@@ -69,10 +69,6 @@ class RotaryTrack {
         }
     }
 
-    setFrame(value) {
-        // map to rotation
-    }
-
     rotateTo(value) {
         for (let i = 0; i < this.segments.length; i++) {
             this.segments[i].rotation = value * this.sign
@@ -87,7 +83,30 @@ class RotaryTrack {
 }
 
 class Rotary {
+    constructor() {
+        this.tracks = []
+        for (let i = 0; i < 12; i++) {
+            const numSegments = 1 + Math.floor(Math.random() * 9);
+            const r0 = 32 + 24 * i;
+            const r1 = 32 + 24 * (i + 1);
+            const widthRatioExp = -Math.floor(Math.random() * 3);
+            const widthRatio = Math.pow(2.0, widthRatioExp);
+            const fill = RotarySegment.FILL_FLAT;
+            this.tracks[i] = new RotaryTrack(numSegments, r0, r1, widthRatio, 0 === widthRatioExp ? RotarySegment.FILL_POSITIVE : fill)
+        }
+    }
 
+    updateFrame(index) {
+        for (let i = 0; i < this.tracks.length; i++) {
+            this.tracks[i].rotateTo(index * 0.02)
+        }
+    }
+
+    draw(context) {
+        for (let i = 0; i < this.tracks.length; i++) {
+            this.tracks[i].draw(context)
+        }
+    }
 }
 
 (() => {
@@ -98,26 +117,14 @@ class Rotary {
     const rx = 384
     const ry = 384
 
-    const tracks = [
-        new RotaryTrack(3, 64 + 16 * 0, 64 + 16 * 1, 0.5, RotarySegment.FILL_FLAT),
-        new RotaryTrack(9, 64 + 16 * 1, 64 + 16 * 2, 0.5, RotarySegment.FILL_FLAT),
-        new RotaryTrack(1, 64 + 16 * 2, 64 + 16 * 3, 0.75, RotarySegment.FILL_FLAT),
-        new RotaryTrack(2, 64 + 16 * 3, 64 + 16 * 4, 0.25, RotarySegment.FILL_POSITIVE),
-        new RotaryTrack(4, 64 + 16 * 4, 64 + 16 * 5, 1.0, RotarySegment.FILL_NEGATIVE),
-    ]
+    const rotary = new Rotary();
 
     const enterFrame = () => {
         context.clearRect(0.0, 0.0, canvas.width, canvas.height)
+        rotary.updateFrame(frame)
         context.save()
         context.translate(rx, ry)
-
-        const rotation = frame * 0.03
-
-        for (let i = 0; i < tracks.length; i++) {
-            tracks[i].rotateTo(rotation)
-            tracks[i].draw(context)
-        }
-
+        rotary.draw(context)
         context.restore()
 
         frame++
