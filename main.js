@@ -26,8 +26,9 @@ class RotarySegment {
             value %= bound
             return value < 1e-13 ? value + bound : value
         }
-        const a0 = this.angleMin + this.rotation;
-        const a1 = this.angleMax + this.rotation;
+        const ad = this.rotation * TAU;
+        const a0 = this.angleMin + ad;
+        const a1 = this.angleMax + ad;
         const gradient = context.createConicGradient(a0, 0.0, 0.0)
         if (this.fill === RotarySegment.FILL_FLAT) {
             context.fillStyle = WHITE
@@ -44,8 +45,8 @@ class RotarySegment {
             context.fillStyle = gradient
         }
         context.beginPath()
-        context.arc(0.0, 0.0, this.radiusMax + 0.25, a0, a1, false)
-        context.arc(0.0, 0.0, this.radiusMin - 0.25, a1, a0, true)
+        context.arc(0.0, 0.0, this.radiusMax, a0, a1, false)
+        context.arc(0.0, 0.0, this.radiusMin, a1, a0, true)
         context.closePath()
         context.fill()
     }
@@ -60,16 +61,21 @@ class RotaryTrack {
         this.segments = []
 
         this.sign = Math.sign(Math.random() * 2.0 - 1.0)
+        this.movement = RotaryTrack.MOVEMENTS[Math.floor(Math.random() * RotaryTrack.MOVEMENTS.length)]
 
         const scale = TAU / numSegments
         for (let i = 0; i < numSegments; i++) {
             const a0 = i * scale
             const a1 = a0 + scale * widthRatio
-            this.segments.push(new RotarySegment(r0, r1, a0, a1, fill))
+            if (Math.random() < 0.9) {
+                this.segments.push(new RotarySegment(r0, r1, a0, a1, fill))
+            }
         }
     }
 
     rotateTo(value) {
+        value -= Math.floor(value)
+        value = this.movement(value)
         for (let i = 0; i < this.segments.length; i++) {
             this.segments[i].rotation = value * this.sign
         }
@@ -82,23 +88,43 @@ class RotaryTrack {
     }
 }
 
+RotaryTrack.AccAndStop = exp => x => Math.pow(x - Math.floor(x), exp)
+RotaryTrack.StopAndGo = x => 1.0 - Math.min(1.0, 2.0 * (2.0 * x - Math.floor(2.0 * x)))
+RotaryTrack.Sine = x => Math.sin(x * PI)
+RotaryTrack.OddShape = shape => {
+    // https://www.desmos.com/calculator/bpbuua3l0j
+    const o = Math.pow(2.0, shape)
+    const c = Math.pow(2.0, o - 1)
+    return x => c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), o) + 0.5
+}
+
+RotaryTrack.MOVEMENTS = [
+    RotaryTrack.StopAndGo,
+    RotaryTrack.Sine,
+    RotaryTrack.AccAndStop(2.0),
+    RotaryTrack.AccAndStop(3.0),
+    RotaryTrack.OddShape(-1.0),
+    RotaryTrack.OddShape(1.0),
+    RotaryTrack.OddShape(2.0),
+]
+
 class Rotary {
     constructor() {
         this.tracks = []
         for (let i = 0; i < 12; i++) {
             const numSegments = 1 + Math.floor(Math.random() * 9);
-            const r0 = 32 + 24 * i;
-            const r1 = 32 + 24 * (i + 1);
+            const r0 = 32 + 24 * i + 0.5;
+            const r1 = 32 + 24 * (i + 1) - 1.0;
             const widthRatioExp = -Math.floor(Math.random() * 3);
             const widthRatio = Math.pow(2.0, widthRatioExp);
             const fill = RotarySegment.FILL_FLAT;
-            this.tracks[i] = new RotaryTrack(numSegments, r0, r1, widthRatio, 0 === widthRatioExp ? RotarySegment.FILL_POSITIVE : fill)
+            this.tracks[i] = new RotaryTrack(numSegments, r0, r1, widthRatio, 2 === numSegments ? RotarySegment.FILL_POSITIVE : fill)
         }
     }
 
     updateFrame(index) {
         for (let i = 0; i < this.tracks.length; i++) {
-            this.tracks[i].rotateTo(index * 0.02)
+            this.tracks[i].rotateTo(index / 240)
         }
     }
 
