@@ -5,10 +5,6 @@ const TAU = PI * 2.0
 const FILL_FLAT = 0
 const FILL_POSITIVE = 1
 const FILL_NEGATIVE = 2
-const wrap = (value, bound) => {
-    value %= bound
-    return value < 1e-13 ? value + bound : value
-}
 const MoveFunction = Object.freeze({
     Reverse: fx => x => 1.0 - fx(x),
     AccAndStop: exp => x => Math.pow(x - Math.floor(x), exp),
@@ -46,35 +42,33 @@ class RotaryTrack {
         this.fill = fill
         this.reverse = reverse
         this.moveFunc = moveFunc
-        this.phase = 0.0
         this.phaseOffset = 0.0
     }
 
-    rotateTo(value) {
-        this.phase = (this.moveFunc(value - Math.floor(value))) * (this.reverse ? -1 : 1) + this.phaseOffset
-    }
-
-    draw(context, radius) {
+    draw(context, radiusMin, position) {
         const scale = this.length / this.numSegments
-        const radiusMax = radius + Math.max(this.width * this.widthRatio, 1.0)
+        const phase = this.moveFunc(position - Math.floor(position)) * (this.reverse ? -1 : 1) + this.phaseOffset
+        const thickness = Math.max(this.width * this.widthRatio, 1.0) * 0.5
+        const radiusAverage = radiusMin + this.width * 0.5;
+        const r0 = radiusAverage - thickness
+        const r1 = radiusAverage + thickness
         for (let i = 0; i < this.numSegments; i++) {
-            const angleMin = i * scale + this.phase
+            const angleMin = i * scale + phase
             const angleMax = angleMin + scale * this.lengthRatio
-            this.drawSection(context, radius, radiusMax, angleMin, angleMax, this.fill)
+            this.drawSection(context, r0, r1, angleMin, angleMax, this.fill)
         }
     }
 
     drawSection(context, radiusMin, radiusMax, angleMin, angleMax, fill) {
         console.assert(radiusMin < radiusMax, `radiusMax(${radiusMax}) must be greater then radiusMin(${radiusMin})`)
         console.assert(angleMin < angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`)
-
-        const a0 = angleMin
-        const a1 = angleMax
+        const a0 = angleMin * TAU
+        const a1 = angleMax * TAU
         const gradient = context.createConicGradient(a0, 0.0, 0.0)
         if (fill === FILL_FLAT) {
             context.fillStyle = WHITE
         } else {
-            const offset = Math.min(wrap(Math.abs(a1 - a0), 1.0), 1.0)
+            const offset = Math.min(RotaryTrack.wrapAngle(Math.abs(a1 - a0), TAU) / TAU, 1.0)
             if (fill === FILL_POSITIVE) {
                 gradient.addColorStop(0.0, TRANSPARENT)
                 gradient.addColorStop(offset, WHITE)
@@ -86,74 +80,85 @@ class RotaryTrack {
             context.fillStyle = gradient
         }
         context.beginPath()
-        context.arc(0.0, 0.0, radiusMax, a0 * TAU, a1 * TAU, false)
-        context.arc(0.0, 0.0, radiusMin, a1 * TAU, a0 * TAU, true)
+        context.arc(0.0, 0.0, radiusMax, a0, a1, false)
+        context.arc(0.0, 0.0, radiusMin, a1, a0, true)
         context.closePath()
         context.fill()
+    }
+
+    static wrapAngle(value, bound) {
+        value %= bound
+        return value < 1e-13 ? value + bound : value
     }
 }
 
 class Rotary {
-    constructor(tracks) {
+    constructor(tracks, radiusMin) {
         this.tracks = tracks
+        this.radiusMin = radiusMin
     }
 
-    updateFrame(index) {
+    draw(context, position) {
+        let radiusMin = this.radiusMin
         for (let i = 0; i < this.tracks.length; i++) {
-            this.tracks[i].rotateTo(index / 240)
+            const track = this.tracks[i]
+            track.draw(context, radiusMin, position)
+            radiusMin += track.width
         }
     }
 
-    draw(context) {
-        let radius = 24
-        for (let i = 0; i < this.tracks.length; i++) {
-            const track = this.tracks[i];
-            track.draw(context, radius)
-            radius += track.width
-        }
+    measureRadius() {
+        return this.tracks.reduce((acc, track) => acc += track.width, this.radiusMin)
     }
 }
 
-class RotaryBuilder {
-    static create() {
-        const tracks = []
-        for (let i = 0; i < 12; i++) {
-            const numSegments = 1 + Math.floor(Math.random() * 9)
-            if (Math.random() < 0.1) ++i
-            const lengthRatioExp = -Math.floor(Math.random() * 3)
-            const lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
-            tracks.push(new RotaryTrack(
-                0 === lengthRatioExp ? 1 : numSegments,
-                12.0, Math.random(), Math.random() < 0.1 ? 0.75 : 1.0, lengthRatio, 2 === numSegments ? FILL_POSITIVE : FILL_FLAT,
-                MOVEMENTS[Math.floor(Math.random() * MOVEMENTS.length)], true))
-        }
-        return new Rotary(tracks)
+const create = () => {
+    const tracks = []
+    for (let i = 0; i < 12; i++) {
+        const numSegments = 1 + Math.floor(Math.random() * 9)
+        if (Math.random() < 0.1) ++i
+        const lengthRatioExp = -Math.floor(Math.random() * 3)
+        const lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
+        tracks.push(new RotaryTrack(
+            0 === lengthRatioExp ? 1 : numSegments,
+            12.0, Math.random(), Math.random() < 0.1 ? 0.75 : 1.0, lengthRatio, 2 === numSegments ? FILL_POSITIVE : FILL_FLAT,
+            MOVEMENTS[Math.floor(Math.random() * MOVEMENTS.length)], true))
     }
+    return new Rotary(tracks, 24)
+}
+const create2 = () => {
+    const tracks = []
+    for (let i = 0; i < 12; i++) {
+        tracks.push(new RotaryTrack(
+            2,
+            12.0, 1.0, 1.0, 1.0, FILL_FLAT,
+            MOVEMENTS[Math.floor(Math.random() * MOVEMENTS.length)], false))
+    }
+    return new Rotary(tracks, 24)
 }
 
 (() => {
     console.log("ready...")
     const canvas = document.querySelector("canvas")
+    const labelSize = document.querySelector("label.size");
     const context = canvas.getContext("2d", {alpha: true})
 
-    const rx = 384
-    const ry = 384
-    const size = 768
-
-    const rotary = RotaryBuilder.create()
+    const rotary = create()
 
     const enterFrame = () => {
-        const ratio = Math.ceil(devicePixelRatio);
-        canvas.width = size * ratio;
-        canvas.height = size * ratio;
-        canvas.style.transform = `scale(${1.0 / ratio})`;
+        const size = rotary.measureRadius() * 2
+        const ratio = Math.ceil(devicePixelRatio)
+        canvas.width = size * ratio
+        canvas.height = size * ratio
+        canvas.style.width = `${size}px`
+        canvas.style.height = `${size}px`
+        labelSize.textContent = `${size}`
 
         context.clearRect(0.0, 0.0, size, size)
-        context.scale(ratio, ratio)
-        rotary.updateFrame(frame)
         context.save()
-        context.translate(rx, ry)
-        rotary.draw(context)
+        context.scale(ratio, ratio)
+        context.translate(size >> 1, size >> 1)
+        rotary.draw(context, frame / 480.0)
         context.restore()
 
         frame++

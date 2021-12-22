@@ -3,38 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <title>rotary</title>
+    <link href="main.css" rel="stylesheet"/>
     <script src="main.js" lang="JavaScript" type="module"></script>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-        }
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(to bottom, #00030A, #00020A);
-            /*background: linear-gradient(to bottom, peru, mediumvioletred);*/
-            position: relative;
-        }
-
-        p {
-            top: 4px;
-            left: 16px;
-            color: white;
-            position: absolute;
-            font-family: "Andale Mono",sans-serif;
-        }
-
-        canvas {
-            filter: drop-shadow(0 0 64px rgba(255, 200, 100, 0.4));
-        }
-    </style>
 </head>
 <body>
-<p>Refresh for new version</p>
-<canvas></canvas>
+<div class="editor">
+    <div class="preview">
+        <div class="rotary">
+            <canvas></canvas>
+            <label class="size"></label>
+        </div>
+    </div>
+    <div class="properties">
+        <h1>Rotary</h1>
+        <h5>editor not functioning yet</h5>
+        <section class="track">
+            <article class="slider" data-input="segments">
+                <label class="name">segments</label>
+                <input type="range" min="1" max="16" value="2">
+                <label class="value" data-unit="x">1</label>
+            </article>
+            <article class="slider" data-input="width">
+                <label class="name">width</label>
+                <input type="range" min="1" max="64" value="12">
+                <label class="value" data-unit="px">12</label>
+            </article>
+            <article class="slider" data-input="width-ratio">
+                <label class="name" class="name">width relative</label>
+                <input type="range" min="1" max="64" value="12">
+                <label class="value" data-unit="%">100</label>
+            </article>
+            <article class="slider" data-input="length">
+                <label class="name">length</label>
+                <input type="range" min="1" max="64" value="12">
+                <label class="value" data-unit="%">100</label>
+            </article>
+            <article class="slider" data-input="length-ratio">
+                <label class="name">length relative</label>
+                <input type="range" min="1" max="64" value="12">
+                <label class="value" data-unit="%">100</label>
+            </article>
+            <article class="option" data-input="fill">
+                <label class="name">gradient</label>
+                <select>
+                    <option>None</option>
+                    <option>Positive</option>
+                    <option>Negative</option>
+                </select>
+            </article>
+            <article class="option" data-input="movement">
+                <label class="name">movement</label>
+                <select>
+                    <option>Linear</option>
+                    <option>StopAndGo</option>
+                    <option>Sine</option>
+                    <option>AccAndStop ^2</option>
+                    <option>AccAndStop ^3</option>
+                    <option>OddShape -1</option>
+                    <option>OddShape +1</option>
+                    <option>OddShape +2</option>
+                </select>
+            </article>
+            <article class="checkbox" data-input="reverse">
+                <label class="name">reverse</label>
+                <input type="checkbox"/>
+            </article>
+            <article class="slider" data-input="phase-offset">
+                <label class="name">phase offset</label>
+                <input type="range" min="1" max="64" value="12">
+                <label class="value" data-unit="%">100</label>
+            </article>
+        </section>
+    </div>
+</div>
 </body>
 </html>
