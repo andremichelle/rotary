@@ -56,8 +56,23 @@ RotarySegment.FILL_FLAT = 0;
 RotarySegment.FILL_POSITIVE = 1;
 RotarySegment.FILL_NEGATIVE = 2;
 
+/**
+ * RotaryTrack properties:
+ *  index in track-array
+ *  numSegments
+ *  width
+ *  widthRatio
+ *  radian
+ *  radianRatio
+ *  excludes?
+ *  direction
+ *  movement
+ *  fill
+ */
+
 class RotaryTrack {
-    constructor(numSegments, r0, r1, widthRatio = 0.5, fill = RotarySegment.FILL_POSITIVE) {
+    // TODO Define r0, r1 in runtime by accumulating track-widths
+    constructor(numSegments, r0, r1, widthRatio = 1.0, lengthRatio = 0.5, fill = RotarySegment.FILL_POSITIVE) {
         this.segments = []
 
         this.sign = Math.sign(Math.random() * 2.0 - 1.0)
@@ -66,9 +81,11 @@ class RotaryTrack {
         const scale = TAU / numSegments
         for (let i = 0; i < numSegments; i++) {
             const a0 = i * scale
-            const a1 = a0 + scale * widthRatio
+            const a1 = a0 + scale * lengthRatio
+            const radius = (r0 + r1) * 0.5
+            const widthHalf = Math.max((r1 - r0) * 0.5 * widthRatio, 0.5)
             if (Math.random() < 0.9) {
-                this.segments.push(new RotarySegment(r0, r1, a0, a1, fill))
+                this.segments.push(new RotarySegment(radius - widthHalf, radius + widthHalf, a0, a1, fill))
             }
         }
     }
@@ -103,23 +120,15 @@ RotaryTrack.MOVEMENTS = [
     RotaryTrack.Sine,
     RotaryTrack.AccAndStop(2.0),
     RotaryTrack.AccAndStop(3.0),
+    RotaryTrack.OddShape(-2.0),
     RotaryTrack.OddShape(-1.0),
     RotaryTrack.OddShape(1.0),
     RotaryTrack.OddShape(2.0),
 ]
 
 class Rotary {
-    constructor() {
-        this.tracks = []
-        for (let i = 0; i < 12; i++) {
-            const numSegments = 1 + Math.floor(Math.random() * 9);
-            const r0 = 32 + 24 * i + 0.5;
-            const r1 = 32 + 24 * (i + 1) - 1.0;
-            const widthRatioExp = -Math.floor(Math.random() * 3);
-            const widthRatio = Math.pow(2.0, widthRatioExp);
-            const fill = RotarySegment.FILL_FLAT;
-            this.tracks[i] = new RotaryTrack(numSegments, r0, r1, widthRatio, 2 === numSegments ? RotarySegment.FILL_POSITIVE : fill)
-        }
+    constructor(tracks) {
+        this.tracks = tracks
     }
 
     updateFrame(index) {
@@ -135,18 +144,42 @@ class Rotary {
     }
 }
 
+class RotaryBuilder {
+    static create() {
+        const tracks = []
+        for (let i = 0; i < 12; i++) {
+            const numSegments = 1 + Math.floor(Math.random() * 9)
+            const r0 = 24 + 12 * i
+            if (Math.random() < 0.1) ++i
+            const r1 = 24 + 12 * (i + 1)
+            const lengthRatioExp = -Math.floor(Math.random() * 3)
+            const lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
+            const fill = RotarySegment.FILL_FLAT
+            tracks.push(new RotaryTrack(0 === lengthRatioExp ? 1 : numSegments, r0, r1, Math.random(), lengthRatio, 2 === numSegments ? RotarySegment.FILL_POSITIVE : fill))
+        }
+        return new Rotary(tracks)
+    }
+}
+
 (() => {
     console.log("ready...")
     const canvas = document.querySelector("canvas")
-    const context = canvas.getContext("2d")
+    const context = canvas.getContext("2d", {alpha: true})
 
     const rx = 384
     const ry = 384
+    const size = 768
 
-    const rotary = new Rotary();
+    const rotary = RotaryBuilder.create()
 
     const enterFrame = () => {
-        context.clearRect(0.0, 0.0, canvas.width, canvas.height)
+        const ratio = Math.ceil(devicePixelRatio);
+        canvas.width = size * ratio;
+        canvas.height = size * ratio;
+        canvas.style.transform = `scale(${1.0 / ratio})`;
+
+        context.clearRect(0.0, 0.0, size, size)
+        context.scale(ratio, ratio)
         rotary.updateFrame(frame)
         context.save()
         context.translate(rx, ry)

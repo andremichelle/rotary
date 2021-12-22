@@ -4,8 +4,38 @@
     <meta charset="UTF-8">
     <title>rotary</title>
     <script src="main.js" lang="JavaScript" type="module"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to bottom, #00030A, #00020A);
+            /*background: linear-gradient(to bottom, peru, mediumvioletred);*/
+            position: relative;
+        }
+
+        p {
+            top: 4px;
+            left: 16px;
+            color: white;
+            position: absolute;
+            font-family: "Andale Mono",sans-serif;
+        }
+
+        canvas {
+            opacity: 0.8;
+            filter: drop-shadow(0 0 64px rgba(255, 200, 100, 0.4));
+        }
+    </style>
 </head>
 <body>
-<canvas width="768" height="768" style="background-color: black"></canvas>
+<p>Refresh for new version</p>
+<canvas></canvas>
 </body>
 </html>
