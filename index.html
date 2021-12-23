@@ -7,7 +7,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
     <link href="main.css" rel="stylesheet"/>
-    <script src="main.js" lang="JavaScript" type="module"></script>
+    <script src="https://requirejs.org/docs/release/2.3.6/minified/require.js"></script>
+    <script src="main.js"></script>
+    <script src="rotary.js" type="module"></script>
 </head>
 <body>
 <div class="editor">
@@ -21,9 +23,9 @@
         <h1>Rotary</h1>
         <div class="two-columns">
             <label class="name">start radius</label>
-            <div class="stepper">
+            <div class="stepper" data-parameter="start-radius">
                 <button>◀︎</button>
-                <input type="text" value="20px">
+                <input type="text">
                 <button>▶</button>
             </div>
         </div>
@@ -101,5 +103,8 @@
         </section>
     </div>
 </div>
+<script>
+    require(['main'])
+</script>
 </body>
 </html>

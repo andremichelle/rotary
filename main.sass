@@ -136,17 +136,24 @@ div.two-columns
       &:active
         color: rgba(white, 1.0)
 
-    > input
+    > input[type=text]
       width: 64px
       color: rgba(white, 0.7)
       border: none
       outline: none
       margin: 0
       padding: 0
-      font-size: 11px
+      font-size: 10px
       text-align: center
       background-color: rgba(black, 0.3)
       font-family: 'Titillium Web', sans-serif
+
+      &:focus
+        box-shadow: 0 0 0 1px #276bae inset
+
+      &::selection
+        background-color: #276bae
+
 
   > input[type=checkbox]
     font-size: 10px
