@@ -3,8 +3,9 @@ const TRANSPARENT = "rgba(255, 255, 255, 0.0)"
 const PI = Math.PI
 const TAU = PI * 2.0
 const FILL_FLAT = 0
-const FILL_POSITIVE = 1
-const FILL_NEGATIVE = 2
+const FILL_STROKE = 1
+const FILL_POSITIVE = 2
+const FILL_NEGATIVE = 3
 const MoveFunction = Object.freeze({
     Reverse: fx => x => 1.0 - fx(x),
     AccAndStop: exp => x => Math.pow(x - Math.floor(x), exp),
@@ -62,13 +63,15 @@ class RotaryTrack {
     drawSection(context, radiusMin, radiusMax, angleMin, angleMax, fill) {
         console.assert(radiusMin < radiusMax, `radiusMax(${radiusMax}) must be greater then radiusMin(${radiusMin})`)
         console.assert(angleMin < angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`)
-        const a0 = angleMin * TAU
-        const a1 = angleMax * TAU
-        const gradient = context.createConicGradient(a0, 0.0, 0.0)
+        const radianMin = angleMin * TAU
+        const radianMax = angleMax * TAU
         if (fill === FILL_FLAT) {
             context.fillStyle = WHITE
+        } else if (fill === FILL_STROKE) {
+            context.strokeStyle = WHITE
         } else {
-            const offset = Math.min(RotaryTrack.wrapAngle(Math.abs(a1 - a0), TAU) / TAU, 1.0)
+            const gradient = context.createConicGradient(radianMin, 0.0, 0.0)
+            const offset = Math.min((angleMax - angleMin) % 1.0, 1.0)
             if (fill === FILL_POSITIVE) {
                 gradient.addColorStop(0.0, TRANSPARENT)
                 gradient.addColorStop(offset, WHITE)
@@ -80,15 +83,14 @@ class RotaryTrack {
             context.fillStyle = gradient
         }
         context.beginPath()
-        context.arc(0.0, 0.0, radiusMax, a0, a1, false)
-        context.arc(0.0, 0.0, radiusMin, a1, a0, true)
+        context.arc(0.0, 0.0, radiusMax, radianMin, radianMax, false)
+        context.arc(0.0, 0.0, radiusMin, radianMax, radianMin, true)
         context.closePath()
-        context.fill()
-    }
-
-    static wrapAngle(value, bound) {
-        value %= bound
-        return value < 1e-13 ? value + bound : value
+        if (fill === FILL_STROKE) {
+            context.stroke()
+        } else {
+            context.fill()
+        }
     }
 }
 
@@ -121,7 +123,7 @@ const create = () => {
         const lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
         tracks.push(new RotaryTrack(
             0 === lengthRatioExp ? 1 : numSegments,
-            12.0, Math.random(), Math.random() < 0.1 ? 0.75 : 1.0, lengthRatio, 2 === numSegments ? FILL_POSITIVE : FILL_FLAT,
+            12.0, Math.random(), Math.random() < 0.1 ? 0.75 : 1.0, lengthRatio, 2 === numSegments ? FILL_POSITIVE : Math.random() < 0.2 ? FILL_STROKE : FILL_FLAT,
             MOVEMENTS[Math.floor(Math.random() * MOVEMENTS.length)], true))
     }
     return new Rotary(tracks, 24)
@@ -131,7 +133,7 @@ const create2 = () => {
     for (let i = 0; i < 12; i++) {
         tracks.push(new RotaryTrack(
             2,
-            12.0, 1.0, 1.0, 1.0, FILL_FLAT,
+            Math.random() < 0.1 ? 24.0 : 12.0, 1.0, 1.0, 1.0, FILL_FLAT,
             MOVEMENTS[Math.floor(Math.random() * MOVEMENTS.length)], false))
     }
     return new Rotary(tracks, 24)
@@ -158,7 +160,7 @@ const create2 = () => {
         context.save()
         context.scale(ratio, ratio)
         context.translate(size >> 1, size >> 1)
-        rotary.draw(context, frame / 480.0)
+        rotary.draw(context, frame / 320.0)
         context.restore()
 
         frame++

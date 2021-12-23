@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>rotary</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
     <link href="main.css" rel="stylesheet"/>
     <script src="main.js" lang="JavaScript" type="module"></script>
 </head>
@@ -16,63 +19,85 @@
     </div>
     <div class="properties">
         <h1>Rotary</h1>
-        <h5>editor not functioning yet</h5>
+        <div class="two-columns">
+            <label class="name">start radius</label>
+            <div class="stepper">
+                <button>◀︎</button>
+                <input type="text" value="20px">
+                <button>▶</button>
+            </div>
+        </div>
+        <h3>Tracks</h3>
         <section class="track">
-            <article class="slider" data-input="segments">
+            <div class="two-columns">
                 <label class="name">segments</label>
-                <input type="range" min="1" max="16" value="2">
-                <label class="value" data-unit="x">1</label>
-            </article>
-            <article class="slider" data-input="width">
+                <div class="stepper">
+                    <button>◀︎</button>
+                    <input type="text" value="100">
+                    <button>▶</button>
+                </div>
                 <label class="name">width</label>
-                <input type="range" min="1" max="64" value="12">
-                <label class="value" data-unit="px">12</label>
-            </article>
-            <article class="slider" data-input="width-ratio">
-                <label class="name" class="name">width relative</label>
-                <input type="range" min="1" max="64" value="12">
-                <label class="value" data-unit="%">100</label>
-            </article>
-            <article class="slider" data-input="length">
+                <div class="stepper">
+                    <button>◀︎</button>
+                    <input type="text" value="100%">
+                    <button>▶</button>
+                </div>
                 <label class="name">length</label>
-                <input type="range" min="1" max="64" value="12">
-                <label class="value" data-unit="%">100</label>
-            </article>
-            <article class="slider" data-input="length-ratio">
-                <label class="name">length relative</label>
-                <input type="range" min="1" max="64" value="12">
-                <label class="value" data-unit="%">100</label>
-            </article>
-            <article class="option" data-input="fill">
-                <label class="name">gradient</label>
+                <div class="stepper">
+                    <button>◀︎</button>
+                    <input type="text" value="100%">
+                    <button>▶</button>
+                </div>
+                <label class="name">phase</label>
+                <div class="stepper">
+                    <button>◀︎</button>
+                    <input type="text" value="100%">
+                    <button>▶</button>
+                </div>
+                <label class="name">fill</label>
                 <select>
-                    <option>None</option>
-                    <option>Positive</option>
-                    <option>Negative</option>
+                    <option>flat</option>
+                    <option>stroke</option>
+                    <option>gradient +</option>
+                    <option>gradient -</option>
                 </select>
-            </article>
-            <article class="option" data-input="movement">
                 <label class="name">movement</label>
                 <select>
-                    <option>Linear</option>
-                    <option>StopAndGo</option>
-                    <option>Sine</option>
-                    <option>AccAndStop ^2</option>
-                    <option>AccAndStop ^3</option>
-                    <option>OddShape -1</option>
-                    <option>OddShape +1</option>
-                    <option>OddShape +2</option>
+                    <option>linear</option>
+                    <option>stopAndGo</option>
+                    <option>sine</option>
+                    <option>accAndStop ^2</option>
+                    <option>accAndStop ^3</option>
+                    <option>oddShape -1</option>
+                    <option>oddShape +1</option>
+                    <option>oddShape +2</option>
                 </select>
-            </article>
-            <article class="checkbox" data-input="reverse">
+            </div>
+            <div class="two-columns">
+                <div class="empty"></div>
+                <label class="name">ratio</label>
+                <div class="stepper">
+                    <button>◀︎</button>
+                    <input type="text" value="100%">
+                    <button>▶</button>
+                </div>
+                <label class="name">ratio</label>
+                <div class="stepper">
+                    <button>◀︎</button>
+                    <input type="text" value="100%">
+                    <button>▶</button>
+                </div>
+                <div class="empty"></div>
+                <div class="empty"></div>
                 <label class="name">reverse</label>
                 <input type="checkbox"/>
-            </article>
-            <article class="slider" data-input="phase-offset">
-                <label class="name">phase offset</label>
-                <input type="range" min="1" max="64" value="12">
-                <label class="value" data-unit="%">100</label>
-            </article>
+            </div>
+            <div class="actions">
+                <button class="delete">✖︎</button>
+                <div class="spacer"></div>
+                <button class="up" disabled>⬆︎︎</button>
+                <button class="down">⬇︎</button>
+            </div>
         </section>
     </div>
 </div>
