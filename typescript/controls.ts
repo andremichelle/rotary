@@ -1,11 +1,11 @@
-import {Events, LinearQuantizedValue, Terminable, Termination} from "./common"
+import {Events, LinearQuantizedValue, Terminable, Terminator} from "./common"
 
 export class NumericStepperControl implements Terminable {
     private readonly decreaseButton: HTMLButtonElement
     private readonly increaseButton: HTMLButtonElement
     private readonly input: HTMLInputElement
     private readonly numFractions: number
-    private readonly termination: Termination = new Termination()
+    private readonly terminator: Terminator = new Terminator()
 
     constructor(private readonly parent: HTMLElement,
                 private readonly value: LinearQuantizedValue,
@@ -22,10 +22,10 @@ export class NumericStepperControl implements Terminable {
     }
 
     connect() {
-        this.termination.with(Events.configRepeatButton(this.decreaseButton, () => this.value.decrease()))
-        this.termination.with(Events.configRepeatButton(this.increaseButton, () => this.value.increase()))
-        this.termination.with(this.value.addObserver(() => this.update()))
-        this.termination.with(Events.addEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
+        this.terminator.with(this.value.addObserver(() => this.update()))
+        this.terminator.with(Events.configRepeatButton(this.decreaseButton, () => this.value.decrease()))
+        this.terminator.with(Events.configRepeatButton(this.increaseButton, () => this.value.increase()))
+        this.terminator.with(Events.bindEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
             const blur = (() => {
                 const lastFocus: HTMLElement = focusEvent.relatedTarget as HTMLElement
                 return () => {
@@ -85,6 +85,6 @@ export class NumericStepperControl implements Terminable {
     }
 
     terminate() {
-        this.termination.terminate()
+        this.terminator.terminate()
     }
 }

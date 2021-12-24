@@ -3,7 +3,7 @@ export interface Terminable {
 }
 
 export class Events {
-    static addEventListener(target: EventTarget, type: string, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): Terminable {
+    static bindEventListener(target: EventTarget, type: string, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): Terminable {
         target.addEventListener(type, listener, options)
         return {terminate: () => target.removeEventListener(type, listener, options)}
     }
@@ -34,7 +34,7 @@ export class Events {
     }
 }
 
-export class Termination implements Terminable {
+export class Terminator implements Terminable {
     private readonly terminables: Terminable[] = []
 
     with<T extends Terminable>(terminable: T): T {
