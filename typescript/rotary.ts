@@ -1,13 +1,22 @@
-import {LinearQuantizedValue, Terminable, Terminator} from "./common"
+import {Linear, LinearInteger, ObservableValue, Terminable, Terminator} from "./common"
 
 export class RotaryTrack implements Terminable {
     private readonly terminator: Terminator = new Terminator()
 
-    public readonly numSegments = this.terminator.with(new LinearQuantizedValue(8, 1, 128, 1))
-    public readonly width = this.terminator.with(new LinearQuantizedValue(12, 1, 128, 1))
-    public readonly widthRatio = this.terminator.with(new LinearQuantizedValue(100, 1, 100, 1))
-    public readonly length = this.terminator.with(new LinearQuantizedValue(50, 1, 100, 1))
-    public readonly lengthRatio = this.terminator.with(new LinearQuantizedValue(100, 1, 100, 1))
+    readonly numSegments = this.terminator.with(new ObservableValue(new LinearInteger(1, 128), 8))
+    readonly width = this.terminator.with(new ObservableValue(new LinearInteger(1, 128), 12))
+    readonly widthRatio = this.terminator.with(new ObservableValue(Linear.Identity, 1.0))
+
+    terminate() {
+        this.terminator.terminate()
+    }
+}
+
+export class Rotary implements Terminable {
+    private readonly terminator: Terminator = new Terminator()
+    private readonly tracks: RotaryTrack[] = [new RotaryTrack()]
+
+    readonly radiusMin = this.terminator.with(new ObservableValue(new LinearInteger(0, 128), 20))
 
     terminate() {
         this.terminator.terminate()

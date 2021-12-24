@@ -59,6 +59,33 @@ export interface Observable<VALUE> extends Terminable {
     removeObserver(observer: Observer<VALUE>): boolean
 }
 
+export class ObservableImpl<T> implements Observable<T> {
+    private readonly observers: Observer<T>[] = []
+
+    notify(value: T) {
+        this.observers.forEach(observer => observer(value))
+    }
+
+    addObserver(observer: Observer<T>): Terminable {
+        this.observers.push(observer)
+        return {terminate: () => this.removeObserver(observer)}
+    }
+
+    removeObserver(observer: Observer<T>): boolean {
+        let index = this.observers.length | 0
+        while (--index > -1) {
+            if (this.observers[index] === observer) {
+                this.observers.splice(index, 1)
+                return
+            }
+        }
+    }
+
+    terminate() {
+        this.observers.splice(0, this.observers.length)
+    }
+}
+
 export interface ValueMapping<Y> {
     y(x: number): Y
 
@@ -86,6 +113,8 @@ export class Linear implements ValueMapping<number> {
 }
 
 export class LinearInteger implements ValueMapping<number> {
+    static Percent = new Linear(0, 100)
+
     private readonly min: number
     private readonly max: number
     private readonly range: number
@@ -135,8 +164,10 @@ export class Boolean implements ValueMapping<boolean> {
     }
 }
 
-// A proper level mapping based on db = a-b/(x+c) where x is unipolar [0,1]
-// Solved in Maxima: solve([min=a-b/c,max=a-b/(1+c),mid=a-b/(1/2+c)],[a,b,c]);
+/**
+ * A proper level mapping based on db = a-b/(x+c) where x is unipolar [0,1]
+ * Solved in Maxima: solve([min=a-b/c,max=a-b/(1+c),mid=a-b/(1/2+c)],[a,b,c]);
+ */
 export class Volume implements ValueMapping<number> {
     static Default = new Volume()
 
@@ -144,9 +175,11 @@ export class Volume implements ValueMapping<number> {
     private readonly b: number
     private readonly c: number
 
-    // min - The lowest decibel value [0.0]
-    // mid - The decibel value in the center [0.5]
-    // max - The highest decibel value [1.0]
+    /**
+     * @param min The lowest decibel value [0.0]
+     * @param mid The decibel value in the center [0.5]
+     * @param max The highest decibel value [1.0]
+     */
     constructor(public readonly min = -72.0,
                 public readonly mid = -12.0,
                 public readonly max = 0.0) {
@@ -236,55 +269,23 @@ export interface Value<T> extends Observable<Value<T>> {
     get(): T
 }
 
-export interface Stepper {
-    decrease()
+export class ObservableValue implements Value<number> {
+    private readonly observable = new ObservableImpl<ObservableValue>()
 
-    increase()
-}
-
-export class ObservableImpl<VALUE> implements Observable<VALUE> {
-    private readonly observers: Observer<VALUE>[] = []
-
-    notify(value: VALUE) {
-        this.observers.forEach(observer => observer(value))
+    constructor(readonly mapping: ValueMapping<number> = LinearInteger.Percent,
+                private value: number = 50) {
     }
 
-    addObserver(observer: Observer<VALUE>): Terminable {
-        this.observers.push(observer)
-        return {terminate: () => this.removeObserver(observer)}
+    get(): number {
+        return this.value;
     }
 
-    removeObserver(observer: Observer<VALUE>): boolean {
-        let index = this.observers.length | 0
-        while (--index > -1) {
-            if (this.observers[index] === observer) {
-                this.observers.splice(index, 1)
-                return
-            }
-        }
+    unipolar(): number {
+        return this.mapping.x(this.value)
     }
 
-    terminate() {
-        this.observers.splice(0, this.observers.length)
-    }
-}
-
-export class LinearQuantizedValue implements Value<number>, Stepper {
-    private readonly observable = new ObservableImpl<LinearQuantizedValue>()
-
-    constructor(private value: number = 50,
-                public readonly min: number = 0,
-                public readonly max: number = 100,
-                public readonly step: number = 1) {
-    }
-
-    get() {
-        return this.value
-    }
-
-    set(value): boolean {
-        value = Math.min(this.max, Math.max(this.min, value))
-        value = Math.round(value / this.step) * this.step
+    set(value: number): boolean {
+        value = this.mapping.y(Math.min(1.0, Math.max(0.0, this.mapping.x(value))))
         if (this.value === value) {
             return false
         }
@@ -293,19 +294,11 @@ export class LinearQuantizedValue implements Value<number>, Stepper {
         return true
     }
 
-    increase() {
-        this.set(this.get() + this.step)
-    }
-
-    decrease() {
-        this.set(this.get() - this.step)
-    }
-
-    addObserver(observer: Observer<LinearQuantizedValue>): Terminable {
+    addObserver(observer: Observer<ObservableValue>): Terminable {
         return this.observable.addObserver(observer)
     }
 
-    removeObserver(observer: Observer<LinearQuantizedValue>): boolean {
+    removeObserver(observer: Observer<ObservableValue>): boolean {
         return this.observable.removeObserver(observer)
     }
 

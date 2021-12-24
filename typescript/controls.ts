@@ -1,34 +1,34 @@
-import {Events, LinearQuantizedValue, Terminable, Terminator} from "./common"
+import {Events, ObservableValue, PrintMapping, Terminable, Terminator} from "./common"
 
 export class NumericStepper implements Terminable {
     private readonly decreaseButton: HTMLButtonElement
     private readonly increaseButton: HTMLButtonElement
     private readonly input: HTMLInputElement
-    private readonly numFractions: number
     private readonly terminator: Terminator = new Terminator()
 
     constructor(private readonly parent: HTMLElement,
-                private readonly value: LinearQuantizedValue,
+                private readonly value: ObservableValue,
+                private readonly mapping: PrintMapping<number> = PrintMapping.NoFloat,
+                private readonly step: number = 1,
                 private readonly unit: string = "") {
         const buttons = this.parent.querySelectorAll("button")
         this.decreaseButton = buttons.item(0)
         this.increaseButton = buttons.item(1)
         this.input = this.parent.querySelector("input[type=text]")
 
-        const both = value.step.toString(10).split(".")
-        this.numFractions = 1 >= both.length ? 0 : both[1].length
         this.connect()
         this.update()
     }
 
     connect() {
         this.terminator.with(this.value.addObserver(() => this.update()))
-        this.terminator.with(Events.configRepeatButton(this.decreaseButton, () => this.value.decrease()))
-        this.terminator.with(Events.configRepeatButton(this.increaseButton, () => this.value.increase()))
+        this.terminator.with(Events.configRepeatButton(this.decreaseButton, () => this.decrease()))
+        this.terminator.with(Events.configRepeatButton(this.increaseButton, () => this.increase()))
         this.terminator.with(Events.bindEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
             const blur = (() => {
                 const lastFocus: HTMLElement = focusEvent.relatedTarget as HTMLElement
                 return () => {
+                    this.input.setSelectionRange(0, 0)
                     if (lastFocus === null) {
                         this.input.blur()
                     } else {
@@ -40,13 +40,13 @@ export class NumericStepper implements Terminable {
                 switch (event.key) {
                     case "ArrowUp": {
                         event.preventDefault()
-                        this.value.increase()
+                        this.increase()
                         this.input.select()
                         break
                     }
                     case "ArrowDown": {
                         event.preventDefault()
-                        this.value.decrease()
+                        this.decrease()
                         this.input.select()
                         break
                     }
@@ -75,13 +75,20 @@ export class NumericStepper implements Terminable {
         }))
     }
 
+    increase() {
+        this.value.set(Math.round((this.value.get() + this.step) / this.step) * this.step)
+    }
+
+    decrease() {
+        this.value.set(Math.round((this.value.get() - this.step) / this.step) * this.step)
+    }
+
     parse(): number {
-        return parseFloat(this.input.value.replace(this.unit, "").trim())
+        return this.mapping.parse(this.value.mapping, this.input.value.replace(this.unit, "").trim())
     }
 
     update() {
-        const number = this.value.get()
-        this.input.value = `${0 < this.numFractions ? number.toFixed(this.numFractions) : number} ${this.unit}`
+        this.input.value = this.mapping.print(this.value.mapping, this.value.unipolar()) + this.unit
     }
 
     terminate() {
