@@ -1,51 +1,31 @@
-import {QuantizedValue} from "./common"
+import {Events, LinearQuantizedValue, Terminable, Termination} from "./common"
 
-export const configRepeatButton = (button, callback) => {
-    button.addEventListener("mousedown", () => {
-        let lastTime = Date.now()
-        let delay = 500.0
-        const repeat = () => {
-            if (!isNaN(lastTime)) {
-                if (Date.now() - lastTime > delay) {
-                    lastTime = Date.now()
-                    delay *= 0.75
-                    callback()
-                }
-                requestAnimationFrame(repeat)
-            }
-        }
-        requestAnimationFrame(repeat)
-        callback()
-        window.addEventListener("mouseup", () => {
-            lastTime = NaN
-            delay = Number.MAX_VALUE
-        }, {once: true})
-    })
-}
-
-export class NumericStepperControl {
-    public readonly decreaseButton: HTMLButtonElement
-    public readonly increaseButton: HTMLButtonElement
-    public readonly input: HTMLInputElement
+export class NumericStepperControl implements Terminable {
+    private readonly decreaseButton: HTMLButtonElement
+    private readonly increaseButton: HTMLButtonElement
+    private readonly input: HTMLInputElement
+    private readonly numFractions: number
+    private readonly termination: Termination = new Termination()
 
     constructor(private readonly parent: HTMLElement,
-                private readonly value: QuantizedValue<number>,
+                private readonly value: LinearQuantizedValue,
                 private readonly unit: string = "") {
         const buttons = this.parent.querySelectorAll("button")
         this.decreaseButton = buttons.item(0)
         this.increaseButton = buttons.item(1)
         this.input = this.parent.querySelector("input[type=text]")
+
+        const both = value.step.toString(10).split(".")
+        this.numFractions = 1 >= both.length ? 0 : both[1].length
         this.connect()
+        this.update()
     }
 
     connect() {
-        configRepeatButton(this.decreaseButton, () => this.value.decrease())
-        configRepeatButton(this.increaseButton, () => this.value.increase())
-
-        this.value.addObserver(() => this.update())
-        this.update()
-
-        this.input.addEventListener("focusin", (focusEvent: FocusEvent) => {
+        this.termination.with(Events.configRepeatButton(this.decreaseButton, () => this.value.decrease()))
+        this.termination.with(Events.configRepeatButton(this.increaseButton, () => this.value.increase()))
+        this.termination.with(this.value.addObserver(() => this.update()))
+        this.termination.with(Events.addEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
             const blur = (() => {
                 const lastFocus: HTMLElement = focusEvent.relatedTarget as HTMLElement
                 return () => {
@@ -92,7 +72,7 @@ export class NumericStepperControl {
             window.addEventListener("mouseup", () => {
                 if (this.input.selectionStart === this.input.selectionEnd) this.input.select()
             }, {once: true})
-        })
+        }))
     }
 
     parse(): number {
@@ -100,6 +80,11 @@ export class NumericStepperControl {
     }
 
     update() {
-        this.input.value = `${this.value.get()} ${this.unit}`
+        const number = this.value.get()
+        this.input.value = `${0 < this.numFractions ? number.toFixed(this.numFractions) : number} ${this.unit}`
+    }
+
+    terminate() {
+        this.termination.terminate()
     }
 }

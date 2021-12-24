@@ -2,6 +2,53 @@ export interface Terminable {
     terminate()
 }
 
+export class Events {
+    static addEventListener(target: EventTarget, type: string, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): Terminable {
+        target.addEventListener(type, listener, options)
+        return {terminate: () => target.removeEventListener(type, listener, options)}
+    }
+
+    static configRepeatButton(button, callback): Terminable {
+        const mouseDownListener = () => {
+            let lastTime = Date.now()
+            let delay = 500.0
+            const repeat = () => {
+                if (!isNaN(lastTime)) {
+                    if (Date.now() - lastTime > delay) {
+                        lastTime = Date.now()
+                        delay *= 0.75
+                        callback()
+                    }
+                    requestAnimationFrame(repeat)
+                }
+            }
+            requestAnimationFrame(repeat)
+            callback()
+            window.addEventListener("mouseup", () => {
+                lastTime = NaN
+                delay = Number.MAX_VALUE
+            }, {once: true})
+        };
+        button.addEventListener("mousedown", mouseDownListener)
+        return {terminate: () => button.removeEventListener("mousedown", mouseDownListener)}
+    }
+}
+
+export class Termination implements Terminable {
+    private readonly terminables: Terminable[] = []
+
+    with<T extends Terminable>(terminable: T): T {
+        this.terminables.push(terminable)
+        return terminable
+    }
+
+    terminate() {
+        while (this.terminables.length) {
+            this.terminables.pop().terminate()
+        }
+    }
+}
+
 export type Observer<VALUE> = (value: VALUE) => void
 
 export interface Observable<VALUE> extends Terminable {
@@ -61,8 +108,9 @@ export class LinearQuantizedValue implements QuantizedValue<number> {
         return this.value
     }
 
-    set(value): boolean { // TODO take step into account
+    set(value): boolean {
         value = Math.min(this.max, Math.max(this.min, value))
+        value = Math.round(value / this.step) * this.step
         if (this.value === value) {
             return false
         }
@@ -72,11 +120,11 @@ export class LinearQuantizedValue implements QuantizedValue<number> {
     }
 
     increase() {
-        this.set(this.get() + this.step) // TODO div step floor comparison
+        this.set(this.get() + this.step)
     }
 
     decrease() {
-        this.set(this.get() - this.step) // TODO div step ceil comparison
+        this.set(this.get() - this.step)
     }
 
     addObserver(observer: Observer<LinearQuantizedValue>): Terminable {
