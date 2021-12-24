@@ -1,7 +1,5 @@
 // TODO Move to typescript
 
-// import {createNumericStepper} from "./controls.js"
-
 const WHITE = "white"
 const TRANSPARENT = "rgba(255, 255, 255, 0.0)"
 const PI = Math.PI
@@ -148,8 +146,6 @@ const create2 = () => {
     const canvas = document.querySelector("canvas")
     const labelSize = document.querySelector("label.size");
     const context = canvas.getContext("2d", {alpha: true})
-
-    // const startRadiusControl = createNumericStepper(document.querySelector("[data-parameter='start-radius']"))
 
     const rotary = create()
 

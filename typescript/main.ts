@@ -1,11 +1,6 @@
-import {LinearQuantizedValue} from "./common";
+import {RotaryTrack} from "./rotary";
+import {NumericStepperControl} from "./controls";
 
-const a = new LinearQuantizedValue()
-const s = a.addObserver(value => {
-    console.log(value.get())
-})
-a.decrease()
-a.decrease()
-a.terminate()
-a.decrease()
-a.decrease()
+const track = new RotaryTrack()
+track.numSegments.addObserver(value => console.log(`changed to ${value.get()}`))
+const control = new NumericStepperControl(document.querySelector("[data-parameter='start-radius']"), track.numSegments, "px")

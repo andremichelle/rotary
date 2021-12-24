@@ -8,18 +8,21 @@ html, body
   font-size: 11px
   font-family: 'Titillium Web', sans-serif
 
+$SIZE: 17px
+
 button
   color: rgba(white, 0.4)
   font-size: 8px
   font-family: 'Titillium Web', sans-serif
-  height: 19px
-  line-height: 19px
-  min-width: 19px
+  height: $SIZE
+  line-height: $SIZE
+  min-width: $SIZE
   border-radius: 2px
   text-align: center
   appearance: none
   padding: 0
   border: none
+  outline: none
   background-color: rgba(black, 0.3)
 
   &:hover
@@ -29,7 +32,10 @@ button
     color: rgba(white, 1.0)
 
   &:disabled
-    opacity: 0.2
+    opacity: 0.3
+
+fieldset:disabled *
+  opacity: 0.3
 
 body
   display: flex
@@ -71,7 +77,7 @@ body
       section.track
         display: grid
         grid-template-columns: min-content min-content 1fr
-        column-gap: 19px
+        column-gap: $SIZE
         border-left: 4px rgba(white, 0.6) solid
         background-color: rgba(white, 0.04)
         border-radius: 2px
@@ -94,11 +100,11 @@ div.two-columns
   grid-template-columns: min-content min-content
   row-gap: 1px
   column-gap: 3px
-  line-height: 19px
+  line-height: $SIZE
   height: min-content
 
   > *
-    height: 19px
+    height: $SIZE
     overflow: hidden
     border-radius: 4px
 
@@ -112,11 +118,15 @@ div.two-columns
     &.name
       padding-right: 4px
 
-  > div.stepper
+  > fieldset.stepper
     display: grid
-    grid-template-columns: 19px auto 19px
+    grid-template-columns: $SIZE auto 19px
     column-gap: 1px
     font-size: 10px
+    outline: none
+    border: none
+    padding: 0
+    margin: 0
 
     > button
       color: rgba(white, 0.2)
@@ -138,6 +148,7 @@ div.two-columns
 
     > input[type=text]
       width: 64px
+      height: $SIZE
       color: rgba(white, 0.7)
       border: none
       outline: none
@@ -154,7 +165,6 @@ div.two-columns
       &::selection
         background-color: #276bae
 
-
   > input[type=checkbox]
     font-size: 10px
     color: aquamarine
@@ -166,7 +176,7 @@ div.two-columns
     appearance: none
     margin: 0
     padding: 0
-    width: 19px
+    width: $SIZE
 
     &:checked
       background-color: rgba(white, 0.7)

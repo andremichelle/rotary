@@ -2,8 +2,16 @@ export interface Terminable {
     terminate()
 }
 
-export interface Value<T> {
-    set(value: T)
+export type Observer<VALUE> = (value: VALUE) => void
+
+export interface Observable<VALUE> extends Terminable {
+    addObserver(observer: Observer<VALUE>): Terminable
+
+    removeObserver(observer: Observer<VALUE>): boolean
+}
+
+export interface Value<T> extends Observable<Value<T>> {
+    set(value: T): boolean
 
     get(): T
 }
@@ -12,14 +20,6 @@ export interface QuantizedValue<T> extends Value<T> {
     decrease()
 
     increase()
-}
-
-export type Observer<VALUE> = (value: VALUE) => void
-
-export interface Observable<VALUE> extends Terminable {
-    addObserver(observer: Observer<VALUE>): Terminable
-
-    removeObserver(observer: Observer<VALUE>): boolean
 }
 
 export class ObservableImpl<VALUE> implements Observable<VALUE> {
@@ -49,7 +49,7 @@ export class ObservableImpl<VALUE> implements Observable<VALUE> {
     }
 }
 
-export class LinearQuantizedValue implements QuantizedValue<number>, Observable<LinearQuantizedValue> {
+export class LinearQuantizedValue implements QuantizedValue<number> {
     private readonly observable = new ObservableImpl<QuantizedValue<number>>()
 
     private value: number = 50
@@ -61,20 +61,22 @@ export class LinearQuantizedValue implements QuantizedValue<number>, Observable<
         return this.value
     }
 
-    set(value) {
+    set(value): boolean { // TODO take step into account
+        value = Math.min(this.max, Math.max(this.min, value))
         if (this.value === value) {
-            return
+            return false
         }
         this.value = value
         this.observable.notify(this)
+        return true
     }
 
     increase() {
-        this.set(this.get() + 1) // TODO
+        this.set(this.get() + this.step) // TODO div step floor comparison
     }
 
     decrease() {
-        this.set(this.get() - 1) // TODO
+        this.set(this.get() - this.step) // TODO div step ceil comparison
     }
 
     addObserver(observer: Observer<LinearQuantizedValue>): Terminable {

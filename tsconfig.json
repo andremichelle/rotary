@@ -1,5 +1,4 @@
 {
-  "version" : "3.0.3",
   "compilerOptions" : {
     "module" : "amd",
     "removeComments" : true,
@@ -13,6 +12,6 @@
     "./**/*.ts"
   ],
   "exclude": [
-    "./out.d.ts"
+    "./main.d.ts"
   ]
 }
