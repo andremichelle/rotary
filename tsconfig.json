@@ -1,12 +1,16 @@
 {
-  "compilerOptions" : {
-    "module" : "amd",
-    "removeComments" : true,
-    "outFile" : "./main.js",
-    "baseUrl" : "./",
-    "sourceMap" : true,
-    "alwaysStrict" : true,
-    "declaration" : true
+  "compilerOptions": {
+    "module": "amd",
+    "removeComments": true,
+    "outFile": "./main.js",
+    "baseUrl": "./",
+    "sourceMap": true,
+    "lib": [
+      "ES2020",
+      "dom"
+    ],
+    "alwaysStrict": true,
+    "declaration": true
   },
   "include": [
     "./**/*.ts"

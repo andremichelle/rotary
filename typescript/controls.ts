@@ -1,6 +1,6 @@
 import {Events, LinearQuantizedValue, Terminable, Terminator} from "./common"
 
-export class NumericStepperControl implements Terminable {
+export class NumericStepper implements Terminable {
     private readonly decreaseButton: HTMLButtonElement
     private readonly increaseButton: HTMLButtonElement
     private readonly input: HTMLInputElement

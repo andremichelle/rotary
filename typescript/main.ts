@@ -1,5 +1,6 @@
 import {RotaryTrack} from "./rotary";
-import {NumericStepperControl} from "./controls";
+import {NumericStepper} from "./controls";
+import {Linear, PrintMapping, Volume} from "./common";
 
 const track = new RotaryTrack()
-const control = new NumericStepperControl(document.querySelector("[data-parameter='start-radius']"), track.numSegments, "px")
+const control = new NumericStepper(document.querySelector("[data-parameter='start-radius']"), track.numSegments, "px")
