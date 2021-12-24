@@ -1,5 +1,5 @@
 import {PrintMapping, TAU, Terminable, Terminator} from "../lib/common";
-import {Fill, RotaryModel, RotaryTrackModel} from "./model";
+import {Fill, Fills, Movements, RotaryModel, RotaryTrackModel} from "./model";
 import {NumericStepper} from "../controls";
 import {Events} from "../dom/common";
 
@@ -38,8 +38,6 @@ export class RotaryView {
 export class RotaryTrackView implements Terminable {
     static WHITE = "white"
     static TRANSPARENT = "rgba(255, 255, 255, 0.0)"
-    static FILLS = new Map<string, Fill>(
-        [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
     private readonly terminator: Terminator = new Terminator()
     private readonly segments: NumericStepper
@@ -48,7 +46,9 @@ export class RotaryTrackView implements Terminable {
     private readonly length: NumericStepper
     private readonly lengthRatio: NumericStepper
     private readonly phase: NumericStepper
-    private readonly fill: Terminable;
+    private readonly fill: Terminable
+    private readonly movement: Terminable
+    private readonly reverse: Terminable
 
     constructor(readonly element: HTMLElement, readonly track: RotaryTrackModel) {
         this.segments = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='segments']"),
@@ -64,13 +64,16 @@ export class RotaryTrackView implements Terminable {
         this.phase = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='phase']"),
             track.phase, PrintMapping.UnipolarPercent, 0.01, "%"))
         this.fill = this.terminator.with(Events.configEnumSelect(element.querySelector("select[data-parameter='fill']"),
-            RotaryTrackView.FILLS, track.fill))
+            Fills, track.fill))
+        this.movement = this.terminator.with(Events.configEnumSelect(element.querySelector("select[data-parameter='movement']"),
+            Movements, track.movement))
+        this.reverse = this.terminator.with(Events.configCheckbox(element.querySelector("input[data-parameter='reverse']"), track.reverse))
     }
 
     draw(context: CanvasRenderingContext2D, radiusMin: number, position: number): void {
         const segments = this.track.segments.get();
         const scale = this.track.length.get() / segments
-        const phase = position - Math.floor(position) //this.moveFunc(position - Math.floor(position)) * (this.reverse ? -1 : 1) + this.track.phase.get()
+        const phase = this.track.movement.get()(position - Math.floor(position)) * (this.track.reverse.get() ? -1 : 1) + this.track.phase.get()
         const width = this.track.width.get()
         const thickness = Math.max(width * this.track.widthRatio.get(), 1.0) * 0.5
         const radiusAverage = radiusMin + width * 0.5;
@@ -94,7 +97,7 @@ export class RotaryTrackView implements Terminable {
             context.strokeStyle = RotaryTrackView.WHITE
         } else {
             const gradient: CanvasGradient = context.createConicGradient(radianMin, 0.0, 0.0)
-            const offset = Math.min((angleMax - angleMin) % 1.0, 1.0)
+            const offset = Math.min(angleMax - angleMin, 1.0)
             if (fill === Fill.Positive) {
                 gradient.addColorStop(0.0, RotaryTrackView.TRANSPARENT)
                 gradient.addColorStop(offset, RotaryTrackView.WHITE)

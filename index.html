@@ -57,19 +57,9 @@
                         <button>▶</button>
                     </fieldset>
                     <label class="name">fill</label>
-                    <select data-parameter="fill">
-                    </select>
+                    <select data-parameter="fill"></select>
                     <label class="name">movement</label>
-                    <select>
-                        <option>linear</option>
-                        <option>stopAndGo</option>
-                        <option>sine</option>
-                        <option>accAndStop ^2</option>
-                        <option>accAndStop ^3</option>
-                        <option>oddShape -1</option>
-                        <option>oddShape +1</option>
-                        <option>oddShape +2</option>
-                    </select>
+                    <select data-parameter="movement"></select>
                 </div>
                 <div class="two-columns">
                     <div class="empty"></div>
@@ -88,13 +78,13 @@
                     <div class="empty"></div>
                     <div class="empty"></div>
                     <label class="name">reverse</label>
-                    <input type="checkbox"/>
+                    <input type="checkbox" data-parameter="reverse"/>
                 </div>
                 <div class="actions">
-                    <button class="delete">✖︎</button>
+                    <button class="delete" disabled>✖︎</button>
                     <div class="spacer"></div>
                     <button class="up" disabled>⬆︎︎</button>
-                    <button class="down">⬇︎</button>
+                    <button class="down" disabled>⬇︎</button>
                 </div>
             </section>
         </div>

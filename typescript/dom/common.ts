@@ -43,13 +43,21 @@ export class Events {
             options.set(some, optionElement)
         })
         const terminator = new Terminator()
+        const values = Array.from(map)
         terminator.with(Events.bindEventListener(select, "change", () => {
             value.set(values[select.selectedIndex][1])
         }))
-        terminator.with(value.addObserver(subject => {
-            options.get(subject.get()).selected = true
+        terminator.with(value.addObserver(value => {
+            options.get(value.get()).selected = true
         }))
-        const values = Array.from(map)
+        return {terminate: () => terminator.terminate()}
+    }
+
+    static configCheckbox(element: HTMLInputElement, value: ObservableValue<boolean>): Terminable {
+        element.checked = value.get()
+        const terminator = new Terminator()
+        terminator.with(Events.bindEventListener(element, "change", () => value.set(element.checked)))
+        terminator.with(value.addObserver(value => element.checked = value.get()))
         return {terminate: () => terminator.terminate()}
     }
 }
