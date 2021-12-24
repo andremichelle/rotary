@@ -1,7 +1,7 @@
-import {Rotary} from "rotary/model"
+import {RotaryModel} from "rotary/model"
 import {RotaryView} from "./rotary/view";
 
-const rotary = new Rotary()
+const rotary = new RotaryModel()
 const rotaryView = RotaryView.create(document, rotary)
 ;
 

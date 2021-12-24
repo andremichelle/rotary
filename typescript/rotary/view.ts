@@ -1,10 +1,10 @@
 import {PrintMapping, TAU, Terminable, Terminator} from "../lib/common";
-import {Fill, Rotary, RotaryTrack} from "./model";
+import {Fill, RotaryModel, RotaryTrackModel} from "./model";
 import {NumericStepper} from "../controls";
 import {Events} from "../dom/common";
 
 export class RotaryView {
-    static create(document: Document, rotary: Rotary): RotaryView {
+    static create(document: Document, rotary: RotaryModel): RotaryView {
         const tracksContainer = document.querySelector(".tracks")
         const trackTemplate = document.querySelector(".track")
         trackTemplate.remove()
@@ -15,7 +15,7 @@ export class RotaryView {
 
     constructor(private readonly tracksContainer: Element,
                 private readonly trackTemplate: Element,
-                private readonly rotary: Rotary) {
+                private readonly rotary: RotaryModel) {
         new NumericStepper(document.querySelector("[data-parameter='start-radius']"), rotary.radiusMin, PrintMapping.NoFloat, 1, "px")
 
         this.trackViews = rotary.tracks.map(track => {
@@ -38,7 +38,8 @@ export class RotaryView {
 export class RotaryTrackView implements Terminable {
     static WHITE = "white"
     static TRANSPARENT = "rgba(255, 255, 255, 0.0)"
-    static FILL_MAP = new Map<string, Fill>([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
+    static FILLS = new Map<string, Fill>(
+        [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
     private readonly terminator: Terminator = new Terminator()
     private readonly segments: NumericStepper
@@ -49,7 +50,7 @@ export class RotaryTrackView implements Terminable {
     private readonly phase: NumericStepper
     private readonly fill: Terminable;
 
-    constructor(readonly element: HTMLElement, readonly track: RotaryTrack) {
+    constructor(readonly element: HTMLElement, readonly track: RotaryTrackModel) {
         this.segments = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='segments']"),
             track.segments, PrintMapping.NoFloat, 1, ""))
         this.width = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='width']"),
@@ -63,7 +64,7 @@ export class RotaryTrackView implements Terminable {
         this.phase = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='phase']"),
             track.phase, PrintMapping.UnipolarPercent, 0.01, "%"))
         this.fill = this.terminator.with(Events.configEnumSelect(element.querySelector("select[data-parameter='fill']"),
-            RotaryTrackView.FILL_MAP, track.fill))
+            RotaryTrackView.FILLS, track.fill))
     }
 
     draw(context: CanvasRenderingContext2D, radiusMin: number, position: number): void {
