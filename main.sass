@@ -70,29 +70,37 @@ body
             content: "px"
 
     .properties
-      width: 400px
+      display: flex
+      flex-direction: column
       padding: 0 16px 16px 16px
       background-color: rgba(white, 0.08)
 
-      section.track
+      div.tracks
         display: grid
-        grid-template-columns: min-content min-content 1fr
-        column-gap: $SIZE
-        border-left: 4px rgba(white, 0.6) solid
-        background-color: rgba(white, 0.04)
-        border-radius: 2px
-        padding: 4px 4px 4px 16px
+        grid-row-gap: 20px
+        overflow-x: hidden
+        overflow-y: scroll
+        flex: 1 0 0
 
-        > div.actions
-          display: flex
-          flex-direction: column
-          justify-self: end
+        section.track
+          display: grid
+          grid-template-columns: min-content min-content min-content
+          column-gap: $SIZE
+          border-left: 4px rgba(white, 0.6) solid
+          background-color: rgba(white, 0.04)
+          border-radius: 2px
+          padding: 4px 8px
 
-          > button.delete
-            appearance: none
+          > div.actions
+            display: flex
+            flex-direction: column
+            justify-self: end
 
-          > div.spacer
-            flex: 1 0 0
+            > button.delete
+              appearance: none
+
+            > div.spacer
+              flex: 1 0 0
 
 div.two-columns
   display: grid
@@ -192,3 +200,21 @@ div.two-columns
     background-color: rgba(black, 0.3)
     appearance: none
     grid-column: 2 / 3
+
+::-webkit-scrollbar
+  width: 11px
+
+::-webkit-scrollbar-button
+  display: none
+
+::-webkit-scrollbar-track-piece
+  background-color: #111
+
+::-webkit-scrollbar-thumb
+  border-left: 5px #111 solid
+  border-right: 5px #111 solid
+  background-color: #666
+  border-radius: 1px
+
+  &:hover
+    background-color: #AAA
