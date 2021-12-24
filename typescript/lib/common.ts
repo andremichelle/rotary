@@ -19,40 +19,6 @@ export class Terminator implements Terminable {
     }
 }
 
-export class Events {
-    static bindEventListener(target: EventTarget,
-                             type: string, listener: EventListenerOrEventListenerObject,
-                             options?: AddEventListenerOptions): Terminable {
-        target.addEventListener(type, listener, options)
-        return {terminate: () => target.removeEventListener(type, listener, options)}
-    }
-
-    static configRepeatButton(button, callback): Terminable {
-        const mouseDownListener = () => {
-            let lastTime = Date.now()
-            let delay = 500.0
-            const repeat = () => {
-                if (!isNaN(lastTime)) {
-                    if (Date.now() - lastTime > delay) {
-                        lastTime = Date.now()
-                        delay *= 0.75
-                        callback()
-                    }
-                    requestAnimationFrame(repeat)
-                }
-            }
-            requestAnimationFrame(repeat)
-            callback()
-            window.addEventListener("mouseup", () => {
-                lastTime = NaN
-                delay = Number.MAX_VALUE
-            }, {once: true})
-        };
-        button.addEventListener("mousedown", mouseDownListener)
-        return {terminate: () => button.removeEventListener("mousedown", mouseDownListener)}
-    }
-}
-
 export type Observer<VALUE> = (value: VALUE) => void
 
 export interface Observable<VALUE> extends Terminable {
@@ -296,8 +262,40 @@ export interface Value<T> extends Observable<Value<T>> {
     get(): T
 }
 
-export class ObservableValue implements Value<number> {
-    private readonly observable = new ObservableImpl<ObservableValue>()
+export class ObservableValue<T> implements Value<T> {
+    private readonly observable = new ObservableImpl<ObservableValue<T>>()
+
+    constructor(private value: T) {
+    }
+
+    get(): T {
+        return this.value;
+    }
+
+    set(value: T): boolean {
+        if (this.value === value) {
+            return false
+        }
+        this.value = value
+        this.observable.notify(this)
+        return true;
+    }
+
+    addObserver(observer: Observer<ObservableValue<T>>): Terminable {
+        return this.observable.addObserver(observer)
+    }
+
+    removeObserver(observer: Observer<ObservableValue<T>>): boolean {
+        return this.observable.removeObserver(observer)
+    }
+
+    terminate() {
+        this.observable.terminate()
+    }
+}
+
+export class Parameter implements Value<number> {
+    private readonly observable = new ObservableImpl<Parameter>()
 
     constructor(readonly mapping: ValueMapping<number> = Linear.Identity,
                 private value: number = 0.5) {
@@ -321,11 +319,11 @@ export class ObservableValue implements Value<number> {
         return true
     }
 
-    addObserver(observer: Observer<ObservableValue>): Terminable {
+    addObserver(observer: Observer<Parameter>): Terminable {
         return this.observable.addObserver(observer)
     }
 
-    removeObserver(observer: Observer<ObservableValue>): boolean {
+    removeObserver(observer: Observer<Parameter>): boolean {
         return this.observable.removeObserver(observer)
     }
 

@@ -1,6 +1,7 @@
+import {PrintMapping, TAU, Terminable, Terminator} from "../lib/common";
 import {Fill, Rotary, RotaryTrack} from "./model";
 import {NumericStepper} from "../controls";
-import {PrintMapping, TAU, Terminable, Terminator} from "../common";
+import {Events} from "../dom/common";
 
 export class RotaryView {
     static create(document: Document, rotary: Rotary): RotaryView {
@@ -10,7 +11,6 @@ export class RotaryView {
         return new RotaryView(tracksContainer, trackTemplate, rotary)
     }
 
-    // noinspection JSMismatchedCollectionQueryUpdate
     private readonly trackViews: RotaryTrackView[]
 
     constructor(private readonly tracksContainer: Element,
@@ -38,6 +38,7 @@ export class RotaryView {
 export class RotaryTrackView implements Terminable {
     static WHITE = "white"
     static TRANSPARENT = "rgba(255, 255, 255, 0.0)"
+    static FILL_MAP = new Map<string, Fill>([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
     private readonly terminator: Terminator = new Terminator()
     private readonly segments: NumericStepper
@@ -46,6 +47,7 @@ export class RotaryTrackView implements Terminable {
     private readonly length: NumericStepper
     private readonly lengthRatio: NumericStepper
     private readonly phase: NumericStepper
+    private readonly fill: Terminable;
 
     constructor(readonly element: HTMLElement, readonly track: RotaryTrack) {
         this.segments = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='segments']"),
@@ -60,20 +62,23 @@ export class RotaryTrackView implements Terminable {
             track.lengthRatio, PrintMapping.UnipolarPercent, 0.01, "%"))
         this.phase = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='phase']"),
             track.phase, PrintMapping.UnipolarPercent, 0.01, "%"))
+        this.fill = this.terminator.with(Events.configEnumSelect(element.querySelector("select[data-parameter='fill']"),
+            RotaryTrackView.FILL_MAP, track.fill))
     }
 
     draw(context: CanvasRenderingContext2D, radiusMin: number, position: number): void {
-        const scale = this.track.length.get() / this.track.segments.get()
+        const segments = this.track.segments.get();
+        const scale = this.track.length.get() / segments
         const phase = position - Math.floor(position) //this.moveFunc(position - Math.floor(position)) * (this.reverse ? -1 : 1) + this.track.phase.get()
         const width = this.track.width.get()
         const thickness = Math.max(width * this.track.widthRatio.get(), 1.0) * 0.5
         const radiusAverage = radiusMin + width * 0.5;
         const r0 = radiusAverage - thickness
         const r1 = radiusAverage + thickness
-        for (let i = 0; i < this.track.segments.get(); i++) {
+        for (let i = 0; i < segments; i++) {
             const angleMin = i * scale + phase
             const angleMax = angleMin + scale * this.track.lengthRatio.get()
-            this.drawSection(context, r0, r1, angleMin, angleMax) // TODO Fill
+            this.drawSection(context, r0, r1, angleMin, angleMax, this.track.fill.get())
         }
     }
 

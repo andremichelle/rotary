@@ -1,4 +1,5 @@
-import {Events, ObservableValue, PrintMapping, Terminable, Terminator} from "./common"
+import {Events} from "./dom/common"
+import {Parameter, PrintMapping, Terminable, Terminator} from "./lib/common"
 
 export class NumericStepper implements Terminable {
     private readonly decreaseButton: HTMLButtonElement
@@ -7,7 +8,7 @@ export class NumericStepper implements Terminable {
     private readonly terminator: Terminator = new Terminator()
 
     constructor(private readonly parent: HTMLElement,
-                private readonly value: ObservableValue,
+                private readonly parameter: Parameter,
                 private readonly mapping: PrintMapping<number> = PrintMapping.NoFloat,
                 private readonly step: number = 1,
                 private readonly unit: string = "") {
@@ -21,7 +22,7 @@ export class NumericStepper implements Terminable {
     }
 
     connect() {
-        this.terminator.with(this.value.addObserver(() => this.update()))
+        this.terminator.with(this.parameter.addObserver(() => this.update()))
         this.terminator.with(Events.configRepeatButton(this.decreaseButton, () => this.decrease()))
         this.terminator.with(Events.configRepeatButton(this.increaseButton, () => this.increase()))
         this.terminator.with(Events.bindEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
@@ -59,7 +60,7 @@ export class NumericStepper implements Terminable {
                     case "Enter": {
                         event.preventDefault()
                         const number = this.parse()
-                        if (isNaN(number) || !this.value.set(number)) {
+                        if (isNaN(number) || !this.parameter.set(number)) {
                             this.update()
                         }
                         blur()
@@ -76,19 +77,19 @@ export class NumericStepper implements Terminable {
     }
 
     increase() {
-        this.value.set(Math.round((this.value.get() + this.step) / this.step) * this.step)
+        this.parameter.set(Math.round((this.parameter.get() + this.step) / this.step) * this.step)
     }
 
     decrease() {
-        this.value.set(Math.round((this.value.get() - this.step) / this.step) * this.step)
+        this.parameter.set(Math.round((this.parameter.get() - this.step) / this.step) * this.step)
     }
 
     parse(): number {
-        return this.mapping.parse(this.value.mapping, this.input.value.replace(this.unit, "").trim())
+        return this.mapping.parse(this.parameter.mapping, this.input.value.replace(this.unit, "").trim())
     }
 
     update() {
-        this.input.value = this.mapping.print(this.value.mapping, this.value.unipolar()) + this.unit
+        this.input.value = this.mapping.print(this.parameter.mapping, this.parameter.unipolar()) + this.unit
     }
 
     terminate() {

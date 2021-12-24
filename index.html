@@ -9,7 +9,6 @@
     <link href="main.css" rel="stylesheet"/>
     <script src="https://requirejs.org/docs/release/2.3.6/minified/require.js"></script>
     <script src="main.js"></script>
-    <!--script src="rotary.js" type="module"></script-->
 </head>
 <body>
 <div class="editor">
@@ -58,11 +57,7 @@
                         <button>▶</button>
                     </fieldset>
                     <label class="name">fill</label>
-                    <select>
-                        <option>flat</option>
-                        <option>stroke</option>
-                        <option>gradient +</option>
-                        <option>gradient -</option>
+                    <select data-parameter="fill">
                     </select>
                     <label class="name">movement</label>
                     <select>
