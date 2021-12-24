@@ -37,7 +37,7 @@ let frame = 0
 
 class RotaryTrack {
     constructor(numSegments, width, widthRatio, length, lengthRatio, fill, moveFunc, reverse) {
-        this.numSegments = numSegments
+        this.segments = numSegments
         this.width = width
         this.widthRatio = widthRatio
         this.length = length
@@ -49,13 +49,13 @@ class RotaryTrack {
     }
 
     draw(context, radiusMin, position) {
-        const scale = this.length / this.numSegments
+        const scale = this.length / this.segments
         const phase = this.moveFunc(position - Math.floor(position)) * (this.reverse ? -1 : 1) + this.phaseOffset
         const thickness = Math.max(this.width * this.widthRatio, 1.0) * 0.5
         const radiusAverage = radiusMin + this.width * 0.5;
         const r0 = radiusAverage - thickness
         const r1 = radiusAverage + thickness
-        for (let i = 0; i < this.numSegments; i++) {
+        for (let i = 0; i < this.segments; i++) {
             const angleMin = i * scale + phase
             const angleMax = angleMin + scale * this.lengthRatio
             this.drawSection(context, r0, r1, angleMin, angleMax, this.fill)

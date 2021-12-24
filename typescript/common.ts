@@ -1,3 +1,5 @@
+export const TAU = Math.PI * 2.0
+
 export interface Terminable {
     terminate()
 }
@@ -90,6 +92,8 @@ export interface ValueMapping<Y> {
     y(x: number): Y
 
     x(y: Y): number
+
+    clamp(y: Y): Y
 }
 
 export class Linear implements ValueMapping<number> {
@@ -109,6 +113,10 @@ export class Linear implements ValueMapping<number> {
 
     y(x: number): number {
         return this.min + x * this.range
+    }
+
+    clamp(y: number): number {
+        return Math.min(this.max, Math.max(this.min, y));
     }
 }
 
@@ -132,6 +140,10 @@ export class LinearInteger implements ValueMapping<number> {
     y(x: number): number {
         return (this.min + Math.round(x * this.range)) | 0
     }
+
+    clamp(y: number): number {
+        return Math.min(this.max, Math.max(this.min, y));
+    }
 }
 
 export class Exp implements ValueMapping<number> {
@@ -152,6 +164,10 @@ export class Exp implements ValueMapping<number> {
     y(x: number): number {
         return this.min * Math.exp(x * this.range)
     }
+
+    clamp(y: number): number {
+        return Math.min(this.max, Math.max(this.min, y));
+    }
 }
 
 export class Boolean implements ValueMapping<boolean> {
@@ -161,6 +177,10 @@ export class Boolean implements ValueMapping<boolean> {
 
     y(x) {
         return x >= 0.5
+    }
+
+    clamp(y: boolean): boolean {
+        return y;
     }
 }
 
@@ -180,9 +200,9 @@ export class Volume implements ValueMapping<number> {
      * @param mid The decibel value in the center [0.5]
      * @param max The highest decibel value [1.0]
      */
-    constructor(public readonly min = -72.0,
-                public readonly mid = -12.0,
-                public readonly max = 0.0) {
+    constructor(readonly min = -72.0,
+                readonly mid = -12.0,
+                readonly max = 0.0) {
         const min2 = min * min;
         const max2 = max * max;
         const mid2 = mid * mid;
@@ -213,6 +233,10 @@ export class Volume implements ValueMapping<number> {
         }
         return -this.b / (y - this.a) - this.c;
     }
+
+    clamp(y: number): number {
+        return Math.min(this.max, Math.max(this.min, y));
+    }
 }
 
 export type Parser<Y> = (mapping: ValueMapping<Y>, text: string) => Y
@@ -238,12 +262,15 @@ export class PrintMapping<Y> {
         return mapping.y(Math.min(1.0, Math.max(0.0, float / 200.0 + 0.5)))
     }
 
-    static createPrintMapping(parser: (mapping: ValueMapping<number>, text: string) =>
-        number = PrintMapping.UnipolarParser, numFraction: number): PrintMapping<number> {
+    static createPrintMapping(parser: Parser<number>, numFraction: number): PrintMapping<number> {
         return new PrintMapping<number>(parser,
             (mapping, unipolar) =>
                 mapping.y(unipolar).toFixed(numFraction))
     }
+
+    static UnipolarPercent = new PrintMapping<number>(
+        (mapping, text) => mapping.y(parseFloat(text) / 100.0),
+        (mapping, unipolar) => (mapping.y(unipolar) * 100.0).toFixed(1))
 
     static NoFloat = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 0)
     static OneFloats = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 1)
@@ -272,8 +299,8 @@ export interface Value<T> extends Observable<Value<T>> {
 export class ObservableValue implements Value<number> {
     private readonly observable = new ObservableImpl<ObservableValue>()
 
-    constructor(readonly mapping: ValueMapping<number> = LinearInteger.Percent,
-                private value: number = 50) {
+    constructor(readonly mapping: ValueMapping<number> = Linear.Identity,
+                private value: number = 0.5) {
     }
 
     get(): number {
@@ -285,7 +312,7 @@ export class ObservableValue implements Value<number> {
     }
 
     set(value: number): boolean {
-        value = this.mapping.y(Math.min(1.0, Math.max(0.0, this.mapping.x(value))))
+        value = this.mapping.clamp(value)
         if (this.value === value) {
             return false
         }

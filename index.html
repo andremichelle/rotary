@@ -9,7 +9,7 @@
     <link href="main.css" rel="stylesheet"/>
     <script src="https://requirejs.org/docs/release/2.3.6/minified/require.js"></script>
     <script src="main.js"></script>
-    <script src="rotary.js" type="module"></script>
+    <!--script src="rotary.js" type="module"></script-->
 </head>
 <body>
 <div class="editor">
@@ -30,79 +30,79 @@
             </fieldset>
         </div>
         <h3>Tracks</h3>
-            <div class="tracks">
-                <section class="track">
-                    <div class="two-columns">
-                        <label class="name">segments</label>
-                        <fieldset class="stepper">
-                            <button>◀︎</button>
-                            <input type="text" value="100">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">width</label>
-                        <fieldset class="stepper">
-                            <button>◀︎</button>
-                            <input type="text" value="100%">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">length</label>
-                        <fieldset class="stepper">
-                            <button>◀︎</button>
-                            <input type="text" value="100%">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">phase</label>
-                        <fieldset class="stepper">
-                            <button>◀︎</button>
-                            <input type="text" value="100%">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">fill</label>
-                        <select>
-                            <option>flat</option>
-                            <option>stroke</option>
-                            <option>gradient +</option>
-                            <option>gradient -</option>
-                        </select>
-                        <label class="name">movement</label>
-                        <select>
-                            <option>linear</option>
-                            <option>stopAndGo</option>
-                            <option>sine</option>
-                            <option>accAndStop ^2</option>
-                            <option>accAndStop ^3</option>
-                            <option>oddShape -1</option>
-                            <option>oddShape +1</option>
-                            <option>oddShape +2</option>
-                        </select>
-                    </div>
-                    <div class="two-columns">
-                        <div class="empty"></div>
-                        <label class="name">ratio</label>
-                        <fieldset class="stepper">
-                            <button>◀︎</button>
-                            <input type="text" value="100%">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">ratio</label>
-                        <fieldset class="stepper">
-                            <button>◀︎</button>
-                            <input type="text" value="100%">
-                            <button>▶</button>
-                        </fieldset>
-                        <div class="empty"></div>
-                        <div class="empty"></div>
-                        <label class="name">reverse</label>
-                        <input type="checkbox"/>
-                    </div>
-                    <div class="actions">
-                        <button class="delete">✖︎</button>
-                        <div class="spacer"></div>
-                        <button class="up" disabled>⬆︎︎</button>
-                        <button class="down">⬇︎</button>
-                    </div>
-                </section>
-            </div>
+        <div class="tracks">
+            <section class="track">
+                <div class="two-columns">
+                    <label class="name">segments</label>
+                    <fieldset class="stepper" data-parameter="segments">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">width</label>
+                    <fieldset class="stepper" data-parameter="width">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">length</label>
+                    <fieldset class="stepper" data-parameter="length">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">phase</label>
+                    <fieldset class="stepper" data-parameter="phase">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">fill</label>
+                    <select>
+                        <option>flat</option>
+                        <option>stroke</option>
+                        <option>gradient +</option>
+                        <option>gradient -</option>
+                    </select>
+                    <label class="name">movement</label>
+                    <select>
+                        <option>linear</option>
+                        <option>stopAndGo</option>
+                        <option>sine</option>
+                        <option>accAndStop ^2</option>
+                        <option>accAndStop ^3</option>
+                        <option>oddShape -1</option>
+                        <option>oddShape +1</option>
+                        <option>oddShape +2</option>
+                    </select>
+                </div>
+                <div class="two-columns">
+                    <div class="empty"></div>
+                    <label class="name">ratio</label>
+                    <fieldset class="stepper" data-parameter="width-ratio">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">ratio</label>
+                    <fieldset class="stepper" data-parameter="length-ratio">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <div class="empty"></div>
+                    <div class="empty"></div>
+                    <label class="name">reverse</label>
+                    <input type="checkbox"/>
+                </div>
+                <div class="actions">
+                    <button class="delete">✖︎</button>
+                    <div class="spacer"></div>
+                    <button class="up" disabled>⬆︎︎</button>
+                    <button class="down">⬇︎</button>
+                </div>
+            </section>
+        </div>
     </div>
 </div>
 <script>
