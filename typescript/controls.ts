@@ -1,4 +1,4 @@
-import {Events} from "./dom/common"
+import {Dom} from "./dom/common"
 import {Parameter, PrintMapping, Terminable, Terminator} from "./lib/common"
 
 export class NumericStepper implements Terminable {
@@ -23,9 +23,9 @@ export class NumericStepper implements Terminable {
 
     connect() {
         this.terminator.with(this.parameter.addObserver(() => this.update()))
-        this.terminator.with(Events.configRepeatButton(this.decreaseButton, () => this.decrease()))
-        this.terminator.with(Events.configRepeatButton(this.increaseButton, () => this.increase()))
-        this.terminator.with(Events.bindEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
+        this.terminator.with(Dom.configRepeatButton(this.decreaseButton, () => this.decrease()))
+        this.terminator.with(Dom.configRepeatButton(this.increaseButton, () => this.increase()))
+        this.terminator.with(Dom.bindEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
             const blur = (() => {
                 const lastFocus: HTMLElement = focusEvent.relatedTarget as HTMLElement
                 return () => {

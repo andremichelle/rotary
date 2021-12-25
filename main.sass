@@ -84,22 +84,29 @@ body
         flex: 1 0 0
 
         section.track
-          display: grid
-          grid-template-columns: min-content min-content min-content
-          column-gap: $SIZE
-          border-left: 4px rgba(white, 0.04) solid
-          background-color: rgba(white, 0.04)
-          border-radius: 2px
-          padding: 4px 8px
-          height: min-content
+          display: flex
+          flex-direction: column
+          > div.properties
+            display: grid
+            grid-template-columns: min-content min-content min-content
+            column-gap: $SIZE
+            border-left: 4px rgba(white, 0.04) solid
+            background-color: rgba(white, 0.04)
+            border-radius: 2px
+            padding: 4px 8px
+            height: min-content
 
-          > div.actions
+            > div.actions
+              display: flex
+              flex-direction: column
+              justify-self: end
+
+              > div.spacer
+                flex: 1 0 0
+          > div.create
+            margin: 4px auto 0 auto
             display: flex
-            flex-direction: column
-            justify-self: end
-
-            > div.spacer
-              flex: 1 0 0
+            column-gap: 4px
 
 div.two-columns
   display: grid

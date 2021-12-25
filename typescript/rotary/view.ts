@@ -1,7 +1,7 @@
 import {PrintMapping, TAU, Terminable, Terminator} from "../lib/common";
 import {Fill, Fills, Movements, RotaryModel, RotaryTrackModel} from "./model";
 import {NumericStepper} from "../controls";
-import {Events} from "../dom/common";
+import {Dom} from "../dom/common";
 
 export class RotaryView {
     static create(document: Document, rotary: RotaryModel): RotaryView {
@@ -18,11 +18,9 @@ export class RotaryView {
                 private readonly rotary: RotaryModel) {
         new NumericStepper(document.querySelector("[data-parameter='start-radius']"), rotary.radiusMin, PrintMapping.NoFloat, 1, "px")
 
-        this.trackViews = rotary.tracks.map(track => {
-            const element = trackTemplate.cloneNode(true) as HTMLElement
-            tracksContainer.appendChild(element)
-            return new RotaryTrackView(this, element, track)
-        })
+        this.trackViews = rotary.tracks.map(track => this.createView(track))
+
+        // TODO Synchronize model-, view-, html-collections
     }
 
     draw(context: CanvasRenderingContext2D, position: number): void {
@@ -34,13 +32,28 @@ export class RotaryView {
         }
     }
 
+    createView(track: RotaryTrackModel, index: number = Number.MAX_SAFE_INTEGER): RotaryTrackView {
+        const element = this.trackTemplate.cloneNode(true) as HTMLElement
+        Dom.insertElement(this.tracksContainer, element, index)
+        return new RotaryTrackView(this, element, track)
+    }
+
+    createTrack(trackView: RotaryTrackView) {
+        const index = this.trackViews.indexOf(trackView)
+        if (-1 === index) {
+            return
+        }
+        this.createView(new RotaryTrackModel(), index)
+    }
+
     removeTrack(trackView: RotaryTrackView) {
         const index = this.trackViews.indexOf(trackView)
-        if (-1 < index) {
-            this.trackViews.splice(index, 1)
-            trackView.element.remove()
-            trackView.terminate()
+        if (-1 === index) {
+            return
         }
+        this.trackViews.splice(index, 1)
+        trackView.element.remove()
+        trackView.terminate()
         this.rotary.removeTrack(trackView.track)
     }
 }
@@ -73,14 +86,16 @@ export class RotaryTrackView implements Terminable {
             track.lengthRatio, PrintMapping.UnipolarPercent, 0.01, "%"))
         this.phase = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='phase']"),
             track.phase, PrintMapping.UnipolarPercent, 0.01, "%"))
-        this.fill = this.terminator.with(Events.configEnumSelect(element.querySelector("select[data-parameter='fill']"),
+        this.fill = this.terminator.with(Dom.configEnumSelect(element.querySelector("select[data-parameter='fill']"),
             Fills, track.fill))
-        this.movement = this.terminator.with(Events.configEnumSelect(element.querySelector("select[data-parameter='movement']"),
+        this.movement = this.terminator.with(Dom.configEnumSelect(element.querySelector("select[data-parameter='movement']"),
             Movements, track.movement))
-        this.reverse = this.terminator.with(Events.configCheckbox(element.querySelector("input[data-parameter='reverse']"), track.reverse))
+        this.reverse = this.terminator.with(Dom.configCheckbox(element.querySelector("input[data-parameter='reverse']"), track.reverse))
 
         const removeButton = element.querySelector("button[data-action='remove']") as HTMLButtonElement
         removeButton.onclick = () => view.removeTrack(this)
+        const newButton = element.querySelector("button[data-action='new']") as HTMLButtonElement
+        newButton.onclick = () => view.createTrack(this)
     }
 
     draw(context: CanvasRenderingContext2D, radiusMin: number, position: number): void {
