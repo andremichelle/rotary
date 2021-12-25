@@ -16,6 +16,12 @@ export class Dom {
         }
     }
 
+    static emptyElement(element: Element): void {
+        while (element.hasChildNodes()) {
+            element.lastChild.remove();
+        }
+    }
+
     static configRepeatButton(button, callback): Terminable {
         const mouseDownListener = () => {
             let lastTime = Date.now()

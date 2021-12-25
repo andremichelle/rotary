@@ -24,6 +24,7 @@ button
   border: none
   outline: none
   background-color: rgba(black, 0.3)
+  cursor: pointer
 
   &:hover
     color: rgba(white, 0.6)
@@ -86,6 +87,7 @@ body
         section.track
           display: flex
           flex-direction: column
+
           > div.properties
             display: grid
             grid-template-columns: min-content min-content min-content
@@ -103,10 +105,14 @@ body
 
               > div.spacer
                 flex: 1 0 0
+
           > div.create
             margin: 4px auto 0 auto
             display: flex
             column-gap: 4px
+
+            button
+              width: 32px
 
 div.two-columns
   display: grid

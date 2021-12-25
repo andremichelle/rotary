@@ -34,6 +34,26 @@ export class RotaryModel implements Terminable {
         }
     }
 
+    createTrack(insertIndex: number = Number.MAX_SAFE_INTEGER): RotaryTrackModel {
+        const track = new RotaryTrackModel()
+        this.tracks.splice(insertIndex, 0, track)
+        return track
+    }
+
+    copyTrack(source: RotaryTrackModel, insertIndex: number = Number.MAX_SAFE_INTEGER): RotaryTrackModel {
+        const copy = this.createTrack(insertIndex)
+        copy.segments.set(source.segments.get())
+        copy.fill.set(source.fill.get())
+        copy.length.set(source.length.get())
+        copy.lengthRatio.set(source.lengthRatio.get())
+        copy.width.set(source.width.get())
+        copy.widthRatio.set(source.widthRatio.get())
+        copy.phase.set(source.phase.get())
+        copy.movement.set(source.movement.get())
+        copy.reverse.set(source.reverse.get())
+        return copy
+    }
+
     removeTrack(track: RotaryTrackModel) {
         const index = this.tracks.indexOf(track)
         if (-1 < index) {
