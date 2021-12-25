@@ -33,6 +33,8 @@ export class Events {
         return {terminate: () => button.removeEventListener("mousedown", mouseDownListener)}
     }
 
+    // TODO Create classes for following controller
+
     static configEnumSelect<T>(select: HTMLSelectElement, map: Map<string, T>, value: ObservableValue<T>): Terminable {
         const options = new Map<T, HTMLOptionElement>()
         map.forEach((some: T, key: string) => {

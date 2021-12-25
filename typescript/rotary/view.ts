@@ -21,7 +21,7 @@ export class RotaryView {
         this.trackViews = rotary.tracks.map(track => {
             const element = trackTemplate.cloneNode(true) as HTMLElement
             tracksContainer.appendChild(element)
-            return new RotaryTrackView(element, track)
+            return new RotaryTrackView(this, element, track)
         })
     }
 
@@ -32,6 +32,16 @@ export class RotaryView {
             trackView.draw(context, radiusMin, position)
             radiusMin += trackView.track.width.get()
         }
+    }
+
+    removeTrack(trackView: RotaryTrackView) {
+        const index = this.trackViews.indexOf(trackView)
+        if (-1 < index) {
+            this.trackViews.splice(index, 1)
+            trackView.element.remove()
+            trackView.terminate()
+        }
+        this.rotary.removeTrack(trackView.track)
     }
 }
 
@@ -50,7 +60,7 @@ export class RotaryTrackView implements Terminable {
     private readonly movement: Terminable
     private readonly reverse: Terminable
 
-    constructor(readonly element: HTMLElement, readonly track: RotaryTrackModel) {
+    constructor(readonly view: RotaryView, readonly element: HTMLElement, readonly track: RotaryTrackModel) {
         this.segments = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='segments']"),
             track.segments, PrintMapping.NoFloat, 1, ""))
         this.width = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='width']"),
@@ -68,6 +78,9 @@ export class RotaryTrackView implements Terminable {
         this.movement = this.terminator.with(Events.configEnumSelect(element.querySelector("select[data-parameter='movement']"),
             Movements, track.movement))
         this.reverse = this.terminator.with(Events.configCheckbox(element.querySelector("input[data-parameter='reverse']"), track.reverse))
+
+        const removeButton = element.querySelector("button[data-action='remove']") as HTMLButtonElement
+        removeButton.onclick = () => view.removeTrack(this)
     }
 
     draw(context: CanvasRenderingContext2D, radiusMin: number, position: number): void {

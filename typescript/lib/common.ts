@@ -40,13 +40,12 @@ export class ObservableImpl<T> implements Observable<T> {
     }
 
     removeObserver(observer: Observer<T>): boolean {
-        let index = this.observers.length | 0
-        while (--index > -1) {
-            if (this.observers[index] === observer) {
-                this.observers.splice(index, 1)
-                return
-            }
+        let index = this.observers.indexOf(observer)
+        if (-1 < index) {
+            this.observers.splice(index, 1)
+            return true
         }
+        return false
     }
 
     terminate() {

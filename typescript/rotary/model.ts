@@ -34,6 +34,14 @@ export class RotaryModel implements Terminable {
         }
     }
 
+    removeTrack(track: RotaryTrackModel) {
+        const index = this.tracks.indexOf(track)
+        if (-1 < index) {
+            this.tracks.splice(index, 1)
+            track.terminate()
+        }
+    }
+
     measureRadius() {
         let radiusMin = this.radiusMin.get()
         for (let i = 0; i < this.tracks.length; i++) {

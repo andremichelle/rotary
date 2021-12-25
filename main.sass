@@ -76,7 +76,8 @@ body
       background-color: rgba(white, 0.08)
 
       div.tracks
-        display: grid
+        display: flex
+        flex-direction: column
         grid-row-gap: 20px
         overflow-x: hidden
         overflow-y: scroll
@@ -90,14 +91,12 @@ body
           background-color: rgba(white, 0.04)
           border-radius: 2px
           padding: 4px 8px
+          height: min-content
 
           > div.actions
             display: flex
             flex-direction: column
             justify-self: end
-
-            > button.delete
-              appearance: none
 
             > div.spacer
               flex: 1 0 0
