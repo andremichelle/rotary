@@ -293,6 +293,28 @@ export class ObservableValue<T> implements Value<T> {
     }
 }
 
+export interface Stepper {
+    decrease(value: Value<number>): void
+
+    increase(value: Value<number>): void
+}
+
+export class NumericStepper implements Stepper {
+    static Integer = new NumericStepper(1)
+    static FloatPercent = new NumericStepper(0.01)
+
+    constructor(private readonly step: number = 1) {
+    }
+
+    decrease(value: Value<number>): void {
+        value.set(Math.round((value.get() - this.step) / this.step) * this.step)
+    }
+
+    increase(value: Value<number>): void {
+        value.set(Math.round((value.get() + this.step) / this.step) * this.step)
+    }
+}
+
 export class Parameter implements Value<number> {
     private readonly observable = new ObservableImpl<Parameter>()
 

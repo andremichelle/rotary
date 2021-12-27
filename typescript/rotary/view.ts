@@ -1,7 +1,7 @@
-import {PrintMapping, TAU, Terminable, Terminator} from "../lib/common";
-import {Fill, Fills, Movements, RotaryModel, RotaryTrackModel} from "./model";
-import {Dom} from "../dom/common";
-import {NumericStepper, NumericStepperInput} from "../dom/controls";
+import {NumericStepper, PrintMapping, TAU, Terminable, Terminator} from "../lib/common";
+import {Fill, Fills, Move, Movements, RotaryModel, RotaryTrackModel} from "./model";
+import {Checkbox, Dom, SelectInput} from "../dom/common";
+import {NumericStepperInput} from "../dom/inputs";
 
 export class RotaryView {
     static create(document: Document, rotary: RotaryModel): RotaryView {
@@ -18,7 +18,7 @@ export class RotaryView {
                 private readonly trackTemplate: Element,
                 private readonly rotary: RotaryModel) {
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"),
-            rotary.radiusMin, PrintMapping.NoFloat, new NumericStepper(rotary.radiusMin, 1), "px"))
+            rotary.radiusMin, PrintMapping.NoFloat, new NumericStepper(1), "px"))
 
         rotary.tracks.forEach(track => this.createView(track))
         this.updateViews()
@@ -81,22 +81,20 @@ export class RotaryTrackView implements Terminable {
 
     constructor(readonly view: RotaryView, readonly element: HTMLElement, readonly model: RotaryTrackModel) {
         this.segments = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"),
-            model.segments, PrintMapping.NoFloat, new NumericStepper(model.segments, 1), ""))
+            model.segments, PrintMapping.NoFloat, NumericStepper.Integer, ""))
         this.width = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"),
-            model.width, PrintMapping.NoFloat, new NumericStepper(model.width, 1), "px"))
+            model.width, PrintMapping.NoFloat, NumericStepper.Integer, "px"))
         this.widthRatio = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width-ratio']"),
-            model.widthRatio, PrintMapping.UnipolarPercent, new NumericStepper(model.widthRatio, 0.01), "%"))
+            model.widthRatio, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
         this.length = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"),
-            model.length, PrintMapping.UnipolarPercent, new NumericStepper(model.length, 0.01), "%"))
+            model.length, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
         this.lengthRatio = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"),
-            model.lengthRatio, PrintMapping.UnipolarPercent, new NumericStepper(model.lengthRatio, 0.01), "%"))
+            model.lengthRatio, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
         this.phase = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='phase']"),
-            model.phase, PrintMapping.UnipolarPercent, new NumericStepper(model.phase, 0.01), "%"))
-        this.fill = this.terminator.with(Dom.configEnumSelect(element.querySelector("select[data-parameter='fill']"),
-            Fills, model.fill))
-        this.movement = this.terminator.with(Dom.configEnumSelect(element.querySelector("select[data-parameter='movement']"),
-            Movements, model.movement))
-        this.reverse = this.terminator.with(Dom.configCheckbox(element.querySelector("input[data-parameter='reverse']"), model.reverse))
+            model.phase, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
+        this.fill = this.terminator.with(new SelectInput<Fill>(element.querySelector("select[data-parameter='fill']"), Fills, model.fill))
+        this.movement = this.terminator.with(new SelectInput<Move>(element.querySelector("select[data-parameter='movement']"), Movements, model.movement))
+        this.reverse = this.terminator.with(new Checkbox(element.querySelector("input[data-parameter='reverse']"), model.reverse))
 
         const removeButton = element.querySelector("button[data-action='remove']") as HTMLButtonElement
         removeButton.onclick = () => view.removeTrack(this)

@@ -46,34 +46,55 @@ export class Dom {
         button.addEventListener("mousedown", mouseDownListener)
         return {terminate: () => button.removeEventListener("mousedown", mouseDownListener)}
     }
+}
 
-    // TODO Create classes for following controller
+export class Checkbox implements Terminable {
+    private readonly terminator = new Terminator()
 
-    static configEnumSelect<T>(select: HTMLSelectElement, map: Map<string, T>, value: ObservableValue<T>): Terminable {
-        const options = new Map<T, HTMLOptionElement>()
-        map.forEach((some: T, key: string) => {
-            const optionElement: HTMLOptionElement = document.createElement("OPTION") as HTMLOptionElement
-            optionElement.textContent = key
-            optionElement.selected = some === value.get()
-            select.appendChild(optionElement)
-            options.set(some, optionElement)
-        })
-        const terminator = new Terminator()
-        const values = Array.from(map)
-        terminator.with(Dom.bindEventListener(select, "change", () => {
-            value.set(values[select.selectedIndex][1])
-        }))
-        terminator.with(value.addObserver(value => {
-            options.get(value.get()).selected = true
-        }))
-        return {terminate: () => terminator.terminate()}
+    constructor(private readonly element: HTMLInputElement, private readonly value: ObservableValue<boolean>) {
+        this.init()
     }
 
-    static configCheckbox(element: HTMLInputElement, value: ObservableValue<boolean>): Terminable {
-        element.checked = value.get()
-        const terminator = new Terminator()
-        terminator.with(Dom.bindEventListener(element, "change", () => value.set(element.checked)))
-        terminator.with(value.addObserver(value => element.checked = value.get()))
-        return {terminate: () => terminator.terminate()}
+    init(): void {
+        this.element.checked = this.value.get()
+        this.terminator.with(Dom.bindEventListener(this.element, "change", () => this.value.set(this.element.checked)))
+        this.terminator.with(this.value.addObserver(value => this.element.checked = value.get()))
+    }
+
+    terminate() {
+        this.terminator.terminate()
+    }
+}
+
+export class SelectInput<T> implements Terminable {
+    private readonly options = new Map<T, HTMLOptionElement>()
+    private readonly terminator = new Terminator()
+    private readonly values: T[] = []
+
+    constructor(private readonly select: HTMLSelectElement,
+                private readonly map: Map<string, T>,
+                private readonly value: ObservableValue<T>) {
+        this.terminator.with(Dom.bindEventListener(select, "change", () => {
+            value.set(this.values[select.selectedIndex])
+        }))
+        this.terminator.with(value.addObserver(value => {
+            this.options.get(value.get()).selected = true
+        }))
+        this.populate()
+    }
+
+    private populate() {
+        this.map.forEach((some: T, key: string) => {
+            const optionElement: HTMLOptionElement = document.createElement("OPTION") as HTMLOptionElement
+            optionElement.textContent = key
+            optionElement.selected = some === this.value.get()
+            this.select.appendChild(optionElement)
+            this.values.push(some)
+            this.options.set(some, optionElement)
+        })
+    }
+
+    terminate() {
+        this.terminator.terminate()
     }
 }

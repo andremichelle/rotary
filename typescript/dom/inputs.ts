@@ -1,25 +1,5 @@
 import {Dom} from "./common";
-import {Parameter, PrintMapping, Terminable, Terminator, Value} from "../lib/common"
-
-export interface Stepper {
-    decrease()
-
-    increase()
-}
-
-export class NumericStepper implements Stepper {
-    constructor(private readonly value: Value<number>, private step: number = 1) {
-    }
-
-    decrease() {
-        this.value.set(Math.round((this.value.get() - this.step) / this.step) * this.step)
-    }
-
-    increase() {
-        this.value.set(Math.round((this.value.get() + this.step) / this.step) * this.step)
-    }
-
-}
+import {NumericStepper, Parameter, PrintMapping, Terminable, Terminator} from "../lib/common"
 
 export class NumericStepperInput implements Terminable {
     private readonly decreaseButton: HTMLButtonElement
@@ -43,8 +23,8 @@ export class NumericStepperInput implements Terminable {
 
     connect() {
         this.terminator.with(this.parameter.addObserver(() => this.update()))
-        this.terminator.with(Dom.configRepeatButton(this.decreaseButton, () => this.stepper.decrease()))
-        this.terminator.with(Dom.configRepeatButton(this.increaseButton, () => this.stepper.increase()))
+        this.terminator.with(Dom.configRepeatButton(this.decreaseButton, () => this.stepper.decrease(this.parameter)))
+        this.terminator.with(Dom.configRepeatButton(this.increaseButton, () => this.stepper.increase(this.parameter)))
         this.terminator.with(Dom.bindEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
             const blur = (() => {
                 const lastFocus: HTMLElement = focusEvent.relatedTarget as HTMLElement
@@ -61,13 +41,13 @@ export class NumericStepperInput implements Terminable {
                 switch (event.key) {
                     case "ArrowUp": {
                         event.preventDefault()
-                        this.stepper.increase()
+                        this.stepper.increase(this.parameter)
                         this.input.select()
                         break
                     }
                     case "ArrowDown": {
                         event.preventDefault()
-                        this.stepper.decrease()
+                        this.stepper.decrease(this.parameter)
                         this.input.select()
                         break
                     }
