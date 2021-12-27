@@ -19,13 +19,13 @@ export class RotaryModel implements Terminable {
             const lengthRatioExp = -Math.floor(Math.random() * 3)
             const lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
             const width = Math.random() < 0.1 ? 24.0 : 12.0
-            const widthRatio = Math.random()
+            const widthPadding = Math.random() < 0.1 ? 0.0 : 3.0
             const length = Math.random() < 0.1 ? 0.75 : 1.0
             const fill = 2 === segments ? Fill.Positive : Math.random() < 0.2 ? Fill.Stroke : Fill.Flat
             const trackModel = new RotaryTrackModel()
             trackModel.segments.set(0 === lengthRatioExp ? 1 : segments)
             trackModel.width.set(width)
-            trackModel.widthRatio.set(widthRatio)
+            trackModel.widthPadding.set(widthPadding)
             trackModel.length.set(length)
             trackModel.lengthRatio.set(lengthRatio)
             trackModel.fill.set(fill)
@@ -47,7 +47,7 @@ export class RotaryModel implements Terminable {
         copy.length.set(source.length.get())
         copy.lengthRatio.set(source.lengthRatio.get())
         copy.width.set(source.width.get())
-        copy.widthRatio.set(source.widthRatio.get())
+        copy.widthPadding.set(source.widthPadding.get())
         copy.phase.set(source.phase.get())
         copy.movement.set(source.movement.get())
         copy.reverse.set(source.reverse.get())
@@ -65,7 +65,8 @@ export class RotaryModel implements Terminable {
     measureRadius() {
         let radiusMin = this.radiusMin.get()
         for (let i = 0; i < this.tracks.length; i++) {
-            radiusMin += this.tracks[i].width.get()
+            const track = this.tracks[i];
+            radiusMin += track.width.get() + track.widthPadding.get()
         }
         return radiusMin
     }
@@ -108,7 +109,7 @@ export class RotaryTrackModel implements Terminable {
 
     readonly segments = this.terminator.with(new Parameter(new LinearInteger(1, 128), 8))
     readonly width = this.terminator.with(new Parameter(new LinearInteger(1, 128), 12))
-    readonly widthRatio = this.terminator.with(new Parameter(Linear.Identity, 0.75))
+    readonly widthPadding = this.terminator.with(new Parameter(new LinearInteger(0, 128), 0))
     readonly length = this.terminator.with(new Parameter(Linear.Identity, 1.0))
     readonly lengthRatio = this.terminator.with(new Parameter(Linear.Identity, 0.5))
     readonly phase = this.terminator.with(new Parameter(Linear.Identity, 0.0))

@@ -29,7 +29,7 @@ export class RotaryView {
         for (let i = 0; i < this.rotary.tracks.length; i++) {
             const view = this.map.get(this.rotary.tracks[i])
             view.draw(context, radiusMin, position)
-            radiusMin += view.model.width.get()
+            radiusMin += view.model.width.get() + view.model.widthPadding.get()
         }
     }
 
@@ -71,7 +71,7 @@ export class RotaryTrackView implements Terminable {
     private readonly terminator: Terminator = new Terminator()
     private readonly segments: NumericStepperInput
     private readonly width: NumericStepperInput
-    private readonly widthRatio: NumericStepperInput
+    private readonly widthPadding: NumericStepperInput
     private readonly length: NumericStepperInput
     private readonly lengthRatio: NumericStepperInput
     private readonly phase: NumericStepperInput
@@ -84,8 +84,8 @@ export class RotaryTrackView implements Terminable {
             model.segments, PrintMapping.NoFloat, NumericStepper.Integer, ""))
         this.width = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"),
             model.width, PrintMapping.NoFloat, NumericStepper.Integer, "px"))
-        this.widthRatio = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width-ratio']"),
-            model.widthRatio, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
+        this.widthPadding = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"),
+            model.widthPadding, PrintMapping.NoFloat, NumericStepper.Integer, "px"))
         this.length = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"),
             model.length, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
         this.lengthRatio = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"),
@@ -109,8 +109,9 @@ export class RotaryTrackView implements Terminable {
         const scale = this.model.length.get() / segments
         const phase = this.model.movement.get()(position - Math.floor(position)) * (this.model.reverse.get() ? -1 : 1) + this.model.phase.get()
         const width = this.model.width.get()
-        const thickness = Math.max(width * this.model.widthRatio.get(), 1.0) * 0.5
-        const radiusAverage = radiusMin + width * 0.5;
+        const widthPadding = this.model.widthPadding.get()
+        const thickness = width * 0.5
+        const radiusAverage = radiusMin + (width + widthPadding) * 0.5;
         const r0 = radiusAverage - thickness
         const r1 = radiusAverage + thickness
         for (let i = 0; i < segments; i++) {
@@ -120,7 +121,10 @@ export class RotaryTrackView implements Terminable {
         }
     }
 
-    drawSection(context: CanvasRenderingContext2D, radiusMin: number, radiusMax: number, angleMin: number, angleMax: number, fill: Fill = Fill.Flat) {
+    drawSection(context: CanvasRenderingContext2D,
+                radiusMin: number, radiusMax: number,
+                angleMin: number, angleMax: number,
+                fill: Fill = Fill.Flat) {
         console.assert(radiusMin < radiusMax, `radiusMax(${radiusMax}) must be greater then radiusMin(${radiusMin})`)
         console.assert(angleMin < angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`)
         const radianMin = angleMin * TAU
