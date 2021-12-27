@@ -1,7 +1,7 @@
 import {PrintMapping, TAU, Terminable, Terminator} from "../lib/common";
 import {Fill, Fills, Movements, RotaryModel, RotaryTrackModel} from "./model";
-import {NumericStepper} from "../controls";
 import {Dom} from "../dom/common";
+import {NumericStepper, NumericStepperInput} from "../dom/controls";
 
 export class RotaryView {
     static create(document: Document, rotary: RotaryModel): RotaryView {
@@ -17,7 +17,8 @@ export class RotaryView {
     constructor(private readonly tracksContainer: Element,
                 private readonly trackTemplate: Element,
                 private readonly rotary: RotaryModel) {
-        this.terminator.with(new NumericStepper(document.querySelector("[data-parameter='start-radius']"), rotary.radiusMin, PrintMapping.NoFloat, 1, "px"))
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"),
+            rotary.radiusMin, PrintMapping.NoFloat, new NumericStepper(rotary.radiusMin, 1), "px"))
 
         rotary.tracks.forEach(track => this.createView(track))
         this.updateViews()
@@ -68,29 +69,29 @@ export class RotaryTrackView implements Terminable {
     static TRANSPARENT = "rgba(255, 255, 255, 0.0)"
 
     private readonly terminator: Terminator = new Terminator()
-    private readonly segments: NumericStepper
-    private readonly width: NumericStepper
-    private readonly widthRatio: NumericStepper
-    private readonly length: NumericStepper
-    private readonly lengthRatio: NumericStepper
-    private readonly phase: NumericStepper
+    private readonly segments: NumericStepperInput
+    private readonly width: NumericStepperInput
+    private readonly widthRatio: NumericStepperInput
+    private readonly length: NumericStepperInput
+    private readonly lengthRatio: NumericStepperInput
+    private readonly phase: NumericStepperInput
     private readonly fill: Terminable
     private readonly movement: Terminable
     private readonly reverse: Terminable
 
     constructor(readonly view: RotaryView, readonly element: HTMLElement, readonly model: RotaryTrackModel) {
-        this.segments = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='segments']"),
-            model.segments, PrintMapping.NoFloat, 1, ""))
-        this.width = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='width']"),
-            model.width, PrintMapping.NoFloat, 1, "px"))
-        this.widthRatio = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='width-ratio']"),
-            model.widthRatio, PrintMapping.UnipolarPercent, 0.01, "%"))
-        this.length = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='length']"),
-            model.length, PrintMapping.UnipolarPercent, 0.01, "%"))
-        this.lengthRatio = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='length-ratio']"),
-            model.lengthRatio, PrintMapping.UnipolarPercent, 0.01, "%"))
-        this.phase = this.terminator.with(new NumericStepper(element.querySelector("fieldset[data-parameter='phase']"),
-            model.phase, PrintMapping.UnipolarPercent, 0.01, "%"))
+        this.segments = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"),
+            model.segments, PrintMapping.NoFloat, new NumericStepper(model.segments, 1), ""))
+        this.width = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"),
+            model.width, PrintMapping.NoFloat, new NumericStepper(model.width, 1), "px"))
+        this.widthRatio = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width-ratio']"),
+            model.widthRatio, PrintMapping.UnipolarPercent, new NumericStepper(model.widthRatio, 0.01), "%"))
+        this.length = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"),
+            model.length, PrintMapping.UnipolarPercent, new NumericStepper(model.length, 0.01), "%"))
+        this.lengthRatio = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"),
+            model.lengthRatio, PrintMapping.UnipolarPercent, new NumericStepper(model.lengthRatio, 0.01), "%"))
+        this.phase = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='phase']"),
+            model.phase, PrintMapping.UnipolarPercent, new NumericStepper(model.phase, 0.01), "%"))
         this.fill = this.terminator.with(Dom.configEnumSelect(element.querySelector("select[data-parameter='fill']"),
             Fills, model.fill))
         this.movement = this.terminator.with(Dom.configEnumSelect(element.querySelector("select[data-parameter='movement']"),
