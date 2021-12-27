@@ -1,7 +1,7 @@
 import {NumericStepper, PrintMapping, TAU, Terminable, Terminator} from "../lib/common";
 import {Fill, Fills, Move, Movements, RotaryModel, RotaryTrackModel} from "./model";
-import {Checkbox, Dom, SelectInput} from "../dom/common";
-import {NumericStepperInput} from "../dom/inputs";
+import {Checkbox, NumericStepperInput, SelectInput} from "../dom/inputs";
+import {Dom} from "../dom/common";
 
 export class RotaryView {
     static create(document: Document, rotary: RotaryModel): RotaryView {
