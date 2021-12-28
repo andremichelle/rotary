@@ -103,7 +103,7 @@ export const randomMovement = (): Move => {
     return array[Math.floor(Math.random() * array.length)][1]
 }
 export const Fills = new Map<string, Fill>(
-    [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Lines", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
+    [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
 export class RotaryTrackModel implements Terminable {
     private readonly terminator: Terminator = new Terminator()
