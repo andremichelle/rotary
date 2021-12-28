@@ -30,6 +30,7 @@ export class RotaryModel implements Terminable {
             trackModel.lengthRatio.set(lengthRatio)
             trackModel.fill.set(fill)
             trackModel.movement.set(randomMovement())
+            trackModel.hue.set(Math.random())
             this.tracks.push(trackModel)
         }
     }
@@ -107,6 +108,9 @@ export const Fills = new Map<string, Fill>(
 export class RotaryTrackModel implements Terminable {
     private readonly terminator: Terminator = new Terminator()
 
+    private readonly gradient: string[] = [] // opaque[0], transparent[1]
+    private gradientNeedsUpdate: boolean = true
+
     readonly segments = this.terminator.with(new Parameter(new LinearInteger(1, 128), 8))
     readonly width = this.terminator.with(new Parameter(new LinearInteger(1, 128), 12))
     readonly widthPadding = this.terminator.with(new Parameter(new LinearInteger(0, 128), 0))
@@ -116,11 +120,36 @@ export class RotaryTrackModel implements Terminable {
     readonly fill = this.terminator.with(new ObservableValue<Fill>(Fill.Flat))
     readonly movement = this.terminator.with(new ObservableValue<Move>(Movements.values().next().value))
     readonly reverse = this.terminator.with(new ObservableValue<boolean>(false))
+    readonly hue = this.terminator.with(new ObservableValue(<number>(0.0)))
+    readonly saturation = this.terminator.with(new ObservableValue(<number>(0.0)))
+    readonly lightness = this.terminator.with(new ObservableValue(<number>(1.0)))
 
     constructor() {
+        this.terminator.with(this.hue.addObserver(() => this.gradientNeedsUpdate = true))
+        this.terminator.with(this.saturation.addObserver(() => this.gradientNeedsUpdate = true))
+        this.terminator.with(this.lightness.addObserver(() => this.gradientNeedsUpdate = true))
+    }
+
+    opaque(): string {
+        if (this.gradientNeedsUpdate) this.updateGradient()
+        return this.gradient[0]
+    }
+
+    transparent(): string {
+        if (this.gradientNeedsUpdate) this.updateGradient()
+        return this.gradient[1]
     }
 
     terminate() {
         this.terminator.terminate()
+    }
+
+    private updateGradient() {
+        const hue = this.hue.get() * 360;
+        const saturation = this.saturation.get() * 100.0;
+        const lightness = this.lightness.get() * 100.0;
+        this.gradient[0] = `hsla(${hue}, ${saturation}%, ${lightness}%, 1.0)`
+        this.gradient[1] = `hsla(${hue}, ${saturation}%, ${lightness}%, 0.0)`
+        this.gradientNeedsUpdate = false
     }
 }

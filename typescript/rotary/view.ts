@@ -21,7 +21,7 @@ export class RotaryView {
             rotary.radiusMin, PrintMapping.NoFloat, new NumericStepper(1), "px"))
 
         rotary.tracks.forEach(track => this.createView(track))
-        this.updateViews()
+        this.updateOrder()
     }
 
     draw(context: CanvasRenderingContext2D, position: number): void {
@@ -37,28 +37,28 @@ export class RotaryView {
         this.map.set(model, new RotaryTrackView(this, this.trackTemplate.cloneNode(true) as HTMLElement, model))
     }
 
-    copyTrack(view: RotaryTrackView) {
+    copyTrack(view: RotaryTrackView): void {
         const index = this.rotary.tracks.indexOf(view.model)
         console.assert(-1 !== index, "could find model")
         this.createView(this.rotary.copyTrack(view.model, index + 1))
-        this.updateViews()
+        this.updateOrder()
     }
 
-    newTrackAfter(view: RotaryTrackView) {
+    newTrackAfter(view: RotaryTrackView): void {
         const index = this.rotary.tracks.indexOf(view.model)
         console.assert(-1 !== index, "could find model")
         this.createView(this.rotary.createTrack(index + 1))
-        this.updateViews()
+        this.updateOrder()
     }
 
-    removeTrack(view: RotaryTrackView) {
+    removeTrack(view: RotaryTrackView): void {
         this.map.delete(view.model)
         this.rotary.removeTrack(view.model)
         view.element.remove()
         view.terminate()
     }
 
-    updateViews() {
+    updateOrder(): void {
         Dom.emptyElement(this.tracksContainer)
         this.rotary.tracks.forEach(track => this.tracksContainer.appendChild(this.map.get(track).element))
     }
@@ -75,9 +75,9 @@ export class RotaryTrackView implements Terminable {
     private readonly length: NumericStepperInput
     private readonly lengthRatio: NumericStepperInput
     private readonly phase: NumericStepperInput
-    private readonly fill: Terminable
-    private readonly movement: Terminable
-    private readonly reverse: Terminable
+    private readonly fill: SelectInput<Fill>
+    private readonly movement: SelectInput<Move>
+    private readonly reverse: Checkbox
 
     constructor(readonly view: RotaryView, readonly element: HTMLElement, readonly model: RotaryTrackModel) {
         this.segments = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"),
@@ -110,10 +110,8 @@ export class RotaryTrackView implements Terminable {
         const phase = this.model.movement.get()(position - Math.floor(position)) * (this.model.reverse.get() ? -1 : 1) + this.model.phase.get()
         const width = this.model.width.get()
         const widthPadding = this.model.widthPadding.get()
-        const thickness = width * 0.5
-        const radiusAverage = radiusMin + (width + widthPadding) * 0.5;
-        const r0 = radiusAverage - thickness
-        const r1 = radiusAverage + thickness
+        const r0 = radiusMin + widthPadding
+        const r1 = radiusMin + widthPadding + width
         for (let i = 0; i < segments; i++) {
             const angleMin = i * scale + phase
             const angleMax = angleMin + scale * this.model.lengthRatio.get()
@@ -130,19 +128,19 @@ export class RotaryTrackView implements Terminable {
         const radianMin = angleMin * TAU
         const radianMax = angleMax * TAU
         if (fill === Fill.Flat) {
-            context.fillStyle = RotaryTrackView.WHITE
+            context.fillStyle = this.model.opaque()
         } else if (fill === Fill.Stroke) {
-            context.strokeStyle = RotaryTrackView.WHITE
+            context.strokeStyle = this.model.opaque()
         } else {
             const gradient: CanvasGradient = context.createConicGradient(radianMin, 0.0, 0.0)
             const offset = Math.min(angleMax - angleMin, 1.0)
             if (fill === Fill.Positive) {
-                gradient.addColorStop(0.0, RotaryTrackView.TRANSPARENT)
-                gradient.addColorStop(offset, RotaryTrackView.WHITE)
-                gradient.addColorStop(offset, RotaryTrackView.TRANSPARENT) // eliminates tiny glitches at the end of the tail
+                gradient.addColorStop(0.0, this.model.transparent())
+                gradient.addColorStop(offset, this.model.opaque())
+                gradient.addColorStop(offset, this.model.transparent()) // eliminates tiny glitches at the end of the tail
             } else if (fill === Fill.Negative) {
-                gradient.addColorStop(0.0, RotaryTrackView.WHITE)
-                gradient.addColorStop(offset, RotaryTrackView.TRANSPARENT)
+                gradient.addColorStop(0.0, this.model.opaque())
+                gradient.addColorStop(offset, this.model.transparent())
             }
             context.fillStyle = gradient
         }
