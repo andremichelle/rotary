@@ -414,7 +414,7 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         var array = Array.from(exports.Movements);
         return array[Math.floor(Math.random() * array.length)][1];
     };
-    exports.Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Lines", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
+    exports.Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
     var RotaryTrackModel = (function () {
         function RotaryTrackModel() {
             var _this = this;
