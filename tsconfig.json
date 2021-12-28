@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "amd",
     "removeComments": true,
-    "outFile": "./main.js",
+    "outFile": "./bin/main.js",
     "baseUrl": "./",
     "sourceMap": true,
     "lib": [
