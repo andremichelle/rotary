@@ -85,7 +85,7 @@ declare module "lib/common" {
         private readonly printer;
         private readonly preUnit;
         private readonly postUnit;
-        static Integer(postUnit: string): PrintMapping<number>;
+        static integer(postUnit: string): PrintMapping<number>;
         static UnipolarPercent: PrintMapping<number>;
         static RGB: PrintMapping<number>;
         constructor(parser: Parser<Y>, printer: Printer<Y>, preUnit?: string, postUnit?: string);

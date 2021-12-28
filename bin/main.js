@@ -178,7 +178,7 @@ define("lib/common", ["require", "exports"], function (require, exports) {
             this.preUnit = preUnit;
             this.postUnit = postUnit;
         }
-        PrintMapping.Integer = function (postUnit) {
+        PrintMapping.integer = function (postUnit) {
             return new PrintMapping(function (text) {
                 var value = parseInt(text, 10);
                 if (isNaN(value))
@@ -755,7 +755,7 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
             this.rotary = rotary;
             this.terminator = new common_4.Terminator();
             this.map = new Map();
-            this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), common_4.PrintMapping.Integer("px"), new common_4.NumericStepper(1))).withValue(rotary.radiusMin);
+            this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), common_4.PrintMapping.integer("px"), new common_4.NumericStepper(1))).withValue(rotary.radiusMin);
             rotary.tracks.forEach(function (track) { return _this.createView(track); });
             this.updateOrder();
         }
@@ -809,9 +809,9 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
             this.element = element;
             this.model = model;
             this.terminator = new common_4.Terminator();
-            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"), common_4.PrintMapping.Integer("px"), common_4.NumericStepper.Integer)).withValue(model.segments);
-            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"), common_4.PrintMapping.Integer("px"), common_4.NumericStepper.Integer)).withValue(model.width);
-            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"), common_4.PrintMapping.Integer("px"), common_4.NumericStepper.Integer)).withValue(model.widthPadding);
+            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer)).withValue(model.segments);
+            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer)).withValue(model.width);
+            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer)).withValue(model.widthPadding);
             this.length = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.length);
             this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.lengthRatio);
             this.phase = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='phase']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.phase);

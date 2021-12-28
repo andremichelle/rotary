@@ -1,3 +1,6 @@
+$SIZE: 19px
+$FONT-FAMILY: 'IBM Plex Sans', sans-serif
+
 html, body
   margin: 0
   padding: 0
@@ -6,9 +9,8 @@ html, body
   color: white
   background-color: black
   font-size: 11px
-  font-family: 'Titillium Web', sans-serif
+  font-family: $FONT-FAMILY
 
-$SIZE: 19px
 
 input[type=text]
   height: $SIZE
@@ -20,7 +22,7 @@ input[type=text]
   font-size: 10px
   text-align: center
   background-color: rgba(black, 0.3)
-  font-family: 'Titillium Web', sans-serif
+  font-family: $FONT-FAMILY
 
   &:focus
     box-shadow: 0 0 0 1px rgba(#276bae, 0.6) inset
@@ -30,12 +32,10 @@ input[type=text]
 
 label.checkbox
   font-size: 12px
-  color: aquamarine
   background-color: rgba(black, 0.3)
   border: none
   outline: none
   white-space: nowrap
-  text-align: center
   appearance: none
   margin: 0
   padding: 0
@@ -65,7 +65,7 @@ label.checkbox
 button
   color: rgba(white, 0.4)
   font-size: 8px
-  font-family: 'Titillium Web', sans-serif
+  font-family: $FONT-FAMILY
   height: $SIZE
   line-height: $SIZE
   min-width: $SIZE
@@ -203,7 +203,7 @@ div.two-columns
     > button
       color: rgba(white, 0.2)
       font-size: 8px
-      font-family: 'Titillium Web', sans-serif
+      font-family: $FONT-FAMILY
       height: 19px
       text-align: center
       appearance: none

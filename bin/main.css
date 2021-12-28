@@ -6,7 +6,7 @@ html, body {
   color: white;
   background-color: black;
   font-size: 11px;
-  font-family: "Titillium Web", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 input[type=text] {
@@ -19,7 +19,7 @@ input[type=text] {
   font-size: 10px;
   text-align: center;
   background-color: rgba(0, 0, 0, 0.3);
-  font-family: "Titillium Web", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 input[type=text]:focus {
   box-shadow: 0 0 0 1px rgba(39, 107, 174, 0.6) inset;
@@ -30,12 +30,10 @@ input[type=text]::selection {
 
 label.checkbox {
   font-size: 12px;
-  color: aquamarine;
   background-color: rgba(0, 0, 0, 0.3);
   border: none;
   outline: none;
   white-space: nowrap;
-  text-align: center;
   appearance: none;
   margin: 0;
   padding: 0;
@@ -66,7 +64,7 @@ label.checkbox input[type=checkbox]:checked + span {
 button {
   color: rgba(255, 255, 255, 0.4);
   font-size: 8px;
-  font-family: "Titillium Web", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
   height: 19px;
   line-height: 19px;
   min-width: 19px;
@@ -207,7 +205,7 @@ div.two-columns > fieldset.stepper {
 div.two-columns > fieldset.stepper > button {
   color: rgba(255, 255, 255, 0.2);
   font-size: 8px;
-  font-family: "Titillium Web", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
   height: 19px;
   text-align: center;
   appearance: none;

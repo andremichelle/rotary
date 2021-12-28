@@ -215,7 +215,7 @@ export type Parser<Y> = (text: string) => Y | null
 export type Printer<Y> = (value: Y) => string
 
 export class PrintMapping<Y> {
-    static Integer(postUnit: string): PrintMapping<number> {
+    static integer(postUnit: string): PrintMapping<number> {
         return new PrintMapping(text => {
             const value = parseInt(text, 10)
             if (isNaN(value)) return null

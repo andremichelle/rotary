@@ -18,7 +18,7 @@ export class RotaryView {
                 private readonly trackTemplate: Element,
                 private readonly rotary: RotaryModel) {
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"),
-            PrintMapping.Integer("px"), new NumericStepper(1))).withValue(rotary.radiusMin)
+            PrintMapping.integer("px"), new NumericStepper(1))).withValue(rotary.radiusMin)
 
         rotary.tracks.forEach(track => this.createView(track))
         this.updateOrder()
@@ -82,11 +82,11 @@ export class RotaryTrackView implements Terminable {
 
     constructor(readonly view: RotaryView, readonly element: HTMLElement, readonly model: RotaryTrackModel) {
         this.segments = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"),
-            PrintMapping.Integer("px"), NumericStepper.Integer)).withValue(model.segments)
+            PrintMapping.integer("px"), NumericStepper.Integer)).withValue(model.segments)
         this.width = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"),
-            PrintMapping.Integer("px"), NumericStepper.Integer)).withValue(model.width)
+            PrintMapping.integer("px"), NumericStepper.Integer)).withValue(model.width)
         this.widthPadding = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"),
-            PrintMapping.Integer("px"), NumericStepper.Integer)).withValue(model.widthPadding)
+            PrintMapping.integer("px"), NumericStepper.Integer)).withValue(model.widthPadding)
         this.length = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"),
             PrintMapping.UnipolarPercent, NumericStepper.FloatPercent)).withValue(model.length)
         this.lengthRatio = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"),
