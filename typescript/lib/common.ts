@@ -4,6 +4,13 @@ export interface Terminable {
     terminate()
 }
 
+export class TerminableVoid implements Terminable {
+    static Instance = new TerminableVoid()
+
+    terminate() {
+    }
+}
+
 export class Terminator implements Terminable {
     private readonly terminables: Terminable[] = []
 
@@ -248,14 +255,40 @@ export class PrintMapping<Y> {
     }
 }
 
-export interface Value<T> extends Observable<Value<T>> {
+export interface Value<T> {
     set(value: T): boolean
 
     get(): T
 }
 
-export class ObservableValue<T> implements Value<T> {
-    private readonly observable = new ObservableImpl<ObservableValue<T>>()
+export interface ObservableValue<T> extends Value<T>, Observable<ObservableValue<T>> {
+}
+
+export class ObservableValueVoid implements ObservableValue<any> {
+    static Instance = new ObservableValueVoid()
+
+    addObserver(observer: Observer<ObservableValue<any>>): Terminable {
+        return TerminableVoid.Instance
+    }
+
+    get(): any {
+        return undefined
+    }
+
+    removeObserver(observer: Observer<ObservableValue<any>>): boolean {
+        return false
+    }
+
+    set(value: any): boolean {
+        return true
+    }
+
+    terminate() {
+    }
+}
+
+export class ObservableValueImpl<T> implements ObservableValue<T> {
+    private readonly observable = new ObservableImpl<ObservableValueImpl<T>>()
 
     constructor(private value: T) {
     }
@@ -273,11 +306,11 @@ export class ObservableValue<T> implements Value<T> {
         return true;
     }
 
-    addObserver(observer: Observer<ObservableValue<T>>): Terminable {
+    addObserver(observer: Observer<ObservableValueImpl<T>>): Terminable {
         return this.observable.addObserver(observer)
     }
 
-    removeObserver(observer: Observer<ObservableValue<T>>): boolean {
+    removeObserver(observer: Observer<ObservableValueImpl<T>>): boolean {
         return this.observable.removeObserver(observer)
     }
 
@@ -287,9 +320,9 @@ export class ObservableValue<T> implements Value<T> {
 }
 
 export interface Stepper {
-    decrease(value: Value<number>): void
+    decrease(value: ObservableValue<number>): void
 
-    increase(value: Value<number>): void
+    increase(value: ObservableValue<number>): void
 }
 
 export class NumericStepper implements Stepper {
@@ -299,16 +332,16 @@ export class NumericStepper implements Stepper {
     constructor(private readonly step: number = 1) {
     }
 
-    decrease(value: Value<number>): void {
+    decrease(value: ObservableValue<number>): void {
         value.set(Math.round((value.get() - this.step) / this.step) * this.step)
     }
 
-    increase(value: Value<number>): void {
+    increase(value: ObservableValue<number>): void {
         value.set(Math.round((value.get() + this.step) / this.step) * this.step)
     }
 }
 
-export class Parameter implements Value<number> {
+export class Parameter implements ObservableValue<number> {
     private readonly observable = new ObservableImpl<Parameter>()
 
     constructor(readonly mapping: ValueMapping<number> = Linear.Identity,

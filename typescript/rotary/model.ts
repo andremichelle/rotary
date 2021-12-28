@@ -1,4 +1,4 @@
-import {Linear, LinearInteger, ObservableValue, Parameter, Terminable, Terminator} from "../lib/common"
+import {Linear, LinearInteger, ObservableValueImpl, Parameter, Terminable, Terminator} from "../lib/common"
 
 export class RotaryModel implements Terminable {
     private readonly terminator: Terminator = new Terminator()
@@ -115,10 +115,10 @@ export class RotaryTrackModel implements Terminable {
     readonly length = this.terminator.with(new Parameter(Linear.Identity, 1.0))
     readonly lengthRatio = this.terminator.with(new Parameter(Linear.Identity, 0.5))
     readonly phase = this.terminator.with(new Parameter(Linear.Identity, 0.0))
-    readonly fill = this.terminator.with(new ObservableValue<Fill>(Fill.Flat))
-    readonly movement = this.terminator.with(new ObservableValue<Move>(Movements.values().next().value))
-    readonly reverse = this.terminator.with(new ObservableValue<boolean>(false))
-    readonly rgb = this.terminator.with(new ObservableValue(<number>(0xFFFFFF)))
+    readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
+    readonly movement = this.terminator.with(new ObservableValueImpl<Move>(Movements.values().next().value))
+    readonly reverse = this.terminator.with(new ObservableValueImpl<boolean>(false))
+    readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
 
     constructor() {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))

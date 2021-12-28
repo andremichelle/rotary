@@ -1,42 +1,70 @@
 import {Dom} from "./common";
-import {NumericStepper, ObservableValue, Parameter, PrintMapping, Terminable, Terminator} from "../lib/common"
+import {NumericStepper, ObservableValue, ObservableValueVoid, PrintMapping, Terminable, Terminator} from "../lib/common"
 
 export class Checkbox implements Terminable {
     private readonly terminator = new Terminator()
+    private readonly observer = () => this.update();
+    private value: ObservableValue<boolean> = ObservableValueVoid.Instance
 
-    constructor(private readonly element: HTMLInputElement, private readonly value: ObservableValue<boolean>) {
+    constructor(private readonly element: HTMLInputElement) {
         this.init()
     }
 
+    withValue(value: ObservableValue<boolean>): Checkbox {
+        this.value.removeObserver(this.observer)
+        this.value = value
+        this.value.addObserver(this.observer)
+        this.update()
+        return this
+    }
+
     init(): void {
+        this.terminator.with(Dom.bindEventListener(this.element, "change",
+            () => this.value.set(this.element.checked)))
+    }
+
+    update() {
         this.element.checked = this.value.get()
-        this.terminator.with(Dom.bindEventListener(this.element, "change", () => this.value.set(this.element.checked)))
-        this.terminator.with(this.value.addObserver(value => this.element.checked = value.get()))
     }
 
     terminate() {
+        this.value.removeObserver(this.observer)
         this.terminator.terminate()
     }
 }
 
 export class SelectInput<T> implements Terminable {
-    private readonly options = new Map<T, HTMLOptionElement>()
     private readonly terminator = new Terminator()
+    private value: ObservableValue<T> = ObservableValueVoid.Instance
+    private observer = () => this.update()
+
+    private readonly options = new Map<T, HTMLOptionElement>()
     private readonly values: T[] = []
 
+
     constructor(private readonly select: HTMLSelectElement,
-                private readonly map: Map<string, T>,
-                private readonly value: ObservableValue<T>) {
-        this.terminator.with(Dom.bindEventListener(select, "change", () => {
-            value.set(this.values[select.selectedIndex])
-        }))
-        this.terminator.with(value.addObserver(value => {
-            this.options.get(value.get()).selected = true
-        }))
-        this.populate()
+                private readonly map: Map<string, T>) {
+        this.connect()
     }
 
-    private populate() {
+    withValue(value: ObservableValue<T>): SelectInput<T> {
+        this.value.removeObserver(this.observer)
+        this.value = value
+        this.value.addObserver(this.observer)
+        this.update()
+        return this
+    }
+
+    terminate() {
+        this.value.removeObserver(this.observer)
+        this.terminator.terminate()
+    }
+
+    private update() {
+        return this.options.get(this.value.get()).selected = true;
+    }
+
+    private connect() {
         this.map.forEach((some: T, key: string) => {
             const optionElement: HTMLOptionElement = document.createElement("OPTION") as HTMLOptionElement
             optionElement.textContent = key
@@ -45,36 +73,42 @@ export class SelectInput<T> implements Terminable {
             this.values.push(some)
             this.options.set(some, optionElement)
         })
-    }
-
-    terminate() {
-        this.terminator.terminate()
+        this.terminator.with(Dom.bindEventListener(this.select, "change",
+            () => this.value.set(this.values[this.select.selectedIndex])))
     }
 }
 
 export class NumericStepperInput implements Terminable {
+    private readonly terminator: Terminator = new Terminator()
+    private readonly observer = () => this.update()
+    private value: ObservableValue<number> = ObservableValueVoid.Instance
+
     private readonly decreaseButton: HTMLButtonElement
     private readonly increaseButton: HTMLButtonElement
     private readonly input: HTMLInputElement
-    private readonly terminator: Terminator = new Terminator()
 
     constructor(private readonly parent: HTMLElement,
-                private readonly parameter: Parameter,
                 private readonly printMapping: PrintMapping<number>,
                 private readonly stepper: NumericStepper) {
         const buttons = this.parent.querySelectorAll("button")
         this.decreaseButton = buttons.item(0)
         this.increaseButton = buttons.item(1)
         this.input = this.parent.querySelector("input[type=text]")
-
         this.connect()
+    }
+
+
+    withValue(value: ObservableValue<number>): NumericStepperInput {
+        this.value.removeObserver(this.observer)
+        this.value = value
+        this.value.addObserver(this.observer)
         this.update()
+        return this
     }
 
     connect() {
-        this.terminator.with(this.parameter.addObserver(() => this.update()))
-        this.terminator.with(Dom.configRepeatButton(this.decreaseButton, () => this.stepper.decrease(this.parameter)))
-        this.terminator.with(Dom.configRepeatButton(this.increaseButton, () => this.stepper.increase(this.parameter)))
+        this.terminator.with(Dom.configRepeatButton(this.decreaseButton, () => this.stepper.decrease(this.value)))
+        this.terminator.with(Dom.configRepeatButton(this.increaseButton, () => this.stepper.increase(this.value)))
         this.terminator.with(Dom.bindEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
             const blur = (() => {
                 const lastFocus: HTMLElement = focusEvent.relatedTarget as HTMLElement
@@ -91,13 +125,13 @@ export class NumericStepperInput implements Terminable {
                 switch (event.key) {
                     case "ArrowUp": {
                         event.preventDefault()
-                        this.stepper.increase(this.parameter)
+                        this.stepper.increase(this.value)
                         this.input.select()
                         break
                     }
                     case "ArrowDown": {
                         event.preventDefault()
-                        this.stepper.decrease(this.parameter)
+                        this.stepper.decrease(this.value)
                         this.input.select()
                         break
                     }
@@ -110,7 +144,7 @@ export class NumericStepperInput implements Terminable {
                     case "Enter": {
                         event.preventDefault()
                         const number = this.parse()
-                        if (null === number || !this.parameter.set(number)) {
+                        if (null === number || !this.value.set(number)) {
                             this.update()
                         }
                         blur()
@@ -131,26 +165,35 @@ export class NumericStepperInput implements Terminable {
     }
 
     update() {
-        this.input.value = this.printMapping.print(this.parameter.get())
+        this.input.value = this.printMapping.print(this.value.get())
     }
 
     terminate() {
         this.terminator.terminate()
+        this.value.removeObserver(this.observer)
     }
 }
 
 export class NumericInput implements Terminable {
     private readonly terminator: Terminator = new Terminator()
+    private readonly observer = () => this.update()
+    private value: ObservableValue<number> = ObservableValueVoid.Instance
 
     constructor(private readonly input: HTMLInputElement,
-                private readonly value: ObservableValue<number>,
                 private readonly printMapping: PrintMapping<number>) {
         this.connect()
-        this.update()
     }
 
+    withValue(value: ObservableValue<number>): NumericInput {
+        this.value.removeObserver(this.observer)
+        this.value = value
+        this.value.addObserver(this.observer)
+        this.update()
+        return this
+    }
+
+
     connect() {
-        this.terminator.with(this.value.addObserver(() => this.update()))
         this.terminator.with(Dom.bindEventListener(this.input, "focusin", (focusEvent: FocusEvent) => {
             const blur = (() => {
                 const lastFocus: HTMLElement = focusEvent.relatedTarget as HTMLElement
@@ -200,5 +243,6 @@ export class NumericInput implements Terminable {
 
     terminate() {
         this.terminator.terminate()
+        this.value.removeObserver(this.observer)
     }
 }

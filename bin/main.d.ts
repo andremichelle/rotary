@@ -3,6 +3,10 @@ declare module "lib/common" {
     export interface Terminable {
         terminate(): any;
     }
+    export class TerminableVoid implements Terminable {
+        static Instance: TerminableVoid;
+        terminate(): void;
+    }
     export class Terminator implements Terminable {
         private readonly terminables;
         with<T extends Terminable>(terminable: T): T;
@@ -88,33 +92,43 @@ declare module "lib/common" {
         parse(text: string): Y | null;
         print(value: Y): string;
     }
-    export interface Value<T> extends Observable<Value<T>> {
+    export interface Value<T> {
         set(value: T): boolean;
         get(): T;
     }
-    export class ObservableValue<T> implements Value<T> {
+    export interface ObservableValue<T> extends Value<T>, Observable<ObservableValue<T>> {
+    }
+    export class ObservableValueVoid implements ObservableValue<any> {
+        static Instance: ObservableValueVoid;
+        addObserver(observer: Observer<ObservableValue<any>>): Terminable;
+        get(): any;
+        removeObserver(observer: Observer<ObservableValue<any>>): boolean;
+        set(value: any): boolean;
+        terminate(): void;
+    }
+    export class ObservableValueImpl<T> implements ObservableValue<T> {
         private value;
         private readonly observable;
         constructor(value: T);
         get(): T;
         set(value: T): boolean;
-        addObserver(observer: Observer<ObservableValue<T>>): Terminable;
-        removeObserver(observer: Observer<ObservableValue<T>>): boolean;
+        addObserver(observer: Observer<ObservableValueImpl<T>>): Terminable;
+        removeObserver(observer: Observer<ObservableValueImpl<T>>): boolean;
         terminate(): void;
     }
     export interface Stepper {
-        decrease(value: Value<number>): void;
-        increase(value: Value<number>): void;
+        decrease(value: ObservableValue<number>): void;
+        increase(value: ObservableValue<number>): void;
     }
     export class NumericStepper implements Stepper {
         private readonly step;
         static Integer: NumericStepper;
         static FloatPercent: NumericStepper;
         constructor(step?: number);
-        decrease(value: Value<number>): void;
-        increase(value: Value<number>): void;
+        decrease(value: ObservableValue<number>): void;
+        increase(value: ObservableValue<number>): void;
     }
-    export class Parameter implements Value<number> {
+    export class Parameter implements ObservableValue<number> {
         readonly mapping: ValueMapping<number>;
         private value;
         private readonly observable;
@@ -128,7 +142,7 @@ declare module "lib/common" {
     }
 }
 declare module "rotary/model" {
-    import { ObservableValue, Parameter, Terminable } from "lib/common";
+    import { ObservableValueImpl, Parameter, Terminable } from "lib/common";
     export class RotaryModel implements Terminable {
         private readonly terminator;
         readonly radiusMin: Parameter;
@@ -160,10 +174,10 @@ declare module "rotary/model" {
         readonly length: Parameter;
         readonly lengthRatio: Parameter;
         readonly phase: Parameter;
-        readonly fill: ObservableValue<Fill>;
-        readonly movement: ObservableValue<Move>;
-        readonly reverse: ObservableValue<boolean>;
-        readonly rgb: ObservableValue<number>;
+        readonly fill: ObservableValueImpl<Fill>;
+        readonly movement: ObservableValueImpl<Move>;
+        readonly reverse: ObservableValueImpl<boolean>;
+        readonly rgb: ObservableValueImpl<number>;
         constructor();
         opaque(): string;
         transparent(): string;
@@ -181,36 +195,44 @@ declare module "dom/common" {
     }
 }
 declare module "dom/inputs" {
-    import { NumericStepper, ObservableValue, Parameter, PrintMapping, Terminable } from "lib/common";
+    import { NumericStepper, ObservableValue, PrintMapping, Terminable } from "lib/common";
     export class Checkbox implements Terminable {
         private readonly element;
-        private readonly value;
         private readonly terminator;
-        constructor(element: HTMLInputElement, value: ObservableValue<boolean>);
+        private readonly observer;
+        private value;
+        constructor(element: HTMLInputElement);
+        withValue(value: ObservableValue<boolean>): Checkbox;
         init(): void;
+        update(): void;
         terminate(): void;
     }
     export class SelectInput<T> implements Terminable {
         private readonly select;
         private readonly map;
-        private readonly value;
-        private readonly options;
         private readonly terminator;
+        private value;
+        private observer;
+        private readonly options;
         private readonly values;
-        constructor(select: HTMLSelectElement, map: Map<string, T>, value: ObservableValue<T>);
-        private populate;
+        constructor(select: HTMLSelectElement, map: Map<string, T>);
+        withValue(value: ObservableValue<T>): SelectInput<T>;
         terminate(): void;
+        private update;
+        private connect;
     }
     export class NumericStepperInput implements Terminable {
         private readonly parent;
-        private readonly parameter;
         private readonly printMapping;
         private readonly stepper;
+        private readonly terminator;
+        private readonly observer;
+        private value;
         private readonly decreaseButton;
         private readonly increaseButton;
         private readonly input;
-        private readonly terminator;
-        constructor(parent: HTMLElement, parameter: Parameter, printMapping: PrintMapping<number>, stepper: NumericStepper);
+        constructor(parent: HTMLElement, printMapping: PrintMapping<number>, stepper: NumericStepper);
+        withValue(value: ObservableValue<number>): NumericStepperInput;
         connect(): void;
         parse(): number | null;
         update(): void;
@@ -218,10 +240,12 @@ declare module "dom/inputs" {
     }
     export class NumericInput implements Terminable {
         private readonly input;
-        private readonly value;
         private readonly printMapping;
         private readonly terminator;
-        constructor(input: HTMLInputElement, value: ObservableValue<number>, printMapping: PrintMapping<number>);
+        private readonly observer;
+        private value;
+        constructor(input: HTMLInputElement, printMapping: PrintMapping<number>);
+        withValue(value: ObservableValue<number>): NumericInput;
         connect(): void;
         parse(): number | null;
         update(): void;

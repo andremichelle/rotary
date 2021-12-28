@@ -228,7 +228,7 @@ define("lib/common", ["require", "exports"], function (require, exports) {
         };
         return ObservableValue;
     }());
-    exports.ObservableValue = ObservableValue;
+    exports.ObservableValueImpl = ObservableValue;
     var NumericStepper = (function () {
         function NumericStepper(step) {
             if (step === void 0) { step = 1; }

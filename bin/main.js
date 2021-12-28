@@ -2,6 +2,15 @@ define("lib/common", ["require", "exports"], function (require, exports) {
     "use strict";
     exports.__esModule = true;
     exports.TAU = Math.PI * 2.0;
+    var TerminableVoid = (function () {
+        function TerminableVoid() {
+        }
+        TerminableVoid.prototype.terminate = function () {
+        };
+        TerminableVoid.Instance = new TerminableVoid();
+        return TerminableVoid;
+    }());
+    exports.TerminableVoid = TerminableVoid;
     var Terminator = (function () {
         function Terminator() {
             this.terminables = [];
@@ -203,15 +212,36 @@ define("lib/common", ["require", "exports"], function (require, exports) {
         return PrintMapping;
     }());
     exports.PrintMapping = PrintMapping;
-    var ObservableValue = (function () {
-        function ObservableValue(value) {
+    var ObservableValueVoid = (function () {
+        function ObservableValueVoid() {
+        }
+        ObservableValueVoid.prototype.addObserver = function (observer) {
+            return TerminableVoid.Instance;
+        };
+        ObservableValueVoid.prototype.get = function () {
+            return undefined;
+        };
+        ObservableValueVoid.prototype.removeObserver = function (observer) {
+            return false;
+        };
+        ObservableValueVoid.prototype.set = function (value) {
+            return true;
+        };
+        ObservableValueVoid.prototype.terminate = function () {
+        };
+        ObservableValueVoid.Instance = new ObservableValueVoid();
+        return ObservableValueVoid;
+    }());
+    exports.ObservableValueVoid = ObservableValueVoid;
+    var ObservableValueImpl = (function () {
+        function ObservableValueImpl(value) {
             this.value = value;
             this.observable = new ObservableImpl();
         }
-        ObservableValue.prototype.get = function () {
+        ObservableValueImpl.prototype.get = function () {
             return this.value;
         };
-        ObservableValue.prototype.set = function (value) {
+        ObservableValueImpl.prototype.set = function (value) {
             if (this.value === value) {
                 return false;
             }
@@ -219,18 +249,18 @@ define("lib/common", ["require", "exports"], function (require, exports) {
             this.observable.notify(this);
             return true;
         };
-        ObservableValue.prototype.addObserver = function (observer) {
+        ObservableValueImpl.prototype.addObserver = function (observer) {
             return this.observable.addObserver(observer);
         };
-        ObservableValue.prototype.removeObserver = function (observer) {
+        ObservableValueImpl.prototype.removeObserver = function (observer) {
             return this.observable.removeObserver(observer);
         };
-        ObservableValue.prototype.terminate = function () {
+        ObservableValueImpl.prototype.terminate = function () {
             this.observable.terminate();
         };
-        return ObservableValue;
+        return ObservableValueImpl;
     }());
-    exports.ObservableValue = ObservableValue;
+    exports.ObservableValueImpl = ObservableValueImpl;
     var NumericStepper = (function () {
         function NumericStepper(step) {
             if (step === void 0) { step = 1; }
@@ -394,10 +424,10 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             this.length = this.terminator["with"](new common_1.Parameter(common_1.Linear.Identity, 1.0));
             this.lengthRatio = this.terminator["with"](new common_1.Parameter(common_1.Linear.Identity, 0.5));
             this.phase = this.terminator["with"](new common_1.Parameter(common_1.Linear.Identity, 0.0));
-            this.fill = this.terminator["with"](new common_1.ObservableValue(Fill.Flat));
-            this.movement = this.terminator["with"](new common_1.ObservableValue(exports.Movements.values().next().value));
-            this.reverse = this.terminator["with"](new common_1.ObservableValue(false));
-            this.rgb = this.terminator["with"](new common_1.ObservableValue((0xFFFFFF)));
+            this.fill = this.terminator["with"](new common_1.ObservableValueImpl(Fill.Flat));
+            this.movement = this.terminator["with"](new common_1.ObservableValueImpl(exports.Movements.values().next().value));
+            this.reverse = this.terminator["with"](new common_1.ObservableValueImpl(false));
+            this.rgb = this.terminator["with"](new common_1.ObservableValueImpl((0xFFFFFF)));
             this.terminator["with"](this.rgb.addObserver(function () { return _this.updateGradient(); }));
             this.updateGradient();
         }
@@ -478,42 +508,62 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
     "use strict";
     exports.__esModule = true;
     var Checkbox = (function () {
-        function Checkbox(element, value) {
+        function Checkbox(element) {
+            var _this = this;
             this.element = element;
-            this.value = value;
             this.terminator = new common_3.Terminator();
+            this.observer = function () { return _this.update(); };
+            this.value = common_3.ObservableValueVoid.Instance;
             this.init();
         }
+        Checkbox.prototype.withValue = function (value) {
+            this.value.removeObserver(this.observer);
+            this.value = value;
+            this.value.addObserver(this.observer);
+            this.update();
+            return this;
+        };
         Checkbox.prototype.init = function () {
             var _this = this;
-            this.element.checked = this.value.get();
             this.terminator["with"](common_2.Dom.bindEventListener(this.element, "change", function () { return _this.value.set(_this.element.checked); }));
-            this.terminator["with"](this.value.addObserver(function (value) { return _this.element.checked = value.get(); }));
+        };
+        Checkbox.prototype.update = function () {
+            this.element.checked = this.value.get();
         };
         Checkbox.prototype.terminate = function () {
+            this.value.removeObserver(this.observer);
             this.terminator.terminate();
         };
         return Checkbox;
     }());
     exports.Checkbox = Checkbox;
     var SelectInput = (function () {
-        function SelectInput(select, map, value) {
+        function SelectInput(select, map) {
             var _this = this;
             this.select = select;
             this.map = map;
-            this.value = value;
-            this.options = new Map();
             this.terminator = new common_3.Terminator();
+            this.value = common_3.ObservableValueVoid.Instance;
+            this.observer = function () { return _this.update(); };
+            this.options = new Map();
             this.values = [];
-            this.terminator["with"](common_2.Dom.bindEventListener(select, "change", function () {
-                value.set(_this.values[select.selectedIndex]);
-            }));
-            this.terminator["with"](value.addObserver(function (value) {
-                _this.options.get(value.get()).selected = true;
-            }));
-            this.populate();
+            this.connect();
         }
-        SelectInput.prototype.populate = function () {
+        SelectInput.prototype.withValue = function (value) {
+            this.value.removeObserver(this.observer);
+            this.value = value;
+            this.value.addObserver(this.observer);
+            this.update();
+            return this;
+        };
+        SelectInput.prototype.terminate = function () {
+            this.value.removeObserver(this.observer);
+            this.terminator.terminate();
+        };
+        SelectInput.prototype.update = function () {
+            return this.options.get(this.value.get()).selected = true;
+        };
+        SelectInput.prototype.connect = function () {
             var _this = this;
             this.map.forEach(function (some, key) {
                 var optionElement = document.createElement("OPTION");
@@ -523,32 +573,37 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
                 _this.values.push(some);
                 _this.options.set(some, optionElement);
             });
-        };
-        SelectInput.prototype.terminate = function () {
-            this.terminator.terminate();
+            this.terminator["with"](common_2.Dom.bindEventListener(this.select, "change", function () { return _this.value.set(_this.values[_this.select.selectedIndex]); }));
         };
         return SelectInput;
     }());
     exports.SelectInput = SelectInput;
     var NumericStepperInput = (function () {
-        function NumericStepperInput(parent, parameter, printMapping, stepper) {
+        function NumericStepperInput(parent, printMapping, stepper) {
+            var _this = this;
             this.parent = parent;
-            this.parameter = parameter;
             this.printMapping = printMapping;
             this.stepper = stepper;
             this.terminator = new common_3.Terminator();
+            this.observer = function () { return _this.update(); };
+            this.value = common_3.ObservableValueVoid.Instance;
             var buttons = this.parent.querySelectorAll("button");
             this.decreaseButton = buttons.item(0);
             this.increaseButton = buttons.item(1);
             this.input = this.parent.querySelector("input[type=text]");
             this.connect();
-            this.update();
         }
+        NumericStepperInput.prototype.withValue = function (value) {
+            this.value.removeObserver(this.observer);
+            this.value = value;
+            this.value.addObserver(this.observer);
+            this.update();
+            return this;
+        };
         NumericStepperInput.prototype.connect = function () {
             var _this = this;
-            this.terminator["with"](this.parameter.addObserver(function () { return _this.update(); }));
-            this.terminator["with"](common_2.Dom.configRepeatButton(this.decreaseButton, function () { return _this.stepper.decrease(_this.parameter); }));
-            this.terminator["with"](common_2.Dom.configRepeatButton(this.increaseButton, function () { return _this.stepper.increase(_this.parameter); }));
+            this.terminator["with"](common_2.Dom.configRepeatButton(this.decreaseButton, function () { return _this.stepper.decrease(_this.value); }));
+            this.terminator["with"](common_2.Dom.configRepeatButton(this.increaseButton, function () { return _this.stepper.increase(_this.value); }));
             this.terminator["with"](common_2.Dom.bindEventListener(this.input, "focusin", function (focusEvent) {
                 var blur = (function () {
                     var lastFocus = focusEvent.relatedTarget;
@@ -566,13 +621,13 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
                     switch (event.key) {
                         case "ArrowUp": {
                             event.preventDefault();
-                            _this.stepper.increase(_this.parameter);
+                            _this.stepper.increase(_this.value);
                             _this.input.select();
                             break;
                         }
                         case "ArrowDown": {
                             event.preventDefault();
-                            _this.stepper.decrease(_this.parameter);
+                            _this.stepper.decrease(_this.value);
                             _this.input.select();
                             break;
                         }
@@ -585,7 +640,7 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
                         case "Enter": {
                             event.preventDefault();
                             var number = _this.parse();
-                            if (null === number || !_this.parameter.set(number)) {
+                            if (null === number || !_this.value.set(number)) {
                                 _this.update();
                             }
                             blur();
@@ -606,26 +661,34 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             return this.printMapping.parse(this.input.value);
         };
         NumericStepperInput.prototype.update = function () {
-            this.input.value = this.printMapping.print(this.parameter.get());
+            this.input.value = this.printMapping.print(this.value.get());
         };
         NumericStepperInput.prototype.terminate = function () {
             this.terminator.terminate();
+            this.value.removeObserver(this.observer);
         };
         return NumericStepperInput;
     }());
     exports.NumericStepperInput = NumericStepperInput;
     var NumericInput = (function () {
-        function NumericInput(input, value, printMapping) {
+        function NumericInput(input, printMapping) {
+            var _this = this;
             this.input = input;
-            this.value = value;
             this.printMapping = printMapping;
             this.terminator = new common_3.Terminator();
+            this.observer = function () { return _this.update(); };
+            this.value = common_3.ObservableValueVoid.Instance;
             this.connect();
-            this.update();
         }
+        NumericInput.prototype.withValue = function (value) {
+            this.value.removeObserver(this.observer);
+            this.value = value;
+            this.value.addObserver(this.observer);
+            this.update();
+            return this;
+        };
         NumericInput.prototype.connect = function () {
             var _this = this;
-            this.terminator["with"](this.value.addObserver(function () { return _this.update(); }));
             this.terminator["with"](common_2.Dom.bindEventListener(this.input, "focusin", function (focusEvent) {
                 var blur = (function () {
                     var lastFocus = focusEvent.relatedTarget;
@@ -675,6 +738,7 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
         };
         NumericInput.prototype.terminate = function () {
             this.terminator.terminate();
+            this.value.removeObserver(this.observer);
         };
         return NumericInput;
     }());
@@ -691,7 +755,7 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
             this.rotary = rotary;
             this.terminator = new common_4.Terminator();
             this.map = new Map();
-            this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), rotary.radiusMin, common_4.PrintMapping.Integer("px"), new common_4.NumericStepper(1)));
+            this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), common_4.PrintMapping.Integer("px"), new common_4.NumericStepper(1))).withValue(rotary.radiusMin);
             rotary.tracks.forEach(function (track) { return _this.createView(track); });
             this.updateOrder();
         }
@@ -745,16 +809,16 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
             this.element = element;
             this.model = model;
             this.terminator = new common_4.Terminator();
-            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"), model.segments, common_4.PrintMapping.Integer("px"), common_4.NumericStepper.Integer));
-            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"), model.width, common_4.PrintMapping.Integer("px"), common_4.NumericStepper.Integer));
-            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"), model.widthPadding, common_4.PrintMapping.Integer("px"), common_4.NumericStepper.Integer));
-            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"), model.length, common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent));
-            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"), model.lengthRatio, common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent));
-            this.phase = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='phase']"), model.phase, common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent));
-            this.fill = this.terminator["with"](new inputs_1.SelectInput(element.querySelector("select[data-parameter='fill']"), model_1.Fills, model.fill));
-            this.movement = this.terminator["with"](new inputs_1.SelectInput(element.querySelector("select[data-parameter='movement']"), model_1.Movements, model.movement));
-            this.reverse = this.terminator["with"](new inputs_1.Checkbox(element.querySelector("input[data-parameter='reverse']"), model.reverse));
-            this.rgb = this.terminator["with"](new inputs_1.NumericInput(element.querySelector("input[data-parameter='rgb']"), model.rgb, common_4.PrintMapping.RGB));
+            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"), common_4.PrintMapping.Integer("px"), common_4.NumericStepper.Integer)).withValue(model.segments);
+            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"), common_4.PrintMapping.Integer("px"), common_4.NumericStepper.Integer)).withValue(model.width);
+            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"), common_4.PrintMapping.Integer("px"), common_4.NumericStepper.Integer)).withValue(model.widthPadding);
+            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.length);
+            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.lengthRatio);
+            this.phase = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='phase']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.phase);
+            this.fill = this.terminator["with"](new inputs_1.SelectInput(element.querySelector("select[data-parameter='fill']"), model_1.Fills)).withValue(model.fill);
+            this.movement = this.terminator["with"](new inputs_1.SelectInput(element.querySelector("select[data-parameter='movement']"), model_1.Movements)).withValue(model.movement);
+            this.reverse = this.terminator["with"](new inputs_1.Checkbox(element.querySelector("input[data-parameter='reverse']"))).withValue(model.reverse);
+            this.rgb = this.terminator["with"](new inputs_1.NumericInput(element.querySelector("input[data-parameter='rgb']"), common_4.PrintMapping.RGB)).withValue(model.rgb);
             var removeButton = element.querySelector("button[data-action='remove']");
             removeButton.onclick = function () { return view.removeTrack(_this); };
             var newButton = element.querySelector("button[data-action='new']");
