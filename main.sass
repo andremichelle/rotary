@@ -1,5 +1,5 @@
-$SIZE: 19px
-$FONT-FAMILY: 'IBM Plex Sans', sans-serif
+@import sass/common
+@import sass/input
 
 html, body
   margin: 0
@@ -11,84 +11,8 @@ html, body
   font-size: 11px
   font-family: $FONT-FAMILY
 
-
-input[type=text]
-  height: $SIZE
-  color: rgba(white, 0.7)
-  border: none
-  outline: none
-  margin: 0
-  padding: 0
-  font-size: 10px
-  text-align: center
-  background-color: rgba(black, 0.3)
-  font-family: $FONT-FAMILY
-
-  &:focus
-    box-shadow: 0 0 0 1px rgba(#276bae, 0.6) inset
-
-  &::selection
-    background-color: #276bae
-
-label.checkbox
-  font-size: 12px
-  background-color: rgba(black, 0.3)
-  border: none
-  outline: none
-  white-space: nowrap
-  appearance: none
-  margin: 0
-  padding: 0
-  max-height: 15px
-  width: 30px
-  border-radius: 19px !important
-  position: relative
-
-  & span
-    top: 3px
-    left: 3px
-    right: unset
-    width: 9px
-    height: 9px
-    border-radius: 11px
-    position: absolute
-    background-color: rgba(white, 0.4)
-
-  input[type=checkbox]
-    appearance: none
-    display: none
-
-    &:checked + span
-      left: unset
-      right: 3px
-
-button
-  color: rgba(white, 0.4)
-  font-size: 8px
-  font-family: $FONT-FAMILY
-  height: $SIZE
-  line-height: $SIZE
-  min-width: $SIZE
-  border-radius: 2px
-  text-align: center
-  appearance: none
-  padding: 0
-  border: none
-  outline: none
-  background-color: rgba(black, 0.3)
-  cursor: pointer
-
-  &:hover
-    color: rgba(white, 0.6)
-
-  &:active
-    color: rgba(white, 1.0)
-
-  &:disabled
-    opacity: 0.3
-
-fieldset:disabled *
-  opacity: 0.3
+*
+  user-select: none
 
 body
   display: flex
@@ -222,31 +146,4 @@ div.two-columns
       width: 64px
 
   > select
-    text-align: center
-    color: rgba(white, 0.7)
-    border: none
-    outline: none
-    margin: 0
-    padding: 0
-    font-size: 10px
-    background-color: rgba(black, 0.3)
-    appearance: none
     grid-column: 2 / 3
-
-::-webkit-scrollbar
-  width: 11px
-
-::-webkit-scrollbar-button
-  display: none
-
-::-webkit-scrollbar-track-piece
-  background-color: #111
-
-::-webkit-scrollbar-thumb
-  border-left: 5px #111 solid
-  border-right: 5px #111 solid
-  background-color: #666
-  border-radius: 1px
-
-  &:hover
-    background-color: #AAA
