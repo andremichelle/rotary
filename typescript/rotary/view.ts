@@ -18,7 +18,7 @@ export class RotaryView {
                 private readonly trackTemplate: Element,
                 private readonly rotary: RotaryModel) {
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"),
-            rotary.radiusMin, PrintMapping.NoFloat, new NumericStepper(1), "px"))
+            rotary.radiusMin, PrintMapping.Integer, new NumericStepper(1), "px"))
 
         rotary.tracks.forEach(track => this.createView(track))
         this.updateOrder()
@@ -81,11 +81,11 @@ export class RotaryTrackView implements Terminable {
 
     constructor(readonly view: RotaryView, readonly element: HTMLElement, readonly model: RotaryTrackModel) {
         this.segments = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"),
-            model.segments, PrintMapping.NoFloat, NumericStepper.Integer, ""))
+            model.segments, PrintMapping.Integer, NumericStepper.Integer, ""))
         this.width = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"),
-            model.width, PrintMapping.NoFloat, NumericStepper.Integer, "px"))
+            model.width, PrintMapping.Integer, NumericStepper.Integer, "px"))
         this.widthPadding = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"),
-            model.widthPadding, PrintMapping.NoFloat, NumericStepper.Integer, "px"))
+            model.widthPadding, PrintMapping.Integer, NumericStepper.Integer, "px"))
         this.length = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"),
             model.length, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
         this.lengthRatio = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"),

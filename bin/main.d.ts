@@ -74,22 +74,18 @@ declare module "lib/common" {
         x(y: any): number;
         clamp(y: number): number;
     }
-    export type Parser<Y> = (mapping: ValueMapping<Y>, text: string) => Y;
-    export type Printer<Y> = (mapping: ValueMapping<Y>, unipolar: number) => string;
+    export type Parser<Y> = (text: string) => Y | null;
+    export type Printer<Y> = (value: Y) => string;
     export class PrintMapping<Y> {
         private readonly parser;
         private readonly printer;
-        static UnipolarParser: (mapping: ValueMapping<number>, text: string) => number;
-        static BipolarParser: (mapping: ValueMapping<number>, text: string) => number;
-        static createPrintMapping(parser: Parser<number>, numFraction: number): PrintMapping<number>;
+        private readonly preUnit;
+        private readonly postUnit;
+        static Integer: PrintMapping<number>;
         static UnipolarPercent: PrintMapping<number>;
-        static NoFloat: PrintMapping<number>;
-        static OneFloats: PrintMapping<number>;
-        static TwoFloats: PrintMapping<number>;
-        static ThreeFloats: PrintMapping<number>;
-        constructor(parser: Parser<Y>, printer: Printer<Y>);
-        parse(mapping: ValueMapping<Y>, text: string): Y;
-        print(mapping: ValueMapping<Y>, unipolar: number): string;
+        constructor(parser: Parser<Y>, printer: Printer<Y>, preUnit?: string, postUnit?: string);
+        parse(text: string): Y | null;
+        print(value: Y): string;
     }
     export interface Value<T> extends Observable<Value<T>> {
         set(value: T): boolean;
@@ -157,7 +153,6 @@ declare module "rotary/model" {
     export class RotaryTrackModel implements Terminable {
         private readonly terminator;
         private readonly gradient;
-        private gradientNeedsUpdate;
         readonly segments: Parameter;
         readonly width: Parameter;
         readonly widthPadding: Parameter;
@@ -167,9 +162,7 @@ declare module "rotary/model" {
         readonly fill: ObservableValue<Fill>;
         readonly movement: ObservableValue<Move>;
         readonly reverse: ObservableValue<boolean>;
-        readonly hue: ObservableValue<number>;
-        readonly saturation: ObservableValue<number>;
-        readonly lightness: ObservableValue<number>;
+        readonly rgb: ObservableValue<number>;
         constructor();
         opaque(): string;
         transparent(): string;
@@ -219,7 +212,7 @@ declare module "dom/inputs" {
         private readonly terminator;
         constructor(parent: HTMLElement, parameter: Parameter, printMapping: PrintMapping<number>, stepper: NumericStepper, unit: string);
         connect(): void;
-        parse(): number;
+        parse(): number | null;
         update(): void;
         terminate(): void;
     }

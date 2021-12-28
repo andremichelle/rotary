@@ -111,7 +111,7 @@ export class NumericStepperInput implements Terminable {
                     case "Enter": {
                         event.preventDefault()
                         const number = this.parse()
-                        if (isNaN(number) || !this.parameter.set(number)) {
+                        if (null === number || !this.parameter.set(number)) {
                             this.update()
                         }
                         blur()
@@ -127,12 +127,12 @@ export class NumericStepperInput implements Terminable {
         }))
     }
 
-    parse(): number {
-        return this.printMapping.parse(this.parameter.mapping, this.input.value.replace(this.unit, "").trim())
+    parse(): number | null {
+        return this.printMapping.parse(this.input.value.replace(this.unit, "").trim())
     }
 
     update() {
-        this.input.value = this.printMapping.print(this.parameter.mapping, this.parameter.unipolar()) + this.unit
+        this.input.value = this.printMapping.print(this.parameter.get()) + this.unit
     }
 
     terminate() {

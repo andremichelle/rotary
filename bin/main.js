@@ -161,43 +161,32 @@ define("lib/common", ["require", "exports"], function (require, exports) {
     }());
     exports.Volume = Volume;
     var PrintMapping = (function () {
-        function PrintMapping(parser, printer) {
+        function PrintMapping(parser, printer, preUnit, postUnit) {
+            if (preUnit === void 0) { preUnit = ""; }
+            if (postUnit === void 0) { postUnit = ""; }
             this.parser = parser;
             this.printer = printer;
+            this.preUnit = preUnit;
+            this.postUnit = postUnit;
         }
-        PrintMapping.createPrintMapping = function (parser, numFraction) {
-            return new PrintMapping(parser, function (mapping, unipolar) {
-                return mapping.y(unipolar).toFixed(numFraction);
-            });
+        PrintMapping.prototype.parse = function (text) {
+            return this.parser(text);
         };
-        PrintMapping.prototype.parse = function (mapping, text) {
-            return this.parser(mapping, text);
+        PrintMapping.prototype.print = function (value) {
+            return this.printer(value);
         };
-        PrintMapping.prototype.print = function (mapping, unipolar) {
-            return this.printer(mapping, unipolar);
-        };
-        PrintMapping.UnipolarParser = function (mapping, text) {
-            if (text.includes("%")) {
-                return mapping.y(parseFloat(text) / 100.0);
-            }
+        PrintMapping.Integer = new PrintMapping(function (text) {
+            var value = parseInt(text, 10);
+            if (isNaN(value))
+                return null;
+            return value | 0;
+        }, function (value) { return String(value); });
+        PrintMapping.UnipolarPercent = new PrintMapping(function (text) {
             var value = parseFloat(text);
-            if (isNaN(value)) {
-                return NaN;
-            }
-            return mapping.y(Math.min(1.0, Math.max(0.0, mapping.x(value))));
-        };
-        PrintMapping.BipolarParser = function (mapping, text) {
-            var float = parseFloat(text);
-            if (isNaN(float)) {
-                return NaN;
-            }
-            return mapping.y(Math.min(1.0, Math.max(0.0, float / 200.0 + 0.5)));
-        };
-        PrintMapping.UnipolarPercent = new PrintMapping(function (mapping, text) { return mapping.y(parseFloat(text) / 100.0); }, function (mapping, unipolar) { return (mapping.y(unipolar) * 100.0).toFixed(1); });
-        PrintMapping.NoFloat = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 0);
-        PrintMapping.OneFloats = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 1);
-        PrintMapping.TwoFloats = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 2);
-        PrintMapping.ThreeFloats = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 3);
+            if (isNaN(value))
+                return null;
+            return value / 100.0;
+        }, function (value) { return (value * 100.0).toFixed(1); });
         return PrintMapping;
     }());
     exports.PrintMapping = PrintMapping;
@@ -584,7 +573,7 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
                         case "Enter": {
                             event.preventDefault();
                             var number = _this.parse();
-                            if (isNaN(number) || !_this.parameter.set(number)) {
+                            if (null === number || !_this.parameter.set(number)) {
                                 _this.update();
                             }
                             blur();
@@ -602,10 +591,10 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             }));
         };
         NumericStepperInput.prototype.parse = function () {
-            return this.printMapping.parse(this.parameter.mapping, this.input.value.replace(this.unit, "").trim());
+            return this.printMapping.parse(this.input.value.replace(this.unit, "").trim());
         };
         NumericStepperInput.prototype.update = function () {
-            this.input.value = this.printMapping.print(this.parameter.mapping, this.parameter.unipolar()) + this.unit;
+            this.input.value = this.printMapping.print(this.parameter.get()) + this.unit;
         };
         NumericStepperInput.prototype.terminate = function () {
             this.terminator.terminate();
@@ -625,7 +614,7 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
             this.rotary = rotary;
             this.terminator = new common_4.Terminator();
             this.map = new Map();
-            this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), rotary.radiusMin, common_4.PrintMapping.NoFloat, new common_4.NumericStepper(1), "px"));
+            this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), rotary.radiusMin, common_4.PrintMapping.Integer, new common_4.NumericStepper(1), "px"));
             rotary.tracks.forEach(function (track) { return _this.createView(track); });
             this.updateOrder();
         }
@@ -679,9 +668,9 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
             this.element = element;
             this.model = model;
             this.terminator = new common_4.Terminator();
-            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"), model.segments, common_4.PrintMapping.NoFloat, common_4.NumericStepper.Integer, ""));
-            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"), model.width, common_4.PrintMapping.NoFloat, common_4.NumericStepper.Integer, "px"));
-            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"), model.widthPadding, common_4.PrintMapping.NoFloat, common_4.NumericStepper.Integer, "px"));
+            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"), model.segments, common_4.PrintMapping.Integer, common_4.NumericStepper.Integer, ""));
+            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"), model.width, common_4.PrintMapping.Integer, common_4.NumericStepper.Integer, "px"));
+            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"), model.widthPadding, common_4.PrintMapping.Integer, common_4.NumericStepper.Integer, "px"));
             this.length = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"), model.length, common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent, "%"));
             this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"), model.lengthRatio, common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent, "%"));
             this.phase = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='phase']"), model.phase, common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent, "%"));

@@ -204,54 +204,34 @@ export class Volume implements ValueMapping<number> {
     }
 }
 
-export type Parser<Y> = (mapping: ValueMapping<Y>, text: string) => Y
-export type Printer<Y> = (mapping: ValueMapping<Y>, unipolar: number) => string
+export type Parser<Y> = (text: string) => Y | null
+export type Printer<Y> = (value: Y) => string
 
 export class PrintMapping<Y> {
-    static UnipolarParser = (mapping: ValueMapping<number>, text: string): number => {
-        if (text.includes("%")) {
-            return mapping.y(parseFloat(text) / 100.0)
-        }
+    static Integer = new PrintMapping(text => {
+        const value = parseInt(text, 10)
+        if (isNaN(value)) return null
+        return value | 0
+    }, value => String(value))
+
+    static UnipolarPercent = new PrintMapping(text => {
         const value = parseFloat(text)
-        if (isNaN(value)) {
-            return NaN
-        }
-        return mapping.y(Math.min(1.0, Math.max(0.0, mapping.x(value))))
-    }
-
-    static BipolarParser = (mapping: ValueMapping<number>, text: string): number => {
-        const float = parseFloat(text)
-        if (isNaN(float)) {
-            return NaN
-        }
-        return mapping.y(Math.min(1.0, Math.max(0.0, float / 200.0 + 0.5)))
-    }
-
-    static createPrintMapping(parser: Parser<number>, numFraction: number): PrintMapping<number> {
-        return new PrintMapping<number>(parser,
-            (mapping, unipolar) =>
-                mapping.y(unipolar).toFixed(numFraction))
-    }
-
-    static UnipolarPercent = new PrintMapping<number>(
-        (mapping, text) => mapping.y(parseFloat(text) / 100.0),
-        (mapping, unipolar) => (mapping.y(unipolar) * 100.0).toFixed(1))
-
-    static NoFloat = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 0)
-    static OneFloats = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 1)
-    static TwoFloats = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 2)
-    static ThreeFloats = PrintMapping.createPrintMapping(PrintMapping.UnipolarParser, 3)
+        if (isNaN(value)) return null
+        return value / 100.0
+    }, value => (value * 100.0).toFixed(1))
 
     constructor(private readonly parser: Parser<Y>,
-                private readonly printer: Printer<Y>) {
+                private readonly printer: Printer<Y>,
+                private readonly preUnit = "",
+                private readonly postUnit = "") {
     }
 
-    parse(mapping: ValueMapping<Y>, text: string): Y {
-        return this.parser(mapping, text)
+    parse(text: string): Y | null {
+        return this.parser(text)
     }
 
-    print(mapping: ValueMapping<Y>, unipolar: number): string {
-        return this.printer(mapping, unipolar)
+    print(value: Y): string {
+        return this.printer(value)
     }
 }
 
