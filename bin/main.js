@@ -709,9 +709,9 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
             var scale = this.model.length.get() / segments;
             var phase = this.model.movement.get()(position - Math.floor(position)) * (this.model.reverse.get() ? -1 : 1) + this.model.phase.get();
             var width = this.model.width.get();
-            var widthPadding = this.model.widthPadding.get();
-            var r0 = radiusMin + widthPadding;
-            var r1 = radiusMin + widthPadding + width;
+            var thickness = this.model.widthPadding.get() * 0.5;
+            var r0 = radiusMin + thickness;
+            var r1 = radiusMin + thickness + width;
             for (var i = 0; i < segments; i++) {
                 var angleMin = i * scale + phase;
                 var angleMax = angleMin + scale * this.model.lengthRatio.get();
