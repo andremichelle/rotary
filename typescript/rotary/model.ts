@@ -44,6 +44,7 @@ export class RotaryModel implements Terminable {
         const copy = this.createTrack(insertIndex)
         copy.segments.set(source.segments.get())
         copy.fill.set(source.fill.get())
+        copy.rgb.set(source.rgb.get())
         copy.length.set(source.length.get())
         copy.lengthRatio.set(source.lengthRatio.get())
         copy.width.set(source.width.get())
@@ -77,7 +78,7 @@ export class RotaryModel implements Terminable {
 }
 
 export enum Fill {
-    Flat, Stroke, Positive, Negative
+    Flat, Stroke, Line, Positive, Negative
 }
 
 const AccAndStop = exp => x => Math.pow(x, exp)
@@ -102,7 +103,7 @@ export const randomMovement = (): Move => {
     return array[Math.floor(Math.random() * array.length)][1]
 }
 export const Fills = new Map<string, Fill>(
-    [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
+    [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Lines", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
 export class RotaryTrackModel implements Terminable {
     private readonly terminator: Terminator = new Terminator()

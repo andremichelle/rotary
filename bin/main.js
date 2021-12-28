@@ -355,6 +355,7 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             var copy = this.createTrack(insertIndex);
             copy.segments.set(source.segments.get());
             copy.fill.set(source.fill.get());
+            copy.rgb.set(source.rgb.get());
             copy.length.set(source.length.get());
             copy.lengthRatio.set(source.lengthRatio.get());
             copy.width.set(source.width.get());
@@ -389,8 +390,9 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
     (function (Fill) {
         Fill[Fill["Flat"] = 0] = "Flat";
         Fill[Fill["Stroke"] = 1] = "Stroke";
-        Fill[Fill["Positive"] = 2] = "Positive";
-        Fill[Fill["Negative"] = 3] = "Negative";
+        Fill[Fill["Line"] = 2] = "Line";
+        Fill[Fill["Positive"] = 3] = "Positive";
+        Fill[Fill["Negative"] = 4] = "Negative";
     })(Fill = exports.Fill || (exports.Fill = {}));
     var AccAndStop = function (exp) { return function (x) { return Math.pow(x, exp); }; };
     var OddShape = function (shape) {
@@ -412,7 +414,7 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         var array = Array.from(exports.Movements);
         return array[Math.floor(Math.random() * array.length)][1];
     };
-    exports.Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
+    exports.Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Lines", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
     var RotaryTrackModel = (function () {
         function RotaryTrackModel() {
             var _this = this;
@@ -809,7 +811,7 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
             this.element = element;
             this.model = model;
             this.terminator = new common_4.Terminator();
-            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer)).withValue(model.segments);
+            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"), common_4.PrintMapping.integer(""), common_4.NumericStepper.Integer)).withValue(model.segments);
             this.width = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer)).withValue(model.width);
             this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer)).withValue(model.widthPadding);
             this.length = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.length);
@@ -849,7 +851,7 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
             if (fill === model_1.Fill.Flat) {
                 context.fillStyle = this.model.opaque();
             }
-            else if (fill === model_1.Fill.Stroke) {
+            else if (fill === model_1.Fill.Stroke || fill === model_1.Fill.Line) {
                 context.strokeStyle = this.model.opaque();
             }
             else {
@@ -866,11 +868,21 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
                 }
                 context.fillStyle = gradient;
             }
-            context.beginPath();
-            context.arc(0.0, 0.0, radiusMax, radianMin, radianMax, false);
-            context.arc(0.0, 0.0, radiusMin, radianMax, radianMin, true);
-            context.closePath();
-            if (fill === model_1.Fill.Stroke) {
+            if (fill === model_1.Fill.Line) {
+                var sn = Math.sin(radianMin);
+                var cs = Math.cos(radianMin);
+                context.beginPath();
+                context.moveTo(cs * radiusMin, sn * radiusMin);
+                context.lineTo(cs * radiusMax, sn * radiusMax);
+                context.closePath();
+            }
+            else {
+                context.beginPath();
+                context.arc(0.0, 0.0, radiusMax, radianMin, radianMax, false);
+                context.arc(0.0, 0.0, radiusMin, radianMax, radianMin, true);
+                context.closePath();
+            }
+            if (fill === model_1.Fill.Stroke || fill === model_1.Fill.Line) {
                 context.stroke();
             }
             else {
@@ -880,8 +892,6 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
         RotaryTrackView.prototype.terminate = function () {
             this.terminator.terminate();
         };
-        RotaryTrackView.WHITE = "white";
-        RotaryTrackView.TRANSPARENT = "rgba(255, 255, 255, 0.0)";
         return RotaryTrackView;
     }());
     exports.RotaryTrackView = RotaryTrackView;

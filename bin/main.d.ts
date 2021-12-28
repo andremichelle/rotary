@@ -158,8 +158,9 @@ declare module "rotary/model" {
     export enum Fill {
         Flat = 0,
         Stroke = 1,
-        Positive = 2,
-        Negative = 3
+        Line = 2,
+        Positive = 3,
+        Negative = 4
     }
     export type Move = (x: number) => number;
     export const Movements: Map<string, (x: any) => any>;
@@ -274,8 +275,6 @@ declare module "rotary/view" {
         readonly view: RotaryView;
         readonly element: HTMLElement;
         readonly model: RotaryTrackModel;
-        static WHITE: string;
-        static TRANSPARENT: string;
         private readonly terminator;
         private readonly segments;
         private readonly width;

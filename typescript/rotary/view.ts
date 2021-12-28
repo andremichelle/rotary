@@ -65,9 +65,6 @@ export class RotaryView {
 }
 
 export class RotaryTrackView implements Terminable {
-    static WHITE = "white"
-    static TRANSPARENT = "rgba(255, 255, 255, 0.0)"
-
     private readonly terminator: Terminator = new Terminator()
     private readonly segments: NumericStepperInput
     private readonly width: NumericStepperInput
@@ -82,7 +79,7 @@ export class RotaryTrackView implements Terminable {
 
     constructor(readonly view: RotaryView, readonly element: HTMLElement, readonly model: RotaryTrackModel) {
         this.segments = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"),
-            PrintMapping.integer("px"), NumericStepper.Integer)).withValue(model.segments)
+            PrintMapping.integer(""), NumericStepper.Integer)).withValue(model.segments)
         this.width = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"),
             PrintMapping.integer("px"), NumericStepper.Integer)).withValue(model.width)
         this.widthPadding = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"),
@@ -131,7 +128,7 @@ export class RotaryTrackView implements Terminable {
         const radianMax = angleMax * TAU
         if (fill === Fill.Flat) {
             context.fillStyle = this.model.opaque()
-        } else if (fill === Fill.Stroke) {
+        } else if (fill === Fill.Stroke || fill === Fill.Line) {
             context.strokeStyle = this.model.opaque()
         } else {
             const gradient: CanvasGradient = context.createConicGradient(radianMin, 0.0, 0.0)
@@ -146,11 +143,20 @@ export class RotaryTrackView implements Terminable {
             }
             context.fillStyle = gradient
         }
-        context.beginPath()
-        context.arc(0.0, 0.0, radiusMax, radianMin, radianMax, false)
-        context.arc(0.0, 0.0, radiusMin, radianMax, radianMin, true)
-        context.closePath()
-        if (fill === Fill.Stroke) {
+        if(fill === Fill.Line) {
+            const sn = Math.sin(radianMin)
+            const cs = Math.cos(radianMin)
+            context.beginPath()
+            context.moveTo(cs * radiusMin, sn * radiusMin)
+            context.lineTo(cs * radiusMax, sn * radiusMax)
+            context.closePath()
+        } else {
+            context.beginPath()
+            context.arc(0.0, 0.0, radiusMax, radianMin, radianMax, false)
+            context.arc(0.0, 0.0, radiusMin, radianMax, radianMin, true)
+            context.closePath()
+        }
+        if (fill === Fill.Stroke || fill === Fill.Line) {
             context.stroke()
         } else {
             context.fill()
