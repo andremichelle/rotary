@@ -1,6 +1,6 @@
 import {NumericStepper, PrintMapping, TAU, Terminable, Terminator} from "../lib/common";
 import {Fill, Fills, Move, Movements, RotaryModel, RotaryTrackModel} from "./model";
-import {Checkbox, NumericStepperInput, SelectInput} from "../dom/inputs";
+import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs";
 import {Dom} from "../dom/common";
 
 export class RotaryView {
@@ -18,7 +18,7 @@ export class RotaryView {
                 private readonly trackTemplate: Element,
                 private readonly rotary: RotaryModel) {
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"),
-            rotary.radiusMin, PrintMapping.Integer, new NumericStepper(1), "px"))
+            rotary.radiusMin, PrintMapping.Integer("px"), new NumericStepper(1)))
 
         rotary.tracks.forEach(track => this.createView(track))
         this.updateOrder()
@@ -76,25 +76,27 @@ export class RotaryTrackView implements Terminable {
     private readonly lengthRatio: NumericStepperInput
     private readonly phase: NumericStepperInput
     private readonly fill: SelectInput<Fill>
+    private readonly rgb: NumericInput
     private readonly movement: SelectInput<Move>
     private readonly reverse: Checkbox
 
     constructor(readonly view: RotaryView, readonly element: HTMLElement, readonly model: RotaryTrackModel) {
         this.segments = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"),
-            model.segments, PrintMapping.Integer, NumericStepper.Integer, ""))
+            model.segments, PrintMapping.Integer("px"), NumericStepper.Integer))
         this.width = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"),
-            model.width, PrintMapping.Integer, NumericStepper.Integer, "px"))
+            model.width, PrintMapping.Integer("px"), NumericStepper.Integer))
         this.widthPadding = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"),
-            model.widthPadding, PrintMapping.Integer, NumericStepper.Integer, "px"))
+            model.widthPadding, PrintMapping.Integer("px"), NumericStepper.Integer))
         this.length = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"),
-            model.length, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
+            model.length, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
         this.lengthRatio = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"),
-            model.lengthRatio, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
+            model.lengthRatio, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
         this.phase = this.terminator.with(new NumericStepperInput(element.querySelector("fieldset[data-parameter='phase']"),
-            model.phase, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent, "%"))
+            model.phase, PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
         this.fill = this.terminator.with(new SelectInput<Fill>(element.querySelector("select[data-parameter='fill']"), Fills, model.fill))
         this.movement = this.terminator.with(new SelectInput<Move>(element.querySelector("select[data-parameter='movement']"), Movements, model.movement))
         this.reverse = this.terminator.with(new Checkbox(element.querySelector("input[data-parameter='reverse']"), model.reverse))
+        this.rgb = this.terminator.with(new NumericInput(element.querySelector("input[data-parameter='rgb']"), model.rgb, PrintMapping.RGB))
 
         const removeButton = element.querySelector("button[data-action='remove']") as HTMLButtonElement
         removeButton.onclick = () => view.removeTrack(this)

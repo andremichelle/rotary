@@ -81,8 +81,9 @@ declare module "lib/common" {
         private readonly printer;
         private readonly preUnit;
         private readonly postUnit;
-        static Integer: PrintMapping<number>;
+        static Integer(postUnit: string): PrintMapping<number>;
         static UnipolarPercent: PrintMapping<number>;
+        static RGB: PrintMapping<number>;
         constructor(parser: Parser<Y>, printer: Printer<Y>, preUnit?: string, postUnit?: string);
         parse(text: string): Y | null;
         print(value: Y): string;
@@ -205,12 +206,22 @@ declare module "dom/inputs" {
         private readonly parameter;
         private readonly printMapping;
         private readonly stepper;
-        private readonly unit;
         private readonly decreaseButton;
         private readonly increaseButton;
         private readonly input;
         private readonly terminator;
-        constructor(parent: HTMLElement, parameter: Parameter, printMapping: PrintMapping<number>, stepper: NumericStepper, unit: string);
+        constructor(parent: HTMLElement, parameter: Parameter, printMapping: PrintMapping<number>, stepper: NumericStepper);
+        connect(): void;
+        parse(): number | null;
+        update(): void;
+        terminate(): void;
+    }
+    export class NumericInput implements Terminable {
+        private readonly input;
+        private readonly value;
+        private readonly printMapping;
+        private readonly terminator;
+        constructor(input: HTMLInputElement, value: ObservableValue<number>, printMapping: PrintMapping<number>);
         connect(): void;
         parse(): number | null;
         update(): void;
@@ -249,6 +260,7 @@ declare module "rotary/view" {
         private readonly lengthRatio;
         private readonly phase;
         private readonly fill;
+        private readonly rgb;
         private readonly movement;
         private readonly reverse;
         constructor(view: RotaryView, element: HTMLElement, model: RotaryTrackModel);

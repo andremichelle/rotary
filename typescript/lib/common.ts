@@ -208,17 +208,30 @@ export type Parser<Y> = (text: string) => Y | null
 export type Printer<Y> = (value: Y) => string
 
 export class PrintMapping<Y> {
-    static Integer = new PrintMapping(text => {
-        const value = parseInt(text, 10)
-        if (isNaN(value)) return null
-        return value | 0
-    }, value => String(value))
+    static Integer(postUnit: string): PrintMapping<number> {
+        return new PrintMapping(text => {
+            const value = parseInt(text, 10)
+            if (isNaN(value)) return null
+            return value | 0
+        }, value => String(value), "", postUnit)
+    }
 
     static UnipolarPercent = new PrintMapping(text => {
         const value = parseFloat(text)
         if (isNaN(value)) return null
         return value / 100.0
-    }, value => (value * 100.0).toFixed(1))
+    }, value => (value * 100.0).toFixed(1), "", "%")
+
+    static RGB = new PrintMapping<number>(text => {
+        if (3 === text.length) {
+            text = text.charAt(0) + text.charAt(0) + text.charAt(1) + text.charAt(1) + text.charAt(2) + text.charAt(2)
+        }
+        if (6 === text.length) {
+            return parseInt(text, 16)
+        } else {
+            return null
+        }
+    }, value => value.toString(16).padStart(6, "0").toUpperCase(), "#", "")
 
     constructor(private readonly parser: Parser<Y>,
                 private readonly printer: Printer<Y>,
@@ -227,11 +240,11 @@ export class PrintMapping<Y> {
     }
 
     parse(text: string): Y | null {
-        return this.parser(text)
+        return this.parser(text.replace(this.preUnit, "").replace(this.postUnit, ""))
     }
 
     print(value: Y): string {
-        return this.printer(value)
+        return `${this.preUnit}${this.printer(value)}${this.postUnit}`
     }
 }
 
