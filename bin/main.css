@@ -28,6 +28,41 @@ input[type=text]::selection {
   background-color: #276bae;
 }
 
+label.checkbox {
+  font-size: 12px;
+  color: aquamarine;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: none;
+  outline: none;
+  white-space: nowrap;
+  text-align: center;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  max-height: 15px;
+  width: 30px;
+  border-radius: 19px !important;
+  position: relative;
+}
+label.checkbox span {
+  top: 3px;
+  left: 3px;
+  right: unset;
+  width: 9px;
+  height: 9px;
+  border-radius: 11px;
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+label.checkbox input[type=checkbox] {
+  appearance: none;
+  display: none;
+}
+label.checkbox input[type=checkbox]:checked + span {
+  left: unset;
+  right: 3px;
+}
+
 button {
   color: rgba(255, 255, 255, 0.4);
   font-size: 8px;
@@ -139,7 +174,7 @@ div.two-columns {
   display: grid;
   align-items: center;
   grid-template-columns: min-content min-content;
-  row-gap: 1px;
+  row-gap: 3px;
   column-gap: 3px;
   line-height: 19px;
   height: min-content;
@@ -189,22 +224,6 @@ div.two-columns > fieldset.stepper > button:active {
 }
 div.two-columns > fieldset.stepper > input[type=text] {
   width: 64px;
-}
-div.two-columns > input[type=checkbox] {
-  font-size: 10px;
-  color: aquamarine;
-  background-color: rgba(0, 0, 0, 0.3);
-  border: none;
-  outline: none;
-  white-space: nowrap;
-  text-align: center;
-  appearance: none;
-  margin: 0;
-  padding: 0;
-  width: 19px;
-}
-div.two-columns > input[type=checkbox]:checked {
-  background-color: rgba(255, 255, 255, 0.7);
 }
 div.two-columns > select {
   text-align: center;
