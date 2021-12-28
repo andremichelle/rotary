@@ -30,7 +30,6 @@ export class RotaryModel implements Terminable {
             trackModel.lengthRatio.set(lengthRatio)
             trackModel.fill.set(fill)
             trackModel.movement.set(randomMovement())
-            trackModel.hue.set(Math.random())
             this.tracks.push(trackModel)
         }
     }
@@ -109,7 +108,6 @@ export class RotaryTrackModel implements Terminable {
     private readonly terminator: Terminator = new Terminator()
 
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
-    private gradientNeedsUpdate: boolean = true
 
     readonly segments = this.terminator.with(new Parameter(new LinearInteger(1, 128), 8))
     readonly width = this.terminator.with(new Parameter(new LinearInteger(1, 128), 12))
@@ -120,23 +118,18 @@ export class RotaryTrackModel implements Terminable {
     readonly fill = this.terminator.with(new ObservableValue<Fill>(Fill.Flat))
     readonly movement = this.terminator.with(new ObservableValue<Move>(Movements.values().next().value))
     readonly reverse = this.terminator.with(new ObservableValue<boolean>(false))
-    readonly hue = this.terminator.with(new ObservableValue(<number>(0.0)))
-    readonly saturation = this.terminator.with(new ObservableValue(<number>(0.0)))
-    readonly lightness = this.terminator.with(new ObservableValue(<number>(1.0)))
+    readonly rgb = this.terminator.with(new ObservableValue(<number>(0xFFFFFF)))
 
     constructor() {
-        this.terminator.with(this.hue.addObserver(() => this.gradientNeedsUpdate = true))
-        this.terminator.with(this.saturation.addObserver(() => this.gradientNeedsUpdate = true))
-        this.terminator.with(this.lightness.addObserver(() => this.gradientNeedsUpdate = true))
+        this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
+        this.updateGradient()
     }
 
     opaque(): string {
-        if (this.gradientNeedsUpdate) this.updateGradient()
         return this.gradient[0]
     }
 
     transparent(): string {
-        if (this.gradientNeedsUpdate) this.updateGradient()
         return this.gradient[1]
     }
 
@@ -144,12 +137,12 @@ export class RotaryTrackModel implements Terminable {
         this.terminator.terminate()
     }
 
-    private updateGradient() {
-        const hue = this.hue.get() * 360;
-        const saturation = this.saturation.get() * 100.0;
-        const lightness = this.lightness.get() * 100.0;
-        this.gradient[0] = `hsla(${hue}, ${saturation}%, ${lightness}%, 1.0)`
-        this.gradient[1] = `hsla(${hue}, ${saturation}%, ${lightness}%, 0.0)`
-        this.gradientNeedsUpdate = false
+    private updateGradient(): void {
+        const rgb = this.rgb.get()
+        const r = (rgb >> 16) & 0xFF
+        const g = (rgb >> 8) & 0xFF
+        const b = rgb & 0xFF
+        this.gradient[0] = `rgba(${r},${g},${b},1.0)`
+        this.gradient[1] = `rgba(${r},${g},${b},0.0)`
     }
 }

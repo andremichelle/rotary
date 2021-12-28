@@ -1,4 +1,4 @@
-import {RotaryModel} from "rotary/model"
+import {RotaryModel} from "./rotary/model"
 import {RotaryView} from "./rotary/view";
 
 const rotary = new RotaryModel()

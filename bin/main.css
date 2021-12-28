@@ -9,6 +9,25 @@ html, body {
   font-family: "Titillium Web", sans-serif;
 }
 
+input[type=text] {
+  height: 19px;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
+  font-size: 10px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  font-family: "Titillium Web", sans-serif;
+}
+input[type=text]:focus {
+  box-shadow: 0 0 0 1px rgba(39, 107, 174, 0.6) inset;
+}
+input[type=text]::selection {
+  background-color: #276bae;
+}
+
 button {
   color: rgba(255, 255, 255, 0.4);
   font-size: 8px;
@@ -170,22 +189,6 @@ div.two-columns > fieldset.stepper > button:active {
 }
 div.two-columns > fieldset.stepper > input[type=text] {
   width: 64px;
-  height: 19px;
-  color: rgba(255, 255, 255, 0.7);
-  border: none;
-  outline: none;
-  margin: 0;
-  padding: 0;
-  font-size: 10px;
-  text-align: center;
-  background-color: rgba(0, 0, 0, 0.3);
-  font-family: "Titillium Web", sans-serif;
-}
-div.two-columns > fieldset.stepper > input[type=text]:focus {
-  box-shadow: 0 0 0 1px rgba(39, 107, 174, 0.6) inset;
-}
-div.two-columns > fieldset.stepper > input[type=text]::selection {
-  background-color: #276bae;
 }
 div.two-columns > input[type=checkbox] {
   font-size: 10px;

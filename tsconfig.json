@@ -16,6 +16,6 @@
     "./**/*.ts"
   ],
   "exclude": [
-    "./main.d.ts"
+    "./bin/main.d.ts"
   ]
 }

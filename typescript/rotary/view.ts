@@ -109,9 +109,9 @@ export class RotaryTrackView implements Terminable {
         const scale = this.model.length.get() / segments
         const phase = this.model.movement.get()(position - Math.floor(position)) * (this.model.reverse.get() ? -1 : 1) + this.model.phase.get()
         const width = this.model.width.get()
-        const widthPadding = this.model.widthPadding.get()
-        const r0 = radiusMin + widthPadding
-        const r1 = radiusMin + widthPadding + width
+        const thickness = this.model.widthPadding.get() * 0.5
+        const r0 = radiusMin + thickness
+        const r1 = radiusMin + thickness + width
         for (let i = 0; i < segments; i++) {
             const angleMin = i * scale + phase
             const angleMax = angleMin + scale * this.model.lengthRatio.get()

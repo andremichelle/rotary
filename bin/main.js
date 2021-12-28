@@ -309,7 +309,6 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
                 trackModel.lengthRatio.set(lengthRatio);
                 trackModel.fill.set(fill);
                 trackModel.movement.set(exports.randomMovement());
-                trackModel.hue.set(Math.random());
                 this.tracks.push(trackModel);
             }
         };
@@ -387,7 +386,6 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             var _this = this;
             this.terminator = new common_1.Terminator();
             this.gradient = [];
-            this.gradientNeedsUpdate = true;
             this.segments = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(1, 128), 8));
             this.width = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(1, 128), 12));
             this.widthPadding = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(0, 128), 0));
@@ -397,33 +395,26 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             this.fill = this.terminator["with"](new common_1.ObservableValue(Fill.Flat));
             this.movement = this.terminator["with"](new common_1.ObservableValue(exports.Movements.values().next().value));
             this.reverse = this.terminator["with"](new common_1.ObservableValue(false));
-            this.hue = this.terminator["with"](new common_1.ObservableValue((0.0)));
-            this.saturation = this.terminator["with"](new common_1.ObservableValue((0.0)));
-            this.lightness = this.terminator["with"](new common_1.ObservableValue((1.0)));
-            this.terminator["with"](this.hue.addObserver(function () { return _this.gradientNeedsUpdate = true; }));
-            this.terminator["with"](this.saturation.addObserver(function () { return _this.gradientNeedsUpdate = true; }));
-            this.terminator["with"](this.lightness.addObserver(function () { return _this.gradientNeedsUpdate = true; }));
+            this.rgb = this.terminator["with"](new common_1.ObservableValue((0xFFFFFF)));
+            this.terminator["with"](this.rgb.addObserver(function () { return _this.updateGradient(); }));
+            this.updateGradient();
         }
         RotaryTrackModel.prototype.opaque = function () {
-            if (this.gradientNeedsUpdate)
-                this.updateGradient();
             return this.gradient[0];
         };
         RotaryTrackModel.prototype.transparent = function () {
-            if (this.gradientNeedsUpdate)
-                this.updateGradient();
             return this.gradient[1];
         };
         RotaryTrackModel.prototype.terminate = function () {
             this.terminator.terminate();
         };
         RotaryTrackModel.prototype.updateGradient = function () {
-            var hue = this.hue.get() * 360;
-            var saturation = this.saturation.get() * 100.0;
-            var lightness = this.lightness.get() * 100.0;
-            this.gradient[0] = "hsla(" + hue + ", " + saturation + "%, " + lightness + "%, 1.0)";
-            this.gradient[1] = "hsla(" + hue + ", " + saturation + "%, " + lightness + "%, 0.0)";
-            this.gradientNeedsUpdate = false;
+            var rgb = this.rgb.get();
+            var r = (rgb >> 16) & 0xFF;
+            var g = (rgb >> 8) & 0xFF;
+            var b = rgb & 0xFF;
+            this.gradient[0] = "rgba(" + r + "," + g + "," + b + ",1.0)";
+            this.gradient[1] = "rgba(" + r + "," + g + "," + b + ",0.0)";
         };
         return RotaryTrackModel;
     }());
