@@ -1,13 +1,13 @@
 export const TAU = Math.PI * 2.0
 
 export interface Terminable {
-    terminate()
+    terminate(): void
 }
 
 export class TerminableVoid implements Terminable {
     static Instance = new TerminableVoid()
 
-    terminate() {
+    terminate(): void {
     }
 }
 
@@ -19,7 +19,7 @@ export class Terminator implements Terminable {
         return terminable
     }
 
-    terminate() {
+    terminate(): void {
         while (this.terminables.length) {
             this.terminables.pop().terminate()
         }
@@ -55,7 +55,7 @@ export class ObservableImpl<T> implements Observable<T> {
         return false
     }
 
-    terminate() {
+    terminate(): void {
         this.observers.splice(0, this.observers.length)
     }
 }
@@ -251,7 +251,7 @@ export class PrintMapping<Y> {
     }
 
     print(value: Y): string {
-        return `${this.preUnit}${this.printer(value)}${this.postUnit}`
+        return undefined === value ? "" : `${this.preUnit}${this.printer(value)}${this.postUnit}`
     }
 }
 
@@ -283,7 +283,7 @@ export class ObservableValueVoid implements ObservableValue<any> {
         return true
     }
 
-    terminate() {
+    terminate(): void {
     }
 }
 
@@ -314,7 +314,7 @@ export class ObservableValueImpl<T> implements ObservableValue<T> {
         return this.observable.removeObserver(observer)
     }
 
-    terminate() {
+    terminate(): void {
         this.observable.terminate()
     }
 }
@@ -374,7 +374,7 @@ export class Parameter implements ObservableValue<number> {
         return this.observable.removeObserver(observer)
     }
 
-    terminate() {
+    terminate(): void {
         this.observable.terminate()
     }
 }

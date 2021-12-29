@@ -18,11 +18,55 @@ body
   display: flex
   position: relative
 
-  .editor
-    flex: 1
+  main
     display: flex
+    flex-direction: column
+    width: 100%
+    height: 100%
 
-    .preview
+    > form.track-nav
+      flex: 0 0 auto
+      padding: 16px 8px
+      display: flex
+      column-gap: 2px
+      align-items: center
+      background-color: rgba(white, 0.12)
+      border: none
+      outline: none
+
+      > #track-selectors
+        display: flex
+        column-gap: 2px
+
+        > article
+          display: flex
+          align-items: center
+
+      > button.delete
+        padding: 1px
+        margin: 0 0 0 32px
+
+    > .global-editor
+      flex: 0 0 auto
+      padding: 0 12px 16px 12px
+      background-color: rgba(white, 0.12)
+
+    > .columns
+      display: flex
+      flex-direction: row
+      padding: 16px
+      background-color: rgba(white, 0.08)
+
+      > .track-editor
+        display: grid
+        grid-template-columns: min-content min-content min-content
+        column-gap: $SIZE
+        border-radius: 2px
+
+    > .actions
+      display: flex
+
+    > .preview
       flex: 1
       display: flex
       align-items: center
@@ -45,50 +89,6 @@ body
           &:after
             opacity: 0.6
             content: "px"
-
-    .properties
-      display: flex
-      flex-direction: column
-      padding: 0 16px 16px 16px
-      background-color: rgba(white, 0.08)
-
-      div.tracks
-        display: flex
-        flex-direction: column
-        grid-row-gap: 20px
-        overflow-x: hidden
-        overflow-y: scroll
-        flex: 1 0 0
-
-        section.track
-          display: flex
-          flex-direction: column
-
-          > div.properties
-            display: grid
-            grid-template-columns: min-content min-content min-content
-            column-gap: $SIZE
-            border-left: 4px rgba(white, 0.04) solid
-            background-color: rgba(white, 0.04)
-            border-radius: 2px
-            padding: 4px 8px
-            height: min-content
-
-            > div.actions
-              display: flex
-              flex-direction: column
-              justify-self: end
-
-              > div.spacer
-                flex: 1 0 0
-
-          > div.create
-            margin: 4px auto 0 auto
-            display: flex
-            column-gap: 4px
-
-            button
-              width: 32px
 
 div.two-columns
   display: grid

@@ -41,7 +41,6 @@ export class SelectInput<T> implements Terminable {
     private readonly options = new Map<T, HTMLOptionElement>()
     private readonly values: T[] = []
 
-
     constructor(private readonly select: HTMLSelectElement,
                 private readonly map: Map<string, T>) {
         this.connect()
@@ -61,7 +60,9 @@ export class SelectInput<T> implements Terminable {
     }
 
     private update() {
-        return this.options.get(this.value.get()).selected = true;
+        const key = this.value.get()
+        if (key === undefined) return
+        this.options.get(key).selected = true
     }
 
     private connect() {

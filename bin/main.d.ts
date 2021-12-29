@@ -1,7 +1,7 @@
 declare module "lib/common" {
     export const TAU: number;
     export interface Terminable {
-        terminate(): any;
+        terminate(): void;
     }
     export class TerminableVoid implements Terminable {
         static Instance: TerminableVoid;
@@ -151,7 +151,7 @@ declare module "rotary/model" {
         randomize(): void;
         createTrack(insertIndex?: number): RotaryTrackModel;
         copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
-        removeTrack(track: RotaryTrackModel): void;
+        removeTrack(track: RotaryTrackModel): boolean;
         measureRadius(): number;
         terminate(): void;
     }
@@ -182,6 +182,7 @@ declare module "rotary/model" {
         constructor();
         opaque(): string;
         transparent(): string;
+        randomize(): void;
         terminate(): void;
         private updateGradient;
     }
@@ -191,7 +192,7 @@ declare module "dom/common" {
     export class Dom {
         static bindEventListener(target: EventTarget, type: string, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): Terminable;
         static insertElement(parent: Element, child: Element, index?: number): void;
-        static emptyElement(element: Element): void;
+        static emptyNode(node: Node): void;
         static configRepeatButton(button: any, callback: any): Terminable;
     }
 }
@@ -253,28 +254,14 @@ declare module "dom/inputs" {
         terminate(): void;
     }
 }
-declare module "rotary/view" {
+declare module "rotary/editor" {
     import { Terminable } from "lib/common";
-    import { Fill, RotaryModel, RotaryTrackModel } from "rotary/model";
-    export class RotaryView {
-        private readonly tracksContainer;
-        private readonly trackTemplate;
-        private readonly rotary;
-        static create(document: Document, rotary: RotaryModel): RotaryView;
-        private readonly terminator;
-        private readonly map;
-        constructor(tracksContainer: Element, trackTemplate: Element, rotary: RotaryModel);
-        draw(context: CanvasRenderingContext2D, position: number): void;
-        createView(model: RotaryTrackModel): void;
-        copyTrack(view: RotaryTrackView): void;
-        newTrackAfter(view: RotaryTrackView): void;
-        removeTrack(view: RotaryTrackView): void;
-        updateOrder(): void;
+    import { RotaryTrackModel } from "rotary/model";
+    export interface RotaryTrackEditorExecutor {
+        delete(subject: RotaryTrackModel): void;
     }
-    export class RotaryTrackView implements Terminable {
-        readonly view: RotaryView;
-        readonly element: HTMLElement;
-        readonly model: RotaryTrackModel;
+    export class RotaryTrackEditor implements Terminable {
+        private readonly executor;
         private readonly terminator;
         private readonly segments;
         private readonly width;
@@ -286,10 +273,39 @@ declare module "rotary/view" {
         private readonly rgb;
         private readonly movement;
         private readonly reverse;
-        constructor(view: RotaryView, element: HTMLElement, model: RotaryTrackModel);
-        draw(context: CanvasRenderingContext2D, radiusMin: number, position: number): void;
-        drawSection(context: CanvasRenderingContext2D, radiusMin: number, radiusMax: number, angleMin: number, angleMax: number, fill?: Fill): void;
+        private subject;
+        constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
+        edit(model: RotaryTrackModel): void;
+        clear(): void;
         terminate(): void;
+    }
+}
+declare module "rotary/view" {
+    import { RotaryModel, RotaryTrackModel } from "rotary/model";
+    import { RotaryTrackEditorExecutor } from "rotary/editor";
+    export class RotarySelector implements RotaryTrackEditorExecutor {
+        private readonly form;
+        private readonly selectors;
+        private readonly template;
+        private readonly model;
+        static create(document: Document, rotary: RotaryModel): RotarySelector;
+        private readonly terminator;
+        private readonly map;
+        private readonly editor;
+        constructor(form: HTMLFormElement, selectors: Node, template: Element, model: RotaryModel);
+        createSelector(trackModel: RotaryTrackModel): void;
+        select(model: RotaryTrackModel): void;
+        createNew(model: RotaryTrackModel, copy: boolean): void;
+        delete(model: RotaryTrackModel): void;
+        updateOrder(): void;
+    }
+}
+declare module "rotary/render" {
+    import { Fill, RotaryModel, RotaryTrackModel } from "rotary/model";
+    export class RotaryRenderer {
+        static draw(context: CanvasRenderingContext2D, rotary: RotaryModel, position: number): void;
+        static drawTrack(context: CanvasRenderingContext2D, model: RotaryTrackModel, radiusMin: number, position: number): void;
+        static drawSection(context: CanvasRenderingContext2D, model: RotaryTrackModel, radiusMin: number, radiusMax: number, angleMin: number, angleMax: number, fill?: Fill): void;
     }
 }
 declare module "main" { }

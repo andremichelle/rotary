@@ -15,22 +15,9 @@ export class RotaryModel implements Terminable {
         this.tracks.splice(0, this.tracks.length)
 
         for (let i = 0; i < 12; i++) {
-            const segments = 1 + Math.floor(Math.random() * 9)
-            const lengthRatioExp = -Math.floor(Math.random() * 3)
-            const lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
-            const width = Math.random() < 0.1 ? 24.0 : 12.0
-            const widthPadding = Math.random() < 0.1 ? 0.0 : 3.0
-            const length = Math.random() < 0.1 ? 0.75 : 1.0
-            const fill = 2 === segments ? Fill.Positive : Math.random() < 0.2 ? Fill.Stroke : Fill.Flat
-            const trackModel = new RotaryTrackModel()
-            trackModel.segments.set(0 === lengthRatioExp ? 1 : segments)
-            trackModel.width.set(width)
-            trackModel.widthPadding.set(widthPadding)
-            trackModel.length.set(length)
-            trackModel.lengthRatio.set(lengthRatio)
-            trackModel.fill.set(fill)
-            trackModel.movement.set(randomMovement())
-            this.tracks.push(trackModel)
+            const model = new RotaryTrackModel()
+            model.randomize()
+            this.tracks.push(model)
         }
     }
 
@@ -55,15 +42,17 @@ export class RotaryModel implements Terminable {
         return copy
     }
 
-    removeTrack(track: RotaryTrackModel) {
+    removeTrack(track: RotaryTrackModel): boolean {
         const index = this.tracks.indexOf(track)
         if (-1 < index) {
             this.tracks.splice(index, 1)
             track.terminate()
+            return true
         }
+        return false
     }
 
-    measureRadius() {
+    measureRadius(): number {
         let radiusMin = this.radiusMin.get()
         for (let i = 0; i < this.tracks.length; i++) {
             const track = this.tracks[i];
@@ -72,7 +61,7 @@ export class RotaryModel implements Terminable {
         return radiusMin
     }
 
-    terminate() {
+    terminate(): void {
         this.terminator.terminate()
     }
 }
@@ -134,7 +123,24 @@ export class RotaryTrackModel implements Terminable {
         return this.gradient[1]
     }
 
-    terminate() {
+    randomize() {
+        const segments = 1 + Math.floor(Math.random() * 9)
+        const lengthRatioExp = -Math.floor(Math.random() * 3)
+        const lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
+        const width = Math.random() < 0.1 ? 24.0 : 12.0
+        const widthPadding = Math.random() < 0.1 ? 0.0 : 3.0
+        const length = Math.random() < 0.1 ? 0.75 : 1.0
+        const fill = 2 === segments ? Fill.Positive : Math.random() < 0.2 ? Fill.Stroke : Fill.Flat
+        this.segments.set(0 === lengthRatioExp ? 1 : segments)
+        this.width.set(width)
+        this.widthPadding.set(widthPadding)
+        this.length.set(length)
+        this.lengthRatio.set(lengthRatio)
+        this.fill.set(fill)
+        this.movement.set(randomMovement())
+    }
+
+    terminate(): void {
         this.terminator.terminate()
     }
 

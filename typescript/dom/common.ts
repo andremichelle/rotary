@@ -16,9 +16,9 @@ export class Dom {
         }
     }
 
-    static emptyElement(element: Element): void {
-        while (element.hasChildNodes()) {
-            element.lastChild.remove();
+    static emptyNode(node: Node): void {
+        while (node.hasChildNodes()) {
+            node.lastChild.remove()
         }
     }
 

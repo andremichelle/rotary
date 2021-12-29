@@ -190,7 +190,7 @@ define("lib/common", ["require", "exports"], function (require, exports) {
             return this.parser(text.replace(this.preUnit, "").replace(this.postUnit, ""));
         };
         PrintMapping.prototype.print = function (value) {
-            return "" + this.preUnit + this.printer(value) + this.postUnit;
+            return undefined === value ? "" : "" + this.preUnit + this.printer(value) + this.postUnit;
         };
         PrintMapping.UnipolarPercent = new PrintMapping(function (text) {
             var value = parseFloat(text);
@@ -326,22 +326,9 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         RotaryModel.prototype.randomize = function () {
             this.tracks.splice(0, this.tracks.length);
             for (var i = 0; i < 12; i++) {
-                var segments = 1 + Math.floor(Math.random() * 9);
-                var lengthRatioExp = -Math.floor(Math.random() * 3);
-                var lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp);
-                var width = Math.random() < 0.1 ? 24.0 : 12.0;
-                var widthPadding = Math.random() < 0.1 ? 0.0 : 3.0;
-                var length_1 = Math.random() < 0.1 ? 0.75 : 1.0;
-                var fill = 2 === segments ? Fill.Positive : Math.random() < 0.2 ? Fill.Stroke : Fill.Flat;
-                var trackModel = new RotaryTrackModel();
-                trackModel.segments.set(0 === lengthRatioExp ? 1 : segments);
-                trackModel.width.set(width);
-                trackModel.widthPadding.set(widthPadding);
-                trackModel.length.set(length_1);
-                trackModel.lengthRatio.set(lengthRatio);
-                trackModel.fill.set(fill);
-                trackModel.movement.set(exports.randomMovement());
-                this.tracks.push(trackModel);
+                var model = new RotaryTrackModel();
+                model.randomize();
+                this.tracks.push(model);
             }
         };
         RotaryModel.prototype.createTrack = function (insertIndex) {
@@ -370,7 +357,9 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             if (-1 < index) {
                 this.tracks.splice(index, 1);
                 track.terminate();
+                return true;
             }
+            return false;
         };
         RotaryModel.prototype.measureRadius = function () {
             var radiusMin = this.radiusMin.get();
@@ -439,6 +428,22 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         RotaryTrackModel.prototype.transparent = function () {
             return this.gradient[1];
         };
+        RotaryTrackModel.prototype.randomize = function () {
+            var segments = 1 + Math.floor(Math.random() * 9);
+            var lengthRatioExp = -Math.floor(Math.random() * 3);
+            var lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp);
+            var width = Math.random() < 0.1 ? 24.0 : 12.0;
+            var widthPadding = Math.random() < 0.1 ? 0.0 : 3.0;
+            var length = Math.random() < 0.1 ? 0.75 : 1.0;
+            var fill = 2 === segments ? Fill.Positive : Math.random() < 0.2 ? Fill.Stroke : Fill.Flat;
+            this.segments.set(0 === lengthRatioExp ? 1 : segments);
+            this.width.set(width);
+            this.widthPadding.set(widthPadding);
+            this.length.set(length);
+            this.lengthRatio.set(lengthRatio);
+            this.fill.set(fill);
+            this.movement.set(exports.randomMovement());
+        };
         RotaryTrackModel.prototype.terminate = function () {
             this.terminator.terminate();
         };
@@ -473,9 +478,9 @@ define("dom/common", ["require", "exports"], function (require, exports) {
                 parent.insertBefore(child, parent.children[index]);
             }
         };
-        Dom.emptyElement = function (element) {
-            while (element.hasChildNodes()) {
-                element.lastChild.remove();
+        Dom.emptyNode = function (node) {
+            while (node.hasChildNodes()) {
+                node.lastChild.remove();
             }
         };
         Dom.configRepeatButton = function (button, callback) {
@@ -563,7 +568,10 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.terminator.terminate();
         };
         SelectInput.prototype.update = function () {
-            return this.options.get(this.value.get()).selected = true;
+            var key = this.value.get();
+            if (key === undefined)
+                return;
+            this.options.get(key).selected = true;
         };
         SelectInput.prototype.connect = function () {
             var _this = this;
@@ -746,129 +754,218 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
     }());
     exports.NumericInput = NumericInput;
 });
-define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/inputs", "dom/common"], function (require, exports, common_4, model_1, inputs_1, common_5) {
+define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rotary/model", "dom/common"], function (require, exports, common_4, inputs_1, model_1, common_5) {
     "use strict";
     exports.__esModule = true;
-    var RotaryView = (function () {
-        function RotaryView(tracksContainer, trackTemplate, rotary) {
+    var RotaryTrackEditor = (function () {
+        function RotaryTrackEditor(executor, parentNode) {
             var _this = this;
-            this.tracksContainer = tracksContainer;
-            this.trackTemplate = trackTemplate;
-            this.rotary = rotary;
+            this.executor = executor;
             this.terminator = new common_4.Terminator();
+            this.subject = null;
+            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"), common_4.PrintMapping.integer(""), common_4.NumericStepper.Integer));
+            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer));
+            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width-padding']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer));
+            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent));
+            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent));
+            this.phase = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent));
+            this.fill = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='fill']"), model_1.Fills));
+            this.movement = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='movement']"), model_1.Movements));
+            this.reverse = this.terminator["with"](new inputs_1.Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
+            this.rgb = this.terminator["with"](new inputs_1.NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), common_4.PrintMapping.RGB));
+            this.terminator["with"](common_5.Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", function (event) {
+                event.preventDefault();
+                executor["delete"](_this.subject);
+            }));
+        }
+        RotaryTrackEditor.prototype.edit = function (model) {
+            this.segments.withValue(model.segments);
+            this.width.withValue(model.width);
+            this.widthPadding.withValue(model.widthPadding);
+            this.length.withValue(model.length);
+            this.lengthRatio.withValue(model.lengthRatio);
+            this.phase.withValue(model.phase);
+            this.fill.withValue(model.fill);
+            this.rgb.withValue(model.rgb);
+            this.movement.withValue(model.movement);
+            this.reverse.withValue(model.reverse);
+            this.subject = model;
+        };
+        RotaryTrackEditor.prototype.clear = function () {
+            this.segments.withValue(common_4.ObservableValueVoid.Instance);
+            this.width.withValue(common_4.ObservableValueVoid.Instance);
+            this.widthPadding.withValue(common_4.ObservableValueVoid.Instance);
+            this.length.withValue(common_4.ObservableValueVoid.Instance);
+            this.lengthRatio.withValue(common_4.ObservableValueVoid.Instance);
+            this.phase.withValue(common_4.ObservableValueVoid.Instance);
+            this.fill.withValue(common_4.ObservableValueVoid.Instance);
+            this.rgb.withValue(common_4.ObservableValueVoid.Instance);
+            this.movement.withValue(common_4.ObservableValueVoid.Instance);
+            this.reverse.withValue(common_4.ObservableValueVoid.Instance);
+            this.subject = null;
+        };
+        RotaryTrackEditor.prototype.terminate = function () {
+            this.terminator.terminate();
+        };
+        return RotaryTrackEditor;
+    }());
+    exports.RotaryTrackEditor = RotaryTrackEditor;
+});
+define("rotary/view", ["require", "exports", "lib/common", "dom/inputs", "rotary/editor", "dom/common"], function (require, exports, common_6, inputs_2, editor_1, common_7) {
+    "use strict";
+    exports.__esModule = true;
+    var RotaryTrackSelector = (function () {
+        function RotaryTrackSelector(selector, model, element, radio, button) {
+            var _this = this;
+            this.selector = selector;
+            this.model = model;
+            this.element = element;
+            this.radio = radio;
+            this.button = button;
+            this.terminator = new common_6.Terminator();
+            this.terminator["with"](common_7.Dom.bindEventListener(this.radio, "change", function () { return _this.selector.select(_this.model); }));
+            this.terminator["with"](common_7.Dom.bindEventListener(this.button, "click", function (event) {
+                event.preventDefault();
+                _this.selector.createNew(_this.model, event.shiftKey);
+            }));
+        }
+        RotaryTrackSelector.prototype.terminate = function () {
+            this.element.remove();
+            this.terminator.terminate();
+        };
+        return RotaryTrackSelector;
+    }());
+    var RotarySelector = (function () {
+        function RotarySelector(form, selectors, template, model) {
+            var _this = this;
+            this.form = form;
+            this.selectors = selectors;
+            this.template = template;
+            this.model = model;
+            this.terminator = new common_6.Terminator();
             this.map = new Map();
-            this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), common_4.PrintMapping.integer("px"), new common_4.NumericStepper(1))).withValue(rotary.radiusMin);
-            rotary.tracks.forEach(function (track) { return _this.createView(track); });
+            this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), common_6.PrintMapping.integer("px"), new common_6.NumericStepper(1))).withValue(model.radiusMin);
+            this.editor = new editor_1.RotaryTrackEditor(this, document);
+            form.querySelector("#unshift-new-track").addEventListener("click", function (event) {
+                event.preventDefault();
+                var model = _this.model.createTrack(0);
+                model.randomize();
+                _this.createSelector(model);
+                _this.updateOrder();
+                _this.select(model);
+            });
+            model.tracks.forEach(function (track) { return _this.createSelector(track); });
+            if (0 < model.tracks.length) {
+                this.select(model.tracks[0]);
+            }
             this.updateOrder();
         }
-        RotaryView.create = function (document, rotary) {
-            var tracksContainer = document.querySelector(".tracks");
-            var trackTemplate = document.querySelector(".track");
-            trackTemplate.remove();
-            return new RotaryView(tracksContainer, trackTemplate, rotary);
+        RotarySelector.create = function (document, rotary) {
+            var form = document.querySelector("form.track-nav");
+            var selectors = form.querySelector("#track-selectors");
+            var template = selectors.querySelector("#template-selector-track");
+            template.remove();
+            return new RotarySelector(form, selectors, template, rotary);
         };
-        RotaryView.prototype.draw = function (context, position) {
-            var radiusMin = this.rotary.radiusMin.get();
-            for (var i = 0; i < this.rotary.tracks.length; i++) {
-                var view = this.map.get(this.rotary.tracks[i]);
-                view.draw(context, radiusMin, position);
-                radiusMin += view.model.width.get() + view.model.widthPadding.get();
+        RotarySelector.prototype.createSelector = function (trackModel) {
+            var element = this.template.cloneNode(true);
+            var radio = element.querySelector("input[type=radio]");
+            var button = element.querySelector("button");
+            this.map.set(trackModel, new RotaryTrackSelector(this, trackModel, element, radio, button));
+        };
+        RotarySelector.prototype.select = function (model) {
+            this.editor.edit(model);
+            this.map.get(model).radio.checked = true;
+        };
+        RotarySelector.prototype.createNew = function (model, copy) {
+            var index = this.model.tracks.indexOf(model);
+            console.assert(-1 !== index, "could find model");
+            var newModel = copy
+                ? this.model.copyTrack(model, index + 1)
+                : this.model.createTrack(index + 1);
+            newModel.randomize();
+            this.createSelector(newModel);
+            this.updateOrder();
+            this.select(newModel);
+        };
+        RotarySelector.prototype["delete"] = function (model) {
+            var index = this.model.tracks.indexOf(model);
+            this.map.get(model).terminate();
+            this.map["delete"](model);
+            this.model.removeTrack(model);
+            this.updateOrder();
+            var numTracks = this.model.tracks.length;
+            if (0 < numTracks) {
+                this.select(this.model.tracks[Math.min(index, numTracks - 1)]);
+            }
+            else {
+                this.editor.clear();
             }
         };
-        RotaryView.prototype.createView = function (model) {
-            this.map.set(model, new RotaryTrackView(this, this.trackTemplate.cloneNode(true), model));
-        };
-        RotaryView.prototype.copyTrack = function (view) {
-            var index = this.rotary.tracks.indexOf(view.model);
-            console.assert(-1 !== index, "could find model");
-            this.createView(this.rotary.copyTrack(view.model, index + 1));
-            this.updateOrder();
-        };
-        RotaryView.prototype.newTrackAfter = function (view) {
-            var index = this.rotary.tracks.indexOf(view.model);
-            console.assert(-1 !== index, "could find model");
-            this.createView(this.rotary.createTrack(index + 1));
-            this.updateOrder();
-        };
-        RotaryView.prototype.removeTrack = function (view) {
-            this.map["delete"](view.model);
-            this.rotary.removeTrack(view.model);
-            view.element.remove();
-            view.terminate();
-        };
-        RotaryView.prototype.updateOrder = function () {
+        RotarySelector.prototype.updateOrder = function () {
             var _this = this;
-            common_5.Dom.emptyElement(this.tracksContainer);
-            this.rotary.tracks.forEach(function (track) { return _this.tracksContainer.appendChild(_this.map.get(track).element); });
+            common_7.Dom.emptyNode(this.selectors);
+            this.model.tracks.forEach(function (track) { return _this.selectors.appendChild(_this.map.get(track).element); });
         };
-        return RotaryView;
+        return RotarySelector;
     }());
-    exports.RotaryView = RotaryView;
-    var RotaryTrackView = (function () {
-        function RotaryTrackView(view, element, model) {
-            var _this = this;
-            this.view = view;
-            this.element = element;
-            this.model = model;
-            this.terminator = new common_4.Terminator();
-            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='segments']"), common_4.PrintMapping.integer(""), common_4.NumericStepper.Integer)).withValue(model.segments);
-            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer)).withValue(model.width);
-            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='width-padding']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer)).withValue(model.widthPadding);
-            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.length);
-            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='length-ratio']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.lengthRatio);
-            this.phase = this.terminator["with"](new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-parameter='phase']"), common_4.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent)).withValue(model.phase);
-            this.fill = this.terminator["with"](new inputs_1.SelectInput(element.querySelector("select[data-parameter='fill']"), model_1.Fills)).withValue(model.fill);
-            this.movement = this.terminator["with"](new inputs_1.SelectInput(element.querySelector("select[data-parameter='movement']"), model_1.Movements)).withValue(model.movement);
-            this.reverse = this.terminator["with"](new inputs_1.Checkbox(element.querySelector("input[data-parameter='reverse']"))).withValue(model.reverse);
-            this.rgb = this.terminator["with"](new inputs_1.NumericInput(element.querySelector("input[data-parameter='rgb']"), common_4.PrintMapping.RGB)).withValue(model.rgb);
-            var removeButton = element.querySelector("button[data-action='remove']");
-            removeButton.onclick = function () { return view.removeTrack(_this); };
-            var newButton = element.querySelector("button[data-action='new']");
-            newButton.onclick = function () { return view.newTrackAfter(_this); };
-            var copyButton = element.querySelector("button[data-action='copy']");
-            copyButton.onclick = function () { return view.copyTrack(_this); };
+    exports.RotarySelector = RotarySelector;
+});
+define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], function (require, exports, model_2, common_8) {
+    "use strict";
+    exports.__esModule = true;
+    var RotaryRenderer = (function () {
+        function RotaryRenderer() {
         }
-        RotaryTrackView.prototype.draw = function (context, radiusMin, position) {
-            var segments = this.model.segments.get();
-            var scale = this.model.length.get() / segments;
-            var phase = this.model.movement.get()(position - Math.floor(position)) * (this.model.reverse.get() ? -1 : 1) + this.model.phase.get();
-            var width = this.model.width.get();
-            var thickness = this.model.widthPadding.get() * 0.5;
+        RotaryRenderer.draw = function (context, rotary, position) {
+            var radiusMin = rotary.radiusMin.get();
+            for (var i = 0; i < rotary.tracks.length; i++) {
+                var model = rotary.tracks[i];
+                RotaryRenderer.drawTrack(context, model, radiusMin, position);
+                radiusMin += model.width.get() + model.widthPadding.get();
+            }
+        };
+        RotaryRenderer.drawTrack = function (context, model, radiusMin, position) {
+            var segments = model.segments.get();
+            var scale = model.length.get() / segments;
+            var phase = model.movement.get()(position - Math.floor(position)) * (model.reverse.get() ? -1 : 1) + model.phase.get();
+            var width = model.width.get();
+            var thickness = model.widthPadding.get() * 0.5;
             var r0 = radiusMin + thickness;
             var r1 = radiusMin + thickness + width;
             for (var i = 0; i < segments; i++) {
                 var angleMin = i * scale + phase;
-                var angleMax = angleMin + scale * this.model.lengthRatio.get();
-                this.drawSection(context, r0, r1, angleMin, angleMax, this.model.fill.get());
+                var angleMax = angleMin + scale * model.lengthRatio.get();
+                RotaryRenderer.drawSection(context, model, r0, r1, angleMin, angleMax, model.fill.get());
             }
         };
-        RotaryTrackView.prototype.drawSection = function (context, radiusMin, radiusMax, angleMin, angleMax, fill) {
-            if (fill === void 0) { fill = model_1.Fill.Flat; }
+        RotaryRenderer.drawSection = function (context, model, radiusMin, radiusMax, angleMin, angleMax, fill) {
+            if (fill === void 0) { fill = model_2.Fill.Flat; }
             console.assert(radiusMin < radiusMax, "radiusMax(" + radiusMax + ") must be greater then radiusMin(" + radiusMin + ")");
             console.assert(angleMin < angleMax, "angleMax(" + angleMax + ") must be greater then angleMin(" + angleMin + ")");
-            var radianMin = angleMin * common_4.TAU;
-            var radianMax = angleMax * common_4.TAU;
-            if (fill === model_1.Fill.Flat) {
-                context.fillStyle = this.model.opaque();
+            var radianMin = angleMin * common_8.TAU;
+            var radianMax = angleMax * common_8.TAU;
+            if (fill === model_2.Fill.Flat) {
+                context.fillStyle = model.opaque();
             }
-            else if (fill === model_1.Fill.Stroke || fill === model_1.Fill.Line) {
-                context.strokeStyle = this.model.opaque();
+            else if (fill === model_2.Fill.Stroke || fill === model_2.Fill.Line) {
+                context.strokeStyle = model.opaque();
             }
             else {
                 var gradient = context.createConicGradient(radianMin, 0.0, 0.0);
                 var offset = Math.min(angleMax - angleMin, 1.0);
-                if (fill === model_1.Fill.Positive) {
-                    gradient.addColorStop(0.0, this.model.transparent());
-                    gradient.addColorStop(offset, this.model.opaque());
-                    gradient.addColorStop(offset, this.model.transparent());
+                if (fill === model_2.Fill.Positive) {
+                    gradient.addColorStop(0.0, model.transparent());
+                    gradient.addColorStop(offset, model.opaque());
+                    gradient.addColorStop(offset, model.transparent());
                 }
-                else if (fill === model_1.Fill.Negative) {
-                    gradient.addColorStop(0.0, this.model.opaque());
-                    gradient.addColorStop(offset, this.model.transparent());
+                else if (fill === model_2.Fill.Negative) {
+                    gradient.addColorStop(0.0, model.opaque());
+                    gradient.addColorStop(offset, model.transparent());
                 }
                 context.fillStyle = gradient;
             }
-            if (fill === model_1.Fill.Line) {
+            if (fill === model_2.Fill.Line) {
                 var sn = Math.sin(radianMin);
                 var cs = Math.cos(radianMin);
                 context.beginPath();
@@ -882,25 +979,22 @@ define("rotary/view", ["require", "exports", "lib/common", "rotary/model", "dom/
                 context.arc(0.0, 0.0, radiusMin, radianMax, radianMin, true);
                 context.closePath();
             }
-            if (fill === model_1.Fill.Stroke || fill === model_1.Fill.Line) {
+            if (fill === model_2.Fill.Stroke || fill === model_2.Fill.Line) {
                 context.stroke();
             }
             else {
                 context.fill();
             }
         };
-        RotaryTrackView.prototype.terminate = function () {
-            this.terminator.terminate();
-        };
-        return RotaryTrackView;
+        return RotaryRenderer;
     }());
-    exports.RotaryTrackView = RotaryTrackView;
+    exports.RotaryRenderer = RotaryRenderer;
 });
-define("main", ["require", "exports", "rotary/model", "rotary/view"], function (require, exports, model_2, view_1) {
+define("main", ["require", "exports", "rotary/model", "rotary/view", "rotary/render"], function (require, exports, model_3, view_1, render_1) {
     "use strict";
     exports.__esModule = true;
-    var rotary = new model_2.RotaryModel();
-    var rotaryView = view_1.RotaryView.create(document, rotary);
+    var model = new model_3.RotaryModel();
+    view_1.RotarySelector.create(document, model);
     var frame = 0;
     (function () {
         console.log("ready...");
@@ -908,7 +1002,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/view"], function (
         var labelSize = document.querySelector("label.size");
         var context = canvas.getContext("2d", { alpha: true });
         var enterFrame = function () {
-            var size = rotary.measureRadius() * 2;
+            var size = model.measureRadius() * 2;
             var ratio = Math.ceil(devicePixelRatio);
             canvas.width = size * ratio;
             canvas.height = size * ratio;
@@ -919,7 +1013,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/view"], function (
             context.save();
             context.scale(ratio, ratio);
             context.translate(size >> 1, size >> 1);
-            rotaryView.draw(context, frame / 320.0);
+            render_1.RotaryRenderer.draw(context, model, frame / 320.0);
             context.restore();
             frame++;
             requestAnimationFrame(enterFrame);

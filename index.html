@@ -11,15 +11,17 @@
     <script src="bin/main.js"></script>
 </head>
 <body>
-<div class="editor">
-    <div class="preview">
-        <div class="rotary">
-            <canvas></canvas>
-            <label class="size"></label>
+<main>
+    <form class="track-nav">
+        <button id="unshift-new-track">+</button>
+        <div id="track-selectors">
+            <article id="template-selector-track">
+                <label class="radio"><input type="radio" name="track"><span></span></label>
+                <button>+</button>
+            </article>
         </div>
-    </div>
-    <div class="properties">
-        <h1>Rotary</h1>
+    </form>
+    <div class="global-editor">
         <div class="two-columns">
             <label class="name">start radius</label>
             <fieldset class="stepper" data-parameter="start-radius">
@@ -28,78 +30,74 @@
                 <button>▶</button>
             </fieldset>
         </div>
-        <h3>Tracks</h3>
-        <div class="tracks">
-            <section class="track">
-                <div class="properties">
-                    <div class="two-columns">
-                        <label class="name">segments</label>
-                        <fieldset class="stepper" data-parameter="segments">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">width</label>
-                        <fieldset class="stepper" data-parameter="width">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">length</label>
-                        <fieldset class="stepper" data-parameter="length">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">phase</label>
-                        <fieldset class="stepper" data-parameter="phase">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">fill</label>
-                        <select data-parameter="fill"></select>
-                        <label class="name">movement</label>
-                        <select data-parameter="movement"></select>
-                    </div>
-                    <div class="two-columns">
-                        <div class="empty"></div>
-                        <label class="name">padding</label>
-                        <fieldset class="stepper" data-parameter="width-padding">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">ratio</label>
-                        <fieldset class="stepper" data-parameter="length-ratio">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <div class="empty"></div>
-                        <label class="name">color</label>
-                        <input type="text" value="#FFFFFF" data-parameter="rgb">
-                        <label class="name">reverse</label>
-                        <label class="checkbox">
-                            <input type="checkbox" data-parameter="reverse"/>
-                            <span></span>
-                        </label>
-                    </div>
-                    <div class="actions">
-                        <button class="remove" data-action="remove">✖︎</button>
-                        <div class="spacer"></div>
-                        <button class="up" disabled>⬆︎︎</button>
-                        <button class="down" disabled>⬇︎</button>
-                    </div>
-                </div>
-                <div class="create">
-                    <button data-action="new">NEW</button>
-                    <button data-action="copy">COPY</button>
-                </div>
-            </section>
+    </div>
+    <div class="columns">
+        <div class="track-editor">
+            <div class="two-columns">
+                <label class="name">segments</label>
+                <fieldset class="stepper" data-parameter="segments">
+                    <button>◀︎</button>
+                    <input type="text">
+                    <button>▶</button>
+                </fieldset>
+                <label class="name">width</label>
+                <fieldset class="stepper" data-parameter="width">
+                    <button>◀︎</button>
+                    <input type="text">
+                    <button>▶</button>
+                </fieldset>
+                <label class="name">length</label>
+                <fieldset class="stepper" data-parameter="length">
+                    <button>◀︎</button>
+                    <input type="text">
+                    <button>▶</button>
+                </fieldset>
+                <label class="name">phase</label>
+                <fieldset class="stepper" data-parameter="phase">
+                    <button>◀︎</button>
+                    <input type="text">
+                    <button>▶</button>
+                </fieldset>
+                <label class="name">fill</label>
+                <select data-parameter="fill"></select>
+                <label class="name">movement</label>
+                <select data-parameter="movement"></select>
+            </div>
+            <div class="two-columns">
+                <div class="empty"></div>
+                <label class="name">padding</label>
+                <fieldset class="stepper" data-parameter="width-padding">
+                    <button>◀︎</button>
+                    <input type="text">
+                    <button>▶</button>
+                </fieldset>
+                <label class="name">ratio</label>
+                <fieldset class="stepper" data-parameter="length-ratio">
+                    <button>◀︎</button>
+                    <input type="text">
+                    <button>▶</button>
+                </fieldset>
+                <div class="empty"></div>
+                <label class="name">color</label>
+                <input type="text" value="#FFFFFF" data-parameter="rgb">
+                <label class="name">reverse</label>
+                <label class="checkbox">
+                    <input type="checkbox" data-parameter="reverse"/>
+                    <span></span>
+                </label>
+            </div>
+        </div>
+        <div class="actions">
+            <button class="delete">DEL</button>
         </div>
     </div>
-</div>
+    <div class="preview">
+        <div class="rotary">
+            <canvas></canvas>
+            <label class="size"></label>
+        </div>
+    </div>
+</main>
 <script>
     require(['main'])
 </script>

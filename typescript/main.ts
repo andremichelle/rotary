@@ -1,8 +1,9 @@
 import {RotaryModel} from "./rotary/model"
-import {RotaryView} from "./rotary/view";
+import {RotarySelector} from "./rotary/view";
+import {RotaryRenderer} from "./rotary/render";
 
-const rotary = new RotaryModel()
-const rotaryView = RotaryView.create(document, rotary)
+const model = new RotaryModel()
+RotarySelector.create(document, model)
 ;
 
 let frame: number = 0;
@@ -14,7 +15,7 @@ let frame: number = 0;
     const context = canvas.getContext("2d", {alpha: true})
 
     const enterFrame = () => {
-        const size = rotary.measureRadius() * 2
+        const size = model.measureRadius() * 2
         const ratio = Math.ceil(devicePixelRatio)
         canvas.width = size * ratio
         canvas.height = size * ratio
@@ -26,7 +27,7 @@ let frame: number = 0;
         context.save()
         context.scale(ratio, ratio)
         context.translate(size >> 1, size >> 1)
-        rotaryView.draw(context, frame / 320.0)
+        RotaryRenderer.draw(context, model, frame / 320.0)
         context.restore()
 
         frame++
