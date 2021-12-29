@@ -1,3 +1,4 @@
+"use strict";
 define("lib/common", ["require", "exports"], function (require, exports) {
     "use strict";
     exports.__esModule = true;
@@ -993,8 +994,26 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
 define("main", ["require", "exports", "rotary/model", "rotary/view", "rotary/render"], function (require, exports, model_3, view_1, render_1) {
     "use strict";
     exports.__esModule = true;
+    var ListItem = menu.ListItem;
+    var MenuBar = menu.MenuBar;
     var model = new model_3.RotaryModel();
     view_1.RotarySelector.create(document, model);
+    var nav = document.querySelector("nav#app-menu");
+    MenuBar.install()
+        .offset(1, 0)
+        .addButton(nav.querySelector("[data-menu='file']"), ListItem.root()
+        .addListItem(ListItem["default"]("Nothing here", "", false))
+        .addListItem(ListItem["default"]("Obviously", "", false))
+        .addListItem(ListItem["default"]("Maybe", "", false))
+        .addListItem(ListItem["default"]("Nope.", "", false)))
+        .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
+        .addListItem(ListItem["default"]("First?", "", false)))
+        .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
+        .addListItem(ListItem["default"]("View?", "", false)))
+        .addButton(nav.querySelector("[data-menu='create']"), ListItem.root()
+        .addListItem(ListItem["default"]("What?", "", false)))
+        .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
+        .addListItem(ListItem["default"]("Help!", "", false)));
     var frame = 0;
     (function () {
         console.log("ready...");
@@ -1021,4 +1040,418 @@ define("main", ["require", "exports", "rotary/model", "rotary/view", "rotary/ren
         enterFrame();
     })();
 });
+var menu;
+(function (menu_1) {
+    var ListItemDefaultData = (function () {
+        function ListItemDefaultData(label, shortcut, checked) {
+            if (shortcut === void 0) { shortcut = ""; }
+            if (checked === void 0) { checked = false; }
+            this.label = label;
+            this.shortcut = shortcut;
+            this.checked = checked;
+        }
+        ListItemDefaultData.prototype.toString = function () {
+            return this.label;
+        };
+        return ListItemDefaultData;
+    }());
+    menu_1.ListItemDefaultData = ListItemDefaultData;
+    var ListItem = (function () {
+        function ListItem(data) {
+            this.data = data;
+            this.permanentChildren = [];
+            this.transientChildren = [];
+            this.transientChildrenCallback = null;
+            this.triggerCallback = null;
+            this.separatorBefore = false;
+            this.selectable = true;
+            this.isOpening = false;
+        }
+        ListItem.root = function () {
+            return new ListItem(null);
+        };
+        ListItem["default"] = function (label, shortcut, checked) {
+            return new ListItem(new ListItemDefaultData(label, shortcut, checked));
+        };
+        ListItem.prototype.addListItem = function (listItem) {
+            if (this.isOpening) {
+                this.transientChildren.push(listItem);
+            }
+            else {
+                this.permanentChildren.push(listItem);
+            }
+            return this;
+        };
+        ListItem.prototype.trigger = function () {
+            if (null === this.triggerCallback) {
+                console.log("You selected '" + this.data + "'");
+            }
+            else {
+                this.triggerCallback(this);
+            }
+        };
+        ListItem.prototype.disable = function () {
+            this.selectable = false;
+            return this;
+        };
+        ListItem.prototype.addSeparatorBefore = function () {
+            this.separatorBefore = true;
+            return this;
+        };
+        ListItem.prototype.addRuntimeChildrenCallback = function (callback) {
+            this.transientChildrenCallback = callback;
+            return this;
+        };
+        ListItem.prototype.onTrigger = function (callback) {
+            this.triggerCallback = callback;
+            return this;
+        };
+        ListItem.prototype.hasChildren = function () {
+            return 0 < this.permanentChildren.length || null !== this.transientChildrenCallback;
+        };
+        ListItem.prototype.collectChildren = function () {
+            if (null === this.transientChildrenCallback) {
+                return this.permanentChildren;
+            }
+            this.isOpening = true;
+            this.transientChildrenCallback(this);
+            this.isOpening = false;
+            return this.permanentChildren.concat(this.transientChildren);
+        };
+        ListItem.prototype.removeTransientChildren = function () {
+            this.transientChildren.splice(0, this.transientChildren.length);
+        };
+        return ListItem;
+    }());
+    menu_1.ListItem = ListItem;
+    var Controller = (function () {
+        function Controller() {
+            var _this = this;
+            this.root = null;
+            this.layer = null;
+            this.onClose = null;
+            this.mouseDownHandler = function (event) {
+                if (null === _this.root) {
+                    throw new Error("No root");
+                }
+                if (!Menu.Controller.reduceAll(function (m) {
+                    var rect = m.element.getBoundingClientRect();
+                    return event.clientX >= rect.left && event.clientX < rect.right && event.clientY >= rect.top && event.clientY < rect.bottom;
+                })) {
+                    event.stopImmediatePropagation();
+                    event.preventDefault();
+                    _this.close();
+                }
+            };
+        }
+        Controller.prototype.open = function (listItem, onClose, x, y, docked) {
+            if (null === this.layer) {
+                this.layer = document.createElement("div");
+                this.layer.classList.add("menu-layer");
+                document.body.appendChild(this.layer);
+            }
+            else if (null !== this.root) {
+                this.close();
+            }
+            this.root = new Menu(listItem, docked);
+            this.root.moveTo(x, y);
+            this.root.attach(this.layer, null);
+            this.onClose = onClose;
+            window.addEventListener("mousedown", this.mouseDownHandler, true);
+        };
+        Controller.prototype.close = function () {
+            if (null === this.root) {
+                throw new Error("Cannot close root.");
+            }
+            this.onClose();
+            this.onClose = null;
+            this.root.dispose();
+            this.root = null;
+        };
+        Controller.prototype.onDispose = function (pullDown) {
+            if (this.root === pullDown) {
+                window.removeEventListener("mousedown", this.mouseDownHandler, true);
+                this.root = null;
+            }
+        };
+        Controller.prototype.shutdown = function () {
+            this.iterateAll(function (menu) { return menu.element.classList.add("shutdown"); });
+        };
+        Controller.prototype.iterateAll = function (callback) {
+            var menu = this.root;
+            do {
+                callback(menu);
+                menu = menu.childMenu;
+            } while (menu !== null);
+        };
+        Controller.prototype.reduceAll = function (callback) {
+            var menu = this.root;
+            var result = 0;
+            do {
+                result |= callback(menu);
+                menu = menu.childMenu;
+            } while (menu !== null);
+            return result;
+        };
+        return Controller;
+    }());
+    var Menu = (function () {
+        function Menu(listItem, docked) {
+            var _this = this;
+            if (docked === void 0) { docked = false; }
+            this.listItem = listItem;
+            this.element = document.createElement("nav");
+            this.container = document.createElement("div");
+            this.scrollUp = document.createElement("div");
+            this.scrollDown = document.createElement("div");
+            this.childMenu = null;
+            this.selectedDiv = null;
+            this.x = 0 | 0;
+            this.y = 0 | 0;
+            this.element.classList.add("menu");
+            this.element.addEventListener("contextmenu", function (event) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }, true);
+            if (docked) {
+                this.element.classList.add("docked");
+            }
+            this.container = document.createElement("div");
+            this.container.classList.add("container");
+            this.scrollUp = document.createElement("div");
+            this.scrollUp.textContent = "▲";
+            this.scrollUp.classList.add("transparent");
+            this.scrollUp.classList.add("scroll");
+            this.scrollUp.classList.add("up");
+            this.scrollDown = document.createElement("div");
+            this.scrollDown.textContent = "▼";
+            this.scrollDown.classList.add("transparent");
+            this.scrollDown.classList.add("scroll");
+            this.scrollDown.classList.add("down");
+            this.element.appendChild(this.scrollUp);
+            this.element.appendChild(this.container);
+            this.element.appendChild(this.scrollDown);
+            var _loop_1 = function (listItem_1) {
+                if (listItem_1.separatorBefore) {
+                    this_1.container.appendChild(document.createElement("hr"));
+                }
+                var div = document.createElement("div");
+                if (listItem_1.selectable) {
+                    div.classList.add("selectable");
+                }
+                if (listItem_1.hasChildren()) {
+                    div.classList.add("has-children");
+                }
+                div.onmouseenter = function () {
+                    if (null !== _this.selectedDiv) {
+                        _this.selectedDiv.classList.remove("selected");
+                        _this.selectedDiv = null;
+                    }
+                    div.classList.add("selected");
+                    _this.selectedDiv = div;
+                    var hasChildren = listItem_1.hasChildren();
+                    if (null !== _this.childMenu) {
+                        if (hasChildren && _this.childMenu.listItem === listItem_1) {
+                            return;
+                        }
+                        _this.childMenu.dispose();
+                        _this.childMenu = null;
+                    }
+                    if (hasChildren) {
+                        var divRect = div.getBoundingClientRect();
+                        _this.childMenu = new Menu(listItem_1);
+                        _this.childMenu.moveTo(divRect.left + divRect.width, divRect.top - 8);
+                        _this.childMenu.attach(_this.element.parentElement, _this);
+                    }
+                };
+                div.onmouseleave = function (event) {
+                    if (_this.isChild(event.relatedTarget)) {
+                        return;
+                    }
+                    div.classList.remove("selected");
+                    _this.selectedDiv = null;
+                    if (null !== _this.childMenu) {
+                        _this.childMenu.dispose();
+                        _this.childMenu = null;
+                    }
+                };
+                div.onmouseup = function (event) {
+                    event.preventDefault();
+                    if (null === _this.childMenu) {
+                        div.addEventListener("animationend", function () {
+                            listItem_1.trigger();
+                            Menu.Controller.close();
+                        }, { once: true });
+                        div.classList.add("triggered");
+                        Menu.Controller.shutdown();
+                    }
+                    return true;
+                };
+                var renderer = Menu.Renderer.get(listItem_1.data.constructor);
+                if (renderer) {
+                    renderer(div, listItem_1.data);
+                }
+                else {
+                    throw new Error("No renderer found for " + listItem_1.data);
+                }
+                this_1.container.appendChild(div);
+            };
+            var this_1 = this;
+            for (var _i = 0, _a = this.listItem.collectChildren(); _i < _a.length; _i++) {
+                var listItem_1 = _a[_i];
+                _loop_1(listItem_1);
+            }
+        }
+        Menu.prototype.moveTo = function (x, y) {
+            this.x = x | 0;
+            this.y = y | 0;
+            this.element.style.transform = "translate(" + this.x + "px, " + this.y + "px)";
+        };
+        Menu.prototype.attach = function (parentNode, parentMenu) {
+            if (parentMenu === void 0) { parentMenu = null; }
+            parentNode.appendChild(this.element);
+            var clientRect = this.element.getBoundingClientRect();
+            if (clientRect.left + clientRect.width > parentNode.clientWidth) {
+                if (null === parentMenu || undefined === parentMenu) {
+                    this.moveTo(this.x - clientRect.width, this.y);
+                }
+                else {
+                    this.moveTo(parentMenu.x - clientRect.width, this.y);
+                }
+            }
+            if (clientRect.height >= parentNode.clientHeight) {
+                this.moveTo(this.x, 0);
+                this.makeScrollable();
+            }
+            else if (clientRect.top + clientRect.height > parentNode.clientHeight) {
+                this.moveTo(this.x, parentNode.clientHeight - clientRect.height);
+            }
+        };
+        Menu.prototype.makeScrollable = function () {
+            var _this = this;
+            var scroll = function (direction) { return _this.container.scrollTop += direction; };
+            this.element.classList.add("overflowing");
+            this.element.addEventListener("wheel", function (event) { return scroll(Math.sign(event.deltaY) * 6); }, { passive: false });
+            var canScroll = function (direction) {
+                if (0 > direction && 0 === _this.container.scrollTop) {
+                    return false;
+                }
+                if (0 < direction && _this.container.scrollTop === _this.container.scrollHeight - _this.container.clientHeight) {
+                    return false;
+                }
+                return true;
+            };
+            var setup = function (button, direction) {
+                button.onmouseenter = function () {
+                    if (!canScroll(direction)) {
+                        return;
+                    }
+                    button.classList.add("scrolling");
+                    var active = true;
+                    var scrolling = function () {
+                        scroll(direction);
+                        if (!canScroll(direction)) {
+                            active = false;
+                        }
+                        if (active) {
+                            window.requestAnimationFrame(scrolling);
+                        }
+                        else {
+                            button.classList.remove("scrolling");
+                        }
+                    };
+                    window.requestAnimationFrame(scrolling);
+                    button.onmouseleave = function () {
+                        active = false;
+                        button.onmouseup = null;
+                    };
+                };
+            };
+            setup(this.scrollUp, -8);
+            setup(this.scrollDown, 8);
+        };
+        Menu.prototype.dispose = function () {
+            if (null !== this.childMenu) {
+                this.childMenu.dispose();
+                this.childMenu = null;
+            }
+            Menu.Controller.onDispose(this);
+            this.element.remove();
+            this.element = null;
+            this.listItem.removeTransientChildren();
+            this.listItem = null;
+            this.selectedDiv = null;
+        };
+        Menu.prototype.domElement = function () {
+            return this.element;
+        };
+        Menu.prototype.isChild = function (target) {
+            if (null === this.childMenu) {
+                return false;
+            }
+            while (null !== target) {
+                if (target === this.element) {
+                    return false;
+                }
+                if (target === this.childMenu.domElement()) {
+                    return true;
+                }
+                target = target.parentNode;
+            }
+            return false;
+        };
+        Menu.Controller = new Controller();
+        Menu.Renderer = new Map();
+        return Menu;
+    }());
+    menu_1.Menu = Menu;
+    Menu.Renderer.set(ListItemDefaultData, function (element, data) {
+        element.classList.add("default");
+        element.innerHTML =
+            "<svg class=\"check-icon\"><use xlink:href=\"#menu-checked\"></use></svg>\n             <span class=\"label\">" + data.label + "</span>\n             <span class=\"shortcut\">" + data.shortcut + "</span>\n             <svg class=\"children-icon\"><use xlink:href=\"#menu-children\"></use></svg>";
+        if (data.checked) {
+            element.classList.add("checked");
+        }
+    });
+    var MenuBar = (function () {
+        function MenuBar() {
+            this.offsetX = 0;
+            this.offsetY = 0;
+            this.openListItem = null;
+        }
+        MenuBar.install = function () {
+            return new MenuBar();
+        };
+        MenuBar.prototype.offset = function (x, y) {
+            this.offsetX = x;
+            this.offsetY = y;
+            return this;
+        };
+        MenuBar.prototype.addButton = function (button, listItem) {
+            var _this = this;
+            button.onmousedown = function () { return _this.open(button, listItem); };
+            button.onmouseenter = function () {
+                if (null !== _this.openListItem && _this.openListItem !== listItem) {
+                    _this.open(button, listItem);
+                }
+            };
+            return this;
+        };
+        MenuBar.prototype.open = function (button, listItem) {
+            var _this = this;
+            button.classList.add("selected");
+            var rect = button.getBoundingClientRect();
+            var x = rect.left + this.offsetX;
+            var y = rect.bottom + this.offsetY;
+            var onClose = function () {
+                _this.openListItem = null;
+                button.classList.remove("selected");
+            };
+            Menu.Controller.open(listItem, onClose, x, y, true);
+            this.openListItem = listItem;
+        };
+        return MenuBar;
+    }());
+    menu_1.MenuBar = MenuBar;
+})(menu || (menu = {}));
 //# sourceMappingURL=main.js.map

@@ -1,9 +1,30 @@
 import {RotaryModel} from "./rotary/model"
 import {RotarySelector} from "./rotary/view";
 import {RotaryRenderer} from "./rotary/render";
+import ListItem = menu.ListItem;
+import MenuBar = menu.MenuBar;
 
 const model = new RotaryModel()
 RotarySelector.create(document, model)
+;
+
+const nav = document.querySelector("nav#app-menu")
+MenuBar.install()
+    .offset(1, 0)
+    .addButton(nav.querySelector("[data-menu='file']"), ListItem.root()
+        .addListItem(ListItem.default("Nothing here", "", false))
+        .addListItem(ListItem.default("Obviously", "", false))
+        .addListItem(ListItem.default("Maybe", "", false))
+        .addListItem(ListItem.default("Nope.", "", false))
+    )
+    .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
+        .addListItem(ListItem.default("First?", "", false)))
+    .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
+        .addListItem(ListItem.default("View?", "", false)))
+    .addButton(nav.querySelector("[data-menu='create']"), ListItem.root()
+        .addListItem(ListItem.default("What?", "", false)))
+    .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
+        .addListItem(ListItem.default("Help!", "", false)))
 ;
 
 let frame: number = 0;

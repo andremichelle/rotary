@@ -1,0 +1,161 @@
+$background: hsl(57, 5%, 86%)
+
+$LabelColour: darken($background, 50)
+$SelectedBackground: darken($background, 50)
+
+@keyframes menu-fade-in
+  from
+    opacity: 0.0
+  to
+    opacity: 0.98
+
+@keyframes menu-item-trigger
+  0%
+    color: $LabelColour
+    background-color: $SelectedBackground
+  50%, 100%
+    color: #333333
+    background-color: lighten($background, 75%)
+
+nav#app-menu
+  display: flex
+  background-color: rgba(white, 0.08)
+  margin: 0
+  padding: 0 8px
+
+  > button
+    width: auto
+    height: auto
+    color: white
+    padding: 8px 12px
+    font-size: 11px
+    background: transparent
+    border-radius: 0
+    font-weight: bold
+
+    &.selected
+      color: black
+      background-color: white
+
+div.menu-layer
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  position: absolute
+  pointer-events: none
+
+nav.menu
+  position: absolute
+  border-collapse: collapse
+  display: flex
+  flex-direction: column
+  font-size: 12px
+  color: $LabelColour
+  background-color: lighten($background, 4)
+  border-radius: 3px
+  overflow: hidden
+  opacity: 0.0
+  min-width: 128px
+  max-height: 100%
+  padding: 8px 0
+  animation-name: menu-fade-in
+  animation-duration: 101ms
+  animation-fill-mode: forwards
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2)
+  pointer-events: all
+
+  &.docked
+    padding: 6px 0 8px 0
+    border-radius: 0 0 3px 3px
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.1) inset
+
+  &.shutdown
+    pointer-events: none
+
+  &.overflowing
+    div.scroll
+      display: flex
+
+  > div.container
+    display: flex
+    flex-direction: column
+    overflow: hidden
+
+    > div.default
+      flex: 1 0 24px
+      display: flex
+      align-items: center
+      padding: 0 8px
+      opacity: 0.3
+      pointer-events: none
+      white-space: nowrap
+
+      &.selected
+        color: lighten($background, 50)
+        background-color: $SelectedBackground
+
+      &.triggered
+        animation-name: menu-item-trigger
+        animation-iteration-count: 2
+        animation-duration: 100ms
+        animation-direction: alternate
+        animation-timing-function: ease-out
+
+      > svg.check-icon, svg.children-icon
+        pointer-events: none
+        fill: currentColor
+        width: 12px
+        height: 12px
+
+      > svg.check-icon
+        visibility: hidden
+
+      > svg.children-icon
+        display: none
+
+      &.checked
+        > svg.check-icon
+          visibility: visible
+
+      &.has-children
+        > svg.children-icon
+          display: block
+
+      &.selectable
+        opacity: 1.0
+        pointer-events: inherit
+
+      > span.label
+        pointer-events: none
+        flex: 1
+        padding: 0 20px 0 4px
+
+      > span.shortcut
+        pointer-events: none
+        margin: 0
+
+    > hr
+      width: 100%
+      height: 0
+      border: 0
+      border-top: 1px solid lighten($background, 5%)
+      pointer-events: none
+
+  > div.scroll
+    display: none
+    justify-content: center
+    flex: 1 0 20px
+    line-height: 22px
+    margin: 4px 0
+    width: 100%
+    color: #666
+
+    &.up
+      margin-top: -3px
+
+    &.down
+      margin-bottom: -3px
+
+    &.scrolling
+      color: #DDD

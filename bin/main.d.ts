@@ -309,3 +309,78 @@ declare module "rotary/render" {
     }
 }
 declare module "main" { }
+declare namespace menu {
+    export class ListItemDefaultData {
+        readonly label: string;
+        readonly shortcut: string;
+        readonly checked: boolean;
+        constructor(label: string, shortcut?: string, checked?: boolean);
+        toString(): string;
+    }
+    export class ListItem {
+        readonly data: any;
+        static root(): ListItem;
+        static default(label: string, shortcut: any, checked: boolean): ListItem;
+        private readonly permanentChildren;
+        private readonly transientChildren;
+        private transientChildrenCallback;
+        private triggerCallback;
+        separatorBefore: boolean;
+        selectable: boolean;
+        private isOpening;
+        constructor(data: any);
+        addListItem(listItem: ListItem): ListItem;
+        trigger(): void;
+        disable(): ListItem;
+        addSeparatorBefore(): ListItem;
+        addRuntimeChildrenCallback(callback: (parent: ListItem) => void): ListItem;
+        onTrigger(callback: (listItem: ListItem) => void): ListItem;
+        hasChildren(): boolean;
+        collectChildren(): ListItem[];
+        removeTransientChildren(): void;
+    }
+    class Controller {
+        private readonly mouseDownHandler;
+        private root;
+        private layer;
+        private onClose;
+        constructor();
+        open(listItem: ListItem, onClose: () => void, x: number, y: number, docked: boolean): void;
+        close(): void;
+        onDispose(pullDown: any): void;
+        shutdown(): void;
+        iterateAll(callback: any): void;
+        reduceAll(callback: any): number;
+    }
+    export class Menu {
+        private listItem;
+        static Controller: Controller;
+        static Renderer: Map<any, (element: HTMLElement, data: any) => void>;
+        private element;
+        private readonly container;
+        private readonly scrollUp;
+        private readonly scrollDown;
+        childMenu: Menu;
+        private selectedDiv;
+        private x;
+        private y;
+        constructor(listItem: ListItem, docked?: boolean);
+        moveTo(x: any, y: any): void;
+        attach(parentNode: Element, parentMenu?: Menu): void;
+        private makeScrollable;
+        dispose(): void;
+        domElement(): HTMLElement;
+        isChild(target: Node): boolean;
+    }
+    export class MenuBar {
+        static install(): MenuBar;
+        private offsetX;
+        private offsetY;
+        private openListItem;
+        constructor();
+        offset(x: number, y: number): MenuBar;
+        addButton(button: HTMLElement, listItem: ListItem): MenuBar;
+        open(button: HTMLElement, listItem: ListItem): void;
+    }
+    export {};
+}
