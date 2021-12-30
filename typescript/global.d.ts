@@ -29,6 +29,11 @@ declare interface PickerOptions {
     types?: PickerOptionType[]
 }
 
+// Hides error TS2339: Property 'text' does not exist on type 'File'
+declare interface File extends Blob {
+    text(): Promise<string>
+}
+
 declare interface Window {
     showOpenFilePicker(pickerOpts?: PickerOptions): Promise<FileSystemFileHandle[]>
 

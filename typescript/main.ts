@@ -22,14 +22,13 @@ MenuBar.install()
         }))
         .addListItem(ListItem.default("Open...", "", false).onTrigger(async item => {
             const fileHandles = await window.showOpenFilePicker(pickerOpts)
-            console.log(fileHandles.length)
             if (0 === fileHandles.length) {
                 return
             }
             const fileStream = await fileHandles[0].getFile()
-            console.log(fileStream)
-            // const text: string = await fileStream.text()
-            // const format = await JSON.parse(text)
+            const text: string = await fileStream.text()
+            const format = await JSON.parse(text)
+            model.deserialize(format)
         }))
     )
     .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()

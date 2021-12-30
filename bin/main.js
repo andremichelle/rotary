@@ -1181,20 +1181,25 @@ define("main", ["require", "exports", "rotary/model", "rotary/view", "rotary/ren
         });
     }); }))
         .addListItem(ListItem["default"]("Open...", "", false).onTrigger(function (item) { return __awaiter(void 0, void 0, void 0, function () {
-        var fileHandles, fileStream;
+        var fileHandles, fileStream, text, format;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4, window.showOpenFilePicker(pickerOpts)];
                 case 1:
                     fileHandles = _a.sent();
-                    console.log(fileHandles.length);
                     if (0 === fileHandles.length) {
                         return [2];
                     }
                     return [4, fileHandles[0].getFile()];
                 case 2:
                     fileStream = _a.sent();
-                    console.log(fileStream);
+                    return [4, fileStream.text()];
+                case 3:
+                    text = _a.sent();
+                    return [4, JSON.parse(text)];
+                case 4:
+                    format = _a.sent();
+                    model.deserialize(format);
                     return [2];
             }
         });
