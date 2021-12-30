@@ -106,6 +106,36 @@ declare module "lib/common" {
         set(value: any): boolean;
         terminate(): void;
     }
+    export enum CollectionEventType {
+        Add = 0,
+        Remove = 1,
+        Order = 2
+    }
+    export class CollectionEvent<T> {
+        readonly collection: ObservableCollection<T>;
+        readonly type: CollectionEventType;
+        readonly item: T;
+        readonly index: number;
+        constructor(collection: ObservableCollection<T>, type: CollectionEventType, item?: T, index?: number);
+    }
+    export class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
+        private readonly observable;
+        private readonly values;
+        add(value: T, index?: number): boolean;
+        addAll(values: T[]): void;
+        remove(value: T): boolean;
+        removeIndex(index: number): boolean;
+        clear(): void;
+        get(index: number): T;
+        indexOf(value: T): number;
+        size(): number;
+        map<U>(fn: (value: T, index: number, array: T[]) => U): U[];
+        forEach(fn: (value: T, index: number) => void): void;
+        reduce<U>(fn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U): U;
+        addObserver(observer: Observer<CollectionEvent<T>>): Terminable;
+        removeObserver(observer: Observer<CollectionEvent<T>>): boolean;
+        terminate(): void;
+    }
     export class ObservableValueImpl<T> implements ObservableValue<T> {
         private value;
         private readonly observable;
@@ -142,18 +172,36 @@ declare module "lib/common" {
     }
 }
 declare module "rotary/model" {
-    import { ObservableValueImpl, Parameter, Terminable } from "lib/common";
+    import { ObservableCollection, ObservableValueImpl, Parameter, Terminable } from "lib/common";
+    interface RotaryFormat {
+        radiusMin: number;
+        tracks: RotaryTrackFormat[];
+    }
+    interface RotaryTrackFormat {
+        segments: number;
+        width: number;
+        widthPadding: number;
+        length: number;
+        lengthRatio: number;
+        fill: number;
+        rgb: number;
+        movement: number;
+        reverse: boolean;
+        phase: number;
+    }
     export class RotaryModel implements Terminable {
         private readonly terminator;
         readonly radiusMin: Parameter;
-        readonly tracks: RotaryTrackModel[];
+        readonly tracks: ObservableCollection<RotaryTrackModel>;
         constructor();
         randomize(): void;
-        createTrack(insertIndex?: number): RotaryTrackModel;
+        deserialize(format: RotaryFormat): void;
+        createTrack(index?: number): RotaryTrackModel | null;
         copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
         removeTrack(track: RotaryTrackModel): boolean;
         measureRadius(): number;
         terminate(): void;
+        serialize(): RotaryFormat;
     }
     export enum Fill {
         Flat = 0,
@@ -182,8 +230,10 @@ declare module "rotary/model" {
         constructor();
         opaque(): string;
         transparent(): string;
-        randomize(): void;
+        randomize(): RotaryTrackModel;
         terminate(): void;
+        serialize(): RotaryTrackFormat;
+        deserialize(format: RotaryTrackFormat): RotaryTrackModel;
         private updateGradient;
     }
 }
@@ -297,7 +347,7 @@ declare module "rotary/view" {
         select(model: RotaryTrackModel): void;
         createNew(model: RotaryTrackModel, copy: boolean): void;
         delete(model: RotaryTrackModel): void;
-        updateOrder(): void;
+        update(): void;
     }
 }
 declare module "rotary/render" {

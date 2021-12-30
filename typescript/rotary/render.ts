@@ -6,8 +6,8 @@ export class RotaryRenderer {
                 rotary: RotaryModel,
                 position: number): void {
         let radiusMin = rotary.radiusMin.get()
-        for (let i = 0; i < rotary.tracks.length; i++) {
-            const model = rotary.tracks[i]
+        for (let i = 0; i < rotary.tracks.size(); i++) {
+            const model = rotary.tracks.get(i)
             RotaryRenderer.drawTrack(context, model, radiusMin, position)
             radiusMin += model.width.get() + model.widthPadding.get()
         }

@@ -1,4 +1,40 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 define("lib/common", ["require", "exports"], function (require, exports) {
     "use strict";
     exports.__esModule = true;
@@ -234,6 +270,102 @@ define("lib/common", ["require", "exports"], function (require, exports) {
         return ObservableValueVoid;
     }());
     exports.ObservableValueVoid = ObservableValueVoid;
+    var CollectionEventType;
+    (function (CollectionEventType) {
+        CollectionEventType[CollectionEventType["Add"] = 0] = "Add";
+        CollectionEventType[CollectionEventType["Remove"] = 1] = "Remove";
+        CollectionEventType[CollectionEventType["Order"] = 2] = "Order";
+    })(CollectionEventType = exports.CollectionEventType || (exports.CollectionEventType = {}));
+    var CollectionEvent = (function () {
+        function CollectionEvent(collection, type, item, index) {
+            if (item === void 0) { item = null; }
+            if (index === void 0) { index = -1; }
+            this.collection = collection;
+            this.type = type;
+            this.item = item;
+            this.index = index;
+        }
+        return CollectionEvent;
+    }());
+    exports.CollectionEvent = CollectionEvent;
+    var ObservableCollection = (function () {
+        function ObservableCollection() {
+            this.observable = new ObservableImpl();
+            this.values = [];
+        }
+        ObservableCollection.prototype.add = function (value, index) {
+            if (index === void 0) { index = Number.MAX_SAFE_INTEGER; }
+            console.assert(0 <= index);
+            index = Math.min(index, this.values.length);
+            if (this.values.includes(value))
+                return false;
+            this.values.splice(index, 0, value);
+            this.observable.notify(new CollectionEvent(this, CollectionEventType.Add, value, index));
+            return true;
+        };
+        ObservableCollection.prototype.addAll = function (values) {
+            for (var _i = 0, values_1 = values; _i < values_1.length; _i++) {
+                var value = values_1[_i];
+                this.add(value);
+            }
+        };
+        ObservableCollection.prototype.remove = function (value) {
+            return this.removeIndex(this.values.indexOf(value));
+        };
+        ObservableCollection.prototype.removeIndex = function (index) {
+            if (-1 === index)
+                return false;
+            var removed = this.values.splice(index, 1);
+            if (0 === removed.length)
+                return false;
+            this.observable.notify(new CollectionEvent(this, CollectionEventType.Remove, removed[0], index));
+            return true;
+        };
+        ObservableCollection.prototype.clear = function () {
+            for (var index = this.values.length - 1; index > -1; index--) {
+                this.removeIndex(index);
+            }
+        };
+        ObservableCollection.prototype.get = function (index) {
+            return this.values[index];
+        };
+        ObservableCollection.prototype.indexOf = function (value) {
+            return this.values.indexOf(value);
+        };
+        ObservableCollection.prototype.size = function () {
+            return this.values.length;
+        };
+        ObservableCollection.prototype.map = function (fn) {
+            var arr = [];
+            for (var i = 0; i < this.values.length; i++) {
+                arr[i] = fn(this.values[i], i, this.values);
+            }
+            return arr;
+        };
+        ObservableCollection.prototype.forEach = function (fn) {
+            for (var i = 0; i < this.values.length; i++) {
+                fn(this.values[i], i);
+            }
+        };
+        ObservableCollection.prototype.reduce = function (fn, initialValue) {
+            var value = initialValue;
+            for (var i = 0; i < this.values.length; i++) {
+                value = fn(value, this.values[i], i);
+            }
+            return value;
+        };
+        ObservableCollection.prototype.addObserver = function (observer) {
+            return this.observable.addObserver(observer);
+        };
+        ObservableCollection.prototype.removeObserver = function (observer) {
+            return this.observable.removeObserver(observer);
+        };
+        ObservableCollection.prototype.terminate = function () {
+            this.observable.terminate();
+        };
+        return ObservableCollection;
+    }());
+    exports.ObservableCollection = ObservableCollection;
     var ObservableValueImpl = (function () {
         function ObservableValueImpl(value) {
             this.value = value;
@@ -321,22 +453,25 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         function RotaryModel() {
             this.terminator = new common_1.Terminator();
             this.radiusMin = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(0, 128), 20));
-            this.tracks = [];
-            this.randomize();
+            this.tracks = new common_1.ObservableCollection();
         }
         RotaryModel.prototype.randomize = function () {
-            this.tracks.splice(0, this.tracks.length);
+            var tracks = [];
             for (var i = 0; i < 12; i++) {
-                var model = new RotaryTrackModel();
-                model.randomize();
-                this.tracks.push(model);
+                tracks.push(new RotaryTrackModel().randomize());
             }
+            this.tracks.clear();
+            this.tracks.addAll(tracks);
         };
-        RotaryModel.prototype.createTrack = function (insertIndex) {
-            if (insertIndex === void 0) { insertIndex = Number.MAX_SAFE_INTEGER; }
+        RotaryModel.prototype.deserialize = function (format) {
+            this.radiusMin.set(format['radiusMin']);
+            this.tracks.clear();
+            this.tracks.addAll(format.tracks.map(function (trackFormat) { return new RotaryTrackModel().deserialize(trackFormat); }));
+        };
+        RotaryModel.prototype.createTrack = function (index) {
+            if (index === void 0) { index = Number.MAX_SAFE_INTEGER; }
             var track = new RotaryTrackModel();
-            this.tracks.splice(insertIndex, 0, track);
-            return track;
+            return this.tracks.add(track, index) ? track : null;
         };
         RotaryModel.prototype.copyTrack = function (source, insertIndex) {
             if (insertIndex === void 0) { insertIndex = Number.MAX_SAFE_INTEGER; }
@@ -354,24 +489,21 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             return copy;
         };
         RotaryModel.prototype.removeTrack = function (track) {
-            var index = this.tracks.indexOf(track);
-            if (-1 < index) {
-                this.tracks.splice(index, 1);
-                track.terminate();
-                return true;
-            }
-            return false;
+            return this.tracks.remove(track);
         };
         RotaryModel.prototype.measureRadius = function () {
-            var radiusMin = this.radiusMin.get();
-            for (var i = 0; i < this.tracks.length; i++) {
-                var track = this.tracks[i];
-                radiusMin += track.width.get() + track.widthPadding.get();
-            }
-            return radiusMin;
+            return this.tracks.reduce(function (radius, track) {
+                return radius + track.width.get() + track.widthPadding.get();
+            }, this.radiusMin.get());
         };
         RotaryModel.prototype.terminate = function () {
             this.terminator.terminate();
+        };
+        RotaryModel.prototype.serialize = function () {
+            return {
+                radiusMin: this.radiusMin.get(),
+                tracks: this.tracks.map(function (track) { return track.serialize(); })
+            };
         };
         return RotaryModel;
     }());
@@ -444,9 +576,36 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             this.lengthRatio.set(lengthRatio);
             this.fill.set(fill);
             this.movement.set(exports.randomMovement());
+            return this;
         };
         RotaryTrackModel.prototype.terminate = function () {
             this.terminator.terminate();
+        };
+        RotaryTrackModel.prototype.serialize = function () {
+            return {
+                segments: this.segments.get(),
+                width: this.width.get(),
+                widthPadding: this.widthPadding.get(),
+                length: this.length.get(),
+                lengthRatio: this.lengthRatio.get(),
+                fill: this.fill.get(),
+                rgb: this.rgb.get(),
+                movement: 0,
+                reverse: this.reverse.get(),
+                phase: this.phase.get()
+            };
+        };
+        RotaryTrackModel.prototype.deserialize = function (format) {
+            this.segments.set(format.segments);
+            this.width.set(format.width);
+            this.widthPadding.set(format.widthPadding);
+            this.length.set(format.length);
+            this.lengthRatio.set(format.lengthRatio);
+            this.fill.set(format.fill);
+            this.rgb.set(format.rgb);
+            this.reverse.set(format.reverse);
+            this.phase.set(format.phase);
+            return this;
         };
         RotaryTrackModel.prototype.updateGradient = function () {
             var rgb = this.rgb.get();
@@ -849,17 +1008,12 @@ define("rotary/view", ["require", "exports", "lib/common", "dom/inputs", "rotary
             this.editor = new editor_1.RotaryTrackEditor(this, document);
             form.querySelector("#unshift-new-track").addEventListener("click", function (event) {
                 event.preventDefault();
-                var model = _this.model.createTrack(0);
-                model.randomize();
-                _this.createSelector(model);
-                _this.updateOrder();
-                _this.select(model);
+                _this.select(_this.model.createTrack(0).randomize());
             });
-            model.tracks.forEach(function (track) { return _this.createSelector(track); });
-            if (0 < model.tracks.length) {
-                this.select(model.tracks[0]);
-            }
-            this.updateOrder();
+            model.tracks.addObserver(function (event) { return _this.update(); });
+            this.update();
+            if (0 < this.model.tracks.size())
+                this.select(this.model.tracks.get(0));
         }
         RotarySelector.create = function (document, rotary) {
             var form = document.querySelector("form.track-nav");
@@ -873,40 +1027,42 @@ define("rotary/view", ["require", "exports", "lib/common", "dom/inputs", "rotary
             var radio = element.querySelector("input[type=radio]");
             var button = element.querySelector("button");
             this.map.set(trackModel, new RotaryTrackSelector(this, trackModel, element, radio, button));
+            this.selectors.appendChild(element);
         };
         RotarySelector.prototype.select = function (model) {
+            console.assert(model != undefined, "Cannot select");
             this.editor.edit(model);
-            this.map.get(model).radio.checked = true;
+            var selector = this.map.get(model);
+            console.assert(selector != undefined, "Cannot select");
+            selector.radio.checked = true;
         };
         RotarySelector.prototype.createNew = function (model, copy) {
             var index = this.model.tracks.indexOf(model);
             console.assert(-1 !== index, "could find model");
             var newModel = copy
                 ? this.model.copyTrack(model, index + 1)
-                : this.model.createTrack(index + 1);
-            newModel.randomize();
-            this.createSelector(newModel);
-            this.updateOrder();
+                : this.model.createTrack(index + 1).randomize();
             this.select(newModel);
         };
         RotarySelector.prototype["delete"] = function (model) {
-            var index = this.model.tracks.indexOf(model);
-            this.map.get(model).terminate();
-            this.map["delete"](model);
+            var beforeIndex = this.model.tracks.indexOf(model);
             this.model.removeTrack(model);
-            this.updateOrder();
-            var numTracks = this.model.tracks.length;
+            var numTracks = this.model.tracks.size();
             if (0 < numTracks) {
-                this.select(this.model.tracks[Math.min(index, numTracks - 1)]);
+                this.select(this.model.tracks.get(Math.min(beforeIndex, numTracks - 1)));
             }
             else {
                 this.editor.clear();
             }
         };
-        RotarySelector.prototype.updateOrder = function () {
+        RotarySelector.prototype.update = function () {
             var _this = this;
-            common_7.Dom.emptyNode(this.selectors);
-            this.model.tracks.forEach(function (track) { return _this.selectors.appendChild(_this.map.get(track).element); });
+            for (var _i = 0, _a = Array.from(this.map.values()); _i < _a.length; _i++) {
+                var entry = _a[_i];
+                entry.terminate();
+            }
+            this.map.clear();
+            this.model.tracks.forEach(function (track) { return _this.createSelector(track); });
         };
         return RotarySelector;
     }());
@@ -920,8 +1076,8 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
         }
         RotaryRenderer.draw = function (context, rotary, position) {
             var radiusMin = rotary.radiusMin.get();
-            for (var i = 0; i < rotary.tracks.length; i++) {
-                var model = rotary.tracks[i];
+            for (var i = 0; i < rotary.tracks.size(); i++) {
+                var model = rotary.tracks.get(i);
                 RotaryRenderer.drawTrack(context, model, radiusMin, position);
                 radiusMin += model.width.get() + model.widthPadding.get();
             }
@@ -997,15 +1153,52 @@ define("main", ["require", "exports", "rotary/model", "rotary/view", "rotary/ren
     var ListItem = menu.ListItem;
     var MenuBar = menu.MenuBar;
     var model = new model_3.RotaryModel();
+    model.randomize();
     view_1.RotarySelector.create(document, model);
+    var pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
     var nav = document.querySelector("nav#app-menu");
     MenuBar.install()
-        .offset(1, 0)
+        .offset(0, 0)
         .addButton(nav.querySelector("[data-menu='file']"), ListItem.root()
-        .addListItem(ListItem["default"]("Nothing here", "", false))
-        .addListItem(ListItem["default"]("Obviously", "", false))
-        .addListItem(ListItem["default"]("Maybe", "", false))
-        .addListItem(ListItem["default"]("Nope.", "", false)))
+        .addListItem(ListItem["default"]("Save", "", false).onTrigger(function (item) { return __awaiter(void 0, void 0, void 0, function () {
+        var fileHandle, fileStream;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4, window.showSaveFilePicker(pickerOpts)];
+                case 1:
+                    fileHandle = _a.sent();
+                    return [4, fileHandle.createWritable()];
+                case 2:
+                    fileStream = _a.sent();
+                    return [4, fileStream.write(new Blob([JSON.stringify(model.serialize())], { type: "application/json" }))];
+                case 3:
+                    _a.sent();
+                    return [4, fileStream.close()];
+                case 4:
+                    _a.sent();
+                    return [2];
+            }
+        });
+    }); }))
+        .addListItem(ListItem["default"]("Open...", "", false).onTrigger(function (item) { return __awaiter(void 0, void 0, void 0, function () {
+        var fileHandles, fileStream;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4, window.showOpenFilePicker(pickerOpts)];
+                case 1:
+                    fileHandles = _a.sent();
+                    console.log(fileHandles.length);
+                    if (0 === fileHandles.length) {
+                        return [2];
+                    }
+                    return [4, fileHandles[0].getFile()];
+                case 2:
+                    fileStream = _a.sent();
+                    console.log(fileStream);
+                    return [2];
+            }
+        });
+    }); })))
         .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
         .addListItem(ListItem["default"]("First?", "", false)))
         .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()

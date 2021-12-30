@@ -1,30 +1,60 @@
-import {Linear, LinearInteger, ObservableValueImpl, Parameter, Terminable, Terminator} from "../lib/common"
+import {
+    Linear,
+    LinearInteger,
+    ObservableCollection,
+    ObservableValueImpl,
+    Parameter,
+    Terminable,
+    Terminator
+} from "../lib/common"
+
+declare interface RotaryFormat {
+    radiusMin: number
+    tracks: RotaryTrackFormat[]
+}
+
+declare interface RotaryTrackFormat {
+    segments: number
+    width: number
+    widthPadding: number
+    length: number
+    lengthRatio: number
+    fill: number
+    rgb: number
+    movement: number
+    reverse: boolean
+    phase: number
+}
 
 export class RotaryModel implements Terminable {
     private readonly terminator: Terminator = new Terminator()
 
     readonly radiusMin = this.terminator.with(new Parameter(new LinearInteger(0, 128), 20))
 
-    readonly tracks: RotaryTrackModel[] = []
+    readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
 
     constructor() {
-        this.randomize()
     }
 
     randomize() {
-        this.tracks.splice(0, this.tracks.length)
-
+        const tracks = []
         for (let i = 0; i < 12; i++) {
-            const model = new RotaryTrackModel()
-            model.randomize()
-            this.tracks.push(model)
+            tracks.push(new RotaryTrackModel().randomize())
         }
+        this.tracks.clear()
+        this.tracks.addAll(tracks)
     }
 
-    createTrack(insertIndex: number = Number.MAX_SAFE_INTEGER): RotaryTrackModel {
+    deserialize(format: RotaryFormat): void {
+        this.radiusMin.set(format['radiusMin'])
+
+        this.tracks.clear()
+        this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel().deserialize(trackFormat)))
+    }
+
+    createTrack(index: number = Number.MAX_SAFE_INTEGER): RotaryTrackModel | null {
         const track = new RotaryTrackModel()
-        this.tracks.splice(insertIndex, 0, track)
-        return track
+        return this.tracks.add(track, index) ? track : null
     }
 
     copyTrack(source: RotaryTrackModel, insertIndex: number = Number.MAX_SAFE_INTEGER): RotaryTrackModel {
@@ -43,26 +73,23 @@ export class RotaryModel implements Terminable {
     }
 
     removeTrack(track: RotaryTrackModel): boolean {
-        const index = this.tracks.indexOf(track)
-        if (-1 < index) {
-            this.tracks.splice(index, 1)
-            track.terminate()
-            return true
-        }
-        return false
+        return this.tracks.remove(track)
     }
 
     measureRadius(): number {
-        let radiusMin = this.radiusMin.get()
-        for (let i = 0; i < this.tracks.length; i++) {
-            const track = this.tracks[i];
-            radiusMin += track.width.get() + track.widthPadding.get()
-        }
-        return radiusMin
+        return this.tracks.reduce((radius, track) =>
+            radius + track.width.get() + track.widthPadding.get(), this.radiusMin.get())
     }
 
     terminate(): void {
         this.terminator.terminate()
+    }
+
+    serialize(): RotaryFormat {
+        return {
+            radiusMin: this.radiusMin.get(),
+            tracks: this.tracks.map(track => track.serialize())
+        }
     }
 }
 
@@ -123,7 +150,7 @@ export class RotaryTrackModel implements Terminable {
         return this.gradient[1]
     }
 
-    randomize() {
+    randomize(): RotaryTrackModel {
         const segments = 1 + Math.floor(Math.random() * 9)
         const lengthRatioExp = -Math.floor(Math.random() * 3)
         const lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
@@ -138,10 +165,40 @@ export class RotaryTrackModel implements Terminable {
         this.lengthRatio.set(lengthRatio)
         this.fill.set(fill)
         this.movement.set(randomMovement())
+        return this
     }
 
     terminate(): void {
         this.terminator.terminate()
+    }
+
+    serialize(): RotaryTrackFormat {
+        return {
+            segments: this.segments.get(),
+            width: this.width.get(),
+            widthPadding: this.widthPadding.get(),
+            length: this.length.get(),
+            lengthRatio: this.lengthRatio.get(),
+            fill: this.fill.get(),
+            rgb: this.rgb.get(),
+            movement: /*this.movement.get()*/ 0, // TODO
+            reverse: this.reverse.get(),
+            phase: this.phase.get()
+        }
+    }
+
+    deserialize(format: RotaryTrackFormat): RotaryTrackModel {
+        this.segments.set(format.segments)
+        this.width.set(format.width)
+        this.widthPadding.set(format.widthPadding)
+        this.length.set(format.length)
+        this.lengthRatio.set(format.lengthRatio)
+        this.fill.set(format.fill)
+        this.rgb.set(format.rgb)
+        // this.movement.set(format.movement) TODO
+        this.reverse.set(format.reverse)
+        this.phase.set(format.phase)
+        return this;
     }
 
     private updateGradient(): void {

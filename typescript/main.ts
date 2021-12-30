@@ -5,17 +5,32 @@ import ListItem = menu.ListItem;
 import MenuBar = menu.MenuBar;
 
 const model = new RotaryModel()
+model.randomize()
 RotarySelector.create(document, model)
 ;
 
+const pickerOpts = {types: [{description: "rotary", accept: {"json/*": [".json"]}}]}
 const nav = document.querySelector("nav#app-menu")
 MenuBar.install()
-    .offset(1, 0)
+    .offset(0, 0)
     .addButton(nav.querySelector("[data-menu='file']"), ListItem.root()
-        .addListItem(ListItem.default("Nothing here", "", false))
-        .addListItem(ListItem.default("Obviously", "", false))
-        .addListItem(ListItem.default("Maybe", "", false))
-        .addListItem(ListItem.default("Nope.", "", false))
+        .addListItem(ListItem.default("Save", "", false).onTrigger(async item => {
+            const fileHandle = await window.showSaveFilePicker(pickerOpts)
+            const fileStream = await fileHandle.createWritable()
+            await fileStream.write(new Blob([JSON.stringify(model.serialize())], {type: "application/json"}))
+            await fileStream.close()
+        }))
+        .addListItem(ListItem.default("Open...", "", false).onTrigger(async item => {
+            const fileHandles = await window.showOpenFilePicker(pickerOpts)
+            console.log(fileHandles.length)
+            if (0 === fileHandles.length) {
+                return
+            }
+            const fileStream = await fileHandles[0].getFile()
+            console.log(fileStream)
+            // const text: string = await fileStream.text()
+            // const format = await JSON.parse(text)
+        }))
     )
     .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
         .addListItem(ListItem.default("First?", "", false)))

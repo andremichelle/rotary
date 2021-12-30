@@ -1,4 +1,4 @@
-import {NumericStepper, PrintMapping, Terminable, Terminator} from "../lib/common"
+import {CollectionEvent, NumericStepper, PrintMapping, Terminable, Terminator} from "../lib/common"
 import {RotaryModel, RotaryTrackModel} from "./model"
 import {NumericStepperInput} from "../dom/inputs"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor"
@@ -52,18 +52,12 @@ export class RotarySelector implements RotaryTrackEditorExecutor {
         form.querySelector("#unshift-new-track").addEventListener("click",
             event => {
                 event.preventDefault()
-                const model = this.model.createTrack(0)
-                model.randomize()
-                this.createSelector(model)
-                this.updateOrder()
-                this.select(model)
+                this.select(this.model.createTrack(0).randomize())
             })
 
-        model.tracks.forEach(track => this.createSelector(track))
-        if (0 < model.tracks.length) {
-            this.select(model.tracks[0])
-        }
-        this.updateOrder()
+        model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => this.update())
+        this.update()
+        if (0 < this.model.tracks.size()) this.select(this.model.tracks.get(0))
     }
 
     createSelector(trackModel: RotaryTrackModel): void {
@@ -71,11 +65,15 @@ export class RotarySelector implements RotaryTrackEditorExecutor {
         const radio = element.querySelector("input[type=radio]") as HTMLInputElement
         const button = element.querySelector("button") as HTMLButtonElement
         this.map.set(trackModel, new RotaryTrackSelector(this, trackModel, element, radio, button))
+        this.selectors.appendChild(element)
     }
 
-    select(model: RotaryTrackModel) {
+    select(model: RotaryTrackModel): void {
+        console.assert(model != undefined, "Cannot select")
         this.editor.edit(model)
-        this.map.get(model).radio.checked = true
+        const selector = this.map.get(model)
+        console.assert(selector != undefined, "Cannot select")
+        selector.radio.checked = true
     }
 
     createNew(model: RotaryTrackModel, copy: boolean) {
@@ -83,29 +81,26 @@ export class RotarySelector implements RotaryTrackEditorExecutor {
         console.assert(-1 !== index, "could find model")
         const newModel = copy
             ? this.model.copyTrack(model, index + 1)
-            : this.model.createTrack(index + 1)
-        newModel.randomize()
-        this.createSelector(newModel)
-        this.updateOrder()
+            : this.model.createTrack(index + 1).randomize()
         this.select(newModel)
     }
 
     delete(model: RotaryTrackModel): void {
-        const index = this.model.tracks.indexOf(model)
-        this.map.get(model).terminate()
-        this.map.delete(model)
+        const beforeIndex = this.model.tracks.indexOf(model)
         this.model.removeTrack(model)
-        this.updateOrder()
-        const numTracks = this.model.tracks.length
+        const numTracks = this.model.tracks.size()
         if (0 < numTracks) {
-            this.select(this.model.tracks[Math.min(index, numTracks - 1)])
+            this.select(this.model.tracks.get(Math.min(beforeIndex, numTracks - 1)))
         } else {
             this.editor.clear()
         }
     }
 
-    updateOrder(): void {
-        Dom.emptyNode(this.selectors)
-        this.model.tracks.forEach(track => this.selectors.appendChild(this.map.get(track).element))
+    update(): void {
+        for (const entry of Array.from(this.map.values())) {
+            entry.terminate()
+        }
+        this.map.clear()
+        this.model.tracks.forEach(track => this.createSelector(track))
     }
 }
