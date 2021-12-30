@@ -199,6 +199,7 @@ declare module "rotary/model" {
         createTrack(index?: number): RotaryTrackModel | null;
         copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
         removeTrack(track: RotaryTrackModel): boolean;
+        clear(): void;
         measureRadius(): number;
         terminate(): void;
         serialize(): RotaryFormat;

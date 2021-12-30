@@ -14,13 +14,7 @@ const nav = document.querySelector("nav#app-menu")
 MenuBar.install()
     .offset(0, 0)
     .addButton(nav.querySelector("[data-menu='file']"), ListItem.root()
-        .addListItem(ListItem.default("Save", "", false).onTrigger(async item => {
-            const fileHandle = await window.showSaveFilePicker(pickerOpts)
-            const fileStream = await fileHandle.createWritable()
-            await fileStream.write(new Blob([JSON.stringify(model.serialize())], {type: "application/json"}))
-            await fileStream.close()
-        }))
-        .addListItem(ListItem.default("Open...", "", false).onTrigger(async item => {
+        .addListItem(ListItem.default("Open...", "", false).onTrigger(async () => {
             const fileHandles = await window.showOpenFilePicker(pickerOpts)
             if (0 === fileHandles.length) {
                 return
@@ -30,15 +24,24 @@ MenuBar.install()
             const format = await JSON.parse(text)
             model.deserialize(format)
         }))
+        .addListItem(ListItem.default("Save...", "", false).onTrigger(async () => {
+            const fileHandle = await window.showSaveFilePicker(pickerOpts)
+            const fileStream = await fileHandle.createWritable()
+            await fileStream.write(new Blob([JSON.stringify(model.serialize())], {type: "application/json"}))
+            await fileStream.close()
+        }))
+        .addListItem(ListItem.default("Clear", "", false).onTrigger( () => {
+            model.clear()
+        }))
     )
     .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
-        .addListItem(ListItem.default("First?", "", false)))
+        .addListItem(ListItem.default("Nothing yet", "", false)))
     .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
-        .addListItem(ListItem.default("View?", "", false)))
+        .addListItem(ListItem.default("Nothing yet", "", false)))
     .addButton(nav.querySelector("[data-menu='create']"), ListItem.root()
-        .addListItem(ListItem.default("What?", "", false)))
+        .addListItem(ListItem.default("Nothing yet", "", false)))
     .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
-        .addListItem(ListItem.default("Help!", "", false)))
+        .addListItem(ListItem.default("Nothing yet", "", false)))
 ;
 
 let frame: number = 0;

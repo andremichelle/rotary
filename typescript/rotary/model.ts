@@ -29,7 +29,7 @@ declare interface RotaryTrackFormat {
 export class RotaryModel implements Terminable {
     private readonly terminator: Terminator = new Terminator()
 
-    readonly radiusMin = this.terminator.with(new Parameter(new LinearInteger(0, 128), 20))
+    readonly radiusMin = this.terminator.with(new Parameter(new LinearInteger(0, 1024), 20))
 
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
 
@@ -74,6 +74,11 @@ export class RotaryModel implements Terminable {
 
     removeTrack(track: RotaryTrackModel): boolean {
         return this.tracks.remove(track)
+    }
+
+    clear() {
+        this.radiusMin.set(20.0)
+        this.tracks.clear()
     }
 
     measureRadius(): number {
@@ -126,9 +131,9 @@ export class RotaryTrackModel implements Terminable {
 
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
 
-    readonly segments = this.terminator.with(new Parameter(new LinearInteger(1, 128), 8))
-    readonly width = this.terminator.with(new Parameter(new LinearInteger(1, 128), 12))
-    readonly widthPadding = this.terminator.with(new Parameter(new LinearInteger(0, 128), 0))
+    readonly segments = this.terminator.with(new Parameter(new LinearInteger(1, 1024), 8))
+    readonly width = this.terminator.with(new Parameter(new LinearInteger(1, 1024), 12))
+    readonly widthPadding = this.terminator.with(new Parameter(new LinearInteger(0, 1024), 0))
     readonly length = this.terminator.with(new Parameter(Linear.Identity, 1.0))
     readonly lengthRatio = this.terminator.with(new Parameter(Linear.Identity, 0.5))
     readonly phase = this.terminator.with(new Parameter(Linear.Identity, 0.0))
@@ -153,7 +158,7 @@ export class RotaryTrackModel implements Terminable {
     randomize(): RotaryTrackModel {
         const segments = 1 + Math.floor(Math.random() * 9)
         const lengthRatioExp = -Math.floor(Math.random() * 3)
-        const lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
+        const lengthRatio = 0 === lengthRatioExp ? 0.5 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
         const width = Math.random() < 0.1 ? 24.0 : 12.0
         const widthPadding = Math.random() < 0.1 ? 0.0 : 3.0
         const length = Math.random() < 0.1 ? 0.75 : 1.0

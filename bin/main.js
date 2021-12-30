@@ -452,7 +452,7 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
     var RotaryModel = (function () {
         function RotaryModel() {
             this.terminator = new common_1.Terminator();
-            this.radiusMin = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(0, 128), 20));
+            this.radiusMin = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(0, 1024), 20));
             this.tracks = new common_1.ObservableCollection();
         }
         RotaryModel.prototype.randomize = function () {
@@ -490,6 +490,10 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         };
         RotaryModel.prototype.removeTrack = function (track) {
             return this.tracks.remove(track);
+        };
+        RotaryModel.prototype.clear = function () {
+            this.radiusMin.set(20.0);
+            this.tracks.clear();
         };
         RotaryModel.prototype.measureRadius = function () {
             return this.tracks.reduce(function (radius, track) {
@@ -542,9 +546,9 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             var _this = this;
             this.terminator = new common_1.Terminator();
             this.gradient = [];
-            this.segments = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(1, 128), 8));
-            this.width = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(1, 128), 12));
-            this.widthPadding = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(0, 128), 0));
+            this.segments = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(1, 1024), 8));
+            this.width = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(1, 1024), 12));
+            this.widthPadding = this.terminator["with"](new common_1.Parameter(new common_1.LinearInteger(0, 1024), 0));
             this.length = this.terminator["with"](new common_1.Parameter(common_1.Linear.Identity, 1.0));
             this.lengthRatio = this.terminator["with"](new common_1.Parameter(common_1.Linear.Identity, 0.5));
             this.phase = this.terminator["with"](new common_1.Parameter(common_1.Linear.Identity, 0.0));
@@ -564,7 +568,7 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         RotaryTrackModel.prototype.randomize = function () {
             var segments = 1 + Math.floor(Math.random() * 9);
             var lengthRatioExp = -Math.floor(Math.random() * 3);
-            var lengthRatio = 0 === lengthRatioExp ? 1.0 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp);
+            var lengthRatio = 0 === lengthRatioExp ? 0.5 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp);
             var width = Math.random() < 0.1 ? 24.0 : 12.0;
             var widthPadding = Math.random() < 0.1 ? 0.0 : 3.0;
             var length = Math.random() < 0.1 ? 0.75 : 1.0;
@@ -1160,27 +1164,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/view", "rotary/ren
     MenuBar.install()
         .offset(0, 0)
         .addButton(nav.querySelector("[data-menu='file']"), ListItem.root()
-        .addListItem(ListItem["default"]("Save", "", false).onTrigger(function (item) { return __awaiter(void 0, void 0, void 0, function () {
-        var fileHandle, fileStream;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4, window.showSaveFilePicker(pickerOpts)];
-                case 1:
-                    fileHandle = _a.sent();
-                    return [4, fileHandle.createWritable()];
-                case 2:
-                    fileStream = _a.sent();
-                    return [4, fileStream.write(new Blob([JSON.stringify(model.serialize())], { type: "application/json" }))];
-                case 3:
-                    _a.sent();
-                    return [4, fileStream.close()];
-                case 4:
-                    _a.sent();
-                    return [2];
-            }
-        });
-    }); }))
-        .addListItem(ListItem["default"]("Open...", "", false).onTrigger(function (item) { return __awaiter(void 0, void 0, void 0, function () {
+        .addListItem(ListItem["default"]("Open...", "", false).onTrigger(function () { return __awaiter(void 0, void 0, void 0, function () {
         var fileHandles, fileStream, text, format;
         return __generator(this, function (_a) {
             switch (_a.label) {
@@ -1203,15 +1187,38 @@ define("main", ["require", "exports", "rotary/model", "rotary/view", "rotary/ren
                     return [2];
             }
         });
-    }); })))
+    }); }))
+        .addListItem(ListItem["default"]("Save...", "", false).onTrigger(function () { return __awaiter(void 0, void 0, void 0, function () {
+        var fileHandle, fileStream;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4, window.showSaveFilePicker(pickerOpts)];
+                case 1:
+                    fileHandle = _a.sent();
+                    return [4, fileHandle.createWritable()];
+                case 2:
+                    fileStream = _a.sent();
+                    return [4, fileStream.write(new Blob([JSON.stringify(model.serialize())], { type: "application/json" }))];
+                case 3:
+                    _a.sent();
+                    return [4, fileStream.close()];
+                case 4:
+                    _a.sent();
+                    return [2];
+            }
+        });
+    }); }))
+        .addListItem(ListItem["default"]("Clear", "", false).onTrigger(function () {
+        model.clear();
+    })))
         .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
-        .addListItem(ListItem["default"]("First?", "", false)))
+        .addListItem(ListItem["default"]("Nothing yet", "", false)))
         .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
-        .addListItem(ListItem["default"]("View?", "", false)))
+        .addListItem(ListItem["default"]("Nothing yet", "", false)))
         .addButton(nav.querySelector("[data-menu='create']"), ListItem.root()
-        .addListItem(ListItem["default"]("What?", "", false)))
+        .addListItem(ListItem["default"]("Nothing yet", "", false)))
         .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
-        .addListItem(ListItem["default"]("Help!", "", false)));
+        .addListItem(ListItem["default"]("Nothing yet", "", false)));
     var frame = 0;
     (function () {
         console.log("ready...");
