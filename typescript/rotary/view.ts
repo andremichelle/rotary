@@ -118,7 +118,7 @@ export class RotarySelector implements RotaryTrackEditorExecutor {
         Dom.emptyNode(this.selectors)
         this.model.tracks.forEach(track => {
             const selector = this.map.get(track)
-            console.assert(selector !== undefined, "Cannot remove selector")
+            console.assert(selector !== undefined, "Cannot reorder selector")
             this.selectors.appendChild(selector.element)
         })
     }
