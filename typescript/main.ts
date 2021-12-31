@@ -1,41 +1,57 @@
 import {RotaryModel} from "./rotary/model"
-import {RotarySelector} from "./rotary/view";
-import {RotaryRenderer} from "./rotary/render";
-import ListItem = menu.ListItem;
-import MenuBar = menu.MenuBar;
+import {RotaryUI} from "./rotary/ui"
+import {RotaryRenderer} from "./rotary/render"
+import MenuBar = menu.MenuBar
+import ListItem = menu.ListItem
+import {UniformRandomMapping} from "./lib/common";
 
-const model = new RotaryModel()
-model.randomize()
-RotarySelector.create( model)
-;
+const model = new RotaryModel().randomize()
+const rotaryUI = RotaryUI.create(model)
 
 const pickerOpts = {types: [{description: "rotary", accept: {"json/*": [".json"]}}]}
 const nav = document.querySelector("nav#app-menu")
 MenuBar.install()
     .offset(0, 0)
     .addButton(nav.querySelector("[data-menu='file']"), ListItem.root()
-        .addListItem(ListItem.default("Open...", "", false).onTrigger(async () => {
-            const fileHandles = await window.showOpenFilePicker(pickerOpts)
-            if (0 === fileHandles.length) {
-                return
-            }
-            const fileStream = await fileHandles[0].getFile()
-            const text: string = await fileStream.text()
-            const format = await JSON.parse(text)
-            model.deserialize(format)
-        }))
-        .addListItem(ListItem.default("Save...", "", false).onTrigger(async () => {
-            const fileHandle = await window.showSaveFilePicker(pickerOpts)
-            const fileStream = await fileHandle.createWritable()
-            await fileStream.write(new Blob([JSON.stringify(model.serialize())], {type: "application/json"}))
-            await fileStream.close()
-        }))
-        .addListItem(ListItem.default("Clear", "", false).onTrigger( () => {
-            model.clear()
-        }))
+        .addListItem(ListItem.default("Open...", "", false)
+            .onTrigger(async () => {
+                const fileHandles = await window.showOpenFilePicker(pickerOpts)
+                if (0 === fileHandles.length) {
+                    return
+                }
+                const fileStream = await fileHandles[0].getFile()
+                const text: string = await fileStream.text()
+                const format = await JSON.parse(text)
+                model.deserialize(format)
+            }))
+        .addListItem(ListItem.default("Save...", "", false)
+            .onTrigger(async () => {
+                const fileHandle = await window.showSaveFilePicker(pickerOpts)
+                const fileStream = await fileHandle.createWritable()
+                await fileStream.write(new Blob([JSON.stringify(model.serialize())], {type: "application/json"}))
+                await fileStream.close()
+            }))
+        .addListItem(ListItem.default("Clear", "", false)
+            .onTrigger(() => {
+                model.clear()
+            }))
     )
     .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
-        .addListItem(ListItem.default("Nothing yet", "", false)))
+        .addListItem(ListItem.default("Create Track", "", false)
+            .onTrigger(item => {
+                rotaryUI.createNew(null, false)
+            }))
+        .addListItem(ListItem.default("Copy Track", "", false)
+            .onOpening(item => item.disable(!rotaryUI.hasSelected()))
+            .onTrigger(item => {
+                rotaryUI.createNew(null, true)
+            }))
+        .addListItem(ListItem.default("Delete Track", "", false)
+            .onOpening(item => item.disable(!rotaryUI.hasSelected()))
+            .onTrigger(item => {
+                rotaryUI.delete()
+            }))
+    )
     .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
         .addListItem(ListItem.default("Nothing yet", "", false)))
     .addButton(nav.querySelector("[data-menu='create']"), ListItem.root()

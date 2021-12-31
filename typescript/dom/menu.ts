@@ -22,6 +22,7 @@ namespace menu {
         private readonly permanentChildren: ListItem[] = []
         private readonly transientChildren: ListItem[] = []
         private transientChildrenCallback: (parent: ListItem) => void = null
+        private openingCallback: (listItem: ListItem) => void = null
         private triggerCallback: (listItem: ListItem) => void = null
         separatorBefore: boolean = false
         selectable: boolean = true
@@ -39,6 +40,12 @@ namespace menu {
             return this
         }
 
+        opening(): void {
+            if (null !== this.openingCallback) {
+                this.openingCallback(this)
+            }
+        }
+
         trigger(): void {
             if (null === this.triggerCallback) {
                 console.log("You selected '" + this.data + "'")
@@ -47,8 +54,8 @@ namespace menu {
             }
         }
 
-        disable(): ListItem {
-            this.selectable = false
+        disable(value: boolean = false): ListItem {
+            this.selectable = value
             return this
         }
 
@@ -59,6 +66,11 @@ namespace menu {
 
         addRuntimeChildrenCallback(callback: (parent: ListItem) => void): ListItem {
             this.transientChildrenCallback = callback
+            return this
+        }
+
+        onOpening(callback: (listItem: ListItem) => void): ListItem {
+            this.openingCallback = callback
             return this
         }
 
@@ -203,6 +215,7 @@ namespace menu {
             this.element.appendChild(this.container)
             this.element.appendChild(this.scrollDown)
             for (const listItem of this.listItem.collectChildren()) {
+                listItem.opening()
                 if (listItem.separatorBefore) {
                     this.container.appendChild(document.createElement("hr"))
                 }

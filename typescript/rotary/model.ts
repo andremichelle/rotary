@@ -3,9 +3,9 @@ import {
     LinearInteger,
     ObservableCollection,
     ObservableValueImpl,
-    Parameter,
+    BoundNumericValue,
     Terminable,
-    Terminator
+    Terminator, UniformRandomMapping
 } from "../lib/common"
 
 declare interface RotaryFormat {
@@ -29,20 +29,20 @@ declare interface RotaryTrackFormat {
 export class RotaryModel implements Terminable {
     private readonly terminator: Terminator = new Terminator()
 
-    readonly radiusMin = this.terminator.with(new Parameter(new LinearInteger(0, 1024), 20))
-
+    readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
 
     constructor() {
     }
 
-    randomize() {
+    randomize(): RotaryModel {
         const tracks = []
         for (let i = 0; i < 12; i++) {
             tracks.push(new RotaryTrackModel().randomize())
         }
         this.tracks.clear()
         this.tracks.addAll(tracks)
+        return this
     }
 
     deserialize(format: RotaryFormat): void {
@@ -109,6 +109,7 @@ const OddShape = shape => { // https://www.desmos.com/calculator/bpbuua3l0j
     return x => c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), o) + 0.5
 }
 export type Move = (x: number) => number
+const randomMapping = new UniformRandomMapping(16, 64.0, 1.0)
 export const Movements = new Map([
     ["Linear", x => x],
     ["Sine", x => Math.sin(x * Math.PI)],
@@ -118,6 +119,7 @@ export const Movements = new Map([
     ["OddShape -1", OddShape(-1.0)],
     ["OddShape 1", OddShape(1.0)],
     ["OddShape 2", OddShape(2.0)],
+    ["Random", x => randomMapping.y(x)],
 ])
 export const randomMovement = (): Move => {
     const array = Array.from(Movements)
@@ -131,12 +133,12 @@ export class RotaryTrackModel implements Terminable {
 
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
 
-    readonly segments = this.terminator.with(new Parameter(new LinearInteger(1, 1024), 8))
-    readonly width = this.terminator.with(new Parameter(new LinearInteger(1, 1024), 12))
-    readonly widthPadding = this.terminator.with(new Parameter(new LinearInteger(0, 1024), 0))
-    readonly length = this.terminator.with(new Parameter(Linear.Identity, 1.0))
-    readonly lengthRatio = this.terminator.with(new Parameter(Linear.Identity, 0.5))
-    readonly phase = this.terminator.with(new Parameter(Linear.Identity, 0.0))
+    readonly segments = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 8))
+    readonly width = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 12))
+    readonly widthPadding = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 0))
+    readonly length = this.terminator.with(new BoundNumericValue(Linear.Identity, 1.0))
+    readonly lengthRatio = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.5))
+    readonly phase = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0))
     readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
     readonly movement = this.terminator.with(new ObservableValueImpl<Move>(Movements.values().next().value))
     readonly reverse = this.terminator.with(new ObservableValueImpl<boolean>(false))

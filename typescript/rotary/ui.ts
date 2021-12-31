@@ -2,38 +2,15 @@ import {CollectionEvent, CollectionEventType, NumericStepper, PrintMapping, Term
 import {RotaryModel, RotaryTrackModel} from "./model"
 import {NumericStepperInput} from "../dom/inputs"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor"
-import {Dom} from "../dom/common";
+import {Dom} from "../dom/common"
 
-class RotaryTrackSelector implements Terminable {
-    private readonly terminator = new Terminator()
-
-    constructor(readonly selector: RotarySelector,
-                readonly model: RotaryTrackModel,
-                readonly element: HTMLElement,
-                readonly radio: HTMLInputElement,
-                readonly button: HTMLButtonElement) {
-        this.terminator.with(Dom.bindEventListener(this.radio, "change",
-            () => this.selector.select(this.model)))
-        this.terminator.with(Dom.bindEventListener(this.button, "click",
-            (event: MouseEvent) => {
-                event.preventDefault()
-                this.selector.createNew(this.model, event.shiftKey)
-            }))
-    }
-
-    terminate(): void {
-        this.element.remove()
-        this.terminator.terminate()
-    }
-}
-
-export class RotarySelector implements RotaryTrackEditorExecutor {
-    static create(rotary: RotaryModel): RotarySelector {
+export class RotaryUI implements RotaryTrackEditorExecutor {
+    static create(rotary: RotaryModel): RotaryUI {
         const form = document.querySelector("form.track-nav") as HTMLFormElement
         const selectors = form.querySelector("#track-selectors")
         const template = selectors.querySelector("#template-selector-track")
         template.remove()
-        return new RotarySelector(form, selectors, template, rotary)
+        return new RotaryUI(form, selectors, template, rotary)
     }
 
     private readonly terminator: Terminator = new Terminator()
@@ -70,15 +47,11 @@ export class RotarySelector implements RotaryTrackEditorExecutor {
         if (0 < this.model.tracks.size()) this.select(this.model.tracks.get(0))
     }
 
-    select(model: RotaryTrackModel): void {
-        console.assert(model != undefined, "Cannot select")
-        this.editor.edit(model)
-        const selector = this.map.get(model)
-        console.assert(selector != undefined, "Cannot select")
-        selector.radio.checked = true
-    }
-
     createNew(model: RotaryTrackModel, copy: boolean) {
+        if ((model = model || this.editor.subject) === null) {
+            this.select(this.model.createTrack(0).randomize())
+            return
+        }
         const index = this.model.tracks.indexOf(model)
         console.assert(-1 !== index, "Could not find model")
         const newModel = copy
@@ -87,7 +60,8 @@ export class RotarySelector implements RotaryTrackEditorExecutor {
         this.select(newModel)
     }
 
-    delete(model: RotaryTrackModel): void {
+    delete(model: RotaryTrackModel = null): void {
+        if ((model = model || this.editor.subject) === null) return
         const beforeIndex = this.model.tracks.indexOf(model)
         console.assert(-1 !== beforeIndex, "Could not find model")
         this.model.removeTrack(model)
@@ -97,6 +71,18 @@ export class RotarySelector implements RotaryTrackEditorExecutor {
         } else {
             this.editor.clear()
         }
+    }
+
+    select(model: RotaryTrackModel): void {
+        console.assert(model != undefined, "Cannot select")
+        this.editor.edit(model)
+        const selector = this.map.get(model)
+        console.assert(selector != undefined, "Cannot select")
+        selector.radio.checked = true
+    }
+
+    hasSelected(): boolean {
+        return this.editor.subject !== null
     }
 
     private createSelector(track: RotaryTrackModel, index: number = Number.MAX_SAFE_INTEGER): void {
@@ -121,5 +107,28 @@ export class RotarySelector implements RotaryTrackEditorExecutor {
             console.assert(selector !== undefined, "Cannot reorder selector")
             this.selectors.appendChild(selector.element)
         })
+    }
+}
+
+export class RotaryTrackSelector implements Terminable {
+    private readonly terminator = new Terminator()
+
+    constructor(readonly selector: RotaryUI,
+                readonly model: RotaryTrackModel,
+                readonly element: HTMLElement,
+                readonly radio: HTMLInputElement,
+                readonly button: HTMLButtonElement) {
+        this.terminator.with(Dom.bindEventListener(this.radio, "change",
+            () => this.selector.select(this.model)))
+        this.terminator.with(Dom.bindEventListener(this.button, "click",
+            (event: MouseEvent) => {
+                event.preventDefault()
+                this.selector.createNew(this.model, event.shiftKey)
+            }))
+    }
+
+    terminate(): void {
+        this.element.remove()
+        this.terminator.terminate()
     }
 }

@@ -60,6 +60,19 @@ export class ObservableImpl<T> implements Observable<T> {
     }
 }
 
+export abstract class Range {
+    private constructor() {
+    }
+
+    min: number
+
+    max: number
+
+    clamp(value: number): number {
+        return Math.min(this.max, Math.max(this.min, value))
+    }
+}
+
 export interface ValueMapping<Y> {
     y(x: number): Y
 
@@ -68,14 +81,14 @@ export interface ValueMapping<Y> {
     clamp(y: Y): Y
 }
 
-export class Linear implements ValueMapping<number> {
+export class Linear implements ValueMapping<number>, Range {
     static Identity = new Linear(0.0, 1.0)
     static Bipolar = new Linear(-1.0, 1.0)
     static Percent = new Linear(0.0, 100.0)
 
     private readonly range: number
 
-    constructor(private readonly min: number, private readonly max: number) {
+    constructor(readonly min: number, readonly max: number) {
         this.range = max - min
     }
 
@@ -92,11 +105,11 @@ export class Linear implements ValueMapping<number> {
     }
 }
 
-export class LinearInteger implements ValueMapping<number> {
+export class LinearInteger implements ValueMapping<number>, Range {
     static Percent = new Linear(0, 100)
 
-    private readonly min: number
-    private readonly max: number
+    readonly min: number
+    readonly max: number
     private readonly range: number
 
     constructor(min: number, max: number) {
@@ -118,9 +131,9 @@ export class LinearInteger implements ValueMapping<number> {
     }
 }
 
-export class Exp implements ValueMapping<number> {
-    private readonly min: number
-    private readonly max: number
+export class Exp implements ValueMapping<number>, Range {
+    readonly min: number
+    readonly max: number
     private readonly range: number
 
     constructor(min: number, max: number) {
@@ -160,7 +173,7 @@ export class Boolean implements ValueMapping<boolean> {
  * A proper level mapping based on db = a-b/(x+c) where x is unipolar [0,1]
  * Solved in Maxima: solve([min=a-b/c,max=a-b/(1+c),mid=a-b/(1/2+c)],[a,b,c]);
  */
-export class Volume implements ValueMapping<number> {
+export class Volume implements ValueMapping<number>, Range {
     static Default = new Volume()
 
     private readonly a: number
@@ -438,10 +451,10 @@ export class NumericStepper implements Stepper {
     }
 }
 
-export class Parameter implements ObservableValue<number> {
-    private readonly observable = new ObservableImpl<Parameter>()
+export class BoundNumericValue implements ObservableValue<number> {
+    private readonly observable = new ObservableImpl<BoundNumericValue>()
 
-    constructor(readonly mapping: ValueMapping<number> = Linear.Identity,
+    constructor(private readonly range: Range = Linear.Identity,
                 private value: number = 0.5) {
     }
 
@@ -449,12 +462,8 @@ export class Parameter implements ObservableValue<number> {
         return this.value;
     }
 
-    unipolar(): number {
-        return this.mapping.x(this.value)
-    }
-
     set(value: number): boolean {
-        value = this.mapping.clamp(value)
+        value = this.range.clamp(value)
         if (this.value === value) {
             return false
         }
@@ -463,15 +472,88 @@ export class Parameter implements ObservableValue<number> {
         return true
     }
 
-    addObserver(observer: Observer<Parameter>): Terminable {
+    addObserver(observer: Observer<BoundNumericValue>): Terminable {
         return this.observable.addObserver(observer)
     }
 
-    removeObserver(observer: Observer<Parameter>): boolean {
+    removeObserver(observer: Observer<BoundNumericValue>): boolean {
         return this.observable.removeObserver(observer)
     }
 
     terminate(): void {
         this.observable.terminate()
+    }
+}
+
+export const binarySearch = (values: Float32Array, key: number): number => {
+    let low = 0 | 0
+    let high = (values.length - 1) | 0
+    while (low <= high) {
+        let mid = (low + high) >>> 1
+        const midVal = values[mid]
+        if (midVal < key)
+            low = mid + 1
+        else if (midVal > key)
+            high = mid - 1
+        else {
+            if (midVal == key)
+                return mid
+            else if (midVal < key)
+                low = mid + 1
+            else
+                high = mid - 1
+        }
+    }
+    return high
+}
+
+export class UniformRandomMapping implements ValueMapping<number> {
+    // http://gamedev.stackexchange.com/questions/26391/is-there-a-family-of-monotonically-non-decreasing-noise-functions/26424#26424
+    static monotoneRandom(n: number, roughness: number, strength: number): Float32Array {
+        const sequence = new Float32Array(n + 1)
+        let sum = 0.0
+        for (let i = 1; i <= n; ++i) {
+            const x = Math.floor(Math.random() * roughness) + 1.0
+            sum += x
+            sequence[i] = x
+        }
+        let nominator = 0.0
+        for (let i = 1; i <= n; ++i) {
+            nominator += sequence[i]
+            sequence[i] = (nominator / sum) * strength + (1.0 - strength) * i / n
+        }
+        return sequence
+    }
+
+    private readonly values: Float32Array
+
+    constructor(private readonly resolution: number = 1024,
+                private readonly roughness: number = 4.0,
+                private readonly strength: number = 0.2) {
+        this.values = UniformRandomMapping.monotoneRandom(resolution, roughness, strength)
+    }
+
+    clamp(y: number): number {
+        return Math.max(0.0, Math.min(1.0, y))
+    }
+
+    x(y: number): number {
+        if (y <= 0.0) return 0.0
+        if (y >= 1.0) return 1.0
+        const index = binarySearch(this.values, y);
+        const a = this.values[index]
+        const b = this.values[index + 1]
+        const nInverse = 1.0 / this.resolution
+        return index * nInverse + nInverse / (b - a) * (y - a);
+    }
+
+    y(x: number): number {
+        if (x <= 0.0) return 0.0
+        if (x >= 1.0) return 1.0
+        const xd = x * this.resolution;
+        const xi = xd | 0
+        const a = xd - xi
+        const q = this.values[xi]
+        return q + a * (this.values[xi + 1] - q)
     }
 }

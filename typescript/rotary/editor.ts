@@ -20,7 +20,7 @@ export class RotaryTrackEditor implements Terminable {
     private readonly movement: SelectInput<Move>
     private readonly reverse: Checkbox
 
-    private subject: RotaryTrackModel | null = null
+    subject: RotaryTrackModel | null = null
 
     constructor(private readonly executor: RotaryTrackEditorExecutor, parentNode: ParentNode) {
         this.segments = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"),
@@ -42,7 +42,9 @@ export class RotaryTrackEditor implements Terminable {
 
         this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault()
-            executor.delete(this.subject)
+            if (this.subject !== null) {
+                executor.delete(this.subject)
+            }
         }))
     }
 

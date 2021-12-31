@@ -24,14 +24,20 @@ declare module "lib/common" {
         removeObserver(observer: Observer<T>): boolean;
         terminate(): void;
     }
+    export abstract class Range {
+        private constructor();
+        min: number;
+        max: number;
+        clamp(value: number): number;
+    }
     export interface ValueMapping<Y> {
         y(x: number): Y;
         x(y: Y): number;
         clamp(y: Y): Y;
     }
-    export class Linear implements ValueMapping<number> {
-        private readonly min;
-        private readonly max;
+    export class Linear implements ValueMapping<number>, Range {
+        readonly min: number;
+        readonly max: number;
         static Identity: Linear;
         static Bipolar: Linear;
         static Percent: Linear;
@@ -41,19 +47,19 @@ declare module "lib/common" {
         y(x: number): number;
         clamp(y: number): number;
     }
-    export class LinearInteger implements ValueMapping<number> {
+    export class LinearInteger implements ValueMapping<number>, Range {
         static Percent: Linear;
-        private readonly min;
-        private readonly max;
+        readonly min: number;
+        readonly max: number;
         private readonly range;
         constructor(min: number, max: number);
         x(y: number): number;
         y(x: number): number;
         clamp(y: number): number;
     }
-    export class Exp implements ValueMapping<number> {
-        private readonly min;
-        private readonly max;
+    export class Exp implements ValueMapping<number>, Range {
+        readonly min: number;
+        readonly max: number;
         private readonly range;
         constructor(min: number, max: number);
         x(y: number): number;
@@ -65,7 +71,7 @@ declare module "lib/common" {
         y(x: any): boolean;
         clamp(y: boolean): boolean;
     }
-    export class Volume implements ValueMapping<number> {
+    export class Volume implements ValueMapping<number>, Range {
         readonly min: number;
         readonly mid: number;
         readonly max: number;
@@ -158,21 +164,32 @@ declare module "lib/common" {
         decrease(value: ObservableValue<number>): void;
         increase(value: ObservableValue<number>): void;
     }
-    export class Parameter implements ObservableValue<number> {
-        readonly mapping: ValueMapping<number>;
+    export class BoundNumericValue implements ObservableValue<number> {
+        private readonly range;
         private value;
         private readonly observable;
-        constructor(mapping?: ValueMapping<number>, value?: number);
+        constructor(range?: Range, value?: number);
         get(): number;
-        unipolar(): number;
         set(value: number): boolean;
-        addObserver(observer: Observer<Parameter>): Terminable;
-        removeObserver(observer: Observer<Parameter>): boolean;
+        addObserver(observer: Observer<BoundNumericValue>): Terminable;
+        removeObserver(observer: Observer<BoundNumericValue>): boolean;
         terminate(): void;
+    }
+    export const binarySearch: (values: Float32Array, key: number) => number;
+    export class UniformRandomMapping implements ValueMapping<number> {
+        private readonly resolution;
+        private readonly roughness;
+        private readonly strength;
+        static monotoneRandom(n: number, roughness: number, strength: number): Float32Array;
+        private readonly values;
+        constructor(resolution?: number, roughness?: number, strength?: number);
+        clamp(y: number): number;
+        x(y: number): number;
+        y(x: number): number;
     }
 }
 declare module "rotary/model" {
-    import { ObservableCollection, ObservableValueImpl, Parameter, Terminable } from "lib/common";
+    import { ObservableCollection, ObservableValueImpl, BoundNumericValue, Terminable } from "lib/common";
     interface RotaryFormat {
         radiusMin: number;
         tracks: RotaryTrackFormat[];
@@ -191,10 +208,10 @@ declare module "rotary/model" {
     }
     export class RotaryModel implements Terminable {
         private readonly terminator;
-        readonly radiusMin: Parameter;
+        readonly radiusMin: BoundNumericValue;
         readonly tracks: ObservableCollection<RotaryTrackModel>;
         constructor();
-        randomize(): void;
+        randomize(): RotaryModel;
         deserialize(format: RotaryFormat): void;
         createTrack(index?: number): RotaryTrackModel | null;
         copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
@@ -218,12 +235,12 @@ declare module "rotary/model" {
     export class RotaryTrackModel implements Terminable {
         private readonly terminator;
         private readonly gradient;
-        readonly segments: Parameter;
-        readonly width: Parameter;
-        readonly widthPadding: Parameter;
-        readonly length: Parameter;
-        readonly lengthRatio: Parameter;
-        readonly phase: Parameter;
+        readonly segments: BoundNumericValue;
+        readonly width: BoundNumericValue;
+        readonly widthPadding: BoundNumericValue;
+        readonly length: BoundNumericValue;
+        readonly lengthRatio: BoundNumericValue;
+        readonly phase: BoundNumericValue;
         readonly fill: ObservableValueImpl<Fill>;
         readonly movement: ObservableValueImpl<Move>;
         readonly reverse: ObservableValueImpl<boolean>;
@@ -324,32 +341,44 @@ declare module "rotary/editor" {
         private readonly rgb;
         private readonly movement;
         private readonly reverse;
-        private subject;
+        subject: RotaryTrackModel | null;
         constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
         edit(model: RotaryTrackModel): void;
         clear(): void;
         terminate(): void;
     }
 }
-declare module "rotary/view" {
+declare module "rotary/ui" {
+    import { Terminable } from "lib/common";
     import { RotaryModel, RotaryTrackModel } from "rotary/model";
     import { RotaryTrackEditorExecutor } from "rotary/editor";
-    export class RotarySelector implements RotaryTrackEditorExecutor {
+    export class RotaryUI implements RotaryTrackEditorExecutor {
         private readonly form;
         private readonly selectors;
         private readonly template;
         private readonly model;
-        static create(rotary: RotaryModel): RotarySelector;
+        static create(rotary: RotaryModel): RotaryUI;
         private readonly terminator;
         private readonly editor;
         private readonly map;
         constructor(form: HTMLFormElement, selectors: Element, template: Element, model: RotaryModel);
-        select(model: RotaryTrackModel): void;
         createNew(model: RotaryTrackModel, copy: boolean): void;
-        delete(model: RotaryTrackModel): void;
+        delete(model?: RotaryTrackModel): void;
+        select(model: RotaryTrackModel): void;
+        hasSelected(): boolean;
         private createSelector;
         private removeSelector;
         private reorderSelectors;
+    }
+    export class RotaryTrackSelector implements Terminable {
+        readonly selector: RotaryUI;
+        readonly model: RotaryTrackModel;
+        readonly element: HTMLElement;
+        readonly radio: HTMLInputElement;
+        readonly button: HTMLButtonElement;
+        private readonly terminator;
+        constructor(selector: RotaryUI, model: RotaryTrackModel, element: HTMLElement, radio: HTMLInputElement, button: HTMLButtonElement);
+        terminate(): void;
     }
 }
 declare module "rotary/render" {
@@ -376,16 +405,19 @@ declare namespace menu {
         private readonly permanentChildren;
         private readonly transientChildren;
         private transientChildrenCallback;
+        private openingCallback;
         private triggerCallback;
         separatorBefore: boolean;
         selectable: boolean;
         private isOpening;
         constructor(data: any);
         addListItem(listItem: ListItem): ListItem;
+        opening(): void;
         trigger(): void;
-        disable(): ListItem;
+        disable(value?: boolean): ListItem;
         addSeparatorBefore(): ListItem;
         addRuntimeChildrenCallback(callback: (parent: ListItem) => void): ListItem;
+        onOpening(callback: (listItem: ListItem) => void): ListItem;
         onTrigger(callback: (listItem: ListItem) => void): ListItem;
         hasChildren(): boolean;
         collectChildren(): ListItem[];
