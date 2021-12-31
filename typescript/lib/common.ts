@@ -60,6 +60,7 @@ export class ObservableImpl<T> implements Observable<T> {
     }
 }
 
+// noinspection JSUnusedLocalSymbols
 export abstract class Range {
     private constructor() {
     }
@@ -304,6 +305,7 @@ export enum CollectionEventType {
     Add, Remove, Order
 }
 
+// noinspection JSUnusedGlobalSymbols
 export class CollectionEvent<T> {
     constructor(readonly collection: ObservableCollection<T>,
                 readonly type: CollectionEventType,
@@ -489,14 +491,14 @@ export const binarySearch = (values: Float32Array, key: number): number => {
     let low = 0 | 0
     let high = (values.length - 1) | 0
     while (low <= high) {
-        let mid = (low + high) >>> 1
+        const mid = (low + high) >>> 1
         const midVal = values[mid]
         if (midVal < key)
             low = mid + 1
         else if (midVal > key)
             high = mid - 1
         else {
-            if (midVal == key)
+            if (midVal === key)
                 return mid
             else if (midVal < key)
                 low = mid + 1

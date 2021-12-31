@@ -3,7 +3,6 @@ import {RotaryUI} from "./rotary/ui"
 import {RotaryRenderer} from "./rotary/render"
 import MenuBar = menu.MenuBar
 import ListItem = menu.ListItem
-import {UniformRandomMapping} from "./lib/common";
 
 const model = new RotaryModel().randomize()
 const rotaryUI = RotaryUI.create(model)
