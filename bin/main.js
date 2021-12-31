@@ -1007,31 +1007,39 @@ define("rotary/view", ["require", "exports", "lib/common", "dom/inputs", "rotary
             this.template = template;
             this.model = model;
             this.terminator = new common_6.Terminator();
+            this.editor = new editor_1.RotaryTrackEditor(this, document);
             this.map = new Map();
             this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), common_6.PrintMapping.integer("px"), new common_6.NumericStepper(1))).withValue(model.radiusMin);
-            this.editor = new editor_1.RotaryTrackEditor(this, document);
-            form.querySelector("#unshift-new-track").addEventListener("click", function (event) {
+            this.terminator["with"](model.tracks.addObserver(function (event) {
+                switch (event.type) {
+                    case common_6.CollectionEventType.Add: {
+                        _this.createSelector(event.item, event.index);
+                        break;
+                    }
+                    case common_6.CollectionEventType.Remove: {
+                        _this.removeSelector(event.item);
+                        break;
+                    }
+                    case common_6.CollectionEventType.Order: {
+                        _this.reorderSelectors();
+                        break;
+                    }
+                }
+            }));
+            this.terminator["with"](common_7.Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", function (event) {
                 event.preventDefault();
                 _this.select(_this.model.createTrack(0).randomize());
-            });
-            model.tracks.addObserver(function (event) { return _this.update(); });
-            this.update();
+            }));
+            this.model.tracks.forEach(function (track) { return _this.createSelector(track); });
             if (0 < this.model.tracks.size())
                 this.select(this.model.tracks.get(0));
         }
-        RotarySelector.create = function (document, rotary) {
+        RotarySelector.create = function (rotary) {
             var form = document.querySelector("form.track-nav");
             var selectors = form.querySelector("#track-selectors");
             var template = selectors.querySelector("#template-selector-track");
             template.remove();
             return new RotarySelector(form, selectors, template, rotary);
-        };
-        RotarySelector.prototype.createSelector = function (trackModel) {
-            var element = this.template.cloneNode(true);
-            var radio = element.querySelector("input[type=radio]");
-            var button = element.querySelector("button");
-            this.map.set(trackModel, new RotaryTrackSelector(this, trackModel, element, radio, button));
-            this.selectors.appendChild(element);
         };
         RotarySelector.prototype.select = function (model) {
             console.assert(model != undefined, "Cannot select");
@@ -1042,7 +1050,7 @@ define("rotary/view", ["require", "exports", "lib/common", "dom/inputs", "rotary
         };
         RotarySelector.prototype.createNew = function (model, copy) {
             var index = this.model.tracks.indexOf(model);
-            console.assert(-1 !== index, "could find model");
+            console.assert(-1 !== index, "Could not find model");
             var newModel = copy
                 ? this.model.copyTrack(model, index + 1)
                 : this.model.createTrack(index + 1).randomize();
@@ -1050,6 +1058,7 @@ define("rotary/view", ["require", "exports", "lib/common", "dom/inputs", "rotary
         };
         RotarySelector.prototype["delete"] = function (model) {
             var beforeIndex = this.model.tracks.indexOf(model);
+            console.assert(-1 !== beforeIndex, "Could not find model");
             this.model.removeTrack(model);
             var numTracks = this.model.tracks.size();
             if (0 < numTracks) {
@@ -1059,14 +1068,28 @@ define("rotary/view", ["require", "exports", "lib/common", "dom/inputs", "rotary
                 this.editor.clear();
             }
         };
-        RotarySelector.prototype.update = function () {
+        RotarySelector.prototype.createSelector = function (track, index) {
+            if (index === void 0) { index = Number.MAX_SAFE_INTEGER; }
+            var element = this.template.cloneNode(true);
+            var radio = element.querySelector("input[type=radio]");
+            var button = element.querySelector("button");
+            this.map.set(track, new RotaryTrackSelector(this, track, element, radio, button));
+            common_7.Dom.insertElement(this.selectors, element, index);
+        };
+        RotarySelector.prototype.removeSelector = function (track) {
+            var selector = this.map.get(track);
+            var deleted = this.map["delete"](track);
+            console.assert(selector !== undefined && deleted, "Cannot remove selector");
+            selector.terminate();
+        };
+        RotarySelector.prototype.reorderSelectors = function () {
             var _this = this;
-            for (var _i = 0, _a = Array.from(this.map.values()); _i < _a.length; _i++) {
-                var entry = _a[_i];
-                entry.terminate();
-            }
-            this.map.clear();
-            this.model.tracks.forEach(function (track) { return _this.createSelector(track); });
+            common_7.Dom.emptyNode(this.selectors);
+            this.model.tracks.forEach(function (track) {
+                var selector = _this.map.get(track);
+                console.assert(selector !== undefined, "Cannot remove selector");
+                _this.selectors.appendChild(selector.element);
+            });
         };
         return RotarySelector;
     }());
@@ -1158,7 +1181,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/view", "rotary/ren
     var MenuBar = menu.MenuBar;
     var model = new model_3.RotaryModel();
     model.randomize();
-    view_1.RotarySelector.create(document, model);
+    view_1.RotarySelector.create(model);
     var pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
     var nav = document.querySelector("nav#app-menu");
     MenuBar.install()

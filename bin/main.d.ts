@@ -339,16 +339,17 @@ declare module "rotary/view" {
         private readonly selectors;
         private readonly template;
         private readonly model;
-        static create(document: Document, rotary: RotaryModel): RotarySelector;
+        static create(rotary: RotaryModel): RotarySelector;
         private readonly terminator;
-        private readonly map;
         private readonly editor;
-        constructor(form: HTMLFormElement, selectors: Node, template: Element, model: RotaryModel);
-        createSelector(trackModel: RotaryTrackModel): void;
+        private readonly map;
+        constructor(form: HTMLFormElement, selectors: Element, template: Element, model: RotaryModel);
         select(model: RotaryTrackModel): void;
         createNew(model: RotaryTrackModel, copy: boolean): void;
         delete(model: RotaryTrackModel): void;
-        update(): void;
+        private createSelector;
+        private removeSelector;
+        private reorderSelectors;
     }
 }
 declare module "rotary/render" {

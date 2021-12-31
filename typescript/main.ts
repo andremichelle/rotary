@@ -6,7 +6,7 @@ import MenuBar = menu.MenuBar;
 
 const model = new RotaryModel()
 model.randomize()
-RotarySelector.create(document, model)
+RotarySelector.create( model)
 ;
 
 const pickerOpts = {types: [{description: "rotary", accept: {"json/*": [".json"]}}]}
