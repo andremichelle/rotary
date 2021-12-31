@@ -1338,12 +1338,12 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
         rotaryUI.createNew(null, false);
     }))
         .addListItem(ListItem["default"]("Copy Track", "", false)
-        .onOpening(function (item) { return item.disable(!rotaryUI.hasSelected()); })
+        .onOpening(function (item) { return item.isSelectable(rotaryUI.hasSelected()); })
         .onTrigger(function (item) {
         rotaryUI.createNew(null, true);
     }))
         .addListItem(ListItem["default"]("Delete Track", "", false)
-        .onOpening(function (item) { return item.disable(!rotaryUI.hasSelected()); })
+        .onOpening(function (item) { return item.isSelectable(rotaryUI.hasSelected()); })
         .onTrigger(function (item) {
         rotaryUI["delete"]();
     })))
@@ -1435,8 +1435,8 @@ var menu;
                 this.triggerCallback(this);
             }
         };
-        ListItem.prototype.disable = function (value) {
-            if (value === void 0) { value = false; }
+        ListItem.prototype.isSelectable = function (value) {
+            if (value === void 0) { value = true; }
             this.selectable = value;
             return this;
         };
@@ -1589,6 +1589,9 @@ var menu;
                 var div = document.createElement("div");
                 if (listItem_1.selectable) {
                     div.classList.add("selectable");
+                }
+                else {
+                    div.classList.remove("selectable");
                 }
                 if (listItem_1.hasChildren()) {
                     div.classList.add("has-children");

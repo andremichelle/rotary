@@ -54,7 +54,7 @@ namespace menu {
             }
         }
 
-        disable(value: boolean = false): ListItem {
+        isSelectable(value: boolean = true): ListItem {
             this.selectable = value
             return this
         }
@@ -222,6 +222,8 @@ namespace menu {
                 const div = document.createElement("div")
                 if (listItem.selectable) {
                     div.classList.add("selectable")
+                } else {
+                    div.classList.remove("selectable")
                 }
                 if (listItem.hasChildren()) {
                     div.classList.add("has-children")

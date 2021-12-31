@@ -414,7 +414,7 @@ declare namespace menu {
         addListItem(listItem: ListItem): ListItem;
         opening(): void;
         trigger(): void;
-        disable(value?: boolean): ListItem;
+        isSelectable(value?: boolean): ListItem;
         addSeparatorBefore(): ListItem;
         addRuntimeChildrenCallback(callback: (parent: ListItem) => void): ListItem;
         onOpening(callback: (listItem: ListItem) => void): ListItem;
