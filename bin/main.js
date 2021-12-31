@@ -462,7 +462,7 @@ define("lib/common", ["require", "exports"], function (require, exports) {
             else if (midVal > key)
                 high = mid - 1;
             else {
-                if (midVal == key)
+                if (midVal === key)
                     return mid;
                 else if (midVal < key)
                     low = mid + 1;
@@ -1060,37 +1060,127 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
     }());
     exports.RotaryTrackEditor = RotaryTrackEditor;
 });
-define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/editor", "dom/common"], function (require, exports, common_6, inputs_2, editor_1, common_7) {
+define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], function (require, exports, model_2, common_6) {
+    "use strict";
+    exports.__esModule = true;
+    var RotaryRenderer = (function () {
+        function RotaryRenderer(context, rotary) {
+            this.context = context;
+            this.rotary = rotary;
+            this.hightlight = null;
+        }
+        RotaryRenderer.prototype.draw = function (position) {
+            var radiusMin = this.rotary.radiusMin.get();
+            for (var i = 0; i < this.rotary.tracks.size(); i++) {
+                var model = this.rotary.tracks.get(i);
+                this.drawTrack(model, radiusMin, position);
+                radiusMin += model.width.get() + model.widthPadding.get();
+            }
+        };
+        RotaryRenderer.prototype.drawTrack = function (model, radiusMin, position) {
+            var segments = model.segments.get();
+            var scale = model.length.get() / segments;
+            var phase = model.movement.get()(position - Math.floor(position)) * (model.reverse.get() ? -1 : 1) + model.phase.get();
+            var width = model.width.get();
+            var thickness = model.widthPadding.get() * 0.5;
+            var r0 = radiusMin + thickness;
+            var r1 = radiusMin + thickness + width;
+            for (var i = 0; i < segments; i++) {
+                var angleMin = i * scale + phase;
+                var angleMax = angleMin + scale * model.lengthRatio.get();
+                this.drawSection(model, r0, r1, angleMin, angleMax, model.fill.get());
+            }
+        };
+        RotaryRenderer.prototype.drawSection = function (model, radiusMin, radiusMax, angleMin, angleMax, fill) {
+            if (fill === void 0) { fill = model_2.Fill.Flat; }
+            console.assert(radiusMin < radiusMax, "radiusMax(" + radiusMax + ") must be greater then radiusMin(" + radiusMin + ")");
+            console.assert(angleMin < angleMax, "angleMax(" + angleMax + ") must be greater then angleMin(" + angleMin + ")");
+            var radianMin = angleMin * common_6.TAU;
+            var radianMax = angleMax * common_6.TAU;
+            this.context.globalAlpha = model === this.hightlight || null === this.hightlight ? 1.0 : 0.2;
+            if (fill === model_2.Fill.Flat) {
+                this.context.fillStyle = model.opaque();
+            }
+            else if (fill === model_2.Fill.Stroke || fill === model_2.Fill.Line) {
+                this.context.strokeStyle = model.opaque();
+            }
+            else {
+                var gradient = this.context.createConicGradient(radianMin, 0.0, 0.0);
+                var offset = Math.min(angleMax - angleMin, 1.0);
+                if (fill === model_2.Fill.Positive) {
+                    gradient.addColorStop(0.0, model.transparent());
+                    gradient.addColorStop(offset, model.opaque());
+                    gradient.addColorStop(offset, model.transparent());
+                }
+                else if (fill === model_2.Fill.Negative) {
+                    gradient.addColorStop(0.0, model.opaque());
+                    gradient.addColorStop(offset, model.transparent());
+                }
+                this.context.fillStyle = gradient;
+            }
+            if (fill === model_2.Fill.Line) {
+                var sn = Math.sin(radianMin);
+                var cs = Math.cos(radianMin);
+                this.context.beginPath();
+                this.context.moveTo(cs * radiusMin, sn * radiusMin);
+                this.context.lineTo(cs * radiusMax, sn * radiusMax);
+                this.context.closePath();
+            }
+            else {
+                this.context.beginPath();
+                this.context.arc(0.0, 0.0, radiusMax, radianMin, radianMax, false);
+                this.context.arc(0.0, 0.0, radiusMin, radianMax, radianMin, true);
+                this.context.closePath();
+            }
+            if (fill === model_2.Fill.Stroke || fill === model_2.Fill.Line) {
+                this.context.stroke();
+            }
+            else {
+                this.context.fill();
+            }
+        };
+        RotaryRenderer.prototype.showHighlight = function (model) {
+            this.hightlight = model;
+        };
+        RotaryRenderer.prototype.releaseHighlight = function () {
+            this.hightlight = null;
+        };
+        return RotaryRenderer;
+    }());
+    exports.RotaryRenderer = RotaryRenderer;
+});
+define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/editor", "dom/common"], function (require, exports, common_7, inputs_2, editor_1, common_8) {
     "use strict";
     exports.__esModule = true;
     var RotaryUI = (function () {
-        function RotaryUI(form, selectors, template, model) {
+        function RotaryUI(form, selectors, template, model, renderer) {
             var _this = this;
             this.form = form;
             this.selectors = selectors;
             this.template = template;
             this.model = model;
-            this.terminator = new common_6.Terminator();
+            this.renderer = renderer;
+            this.terminator = new common_7.Terminator();
             this.editor = new editor_1.RotaryTrackEditor(this, document);
             this.map = new Map();
-            this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), common_6.PrintMapping.integer("px"), new common_6.NumericStepper(1))).withValue(model.radiusMin);
+            this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), common_7.PrintMapping.integer("px"), new common_7.NumericStepper(1))).withValue(model.radiusMin);
             this.terminator["with"](model.tracks.addObserver(function (event) {
                 switch (event.type) {
-                    case common_6.CollectionEventType.Add: {
+                    case common_7.CollectionEventType.Add: {
                         _this.createSelector(event.item, event.index);
                         break;
                     }
-                    case common_6.CollectionEventType.Remove: {
+                    case common_7.CollectionEventType.Remove: {
                         _this.removeSelector(event.item);
                         break;
                     }
-                    case common_6.CollectionEventType.Order: {
+                    case common_7.CollectionEventType.Order: {
                         _this.reorderSelectors();
                         break;
                     }
                 }
             }));
-            this.terminator["with"](common_7.Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", function (event) {
+            this.terminator["with"](common_8.Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", function (event) {
                 event.preventDefault();
                 _this.select(_this.model.createTrack(0).randomize());
             }));
@@ -1098,12 +1188,12 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             if (0 < this.model.tracks.size())
                 this.select(this.model.tracks.get(0));
         }
-        RotaryUI.create = function (rotary) {
+        RotaryUI.create = function (rotary, renderer) {
             var form = document.querySelector("form.track-nav");
             var selectors = form.querySelector("#track-selectors");
             var template = selectors.querySelector("#template-selector-track");
             template.remove();
-            return new RotaryUI(form, selectors, template, rotary);
+            return new RotaryUI(form, selectors, template, rotary, renderer);
         };
         RotaryUI.prototype.createNew = function (model, copy) {
             if ((model = model || this.editor.subject) === null) {
@@ -1142,13 +1232,19 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
         RotaryUI.prototype.hasSelected = function () {
             return this.editor.subject !== null;
         };
+        RotaryUI.prototype.showHighlight = function (model) {
+            this.renderer.showHighlight(model);
+        };
+        RotaryUI.prototype.releaseHighlight = function () {
+            this.renderer.releaseHighlight();
+        };
         RotaryUI.prototype.createSelector = function (track, index) {
             if (index === void 0) { index = Number.MAX_SAFE_INTEGER; }
             var element = this.template.cloneNode(true);
             var radio = element.querySelector("input[type=radio]");
             var button = element.querySelector("button");
             this.map.set(track, new RotaryTrackSelector(this, track, element, radio, button));
-            common_7.Dom.insertElement(this.selectors, element, index);
+            common_8.Dom.insertElement(this.selectors, element, index);
         };
         RotaryUI.prototype.removeSelector = function (track) {
             var selector = this.map.get(track);
@@ -1158,7 +1254,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
         };
         RotaryUI.prototype.reorderSelectors = function () {
             var _this = this;
-            common_7.Dom.emptyNode(this.selectors);
+            common_8.Dom.emptyNode(this.selectors);
             this.model.tracks.forEach(function (track) {
                 var selector = _this.map.get(track);
                 console.assert(selector !== undefined, "Cannot reorder selector");
@@ -1169,18 +1265,20 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
     }());
     exports.RotaryUI = RotaryUI;
     var RotaryTrackSelector = (function () {
-        function RotaryTrackSelector(selector, model, element, radio, button) {
+        function RotaryTrackSelector(ui, model, element, radio, button) {
             var _this = this;
-            this.selector = selector;
+            this.ui = ui;
             this.model = model;
             this.element = element;
             this.radio = radio;
             this.button = button;
-            this.terminator = new common_6.Terminator();
-            this.terminator["with"](common_7.Dom.bindEventListener(this.radio, "change", function () { return _this.selector.select(_this.model); }));
-            this.terminator["with"](common_7.Dom.bindEventListener(this.button, "click", function (event) {
+            this.terminator = new common_7.Terminator();
+            this.terminator["with"](common_8.Dom.bindEventListener(this.radio, "change", function () { return _this.ui.select(_this.model); }));
+            this.terminator["with"](common_8.Dom.bindEventListener(this.element, "mouseenter", function () { return _this.ui.showHighlight(model); }));
+            this.terminator["with"](common_8.Dom.bindEventListener(this.element, "mouseleave", function () { return _this.ui.releaseHighlight(); }));
+            this.terminator["with"](common_8.Dom.bindEventListener(this.button, "click", function (event) {
                 event.preventDefault();
-                _this.selector.createNew(_this.model, event.shiftKey);
+                _this.ui.createNew(_this.model, event.shiftKey);
             }));
         }
         RotaryTrackSelector.prototype.terminate = function () {
@@ -1191,92 +1289,17 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
     }());
     exports.RotaryTrackSelector = RotaryTrackSelector;
 });
-define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], function (require, exports, model_2, common_8) {
-    "use strict";
-    exports.__esModule = true;
-    var RotaryRenderer = (function () {
-        function RotaryRenderer() {
-        }
-        RotaryRenderer.draw = function (context, rotary, position) {
-            var radiusMin = rotary.radiusMin.get();
-            for (var i = 0; i < rotary.tracks.size(); i++) {
-                var model = rotary.tracks.get(i);
-                RotaryRenderer.drawTrack(context, model, radiusMin, position);
-                radiusMin += model.width.get() + model.widthPadding.get();
-            }
-        };
-        RotaryRenderer.drawTrack = function (context, model, radiusMin, position) {
-            var segments = model.segments.get();
-            var scale = model.length.get() / segments;
-            var phase = model.movement.get()(position - Math.floor(position)) * (model.reverse.get() ? -1 : 1) + model.phase.get();
-            var width = model.width.get();
-            var thickness = model.widthPadding.get() * 0.5;
-            var r0 = radiusMin + thickness;
-            var r1 = radiusMin + thickness + width;
-            for (var i = 0; i < segments; i++) {
-                var angleMin = i * scale + phase;
-                var angleMax = angleMin + scale * model.lengthRatio.get();
-                RotaryRenderer.drawSection(context, model, r0, r1, angleMin, angleMax, model.fill.get());
-            }
-        };
-        RotaryRenderer.drawSection = function (context, model, radiusMin, radiusMax, angleMin, angleMax, fill) {
-            if (fill === void 0) { fill = model_2.Fill.Flat; }
-            console.assert(radiusMin < radiusMax, "radiusMax(" + radiusMax + ") must be greater then radiusMin(" + radiusMin + ")");
-            console.assert(angleMin < angleMax, "angleMax(" + angleMax + ") must be greater then angleMin(" + angleMin + ")");
-            var radianMin = angleMin * common_8.TAU;
-            var radianMax = angleMax * common_8.TAU;
-            if (fill === model_2.Fill.Flat) {
-                context.fillStyle = model.opaque();
-            }
-            else if (fill === model_2.Fill.Stroke || fill === model_2.Fill.Line) {
-                context.strokeStyle = model.opaque();
-            }
-            else {
-                var gradient = context.createConicGradient(radianMin, 0.0, 0.0);
-                var offset = Math.min(angleMax - angleMin, 1.0);
-                if (fill === model_2.Fill.Positive) {
-                    gradient.addColorStop(0.0, model.transparent());
-                    gradient.addColorStop(offset, model.opaque());
-                    gradient.addColorStop(offset, model.transparent());
-                }
-                else if (fill === model_2.Fill.Negative) {
-                    gradient.addColorStop(0.0, model.opaque());
-                    gradient.addColorStop(offset, model.transparent());
-                }
-                context.fillStyle = gradient;
-            }
-            if (fill === model_2.Fill.Line) {
-                var sn = Math.sin(radianMin);
-                var cs = Math.cos(radianMin);
-                context.beginPath();
-                context.moveTo(cs * radiusMin, sn * radiusMin);
-                context.lineTo(cs * radiusMax, sn * radiusMax);
-                context.closePath();
-            }
-            else {
-                context.beginPath();
-                context.arc(0.0, 0.0, radiusMax, radianMin, radianMax, false);
-                context.arc(0.0, 0.0, radiusMin, radianMax, radianMin, true);
-                context.closePath();
-            }
-            if (fill === model_2.Fill.Stroke || fill === model_2.Fill.Line) {
-                context.stroke();
-            }
-            else {
-                context.fill();
-            }
-        };
-        return RotaryRenderer;
-    }());
-    exports.RotaryRenderer = RotaryRenderer;
-});
 define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render"], function (require, exports, model_3, ui_1, render_1) {
     "use strict";
     exports.__esModule = true;
     var MenuBar = menu.MenuBar;
     var ListItem = menu.ListItem;
+    var canvas = document.querySelector("canvas");
+    var labelSize = document.querySelector("label.size");
+    var context = canvas.getContext("2d", { alpha: true });
     var model = new model_3.RotaryModel().randomize();
-    var rotaryUI = ui_1.RotaryUI.create(model);
+    var renderer = new render_1.RotaryRenderer(context, model);
+    var ui = ui_1.RotaryUI.create(model, renderer);
     var pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
     var nav = document.querySelector("nav#app-menu");
     MenuBar.install()
@@ -1335,17 +1358,17 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
         .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
         .addListItem(ListItem["default"]("Create Track", "", false)
         .onTrigger(function (item) {
-        rotaryUI.createNew(null, false);
+        ui.createNew(null, false);
     }))
         .addListItem(ListItem["default"]("Copy Track", "", false)
-        .onOpening(function (item) { return item.isSelectable(rotaryUI.hasSelected()); })
+        .onOpening(function (item) { return item.isSelectable(ui.hasSelected()); })
         .onTrigger(function (item) {
-        rotaryUI.createNew(null, true);
+        ui.createNew(null, true);
     }))
         .addListItem(ListItem["default"]("Delete Track", "", false)
-        .onOpening(function (item) { return item.isSelectable(rotaryUI.hasSelected()); })
+        .onOpening(function (item) { return item.isSelectable(ui.hasSelected()); })
         .onTrigger(function (item) {
-        rotaryUI["delete"]();
+        ui["delete"]();
     })))
         .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
         .addListItem(ListItem["default"]("Nothing yet", "", false)))
@@ -1356,9 +1379,6 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
     var frame = 0;
     (function () {
         console.log("ready...");
-        var canvas = document.querySelector("canvas");
-        var labelSize = document.querySelector("label.size");
-        var context = canvas.getContext("2d", { alpha: true });
         var enterFrame = function () {
             var size = model.measureRadius() * 2;
             var ratio = Math.ceil(devicePixelRatio);
@@ -1371,7 +1391,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
             context.save();
             context.scale(ratio, ratio);
             context.translate(size >> 1, size >> 1);
-            render_1.RotaryRenderer.draw(context, model, frame / 320.0);
+            renderer.draw(frame / 320.0);
             context.restore();
             frame++;
             requestAnimationFrame(enterFrame);

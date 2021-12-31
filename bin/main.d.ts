@@ -348,45 +348,55 @@ declare module "rotary/editor" {
         terminate(): void;
     }
 }
+declare module "rotary/render" {
+    import { Fill, RotaryModel, RotaryTrackModel } from "rotary/model";
+    export class RotaryRenderer {
+        private readonly context;
+        private readonly rotary;
+        private hightlight;
+        constructor(context: CanvasRenderingContext2D, rotary: RotaryModel);
+        draw(position: number): void;
+        drawTrack(model: RotaryTrackModel, radiusMin: number, position: number): void;
+        drawSection(model: RotaryTrackModel, radiusMin: number, radiusMax: number, angleMin: number, angleMax: number, fill?: Fill): void;
+        showHighlight(model: RotaryTrackModel): void;
+        releaseHighlight(): void;
+    }
+}
 declare module "rotary/ui" {
     import { Terminable } from "lib/common";
     import { RotaryModel, RotaryTrackModel } from "rotary/model";
     import { RotaryTrackEditorExecutor } from "rotary/editor";
+    import { RotaryRenderer } from "rotary/render";
     export class RotaryUI implements RotaryTrackEditorExecutor {
         private readonly form;
         private readonly selectors;
         private readonly template;
         private readonly model;
-        static create(rotary: RotaryModel): RotaryUI;
+        private readonly renderer;
+        static create(rotary: RotaryModel, renderer: RotaryRenderer): RotaryUI;
         private readonly terminator;
         private readonly editor;
         private readonly map;
-        constructor(form: HTMLFormElement, selectors: Element, template: Element, model: RotaryModel);
+        constructor(form: HTMLFormElement, selectors: Element, template: Element, model: RotaryModel, renderer: RotaryRenderer);
         createNew(model: RotaryTrackModel, copy: boolean): void;
         delete(model?: RotaryTrackModel): void;
         select(model: RotaryTrackModel): void;
         hasSelected(): boolean;
+        showHighlight(model: RotaryTrackModel): void;
+        releaseHighlight(): void;
         private createSelector;
         private removeSelector;
         private reorderSelectors;
     }
     export class RotaryTrackSelector implements Terminable {
-        readonly selector: RotaryUI;
+        readonly ui: RotaryUI;
         readonly model: RotaryTrackModel;
         readonly element: HTMLElement;
         readonly radio: HTMLInputElement;
         readonly button: HTMLButtonElement;
         private readonly terminator;
-        constructor(selector: RotaryUI, model: RotaryTrackModel, element: HTMLElement, radio: HTMLInputElement, button: HTMLButtonElement);
+        constructor(ui: RotaryUI, model: RotaryTrackModel, element: HTMLElement, radio: HTMLInputElement, button: HTMLButtonElement);
         terminate(): void;
-    }
-}
-declare module "rotary/render" {
-    import { Fill, RotaryModel, RotaryTrackModel } from "rotary/model";
-    export class RotaryRenderer {
-        static draw(context: CanvasRenderingContext2D, rotary: RotaryModel, position: number): void;
-        static drawTrack(context: CanvasRenderingContext2D, model: RotaryTrackModel, radiusMin: number, position: number): void;
-        static drawSection(context: CanvasRenderingContext2D, model: RotaryTrackModel, radiusMin: number, radiusMax: number, angleMin: number, angleMax: number, fill?: Fill): void;
     }
 }
 declare module "main" { }

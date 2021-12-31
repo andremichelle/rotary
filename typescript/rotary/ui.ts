@@ -3,14 +3,15 @@ import {RotaryModel, RotaryTrackModel} from "./model"
 import {NumericStepperInput} from "../dom/inputs"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor"
 import {Dom} from "../dom/common"
+import {RotaryRenderer} from "./render";
 
 export class RotaryUI implements RotaryTrackEditorExecutor {
-    static create(rotary: RotaryModel): RotaryUI {
+    static create(rotary: RotaryModel, renderer: RotaryRenderer): RotaryUI {
         const form = document.querySelector("form.track-nav") as HTMLFormElement
         const selectors = form.querySelector("#track-selectors")
         const template = selectors.querySelector("#template-selector-track")
         template.remove()
-        return new RotaryUI(form, selectors, template, rotary)
+        return new RotaryUI(form, selectors, template, rotary, renderer)
     }
 
     private readonly terminator: Terminator = new Terminator()
@@ -20,7 +21,8 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
     constructor(private readonly form: HTMLFormElement,
                 private readonly selectors: Element,
                 private readonly template: Element,
-                private readonly model: RotaryModel) {
+                private readonly model: RotaryModel,
+                private readonly renderer: RotaryRenderer) {
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"),
             PrintMapping.integer("px"), new NumericStepper(1))).withValue(model.radiusMin)
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
@@ -85,6 +87,14 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         return this.editor.subject !== null
     }
 
+    showHighlight(model: RotaryTrackModel): void {
+        this.renderer.showHighlight(model)
+    }
+
+    releaseHighlight(): void {
+        this.renderer.releaseHighlight()
+    }
+
     private createSelector(track: RotaryTrackModel, index: number = Number.MAX_SAFE_INTEGER): void {
         const element = this.template.cloneNode(true) as HTMLElement
         const radio = element.querySelector("input[type=radio]") as HTMLInputElement
@@ -113,17 +123,21 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
 export class RotaryTrackSelector implements Terminable {
     private readonly terminator = new Terminator()
 
-    constructor(readonly selector: RotaryUI,
+    constructor(readonly ui: RotaryUI,
                 readonly model: RotaryTrackModel,
                 readonly element: HTMLElement,
                 readonly radio: HTMLInputElement,
                 readonly button: HTMLButtonElement) {
         this.terminator.with(Dom.bindEventListener(this.radio, "change",
-            () => this.selector.select(this.model)))
+            () => this.ui.select(this.model)))
+        this.terminator.with(Dom.bindEventListener(this.element, "mouseenter",
+            () => this.ui.showHighlight(model)))
+        this.terminator.with(Dom.bindEventListener(this.element, "mouseleave",
+            () => this.ui.releaseHighlight()))
         this.terminator.with(Dom.bindEventListener(this.button, "click",
             (event: MouseEvent) => {
                 event.preventDefault()
-                this.selector.createNew(this.model, event.shiftKey)
+                this.ui.createNew(this.model, event.shiftKey)
             }))
     }
 

@@ -4,8 +4,13 @@ import {RotaryRenderer} from "./rotary/render"
 import MenuBar = menu.MenuBar
 import ListItem = menu.ListItem
 
+const canvas = document.querySelector("canvas")
+const labelSize = document.querySelector("label.size");
+const context = canvas.getContext("2d", {alpha: true})
+
 const model = new RotaryModel().randomize()
-const rotaryUI = RotaryUI.create(model)
+const renderer = new RotaryRenderer(context, model)
+const ui = RotaryUI.create(model, renderer)
 
 const pickerOpts = {types: [{description: "rotary", accept: {"json/*": [".json"]}}]}
 const nav = document.querySelector("nav#app-menu")
@@ -38,17 +43,17 @@ MenuBar.install()
     .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
         .addListItem(ListItem.default("Create Track", "", false)
             .onTrigger(item => {
-                rotaryUI.createNew(null, false)
+                ui.createNew(null, false)
             }))
         .addListItem(ListItem.default("Copy Track", "", false)
-            .onOpening(item => item.isSelectable(rotaryUI.hasSelected()))
+            .onOpening(item => item.isSelectable(ui.hasSelected()))
             .onTrigger(item => {
-                rotaryUI.createNew(null, true)
+                ui.createNew(null, true)
             }))
         .addListItem(ListItem.default("Delete Track", "", false)
-            .onOpening(item => item.isSelectable(rotaryUI.hasSelected()))
+            .onOpening(item => item.isSelectable(ui.hasSelected()))
             .onTrigger(item => {
-                rotaryUI.delete()
+                ui.delete()
             }))
     )
     .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
@@ -63,9 +68,6 @@ let frame: number = 0;
 
 (() => {
     console.log("ready...")
-    const canvas = document.querySelector("canvas")
-    const labelSize = document.querySelector("label.size");
-    const context = canvas.getContext("2d", {alpha: true})
 
     const enterFrame = () => {
         const size = model.measureRadius() * 2
@@ -80,7 +82,7 @@ let frame: number = 0;
         context.save()
         context.scale(ratio, ratio)
         context.translate(size >> 1, size >> 1)
-        RotaryRenderer.draw(context, model, frame / 320.0)
+        renderer.draw(frame / 320.0)
         context.restore()
 
         frame++
