@@ -4,12 +4,11 @@ import {
     ObservableValueImpl,
     Serializer,
     Terminable,
-    Terminator,
-    UniformRandomMapping
+    Terminator
 } from "../lib/common"
-import {JsRandom, Random} from "../lib/math"
+import {Random} from "../lib/math"
 import {Linear, LinearInteger} from "../lib/mapping"
-import {Exponential, fromFormat, Movement, MovementFormat} from "./movement"
+import {ExponentialMotion, Motion, MotionFormat} from "./motion"
 
 declare interface RotaryFormat {
     radiusMin: number
@@ -24,12 +23,12 @@ declare interface RotaryTrackFormat {
     lengthRatio: number
     fill: number
     rgb: number
-    movement: MovementFormat<any>
+    motion: MotionFormat<any>
 }
 
 export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
-    readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
     private readonly terminator: Terminator = new Terminator()
+    readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
     readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
 
     constructor() {
@@ -59,7 +58,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         copy.lengthRatio.set(source.lengthRatio.get())
         copy.width.set(source.width.get())
         copy.widthPadding.set(source.widthPadding.get())
-        copy.movement.set(source.movement.get())
+        copy.motion.set(source.motion.get())
         return copy
     }
 
@@ -105,29 +104,6 @@ export enum Fill {
     Flat, Stroke, Line, Positive, Negative
 }
 
-const AccAndStop = exp => x => Math.pow(x, exp)
-const OddShape = shape => { // https://www.desmos.com/calculator/bpbuua3l0j
-    const o = Math.pow(2.0, shape)
-    const c = Math.pow(2.0, o - 1)
-    return x => c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), o) + 0.5
-}
-export type Move = (x: number) => number
-const randomMapping = new UniformRandomMapping(JsRandom.Instance, 16, 64.0, 1.0)
-export const Movements = new Map([
-    ["Linear", x => x],
-    ["Sine", x => Math.sin(x * Math.PI)],
-    ["StopAndGo", x => 1.0 - Math.min(1.0, 2.0 * (2.0 * x - Math.floor(2.0 * x)))],
-    ["AccAndStop 2", AccAndStop(2.0)],
-    ["AccAndStop 3", AccAndStop(3.0)],
-    ["OddShape -1", OddShape(-1.0)],
-    ["OddShape 1", OddShape(1.0)],
-    ["OddShape 2", OddShape(2.0)],
-    ["Random", x => randomMapping.y(x)],
-])
-export const randomMovement = (random: Random): Move => {
-    const array = Array.from(Movements)
-    return array[Math.floor(random.nextDouble(0.0, 1.0) * array.length)][1]
-}
 export const Fills = new Map<string, Fill>(
     [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
@@ -139,7 +115,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     readonly length = this.terminator.with(new BoundNumericValue(Linear.Identity, 1.0))
     readonly lengthRatio = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.5))
     readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
-    readonly movement = this.terminator.with(new ObservableValueImpl<Movement<any>>(Movements.values().next().value))
+    readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new ExponentialMotion()))
     readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
 
@@ -170,7 +146,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         this.length.set(length)
         this.lengthRatio.set(lengthRatio)
         this.fill.set(fill)
-        this.movement.set(new Exponential())
+        this.motion.set(new ExponentialMotion())
         return this
     }
 
@@ -187,7 +163,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
             lengthRatio: this.lengthRatio.get(),
             fill: this.fill.get(),
             rgb: this.rgb.get(),
-            movement: this.movement.get().serialize()
+            motion: this.motion.get().serialize()
         }
     }
 
@@ -199,7 +175,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         this.lengthRatio.set(format.lengthRatio)
         this.fill.set(format.fill)
         this.rgb.set(format.rgb)
-        this.movement.set(fromFormat(format.movement))
+        this.motion.set(Motion.from(format.motion))
         return this
     }
 

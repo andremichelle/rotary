@@ -22,7 +22,7 @@ export class RotaryRenderer {
               position: number): void {
         const segments = model.segments.get()
         const scale = model.length.get() / segments
-        const phase = model.movement.get().map(position - Math.floor(position))
+        const phase = model.motion.get().map(position - Math.floor(position))
         const width = model.width.get()
         const thickness = model.widthPadding.get() * 0.5
         const r0 = radiusMin + thickness
@@ -37,7 +37,7 @@ export class RotaryRenderer {
     drawSection(model: RotaryTrackModel,
                 radiusMin: number, radiusMax: number,
                 angleMin: number, angleMax: number,
-                fill: Fill = Fill.Flat): void {
+                fill: Fill): void {
         console.assert(radiusMin < radiusMax, `radiusMax(${radiusMax}) must be greater then radiusMin(${radiusMin})`)
         console.assert(angleMin < angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`)
         const radianMin = angleMin * TAU

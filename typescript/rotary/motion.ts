@@ -3,17 +3,7 @@ import {Linear, LinearInteger} from "../lib/mapping"
 
 type Data = ExponentialData | CShapeData
 
-export const fromFormat = (format: MovementFormat<any>) => {
-    switch (format.class) {
-        case Exponential.name:
-            return new Exponential().deserialize(format)
-        case CShape.name:
-            return new CShape().deserialize(format)
-    }
-    throw new Error("Unknown movement format")
-}
-
-export declare interface MovementFormat<DATA extends Data> {
+export declare interface MotionFormat<DATA extends Data> {
     phaseOffset: number
     frequency: number
     reverse: boolean
@@ -22,7 +12,17 @@ export declare interface MovementFormat<DATA extends Data> {
     data: DATA
 }
 
-export abstract class Movement<DATA extends Data> implements Serializer<MovementFormat<DATA>>, Terminable {
+export abstract class Motion<DATA extends Data> implements Serializer<MotionFormat<DATA>>, Terminable {
+    static from(format: MotionFormat<any>) {
+        switch (format.class) {
+            case ExponentialMotion.name:
+                return new ExponentialMotion().deserialize(format)
+            case CShapeMotion.name:
+                return new CShapeMotion().deserialize(format)
+        }
+        throw new Error("Unknown movement format")
+    }
+
     protected readonly terminator: Terminator = new Terminator()
 
     readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0))
@@ -31,11 +31,11 @@ export abstract class Movement<DATA extends Data> implements Serializer<Movement
 
     abstract map(x: number): number
 
-    abstract deserialize(format: MovementFormat<DATA>): Movement<DATA>
+    abstract deserialize(format: MotionFormat<DATA>): Motion<DATA>
 
-    abstract serialize(): MovementFormat<DATA>
+    abstract serialize(): MotionFormat<DATA>
 
-    pack(data: DATA): MovementFormat<DATA> {
+    pack(data: DATA): MotionFormat<DATA> {
         return {
             class: this.constructor.name,
             phaseOffset: this.phaseOffset.get(),
@@ -45,7 +45,7 @@ export abstract class Movement<DATA extends Data> implements Serializer<Movement
         }
     }
 
-    unpack(format: MovementFormat<DATA>): DATA {
+    unpack(format: MotionFormat<DATA>): DATA {
         console.assert(this.constructor.name === format.class)
         this.phaseOffset.set(format.phaseOffset)
         this.frequency.set(format.frequency)
@@ -67,14 +67,14 @@ export declare interface ExponentialData {
     exponent: number
 }
 
-export class Exponential extends Movement<ExponentialData> {
+export class ExponentialMotion extends Motion<ExponentialData> {
     readonly exponent = this.terminator.with(new BoundNumericValue(new Linear(-4.0, 4.0), 2.0))
 
-    serialize(): MovementFormat<ExponentialData> {
+    serialize(): MotionFormat<ExponentialData> {
         return super.pack({exponent: this.exponent.get()})
     }
 
-    deserialize(format: MovementFormat<ExponentialData>): Exponential {
+    deserialize(format: MotionFormat<ExponentialData>): ExponentialMotion {
         this.exponent.set(super.unpack(format).exponent)
         return this
     }
@@ -88,7 +88,7 @@ export declare interface CShapeData {
     shape: number
 }
 
-export class CShape extends Movement<CShapeData> {
+export class CShapeMotion extends Motion<CShapeData> {
     readonly shape = this.terminator.with(new BoundNumericValue(new Linear(-2.0, 2.0), 2.0))
 
     private o: number
@@ -100,11 +100,11 @@ export class CShape extends Movement<CShapeData> {
         this.update()
     }
 
-    serialize(): MovementFormat<CShapeData> {
+    serialize(): MotionFormat<CShapeData> {
         return super.pack({shape: this.shape.get()})
     }
 
-    deserialize(format: MovementFormat<CShapeData>): CShape {
+    deserialize(format: MotionFormat<CShapeData>): CShapeMotion {
         this.shape.set(super.unpack(format).shape)
         return this
     }
