@@ -55,11 +55,11 @@ export class RotaryTrackEditor implements Terminable {
         this.widthPadding.withValue(model.widthPadding)
         this.length.withValue(model.length)
         this.lengthRatio.withValue(model.lengthRatio)
-        this.phase.withValue(model.phase)
+        // this.phase.withValue(model.phase)
         this.fill.withValue(model.fill)
         this.rgb.withValue(model.rgb)
         // this.movement.withValue(model.movement)
-        this.reverse.withValue(model.reverse)
+        // this.reverse.withValue(model.reverse)
 
         this.subject = model
     }

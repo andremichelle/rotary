@@ -214,38 +214,49 @@ declare module "lib/common" {
     }
 }
 declare module "rotary/movement" {
-    import { BoundNumericValue, Serializer, Terminable } from "lib/common";
-    export const fromFormat: (format: MovementFormat) => Exponential | CShape;
-    export interface MovementFormat {
+    import { BoundNumericValue, ObservableValueImpl, Serializer, Terminable, Terminator } from "lib/common";
+    type Data = ExponentialData | CShapeData;
+    export const fromFormat: (format: MovementFormat<any>) => Exponential | CShape;
+    export interface MovementFormat<DATA extends Data> {
+        phaseOffset: number;
+        frequency: number;
+        reverse: boolean;
         class: string;
+        data: DATA;
     }
-    export interface Movement<FORMAT> extends Serializer<FORMAT>, Terminable {
-        map(x: number): number;
-    }
-    export interface ExponentialFormat extends MovementFormat {
-        exponent: number;
-    }
-    export class Exponential implements Movement<ExponentialFormat> {
-        private readonly terminator;
-        readonly exponent: BoundNumericValue;
-        serialize(): ExponentialFormat;
-        deserialize(format: ExponentialFormat): void;
-        map(x: number): number;
+    export abstract class Movement<DATA extends Data> implements Serializer<MovementFormat<DATA>>, Terminable {
+        protected readonly terminator: Terminator;
+        readonly phaseOffset: BoundNumericValue;
+        readonly frequency: BoundNumericValue;
+        readonly reverse: ObservableValueImpl<boolean>;
+        abstract map(x: number): number;
+        abstract deserialize(format: MovementFormat<DATA>): void;
+        abstract serialize(): MovementFormat<DATA>;
+        pack(data: DATA): MovementFormat<DATA>;
+        unpack(format: MovementFormat<DATA>): DATA;
+        moveTo(phase: number): number;
         terminate(): void;
     }
-    export interface CShapeFormat extends MovementFormat {
+    export interface ExponentialData {
+        exponent: number;
+    }
+    export class Exponential extends Movement<ExponentialData> {
+        readonly exponent: BoundNumericValue;
+        serialize(): MovementFormat<ExponentialData>;
+        deserialize(format: MovementFormat<ExponentialData>): void;
+        map(x: number): number;
+    }
+    export interface CShapeData {
         shape: number;
     }
-    export class CShape implements Movement<CShapeFormat> {
-        private readonly terminator;
+    export class CShape extends Movement<CShapeData> {
         readonly shape: BoundNumericValue;
         private o;
         private c;
         constructor();
-        serialize(): CShapeFormat;
-        deserialize(format: CShapeFormat): void;
+        serialize(): MovementFormat<CShapeData>;
+        deserialize(format: MovementFormat<CShapeData>): void;
         map(x: number): number;
-        terminate(): void;
         private update;
     }
 }
@@ -265,9 +276,7 @@ declare module "rotary/model" {
         lengthRatio: number;
         fill: number;
         rgb: number;
-        movement: MovementFormat;
-        reverse: boolean;
-        phase: number;
+        movement: MovementFormat<any>;
     }
     export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         readonly tracks: ObservableCollection<RotaryTrackModel>;
@@ -303,10 +312,8 @@ declare module "rotary/model" {
         readonly widthPadding: BoundNumericValue;
         readonly length: BoundNumericValue;
         readonly lengthRatio: BoundNumericValue;
-        readonly phase: BoundNumericValue;
         readonly fill: ObservableValueImpl<Fill>;
         readonly movement: ObservableValueImpl<Movement<any>>;
-        readonly reverse: ObservableValueImpl<boolean>;
         readonly rgb: ObservableValueImpl<number>;
         constructor();
         opaque(): string;

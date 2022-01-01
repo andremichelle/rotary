@@ -24,9 +24,7 @@ declare interface RotaryTrackFormat {
     lengthRatio: number
     fill: number
     rgb: number
-    movement: MovementFormat,
-    reverse: boolean
-    phase: number
+    movement: MovementFormat<any>
 }
 
 export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
@@ -61,9 +59,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         copy.lengthRatio.set(source.lengthRatio.get())
         copy.width.set(source.width.get())
         copy.widthPadding.set(source.widthPadding.get())
-        copy.phase.set(source.phase.get())
         copy.movement.set(source.movement.get())
-        copy.reverse.set(source.reverse.get())
         return copy
     }
 
@@ -142,10 +138,8 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     readonly widthPadding = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 0))
     readonly length = this.terminator.with(new BoundNumericValue(Linear.Identity, 1.0))
     readonly lengthRatio = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.5))
-    readonly phase = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0))
     readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
     readonly movement = this.terminator.with(new ObservableValueImpl<Movement<any>>(Movements.values().next().value))
-    readonly reverse = this.terminator.with(new ObservableValueImpl<boolean>(false))
     readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
 
     constructor() {
@@ -192,9 +186,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
             lengthRatio: this.lengthRatio.get(),
             fill: this.fill.get(),
             rgb: this.rgb.get(),
-            movement: this.movement.get().serialize(),
-            reverse: this.reverse.get(),
-            phase: this.phase.get()
+            movement: this.movement.get().serialize()
         }
     }
 
@@ -206,8 +198,6 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         this.lengthRatio.set(format.lengthRatio)
         this.fill.set(format.fill)
         this.rgb.set(format.rgb)
-        this.reverse.set(format.reverse)
-        this.phase.set(format.phase)
         this.movement.set(fromFormat(format.movement))
     }
 
