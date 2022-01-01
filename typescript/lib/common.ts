@@ -66,7 +66,7 @@ export class ObservableImpl<T> implements Observable<T> {
 export interface Serializer<T> {
     serialize(): T
 
-    deserialize(format: T): void
+    deserialize(format: T): Serializer<T>
 }
 
 export interface Value<T> {

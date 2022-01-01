@@ -9,6 +9,7 @@ export interface RotaryTrackEditorExecutor {
 }
 
 export class RotaryTrackEditor implements Terminable {
+    subject: RotaryTrackModel | null = null
     private readonly terminator: Terminator = new Terminator()
     private readonly segments: NumericStepperInput
     private readonly width: NumericStepperInput
@@ -20,8 +21,6 @@ export class RotaryTrackEditor implements Terminable {
     private readonly rgb: NumericInput
     private readonly movement: SelectInput<Move>
     private readonly reverse: Checkbox
-
-    subject: RotaryTrackModel | null = null
 
     constructor(private readonly executor: RotaryTrackEditorExecutor, parentNode: ParentNode) {
         this.segments = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"),

@@ -88,7 +88,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         }
     }
 
-    deserialize(format: RotaryFormat): void {
+    deserialize(format: RotaryFormat): RotaryModel {
         this.radiusMin.set(format['radiusMin'])
 
         this.tracks.clear()
@@ -97,6 +97,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
             model.deserialize(trackFormat)
             return model
         }))
+        return this
     }
 }
 
@@ -132,7 +133,6 @@ export const Fills = new Map<string, Fill>(
 
 export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
-    private readonly gradient: string[] = [] // opaque[0], transparent[1]
     readonly segments = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 8))
     readonly width = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 12))
     readonly widthPadding = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 0))
@@ -141,6 +141,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
     readonly movement = this.terminator.with(new ObservableValueImpl<Movement<any>>(Movements.values().next().value))
     readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
+    private readonly gradient: string[] = [] // opaque[0], transparent[1]
 
     constructor() {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
@@ -190,7 +191,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         }
     }
 
-    deserialize(format: RotaryTrackFormat): void {
+    deserialize(format: RotaryTrackFormat): RotaryTrackModel {
         this.segments.set(format.segments)
         this.width.set(format.width)
         this.widthPadding.set(format.widthPadding)
@@ -199,6 +200,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         this.fill.set(format.fill)
         this.rgb.set(format.rgb)
         this.movement.set(fromFormat(format.movement))
+        return this
     }
 
     private updateGradient(): void {

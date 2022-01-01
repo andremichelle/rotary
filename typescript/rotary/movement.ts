@@ -5,16 +5,10 @@ type Data = ExponentialData | CShapeData
 
 export const fromFormat = (format: MovementFormat<any>) => {
     switch (format.class) {
-        case Exponential.name: {
-            const movement = new Exponential()
-            movement.deserialize(format)
-            return movement
-        }
-        case CShape.name: {
-            const movement = new CShape()
-            movement.deserialize(format)
-            return movement
-        }
+        case Exponential.name:
+            return new Exponential().deserialize(format)
+        case CShape.name:
+            return new CShape().deserialize(format)
     }
     throw new Error("Unknown movement format")
 }
@@ -37,7 +31,7 @@ export abstract class Movement<DATA extends Data> implements Serializer<Movement
 
     abstract map(x: number): number
 
-    abstract deserialize(format: MovementFormat<DATA>): void
+    abstract deserialize(format: MovementFormat<DATA>): Movement<DATA>
 
     abstract serialize(): MovementFormat<DATA>
 
@@ -80,8 +74,9 @@ export class Exponential extends Movement<ExponentialData> {
         return super.pack({exponent: this.exponent.get()})
     }
 
-    deserialize(format: MovementFormat<ExponentialData>): void {
+    deserialize(format: MovementFormat<ExponentialData>): Exponential {
         this.exponent.set(super.unpack(format).exponent)
+        return this
     }
 
     map(x: number): number {
@@ -109,8 +104,9 @@ export class CShape extends Movement<CShapeData> {
         return super.pack({shape: this.shape.get()})
     }
 
-    deserialize(format: MovementFormat<CShapeData>): void {
+    deserialize(format: MovementFormat<CShapeData>): CShape {
         this.shape.set(super.unpack(format).shape)
+        return this
     }
 
     map(x: number): number {
