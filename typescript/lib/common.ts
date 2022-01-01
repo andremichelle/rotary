@@ -60,6 +60,12 @@ export class ObservableImpl<T> implements Observable<T> {
     }
 }
 
+export interface Serializer<T> {
+    serialize(): T
+
+    deserialize(format: T): void
+}
+
 // noinspection JSUnusedLocalSymbols
 export abstract class Range {
     private constructor() {

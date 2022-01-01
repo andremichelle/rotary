@@ -544,11 +544,6 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             this.tracks.addAll(tracks);
             return this;
         };
-        RotaryModel.prototype.deserialize = function (format) {
-            this.radiusMin.set(format['radiusMin']);
-            this.tracks.clear();
-            this.tracks.addAll(format.tracks.map(function (trackFormat) { return new RotaryTrackModel().deserialize(trackFormat); }));
-        };
         RotaryModel.prototype.createTrack = function (index) {
             if (index === void 0) { index = Number.MAX_SAFE_INTEGER; }
             var track = new RotaryTrackModel();
@@ -589,6 +584,15 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
                 radiusMin: this.radiusMin.get(),
                 tracks: this.tracks.map(function (track) { return track.serialize(); })
             };
+        };
+        RotaryModel.prototype.deserialize = function (format) {
+            this.radiusMin.set(format['radiusMin']);
+            this.tracks.clear();
+            this.tracks.addAll(format.tracks.map(function (trackFormat) {
+                var model = new RotaryTrackModel();
+                model.deserialize(trackFormat);
+                return model;
+            }));
         };
         return RotaryModel;
     }());
@@ -692,7 +696,6 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             this.rgb.set(format.rgb);
             this.reverse.set(format.reverse);
             this.phase.set(format.phase);
-            return this;
         };
         RotaryTrackModel.prototype.updateGradient = function () {
             var rgb = this.rgb.get();
@@ -1828,4 +1831,61 @@ var menu;
     }());
     menu_1.MenuBar = MenuBar;
 })(menu || (menu = {}));
+define("rotary/movement", ["require", "exports", "lib/common"], function (require, exports, common_9) {
+    "use strict";
+    exports.__esModule = true;
+    var Exponential = (function () {
+        function Exponential() {
+            this.terminator = new common_9.Terminator();
+            this.exponent = this.terminator["with"](new common_9.BoundNumericValue(new common_9.Linear(-4.0, 4.0), 2.0));
+        }
+        Exponential.prototype.serialize = function () {
+            return { exponent: this.exponent.get() };
+        };
+        Exponential.prototype.deserialize = function (format) {
+            this.exponent.set(format.exponent);
+        };
+        Exponential.prototype.map = function (x) {
+            return Math.pow(x, this.exponent.get());
+        };
+        Exponential.prototype.name = function () {
+            return this.constructor.name;
+        };
+        Exponential.prototype.terminate = function () {
+            this.terminator.terminate();
+        };
+        return Exponential;
+    }());
+    exports.Exponential = Exponential;
+    var CShape = (function () {
+        function CShape() {
+            var _this = this;
+            this.terminator = new common_9.Terminator();
+            this.shape = this.terminator["with"](new common_9.BoundNumericValue(new common_9.Linear(-2.0, 2.0), 2.0));
+            this.terminator["with"](this.shape.addObserver(function () { return _this.update(); }));
+            this.update();
+        }
+        CShape.prototype.serialize = function () {
+            return { shape: this.shape.get() };
+        };
+        CShape.prototype.deserialize = function (format) {
+            this.shape.set(format.shape);
+        };
+        CShape.prototype.map = function (x) {
+            return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5;
+        };
+        CShape.prototype.name = function () {
+            return this.constructor.name;
+        };
+        CShape.prototype.terminate = function () {
+            this.terminator.terminate();
+        };
+        CShape.prototype.update = function () {
+            this.o = Math.pow(2.0, this.shape.get());
+            this.c = Math.pow(2.0, this.o - 1);
+        };
+        return CShape;
+    }());
+    exports.CShape = CShape;
+});
 //# sourceMappingURL=main.js.map

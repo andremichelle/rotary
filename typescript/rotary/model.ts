@@ -1,11 +1,13 @@
 import {
+    BoundNumericValue,
     Linear,
     LinearInteger,
     ObservableCollection,
     ObservableValueImpl,
-    BoundNumericValue,
+    Serializer,
     Terminable,
-    Terminator, UniformRandomMapping
+    Terminator,
+    UniformRandomMapping
 } from "../lib/common"
 
 declare interface RotaryFormat {
@@ -26,7 +28,7 @@ declare interface RotaryTrackFormat {
     phase: number
 }
 
-export class RotaryModel implements Terminable {
+export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
 
     readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
@@ -43,13 +45,6 @@ export class RotaryModel implements Terminable {
         this.tracks.clear()
         this.tracks.addAll(tracks)
         return this
-    }
-
-    deserialize(format: RotaryFormat): void {
-        this.radiusMin.set(format['radiusMin'])
-
-        this.tracks.clear()
-        this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel().deserialize(trackFormat)))
     }
 
     createTrack(index: number = Number.MAX_SAFE_INTEGER): RotaryTrackModel | null {
@@ -96,6 +91,17 @@ export class RotaryModel implements Terminable {
             tracks: this.tracks.map(track => track.serialize())
         }
     }
+
+    deserialize(format: RotaryFormat): void {
+        this.radiusMin.set(format['radiusMin'])
+
+        this.tracks.clear()
+        this.tracks.addAll(format.tracks.map(trackFormat => {
+            const model = new RotaryTrackModel()
+            model.deserialize(trackFormat)
+            return model
+        }))
+    }
 }
 
 export enum Fill {
@@ -128,7 +134,7 @@ export const randomMovement = (): Move => {
 export const Fills = new Map<string, Fill>(
     [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
-export class RotaryTrackModel implements Terminable {
+export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
 
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
@@ -194,7 +200,7 @@ export class RotaryTrackModel implements Terminable {
         }
     }
 
-    deserialize(format: RotaryTrackFormat): RotaryTrackModel {
+    deserialize(format: RotaryTrackFormat): void {
         this.segments.set(format.segments)
         this.width.set(format.width)
         this.widthPadding.set(format.widthPadding)
@@ -205,7 +211,6 @@ export class RotaryTrackModel implements Terminable {
         // this.movement.set(format.movement) TODO
         this.reverse.set(format.reverse)
         this.phase.set(format.phase)
-        return this;
     }
 
     private updateGradient(): void {

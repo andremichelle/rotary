@@ -24,6 +24,10 @@ declare module "lib/common" {
         removeObserver(observer: Observer<T>): boolean;
         terminate(): void;
     }
+    export interface Serializer<T> {
+        serialize(): T;
+        deserialize(format: T): void;
+    }
     export abstract class Range {
         private constructor();
         min: number;
@@ -189,7 +193,7 @@ declare module "lib/common" {
     }
 }
 declare module "rotary/model" {
-    import { ObservableCollection, ObservableValueImpl, BoundNumericValue, Terminable } from "lib/common";
+    import { BoundNumericValue, ObservableCollection, ObservableValueImpl, Serializer, Terminable } from "lib/common";
     interface RotaryFormat {
         radiusMin: number;
         tracks: RotaryTrackFormat[];
@@ -206,13 +210,12 @@ declare module "rotary/model" {
         reverse: boolean;
         phase: number;
     }
-    export class RotaryModel implements Terminable {
+    export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         private readonly terminator;
         readonly radiusMin: BoundNumericValue;
         readonly tracks: ObservableCollection<RotaryTrackModel>;
         constructor();
         randomize(): RotaryModel;
-        deserialize(format: RotaryFormat): void;
         createTrack(index?: number): RotaryTrackModel | null;
         copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
         removeTrack(track: RotaryTrackModel): boolean;
@@ -220,6 +223,7 @@ declare module "rotary/model" {
         measureRadius(): number;
         terminate(): void;
         serialize(): RotaryFormat;
+        deserialize(format: RotaryFormat): void;
     }
     export enum Fill {
         Flat = 0,
@@ -232,7 +236,7 @@ declare module "rotary/model" {
     export const Movements: Map<string, (x: any) => any>;
     export const randomMovement: () => Move;
     export const Fills: Map<string, Fill>;
-    export class RotaryTrackModel implements Terminable {
+    export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminable {
         private readonly terminator;
         private readonly gradient;
         readonly segments: BoundNumericValue;
@@ -251,7 +255,7 @@ declare module "rotary/model" {
         randomize(): RotaryTrackModel;
         terminate(): void;
         serialize(): RotaryTrackFormat;
-        deserialize(format: RotaryTrackFormat): RotaryTrackModel;
+        deserialize(format: RotaryTrackFormat): void;
         private updateGradient;
     }
 }
@@ -477,4 +481,39 @@ declare namespace menu {
         open(button: HTMLElement, listItem: ListItem): void;
     }
     export {};
+}
+declare module "rotary/movement" {
+    import { BoundNumericValue, Serializer, Terminable } from "lib/common";
+    export interface Movement<FORMAT> extends Serializer<FORMAT>, Terminable {
+        map(x: number): number;
+        readonly name: (() => string);
+    }
+    interface ExponentialFormat {
+        exponent: number;
+    }
+    export class Exponential implements Movement<ExponentialFormat> {
+        private readonly terminator;
+        readonly exponent: BoundNumericValue;
+        serialize(): ExponentialFormat;
+        deserialize(format: ExponentialFormat): void;
+        map(x: number): number;
+        name(): string;
+        terminate(): void;
+    }
+    interface CShapeFormat {
+        shape: number;
+    }
+    export class CShape implements Movement<CShapeFormat> {
+        private readonly terminator;
+        private readonly shape;
+        private o;
+        private c;
+        constructor();
+        serialize(): CShapeFormat;
+        deserialize(format: CShapeFormat): void;
+        map(x: number): number;
+        name(): string;
+        terminate(): void;
+        private update;
+    }
 }
