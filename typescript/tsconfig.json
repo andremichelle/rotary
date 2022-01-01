@@ -6,7 +6,7 @@
     "baseUrl": "./",
     "sourceMap": true,
     "lib": [
-      "esnext",
+      "es2020",
       "dom"
     ],
     "alwaysStrict": true,

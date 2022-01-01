@@ -531,9 +531,9 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
     exports.__esModule = true;
     var RotaryModel = (function () {
         function RotaryModel() {
+            this.tracks = new common_1.ObservableCollection();
             this.terminator = new common_1.Terminator();
             this.radiusMin = this.terminator["with"](new common_1.BoundNumericValue(new common_1.LinearInteger(0, 1024), 20));
-            this.tracks = new common_1.ObservableCollection();
         }
         RotaryModel.prototype.randomize = function () {
             var tracks = [];
@@ -632,7 +632,6 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         function RotaryTrackModel() {
             var _this = this;
             this.terminator = new common_1.Terminator();
-            this.gradient = [];
             this.segments = this.terminator["with"](new common_1.BoundNumericValue(new common_1.LinearInteger(1, 1024), 8));
             this.width = this.terminator["with"](new common_1.BoundNumericValue(new common_1.LinearInteger(1, 1024), 12));
             this.widthPadding = this.terminator["with"](new common_1.BoundNumericValue(new common_1.LinearInteger(0, 1024), 0));
@@ -643,6 +642,7 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             this.movement = this.terminator["with"](new common_1.ObservableValueImpl(exports.Movements.values().next().value));
             this.reverse = this.terminator["with"](new common_1.ObservableValueImpl(false));
             this.rgb = this.terminator["with"](new common_1.ObservableValueImpl((0xFFFFFF)));
+            this.gradient = [];
             this.terminator["with"](this.rgb.addObserver(function () { return _this.updateGradient(); }));
             this.updateGradient();
         }
@@ -769,8 +769,8 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             var _this = this;
             this.element = element;
             this.terminator = new common_3.Terminator();
-            this.observer = function () { return _this.update(); };
             this.value = common_3.ObservableValueVoid.Instance;
+            this.observer = function () { return _this.update(); };
             this.init();
         }
         Checkbox.prototype.withValue = function (value) {
@@ -801,9 +801,9 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.map = map;
             this.terminator = new common_3.Terminator();
             this.value = common_3.ObservableValueVoid.Instance;
-            this.observer = function () { return _this.update(); };
             this.options = new Map();
             this.values = [];
+            this.observer = function () { return _this.update(); };
             this.connect();
         }
         SelectInput.prototype.withValue = function (value) {
@@ -845,8 +845,8 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.printMapping = printMapping;
             this.stepper = stepper;
             this.terminator = new common_3.Terminator();
-            this.observer = function () { return _this.update(); };
             this.value = common_3.ObservableValueVoid.Instance;
+            this.observer = function () { return _this.update(); };
             var buttons = this.parent.querySelectorAll("button");
             this.decreaseButton = buttons.item(0);
             this.increaseButton = buttons.item(1);
@@ -936,8 +936,8 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.input = input;
             this.printMapping = printMapping;
             this.terminator = new common_3.Terminator();
-            this.observer = function () { return _this.update(); };
             this.value = common_3.ObservableValueVoid.Instance;
+            this.observer = function () { return _this.update(); };
             this.connect();
         }
         NumericInput.prototype.withValue = function (value) {
@@ -1011,8 +1011,8 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
         function RotaryTrackEditor(executor, parentNode) {
             var _this = this;
             this.executor = executor;
-            this.terminator = new common_4.Terminator();
             this.subject = null;
+            this.terminator = new common_4.Terminator();
             this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"), common_4.PrintMapping.integer(""), common_4.NumericStepper.Integer));
             this.width = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer));
             this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width-padding']"), common_4.PrintMapping.integer("px"), common_4.NumericStepper.Integer));
@@ -1421,13 +1421,13 @@ var menu;
     var ListItem = (function () {
         function ListItem(data) {
             this.data = data;
+            this.separatorBefore = false;
+            this.selectable = true;
             this.permanentChildren = [];
             this.transientChildren = [];
             this.transientChildrenCallback = null;
             this.openingCallback = null;
             this.triggerCallback = null;
-            this.separatorBefore = false;
-            this.selectable = true;
             this.isOpening = false;
         }
         ListItem.root = function () {
@@ -1573,11 +1573,11 @@ var menu;
             var _this = this;
             if (docked === void 0) { docked = false; }
             this.listItem = listItem;
+            this.childMenu = null;
             this.element = document.createElement("nav");
             this.container = document.createElement("div");
             this.scrollUp = document.createElement("div");
             this.scrollDown = document.createElement("div");
-            this.childMenu = null;
             this.selectedDiv = null;
             this.x = 0 | 0;
             this.y = 0 | 0;
@@ -1704,6 +1704,36 @@ var menu;
                 this.moveTo(this.x, parentNode.clientHeight - clientRect.height);
             }
         };
+        Menu.prototype.dispose = function () {
+            if (null !== this.childMenu) {
+                this.childMenu.dispose();
+                this.childMenu = null;
+            }
+            Menu.Controller.onDispose(this);
+            this.element.remove();
+            this.element = null;
+            this.listItem.removeTransientChildren();
+            this.listItem = null;
+            this.selectedDiv = null;
+        };
+        Menu.prototype.domElement = function () {
+            return this.element;
+        };
+        Menu.prototype.isChild = function (target) {
+            if (null === this.childMenu) {
+                return false;
+            }
+            while (null !== target) {
+                if (target === this.element) {
+                    return false;
+                }
+                if (target === this.childMenu.domElement()) {
+                    return true;
+                }
+                target = target.parentNode;
+            }
+            return false;
+        };
         Menu.prototype.makeScrollable = function () {
             var _this = this;
             var scroll = function (direction) { return _this.container.scrollTop += direction; };
@@ -1746,36 +1776,6 @@ var menu;
             };
             setup(this.scrollUp, -8);
             setup(this.scrollDown, 8);
-        };
-        Menu.prototype.dispose = function () {
-            if (null !== this.childMenu) {
-                this.childMenu.dispose();
-                this.childMenu = null;
-            }
-            Menu.Controller.onDispose(this);
-            this.element.remove();
-            this.element = null;
-            this.listItem.removeTransientChildren();
-            this.listItem = null;
-            this.selectedDiv = null;
-        };
-        Menu.prototype.domElement = function () {
-            return this.element;
-        };
-        Menu.prototype.isChild = function (target) {
-            if (null === this.childMenu) {
-                return false;
-            }
-            while (null !== target) {
-                if (target === this.element) {
-                    return false;
-                }
-                if (target === this.childMenu.domElement()) {
-                    return true;
-                }
-                target = target.parentNode;
-            }
-            return false;
         };
         Menu.Controller = new Controller();
         Menu.Renderer = new Map();
