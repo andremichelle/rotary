@@ -22,7 +22,7 @@ export class RotaryRenderer {
               position: number): void {
         const segments = model.segments.get()
         const scale = model.length.get() / segments
-        const phase = model.movement.get()(position - Math.floor(position)) * (model.reverse.get() ? -1 : 1) + model.phase.get()
+        const phase = model.movement.get().map(position - Math.floor(position)) * (model.reverse.get() ? -1 : 1) + model.phase.get()
         const width = model.width.get()
         const thickness = model.widthPadding.get() * 0.5
         const r0 = radiusMin + thickness

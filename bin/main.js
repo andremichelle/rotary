@@ -561,14 +561,80 @@ define("lib/common", ["require", "exports", "lib/mapping"], function (require, e
     }());
     exports.UniformRandomMapping = UniformRandomMapping;
 });
-define("rotary/model", ["require", "exports", "lib/common", "lib/math", "lib/mapping"], function (require, exports, common_1, math_1, mapping_2) {
+define("rotary/movement", ["require", "exports", "lib/common", "lib/mapping"], function (require, exports, common_1, mapping_2) {
+    "use strict";
+    exports.__esModule = true;
+    exports.fromFormat = function (format) {
+        switch (format["class"]) {
+            case Exponential.name: {
+                var movement = new Exponential();
+                movement.deserialize(format);
+                return movement;
+            }
+            case CShape.name: {
+                var movement = new CShape();
+                movement.deserialize(format);
+                return movement;
+            }
+        }
+        throw new Error("Unknown movement format");
+    };
+    var Exponential = (function () {
+        function Exponential() {
+            this.terminator = new common_1.Terminator();
+            this.exponent = this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.Linear(-4.0, 4.0), 2.0));
+        }
+        Exponential.prototype.serialize = function () {
+            return { "class": this.constructor.name, exponent: this.exponent.get() };
+        };
+        Exponential.prototype.deserialize = function (format) {
+            this.exponent.set(format.exponent);
+        };
+        Exponential.prototype.map = function (x) {
+            return Math.pow(x, this.exponent.get());
+        };
+        Exponential.prototype.terminate = function () {
+            this.terminator.terminate();
+        };
+        return Exponential;
+    }());
+    exports.Exponential = Exponential;
+    var CShape = (function () {
+        function CShape() {
+            var _this = this;
+            this.terminator = new common_1.Terminator();
+            this.shape = this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.Linear(-2.0, 2.0), 2.0));
+            this.terminator["with"](this.shape.addObserver(function () { return _this.update(); }));
+            this.update();
+        }
+        CShape.prototype.serialize = function () {
+            return { "class": this.constructor.name, shape: this.shape.get() };
+        };
+        CShape.prototype.deserialize = function (format) {
+            this.shape.set(format.shape);
+        };
+        CShape.prototype.map = function (x) {
+            return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5;
+        };
+        CShape.prototype.terminate = function () {
+            this.terminator.terminate();
+        };
+        CShape.prototype.update = function () {
+            this.o = Math.pow(2.0, this.shape.get());
+            this.c = Math.pow(2.0, this.o - 1);
+        };
+        return CShape;
+    }());
+    exports.CShape = CShape;
+});
+define("rotary/model", ["require", "exports", "lib/common", "lib/math", "lib/mapping", "rotary/movement"], function (require, exports, common_2, math_1, mapping_3, movement_1) {
     "use strict";
     exports.__esModule = true;
     var RotaryModel = (function () {
         function RotaryModel() {
-            this.tracks = new common_1.ObservableCollection();
-            this.terminator = new common_1.Terminator();
-            this.radiusMin = this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.LinearInteger(0, 1024), 20));
+            this.tracks = new common_2.ObservableCollection();
+            this.terminator = new common_2.Terminator();
+            this.radiusMin = this.terminator["with"](new common_2.BoundNumericValue(new mapping_3.LinearInteger(0, 1024), 20));
         }
         RotaryModel.prototype.randomize = function (random) {
             var tracks = [];
@@ -646,7 +712,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/math", "lib/map
         var c = Math.pow(2.0, o - 1);
         return function (x) { return c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), o) + 0.5; };
     };
-    var randomMapping = new common_1.UniformRandomMapping(math_1.JsRandom.Instance, 16, 64.0, 1.0);
+    var randomMapping = new common_2.UniformRandomMapping(math_1.JsRandom.Instance, 16, 64.0, 1.0);
     exports.Movements = new Map([
         ["Linear", function (x) { return x; }],
         ["Sine", function (x) { return Math.sin(x * Math.PI); }],
@@ -666,18 +732,18 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/math", "lib/map
     var RotaryTrackModel = (function () {
         function RotaryTrackModel() {
             var _this = this;
-            this.terminator = new common_1.Terminator();
-            this.segments = this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.LinearInteger(1, 1024), 8));
-            this.width = this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.LinearInteger(1, 1024), 12));
-            this.widthPadding = this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.LinearInteger(0, 1024), 0));
-            this.length = this.terminator["with"](new common_1.BoundNumericValue(mapping_2.Linear.Identity, 1.0));
-            this.lengthRatio = this.terminator["with"](new common_1.BoundNumericValue(mapping_2.Linear.Identity, 0.5));
-            this.phase = this.terminator["with"](new common_1.BoundNumericValue(mapping_2.Linear.Identity, 0.0));
-            this.fill = this.terminator["with"](new common_1.ObservableValueImpl(Fill.Flat));
-            this.movement = this.terminator["with"](new common_1.ObservableValueImpl(exports.Movements.values().next().value));
-            this.reverse = this.terminator["with"](new common_1.ObservableValueImpl(false));
-            this.rgb = this.terminator["with"](new common_1.ObservableValueImpl((0xFFFFFF)));
+            this.terminator = new common_2.Terminator();
             this.gradient = [];
+            this.segments = this.terminator["with"](new common_2.BoundNumericValue(new mapping_3.LinearInteger(1, 1024), 8));
+            this.width = this.terminator["with"](new common_2.BoundNumericValue(new mapping_3.LinearInteger(1, 1024), 12));
+            this.widthPadding = this.terminator["with"](new common_2.BoundNumericValue(new mapping_3.LinearInteger(0, 1024), 0));
+            this.length = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 1.0));
+            this.lengthRatio = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 0.5));
+            this.phase = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 0.0));
+            this.fill = this.terminator["with"](new common_2.ObservableValueImpl(Fill.Flat));
+            this.movement = this.terminator["with"](new common_2.ObservableValueImpl(exports.Movements.values().next().value));
+            this.reverse = this.terminator["with"](new common_2.ObservableValueImpl(false));
+            this.rgb = this.terminator["with"](new common_2.ObservableValueImpl((0xFFFFFF)));
             this.terminator["with"](this.rgb.addObserver(function () { return _this.updateGradient(); }));
             this.updateGradient();
         }
@@ -701,7 +767,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/math", "lib/map
             this.length.set(length);
             this.lengthRatio.set(lengthRatio);
             this.fill.set(fill);
-            this.movement.set(exports.randomMovement(random));
+            this.movement.set(new movement_1.Exponential());
             return this;
         };
         RotaryTrackModel.prototype.terminate = function () {
@@ -716,7 +782,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/math", "lib/map
                 lengthRatio: this.lengthRatio.get(),
                 fill: this.fill.get(),
                 rgb: this.rgb.get(),
-                movement: 0,
+                movement: this.movement.get().serialize(),
                 reverse: this.reverse.get(),
                 phase: this.phase.get()
             };
@@ -731,6 +797,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/math", "lib/map
             this.rgb.set(format.rgb);
             this.reverse.set(format.reverse);
             this.phase.set(format.phase);
+            this.movement.set(movement_1.fromFormat(format.movement));
         };
         RotaryTrackModel.prototype.updateGradient = function () {
             var rgb = this.rgb.get();
@@ -796,15 +863,15 @@ define("dom/common", ["require", "exports"], function (require, exports) {
     }());
     exports.Dom = Dom;
 });
-define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], function (require, exports, common_2, common_3) {
+define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], function (require, exports, common_3, common_4) {
     "use strict";
     exports.__esModule = true;
     var Checkbox = (function () {
         function Checkbox(element) {
             var _this = this;
             this.element = element;
-            this.terminator = new common_3.Terminator();
-            this.value = common_3.ObservableValueVoid.Instance;
+            this.terminator = new common_4.Terminator();
+            this.value = common_4.ObservableValueVoid.Instance;
             this.observer = function () { return _this.update(); };
             this.init();
         }
@@ -817,7 +884,7 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
         };
         Checkbox.prototype.init = function () {
             var _this = this;
-            this.terminator["with"](common_2.Dom.bindEventListener(this.element, "change", function () { return _this.value.set(_this.element.checked); }));
+            this.terminator["with"](common_3.Dom.bindEventListener(this.element, "change", function () { return _this.value.set(_this.element.checked); }));
         };
         Checkbox.prototype.update = function () {
             this.element.checked = this.value.get();
@@ -834,8 +901,8 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             var _this = this;
             this.select = select;
             this.map = map;
-            this.terminator = new common_3.Terminator();
-            this.value = common_3.ObservableValueVoid.Instance;
+            this.terminator = new common_4.Terminator();
+            this.value = common_4.ObservableValueVoid.Instance;
             this.options = new Map();
             this.values = [];
             this.observer = function () { return _this.update(); };
@@ -868,7 +935,7 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
                 _this.values.push(some);
                 _this.options.set(some, optionElement);
             });
-            this.terminator["with"](common_2.Dom.bindEventListener(this.select, "change", function () { return _this.value.set(_this.values[_this.select.selectedIndex]); }));
+            this.terminator["with"](common_3.Dom.bindEventListener(this.select, "change", function () { return _this.value.set(_this.values[_this.select.selectedIndex]); }));
         };
         return SelectInput;
     }());
@@ -879,8 +946,8 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.parent = parent;
             this.printMapping = printMapping;
             this.stepper = stepper;
-            this.terminator = new common_3.Terminator();
-            this.value = common_3.ObservableValueVoid.Instance;
+            this.terminator = new common_4.Terminator();
+            this.value = common_4.ObservableValueVoid.Instance;
             this.observer = function () { return _this.update(); };
             var buttons = this.parent.querySelectorAll("button");
             this.decreaseButton = buttons.item(0);
@@ -897,9 +964,9 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
         };
         NumericStepperInput.prototype.connect = function () {
             var _this = this;
-            this.terminator["with"](common_2.Dom.configRepeatButton(this.decreaseButton, function () { return _this.stepper.decrease(_this.value); }));
-            this.terminator["with"](common_2.Dom.configRepeatButton(this.increaseButton, function () { return _this.stepper.increase(_this.value); }));
-            this.terminator["with"](common_2.Dom.bindEventListener(this.input, "focusin", function (focusEvent) {
+            this.terminator["with"](common_3.Dom.configRepeatButton(this.decreaseButton, function () { return _this.stepper.decrease(_this.value); }));
+            this.terminator["with"](common_3.Dom.configRepeatButton(this.increaseButton, function () { return _this.stepper.increase(_this.value); }));
+            this.terminator["with"](common_3.Dom.bindEventListener(this.input, "focusin", function (focusEvent) {
                 var blur = (function () {
                     var lastFocus = focusEvent.relatedTarget;
                     return function () {
@@ -970,8 +1037,8 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             var _this = this;
             this.input = input;
             this.printMapping = printMapping;
-            this.terminator = new common_3.Terminator();
-            this.value = common_3.ObservableValueVoid.Instance;
+            this.terminator = new common_4.Terminator();
+            this.value = common_4.ObservableValueVoid.Instance;
             this.observer = function () { return _this.update(); };
             this.connect();
         }
@@ -984,7 +1051,7 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
         };
         NumericInput.prototype.connect = function () {
             var _this = this;
-            this.terminator["with"](common_2.Dom.bindEventListener(this.input, "focusin", function (focusEvent) {
+            this.terminator["with"](common_3.Dom.bindEventListener(this.input, "focusin", function (focusEvent) {
                 var blur = (function () {
                     var lastFocus = focusEvent.relatedTarget;
                     return function () {
@@ -1039,26 +1106,26 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
     }());
     exports.NumericInput = NumericInput;
 });
-define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rotary/model", "dom/common", "lib/mapping"], function (require, exports, common_4, inputs_1, model_1, common_5, mapping_3) {
+define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rotary/model", "dom/common", "lib/mapping"], function (require, exports, common_5, inputs_1, model_1, common_6, mapping_4) {
     "use strict";
     exports.__esModule = true;
     var RotaryTrackEditor = (function () {
         function RotaryTrackEditor(executor, parentNode) {
             var _this = this;
             this.executor = executor;
+            this.terminator = new common_5.Terminator();
             this.subject = null;
-            this.terminator = new common_4.Terminator();
-            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"), mapping_3.PrintMapping.integer(""), common_4.NumericStepper.Integer));
-            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width']"), mapping_3.PrintMapping.integer("px"), common_4.NumericStepper.Integer));
-            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width-padding']"), mapping_3.PrintMapping.integer("px"), common_4.NumericStepper.Integer));
-            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length']"), mapping_3.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent));
-            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"), mapping_3.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent));
-            this.phase = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase']"), mapping_3.PrintMapping.UnipolarPercent, common_4.NumericStepper.FloatPercent));
+            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"), mapping_4.PrintMapping.integer(""), common_5.NumericStepper.Integer));
+            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
+            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width-padding']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
+            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
+            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
+            this.phase = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
             this.fill = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='fill']"), model_1.Fills));
             this.movement = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='movement']"), model_1.Movements));
             this.reverse = this.terminator["with"](new inputs_1.Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
-            this.rgb = this.terminator["with"](new inputs_1.NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), mapping_3.PrintMapping.RGB));
-            this.terminator["with"](common_5.Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", function (event) {
+            this.rgb = this.terminator["with"](new inputs_1.NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), mapping_4.PrintMapping.RGB));
+            this.terminator["with"](common_6.Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", function (event) {
                 event.preventDefault();
                 if (_this.subject !== null) {
                     executor["delete"](_this.subject);
@@ -1074,21 +1141,20 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             this.phase.withValue(model.phase);
             this.fill.withValue(model.fill);
             this.rgb.withValue(model.rgb);
-            this.movement.withValue(model.movement);
             this.reverse.withValue(model.reverse);
             this.subject = model;
         };
         RotaryTrackEditor.prototype.clear = function () {
-            this.segments.withValue(common_4.ObservableValueVoid.Instance);
-            this.width.withValue(common_4.ObservableValueVoid.Instance);
-            this.widthPadding.withValue(common_4.ObservableValueVoid.Instance);
-            this.length.withValue(common_4.ObservableValueVoid.Instance);
-            this.lengthRatio.withValue(common_4.ObservableValueVoid.Instance);
-            this.phase.withValue(common_4.ObservableValueVoid.Instance);
-            this.fill.withValue(common_4.ObservableValueVoid.Instance);
-            this.rgb.withValue(common_4.ObservableValueVoid.Instance);
-            this.movement.withValue(common_4.ObservableValueVoid.Instance);
-            this.reverse.withValue(common_4.ObservableValueVoid.Instance);
+            this.segments.withValue(common_5.ObservableValueVoid.Instance);
+            this.width.withValue(common_5.ObservableValueVoid.Instance);
+            this.widthPadding.withValue(common_5.ObservableValueVoid.Instance);
+            this.length.withValue(common_5.ObservableValueVoid.Instance);
+            this.lengthRatio.withValue(common_5.ObservableValueVoid.Instance);
+            this.phase.withValue(common_5.ObservableValueVoid.Instance);
+            this.fill.withValue(common_5.ObservableValueVoid.Instance);
+            this.rgb.withValue(common_5.ObservableValueVoid.Instance);
+            this.movement.withValue(common_5.ObservableValueVoid.Instance);
+            this.reverse.withValue(common_5.ObservableValueVoid.Instance);
             this.subject = null;
         };
         RotaryTrackEditor.prototype.terminate = function () {
@@ -1098,7 +1164,7 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
     }());
     exports.RotaryTrackEditor = RotaryTrackEditor;
 });
-define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], function (require, exports, model_2, common_6) {
+define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], function (require, exports, model_2, common_7) {
     "use strict";
     exports.__esModule = true;
     var RotaryRenderer = (function () {
@@ -1118,7 +1184,7 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
         RotaryRenderer.prototype.drawTrack = function (model, radiusMin, position) {
             var segments = model.segments.get();
             var scale = model.length.get() / segments;
-            var phase = model.movement.get()(position - Math.floor(position)) * (model.reverse.get() ? -1 : 1) + model.phase.get();
+            var phase = model.movement.get().map(position - Math.floor(position)) * (model.reverse.get() ? -1 : 1) + model.phase.get();
             var width = model.width.get();
             var thickness = model.widthPadding.get() * 0.5;
             var r0 = radiusMin + thickness;
@@ -1133,8 +1199,8 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
             if (fill === void 0) { fill = model_2.Fill.Flat; }
             console.assert(radiusMin < radiusMax, "radiusMax(" + radiusMax + ") must be greater then radiusMin(" + radiusMin + ")");
             console.assert(angleMin < angleMax, "angleMax(" + angleMax + ") must be greater then angleMin(" + angleMin + ")");
-            var radianMin = angleMin * common_6.TAU;
-            var radianMax = angleMax * common_6.TAU;
+            var radianMin = angleMin * common_7.TAU;
+            var radianMax = angleMax * common_7.TAU;
             this.context.globalAlpha = model === this.hightlight || null === this.hightlight ? 1.0 : 0.2;
             if (fill === model_2.Fill.Flat) {
                 this.context.fillStyle = model.opaque();
@@ -1187,7 +1253,7 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
     }());
     exports.RotaryRenderer = RotaryRenderer;
 });
-define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/editor", "dom/common", "lib/math", "lib/mapping"], function (require, exports, common_7, inputs_2, editor_1, common_8, math_2, mapping_4) {
+define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/editor", "dom/common", "lib/math", "lib/mapping"], function (require, exports, common_8, inputs_2, editor_1, common_9, math_2, mapping_5) {
     "use strict";
     exports.__esModule = true;
     var RotaryUI = (function () {
@@ -1198,28 +1264,28 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             this.template = template;
             this.model = model;
             this.renderer = renderer;
-            this.terminator = new common_7.Terminator();
+            this.terminator = new common_8.Terminator();
             this.editor = new editor_1.RotaryTrackEditor(this, document);
             this.map = new Map();
             this.random = new math_2.Mulberry32(0x123abc456);
-            this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), mapping_4.PrintMapping.integer("px"), new common_7.NumericStepper(1))).withValue(model.radiusMin);
+            this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), mapping_5.PrintMapping.integer("px"), new common_8.NumericStepper(1))).withValue(model.radiusMin);
             this.terminator["with"](model.tracks.addObserver(function (event) {
                 switch (event.type) {
-                    case common_7.CollectionEventType.Add: {
+                    case common_8.CollectionEventType.Add: {
                         _this.createSelector(event.item, event.index);
                         break;
                     }
-                    case common_7.CollectionEventType.Remove: {
+                    case common_8.CollectionEventType.Remove: {
                         _this.removeSelector(event.item);
                         break;
                     }
-                    case common_7.CollectionEventType.Order: {
+                    case common_8.CollectionEventType.Order: {
                         _this.reorderSelectors();
                         break;
                     }
                 }
             }));
-            this.terminator["with"](common_8.Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", function (event) {
+            this.terminator["with"](common_9.Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", function (event) {
                 event.preventDefault();
                 _this.select(_this.model.createTrack(0).randomize(_this.random));
             }));
@@ -1283,7 +1349,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             var radio = element.querySelector("input[type=radio]");
             var button = element.querySelector("button");
             this.map.set(track, new RotaryTrackSelector(this, track, element, radio, button));
-            common_8.Dom.insertElement(this.selectors, element, index);
+            common_9.Dom.insertElement(this.selectors, element, index);
         };
         RotaryUI.prototype.removeSelector = function (track) {
             var selector = this.map.get(track);
@@ -1293,7 +1359,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
         };
         RotaryUI.prototype.reorderSelectors = function () {
             var _this = this;
-            common_8.Dom.emptyNode(this.selectors);
+            common_9.Dom.emptyNode(this.selectors);
             this.model.tracks.forEach(function (track) {
                 var selector = _this.map.get(track);
                 console.assert(selector !== undefined, "Cannot reorder selector");
@@ -1311,11 +1377,11 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             this.element = element;
             this.radio = radio;
             this.button = button;
-            this.terminator = new common_7.Terminator();
-            this.terminator["with"](common_8.Dom.bindEventListener(this.radio, "change", function () { return _this.ui.select(_this.model); }));
-            this.terminator["with"](common_8.Dom.bindEventListener(this.element, "mouseenter", function () { return _this.ui.showHighlight(model); }));
-            this.terminator["with"](common_8.Dom.bindEventListener(this.element, "mouseleave", function () { return _this.ui.releaseHighlight(); }));
-            this.terminator["with"](common_8.Dom.bindEventListener(this.button, "click", function (event) {
+            this.terminator = new common_8.Terminator();
+            this.terminator["with"](common_9.Dom.bindEventListener(this.radio, "change", function () { return _this.ui.select(_this.model); }));
+            this.terminator["with"](common_9.Dom.bindEventListener(this.element, "mouseenter", function () { return _this.ui.showHighlight(model); }));
+            this.terminator["with"](common_9.Dom.bindEventListener(this.element, "mouseleave", function () { return _this.ui.releaseHighlight(); }));
+            this.terminator["with"](common_9.Dom.bindEventListener(this.button, "click", function (event) {
                 event.preventDefault();
                 _this.ui.createNew(_this.model, event.shiftKey);
             }));
@@ -1865,61 +1931,4 @@ var menu;
     }());
     menu_1.MenuBar = MenuBar;
 })(menu || (menu = {}));
-define("rotary/movement", ["require", "exports", "lib/common", "lib/mapping"], function (require, exports, common_9, mapping_5) {
-    "use strict";
-    exports.__esModule = true;
-    var Exponential = (function () {
-        function Exponential() {
-            this.terminator = new common_9.Terminator();
-            this.exponent = this.terminator["with"](new common_9.BoundNumericValue(new mapping_5.Linear(-4.0, 4.0), 2.0));
-        }
-        Exponential.prototype.serialize = function () {
-            return { exponent: this.exponent.get() };
-        };
-        Exponential.prototype.deserialize = function (format) {
-            this.exponent.set(format.exponent);
-        };
-        Exponential.prototype.map = function (x) {
-            return Math.pow(x, this.exponent.get());
-        };
-        Exponential.prototype.name = function () {
-            return this.constructor.name;
-        };
-        Exponential.prototype.terminate = function () {
-            this.terminator.terminate();
-        };
-        return Exponential;
-    }());
-    exports.Exponential = Exponential;
-    var CShape = (function () {
-        function CShape() {
-            var _this = this;
-            this.terminator = new common_9.Terminator();
-            this.shape = this.terminator["with"](new common_9.BoundNumericValue(new mapping_5.Linear(-2.0, 2.0), 2.0));
-            this.terminator["with"](this.shape.addObserver(function () { return _this.update(); }));
-            this.update();
-        }
-        CShape.prototype.serialize = function () {
-            return { shape: this.shape.get() };
-        };
-        CShape.prototype.deserialize = function (format) {
-            this.shape.set(format.shape);
-        };
-        CShape.prototype.map = function (x) {
-            return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5;
-        };
-        CShape.prototype.name = function () {
-            return this.constructor.name;
-        };
-        CShape.prototype.terminate = function () {
-            this.terminator.terminate();
-        };
-        CShape.prototype.update = function () {
-            this.o = Math.pow(2.0, this.shape.get());
-            this.c = Math.pow(2.0, this.o - 1);
-        };
-        return CShape;
-    }());
-    exports.CShape = CShape;
-});
 //# sourceMappingURL=main.js.map

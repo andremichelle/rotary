@@ -1,13 +1,31 @@
 import {BoundNumericValue, Serializer, Terminable, Terminator} from "../lib/common"
 import {Linear} from "../lib/mapping"
 
-export interface Movement<FORMAT> extends Serializer<FORMAT>, Terminable {
-    readonly name: (() => string)
+export const fromFormat = (format: MovementFormat) => {
+    switch (format.class) {
+        case Exponential.name: {
+            const movement = new Exponential()
+            movement.deserialize(format as ExponentialFormat)
+            return movement
+        }
+        case CShape.name: {
+            const movement = new CShape()
+            movement.deserialize(format as CShapeFormat)
+            return movement
+        }
+    }
+    throw new Error("Unknown movement format")
+}
 
+export declare interface MovementFormat {
+    class: string
+}
+
+export interface Movement<FORMAT> extends Serializer<FORMAT>, Terminable {
     map(x: number): number
 }
 
-declare interface ExponentialFormat {
+export declare interface ExponentialFormat extends MovementFormat {
     exponent: number
 }
 
@@ -17,7 +35,7 @@ export class Exponential implements Movement<ExponentialFormat> {
     readonly exponent = this.terminator.with(new BoundNumericValue(new Linear(-4.0, 4.0), 2.0))
 
     serialize(): ExponentialFormat {
-        return {exponent: this.exponent.get()}
+        return {class: this.constructor.name, exponent: this.exponent.get()}
     }
 
     deserialize(format: ExponentialFormat): void {
@@ -28,16 +46,12 @@ export class Exponential implements Movement<ExponentialFormat> {
         return Math.pow(x, this.exponent.get())
     }
 
-    name(): string {
-        return this.constructor.name
-    }
-
     terminate(): void {
         this.terminator.terminate()
     }
 }
 
-declare interface CShapeFormat {
+export declare interface CShapeFormat extends MovementFormat {
     shape: number
 }
 
@@ -55,7 +69,7 @@ export class CShape implements Movement<CShapeFormat> {
     }
 
     serialize(): CShapeFormat {
-        return {shape: this.shape.get()}
+        return {class: this.constructor.name, shape: this.shape.get()}
     }
 
     deserialize(format: CShapeFormat): void {
@@ -65,10 +79,6 @@ export class CShape implements Movement<CShapeFormat> {
     map(x: number): number {
         // https://www.desmos.com/calculator/bpbuua3l0j
         return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5
-    }
-
-    name(): string {
-        return this.constructor.name
     }
 
     terminate(): void {
