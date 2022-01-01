@@ -1,5 +1,6 @@
 import {Dom} from "./common"
-import {NumericStepper, ObservableValue, ObservableValueVoid, PrintMapping, Terminable, Terminator} from "../lib/common"
+import {NumericStepper, ObservableValue, ObservableValueVoid, Terminable, Terminator} from "../lib/common"
+import {PrintMapping} from "../lib/mapping"
 
 export class Checkbox implements Terminable {
     private readonly terminator = new Terminator()

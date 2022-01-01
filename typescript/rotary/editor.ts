@@ -1,7 +1,8 @@
-import {NumericStepper, ObservableValueVoid, PrintMapping, Terminable, Terminator} from "../lib/common"
+import {NumericStepper, ObservableValueVoid, Terminable, Terminator} from "../lib/common"
 import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs"
 import {Fill, Fills, Move, Movements, RotaryTrackModel} from "./model"
 import {Dom} from "../dom/common"
+import {PrintMapping} from "../lib/mapping"
 
 export interface RotaryTrackEditorExecutor {
     delete(subject: RotaryTrackModel): void

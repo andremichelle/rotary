@@ -1,9 +1,9 @@
 import {RotaryModel} from "./rotary/model"
 import {RotaryUI} from "./rotary/ui"
 import {RotaryRenderer} from "./rotary/render"
+import {Mulberry32} from "./lib/math"
 import MenuBar = menu.MenuBar
 import ListItem = menu.ListItem
-import {Mulberry32} from "./lib/math"
 
 const canvas = document.querySelector("canvas")
 const labelSize = document.querySelector("label.size")

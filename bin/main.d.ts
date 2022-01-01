@@ -4,8 +4,8 @@ declare module "lib/math" {
     }
     export class JsRandom implements Random {
         static Instance: JsRandom;
-        nextDouble(min: number, max: number): number;
         private constructor();
+        nextDouble(min: number, max: number): number;
     }
     export class Mulberry32 implements Random {
         private seed;
@@ -14,37 +14,7 @@ declare module "lib/math" {
         private uniform;
     }
 }
-declare module "lib/common" {
-    import { Random } from "lib/math";
-    export const TAU: number;
-    export interface Terminable {
-        terminate(): void;
-    }
-    export class TerminableVoid implements Terminable {
-        static Instance: TerminableVoid;
-        terminate(): void;
-    }
-    export class Terminator implements Terminable {
-        private readonly terminables;
-        with<T extends Terminable>(terminable: T): T;
-        terminate(): void;
-    }
-    export type Observer<VALUE> = (value: VALUE) => void;
-    export interface Observable<VALUE> extends Terminable {
-        addObserver(observer: Observer<VALUE>): Terminable;
-        removeObserver(observer: Observer<VALUE>): boolean;
-    }
-    export class ObservableImpl<T> implements Observable<T> {
-        private readonly observers;
-        notify(value: T): void;
-        addObserver(observer: Observer<T>): Terminable;
-        removeObserver(observer: Observer<T>): boolean;
-        terminate(): void;
-    }
-    export interface Serializer<T> {
-        serialize(): T;
-        deserialize(format: T): void;
-    }
+declare module "lib/mapping" {
     export abstract class Range {
         min: number;
         max: number;
@@ -118,6 +88,39 @@ declare module "lib/common" {
         static integer(postUnit: string): PrintMapping<number>;
         parse(text: string): Y | null;
         print(value: Y): string;
+    }
+}
+declare module "lib/common" {
+    import { Random } from "lib/math";
+    import { Range, ValueMapping } from "lib/mapping";
+    export const TAU: number;
+    export interface Terminable {
+        terminate(): void;
+    }
+    export class TerminableVoid implements Terminable {
+        static Instance: TerminableVoid;
+        terminate(): void;
+    }
+    export class Terminator implements Terminable {
+        private readonly terminables;
+        with<T extends Terminable>(terminable: T): T;
+        terminate(): void;
+    }
+    export type Observer<VALUE> = (value: VALUE) => void;
+    export interface Observable<VALUE> extends Terminable {
+        addObserver(observer: Observer<VALUE>): Terminable;
+        removeObserver(observer: Observer<VALUE>): boolean;
+    }
+    export class ObservableImpl<T> implements Observable<T> {
+        private readonly observers;
+        notify(value: T): void;
+        addObserver(observer: Observer<T>): Terminable;
+        removeObserver(observer: Observer<T>): boolean;
+        terminate(): void;
+    }
+    export interface Serializer<T> {
+        serialize(): T;
+        deserialize(format: T): void;
     }
     export interface Value<T> {
         set(value: T): boolean;
@@ -288,7 +291,8 @@ declare module "dom/common" {
     }
 }
 declare module "dom/inputs" {
-    import { NumericStepper, ObservableValue, PrintMapping, Terminable } from "lib/common";
+    import { NumericStepper, ObservableValue, Terminable } from "lib/common";
+    import { PrintMapping } from "lib/mapping";
     export class Checkbox implements Terminable {
         private readonly element;
         private readonly terminator;

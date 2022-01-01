@@ -1,4 +1,5 @@
-import {BoundNumericValue, Linear, Serializer, Terminable, Terminator} from "../lib/common"
+import {BoundNumericValue, Serializer, Terminable, Terminator} from "../lib/common"
+import {Linear} from "../lib/mapping"
 
 export interface Movement<FORMAT> extends Serializer<FORMAT>, Terminable {
     readonly name: (() => string)

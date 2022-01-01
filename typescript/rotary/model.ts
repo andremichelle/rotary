@@ -1,7 +1,5 @@
 import {
     BoundNumericValue,
-    Linear,
-    LinearInteger,
     ObservableCollection,
     ObservableValueImpl,
     Serializer,
@@ -10,6 +8,7 @@ import {
     UniformRandomMapping
 } from "../lib/common"
 import {JsRandom, Random} from "../lib/math"
+import {Linear, LinearInteger} from "../lib/mapping"
 
 declare interface RotaryFormat {
     radiusMin: number

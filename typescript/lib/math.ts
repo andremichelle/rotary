@@ -5,11 +5,11 @@ export interface Random {
 export class JsRandom implements Random {
     static Instance = new JsRandom()
 
-    nextDouble(min: number, max: number): number {
-        return min + Math.random() * (max - min)
+    private constructor() {
     }
 
-    private constructor() {
+    nextDouble(min: number, max: number): number {
+        return min + Math.random() * (max - min)
     }
 }
 
