@@ -35,6 +35,36 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+define("lib/math", ["require", "exports"], function (require, exports) {
+    "use strict";
+    exports.__esModule = true;
+    var JsRandom = (function () {
+        function JsRandom() {
+        }
+        JsRandom.prototype.nextDouble = function (min, max) {
+            return min + Math.random() * (max - min);
+        };
+        JsRandom.Instance = new JsRandom();
+        return JsRandom;
+    }());
+    exports.JsRandom = JsRandom;
+    var Mulberry32 = (function () {
+        function Mulberry32(seed) {
+            this.seed = seed;
+        }
+        Mulberry32.prototype.nextDouble = function (min, max) {
+            return min + this.uniform() * (max - min);
+        };
+        Mulberry32.prototype.uniform = function () {
+            var t = this.seed += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296.0;
+        };
+        return Mulberry32;
+    }());
+    exports.Mulberry32 = Mulberry32;
+});
 define("lib/common", ["require", "exports"], function (require, exports) {
     "use strict";
     exports.__esModule = true;
@@ -473,20 +503,21 @@ define("lib/common", ["require", "exports"], function (require, exports) {
         return high;
     };
     var UniformRandomMapping = (function () {
-        function UniformRandomMapping(resolution, roughness, strength) {
+        function UniformRandomMapping(random, resolution, roughness, strength) {
             if (resolution === void 0) { resolution = 1024; }
             if (roughness === void 0) { roughness = 4.0; }
             if (strength === void 0) { strength = 0.2; }
+            this.random = random;
             this.resolution = resolution;
             this.roughness = roughness;
             this.strength = strength;
-            this.values = UniformRandomMapping.monotoneRandom(resolution, roughness, strength);
+            this.values = UniformRandomMapping.monotoneRandom(random, resolution, roughness, strength);
         }
-        UniformRandomMapping.monotoneRandom = function (n, roughness, strength) {
+        UniformRandomMapping.monotoneRandom = function (random, n, roughness, strength) {
             var sequence = new Float32Array(n + 1);
             var sum = 0.0;
             for (var i = 1; i <= n; ++i) {
-                var x = Math.floor(Math.random() * roughness) + 1.0;
+                var x = Math.floor(random.nextDouble(0.0, roughness)) + 1.0;
                 sum += x;
                 sequence[i] = x;
             }
@@ -526,7 +557,7 @@ define("lib/common", ["require", "exports"], function (require, exports) {
     }());
     exports.UniformRandomMapping = UniformRandomMapping;
 });
-define("rotary/model", ["require", "exports", "lib/common"], function (require, exports, common_1) {
+define("rotary/model", ["require", "exports", "lib/common", "lib/math"], function (require, exports, common_1, math_1) {
     "use strict";
     exports.__esModule = true;
     var RotaryModel = (function () {
@@ -535,10 +566,10 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
             this.terminator = new common_1.Terminator();
             this.radiusMin = this.terminator["with"](new common_1.BoundNumericValue(new common_1.LinearInteger(0, 1024), 20));
         }
-        RotaryModel.prototype.randomize = function () {
+        RotaryModel.prototype.randomize = function (random) {
             var tracks = [];
             for (var i = 0; i < 12; i++) {
-                tracks.push(new RotaryTrackModel().randomize());
+                tracks.push(new RotaryTrackModel().randomize(random));
             }
             this.tracks.clear();
             this.tracks.addAll(tracks);
@@ -611,7 +642,7 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         var c = Math.pow(2.0, o - 1);
         return function (x) { return c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), o) + 0.5; };
     };
-    var randomMapping = new common_1.UniformRandomMapping(16, 64.0, 1.0);
+    var randomMapping = new common_1.UniformRandomMapping(math_1.JsRandom.Instance, 16, 64.0, 1.0);
     exports.Movements = new Map([
         ["Linear", function (x) { return x; }],
         ["Sine", function (x) { return Math.sin(x * Math.PI); }],
@@ -623,9 +654,9 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         ["OddShape 2", OddShape(2.0)],
         ["Random", function (x) { return randomMapping.y(x); }],
     ]);
-    exports.randomMovement = function () {
+    exports.randomMovement = function (random) {
         var array = Array.from(exports.Movements);
-        return array[Math.floor(Math.random() * array.length)][1];
+        return array[Math.floor(random.nextDouble(0.0, 1.0) * array.length)][1];
     };
     exports.Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
     var RotaryTrackModel = (function () {
@@ -652,21 +683,21 @@ define("rotary/model", ["require", "exports", "lib/common"], function (require, 
         RotaryTrackModel.prototype.transparent = function () {
             return this.gradient[1];
         };
-        RotaryTrackModel.prototype.randomize = function () {
-            var segments = 1 + Math.floor(Math.random() * 9);
-            var lengthRatioExp = -Math.floor(Math.random() * 3);
-            var lengthRatio = 0 === lengthRatioExp ? 0.5 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp);
-            var width = Math.random() < 0.1 ? 24.0 : 12.0;
-            var widthPadding = Math.random() < 0.1 ? 0.0 : 3.0;
-            var length = Math.random() < 0.1 ? 0.75 : 1.0;
-            var fill = 2 === segments ? Fill.Positive : Math.random() < 0.2 ? Fill.Stroke : Fill.Flat;
+        RotaryTrackModel.prototype.randomize = function (random) {
+            var segments = 1 + Math.floor(random.nextDouble(0.0, 9.0));
+            var lengthRatioExp = -Math.floor(random.nextDouble(0.0, 3.0));
+            var lengthRatio = 0 === lengthRatioExp ? 0.5 : random.nextDouble(0.0, 1.0) < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp);
+            var width = random.nextDouble(0.0, 1.0) < 0.1 ? 24.0 : 12.0;
+            var widthPadding = random.nextDouble(0.0, 1.0) < 0.1 ? 0.0 : 3.0;
+            var length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0;
+            var fill = 2 === segments ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat;
             this.segments.set(0 === lengthRatioExp ? 1 : segments);
             this.width.set(width);
             this.widthPadding.set(widthPadding);
             this.length.set(length);
             this.lengthRatio.set(lengthRatio);
             this.fill.set(fill);
-            this.movement.set(exports.randomMovement());
+            this.movement.set(exports.randomMovement(random));
             return this;
         };
         RotaryTrackModel.prototype.terminate = function () {
@@ -1152,7 +1183,7 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
     }());
     exports.RotaryRenderer = RotaryRenderer;
 });
-define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/editor", "dom/common"], function (require, exports, common_7, inputs_2, editor_1, common_8) {
+define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/editor", "dom/common", "lib/math"], function (require, exports, common_7, inputs_2, editor_1, common_8, math_2) {
     "use strict";
     exports.__esModule = true;
     var RotaryUI = (function () {
@@ -1166,6 +1197,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             this.terminator = new common_7.Terminator();
             this.editor = new editor_1.RotaryTrackEditor(this, document);
             this.map = new Map();
+            this.random = new math_2.Mulberry32(0x123abc456);
             this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), common_7.PrintMapping.integer("px"), new common_7.NumericStepper(1))).withValue(model.radiusMin);
             this.terminator["with"](model.tracks.addObserver(function (event) {
                 switch (event.type) {
@@ -1185,7 +1217,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             }));
             this.terminator["with"](common_8.Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", function (event) {
                 event.preventDefault();
-                _this.select(_this.model.createTrack(0).randomize());
+                _this.select(_this.model.createTrack(0).randomize(_this.random));
             }));
             this.model.tracks.forEach(function (track) { return _this.createSelector(track); });
             if (0 < this.model.tracks.size())
@@ -1200,14 +1232,14 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
         };
         RotaryUI.prototype.createNew = function (model, copy) {
             if ((model = model || this.editor.subject) === null) {
-                this.select(this.model.createTrack(0).randomize());
+                this.select(this.model.createTrack(0).randomize(this.random));
                 return;
             }
             var index = this.model.tracks.indexOf(model);
             console.assert(-1 !== index, "Could not find model");
             var newModel = copy
                 ? this.model.copyTrack(model, index + 1)
-                : this.model.createTrack(index + 1).randomize();
+                : this.model.createTrack(index + 1).randomize(this.random);
             this.select(newModel);
         };
         RotaryUI.prototype["delete"] = function (model) {
@@ -1292,7 +1324,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
     }());
     exports.RotaryTrackSelector = RotaryTrackSelector;
 });
-define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render"], function (require, exports, model_3, ui_1, render_1) {
+define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render", "lib/math"], function (require, exports, model_3, ui_1, render_1, math_3) {
     "use strict";
     exports.__esModule = true;
     var MenuBar = menu.MenuBar;
@@ -1300,7 +1332,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
     var canvas = document.querySelector("canvas");
     var labelSize = document.querySelector("label.size");
     var context = canvas.getContext("2d", { alpha: true });
-    var model = new model_3.RotaryModel().randomize();
+    var model = new model_3.RotaryModel().randomize(new math_3.Mulberry32(0x987123F));
     var renderer = new render_1.RotaryRenderer(context, model);
     var ui = ui_1.RotaryUI.create(model, renderer);
     var pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
@@ -1374,8 +1406,6 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
         ui["delete"]();
     })))
         .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
-        .addListItem(ListItem["default"]("Nothing yet", "", false)))
-        .addButton(nav.querySelector("[data-menu='create']"), ListItem.root()
         .addListItem(ListItem["default"]("Nothing yet", "", false)))
         .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
         .addListItem(ListItem["default"]("Nothing yet", "", false)));

@@ -9,6 +9,7 @@ import {
     Terminator,
     UniformRandomMapping
 } from "../lib/common"
+import {JsRandom, Random} from "../lib/math"
 
 declare interface RotaryFormat {
     radiusMin: number
@@ -36,10 +37,10 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
     constructor() {
     }
 
-    randomize(): RotaryModel {
+    randomize(random: Random): RotaryModel {
         const tracks = []
         for (let i = 0; i < 12; i++) {
-            tracks.push(new RotaryTrackModel().randomize())
+            tracks.push(new RotaryTrackModel().randomize(random))
         }
         this.tracks.clear()
         this.tracks.addAll(tracks)
@@ -114,7 +115,7 @@ const OddShape = shape => { // https://www.desmos.com/calculator/bpbuua3l0j
     return x => c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), o) + 0.5
 }
 export type Move = (x: number) => number
-const randomMapping = new UniformRandomMapping(16, 64.0, 1.0)
+const randomMapping = new UniformRandomMapping(JsRandom.Instance, 16, 64.0, 1.0)
 export const Movements = new Map([
     ["Linear", x => x],
     ["Sine", x => Math.sin(x * Math.PI)],
@@ -126,9 +127,9 @@ export const Movements = new Map([
     ["OddShape 2", OddShape(2.0)],
     ["Random", x => randomMapping.y(x)],
 ])
-export const randomMovement = (): Move => {
+export const randomMovement = (random: Random): Move => {
     const array = Array.from(Movements)
-    return array[Math.floor(Math.random() * array.length)][1]
+    return array[Math.floor(random.nextDouble(0.0, 1.0) * array.length)][1]
 }
 export const Fills = new Map<string, Fill>(
     [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
@@ -160,21 +161,21 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         return this.gradient[1]
     }
 
-    randomize(): RotaryTrackModel {
-        const segments = 1 + Math.floor(Math.random() * 9)
-        const lengthRatioExp = -Math.floor(Math.random() * 3)
-        const lengthRatio = 0 === lengthRatioExp ? 0.5 : Math.random() < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
-        const width = Math.random() < 0.1 ? 24.0 : 12.0
-        const widthPadding = Math.random() < 0.1 ? 0.0 : 3.0
-        const length = Math.random() < 0.1 ? 0.75 : 1.0
-        const fill = 2 === segments ? Fill.Positive : Math.random() < 0.2 ? Fill.Stroke : Fill.Flat
+    randomize(random: Random): RotaryTrackModel {
+        const segments = 1 + Math.floor(random.nextDouble(0.0, 9.0))
+        const lengthRatioExp = -Math.floor(random.nextDouble(0.0, 3.0))
+        const lengthRatio = 0 === lengthRatioExp ? 0.5 : random.nextDouble(0.0, 1.0) < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
+        const width = random.nextDouble(0.0, 1.0) < 0.1 ? 24.0 : 12.0
+        const widthPadding = random.nextDouble(0.0, 1.0) < 0.1 ? 0.0 : 3.0
+        const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0
+        const fill = 2 === segments ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
         this.segments.set(0 === lengthRatioExp ? 1 : segments)
         this.width.set(width)
         this.widthPadding.set(widthPadding)
         this.length.set(length)
         this.lengthRatio.set(lengthRatio)
         this.fill.set(fill)
-        this.movement.set(randomMovement())
+        this.movement.set(randomMovement(random))
         return this
     }
 

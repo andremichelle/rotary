@@ -1,3 +1,5 @@
+import {Random} from "./math"
+
 export const TAU = Math.PI * 2.0
 
 export interface Terminable {
@@ -516,18 +518,19 @@ export const binarySearch = (values: Float32Array, key: number): number => {
 export class UniformRandomMapping implements ValueMapping<number> {
     private readonly values: Float32Array
 
-    constructor(private readonly resolution: number = 1024,
+    constructor(private readonly random: Random,
+                private readonly resolution: number = 1024,
                 private readonly roughness: number = 4.0,
                 private readonly strength: number = 0.2) {
-        this.values = UniformRandomMapping.monotoneRandom(resolution, roughness, strength)
+        this.values = UniformRandomMapping.monotoneRandom(random, resolution, roughness, strength)
     }
 
     // http://gamedev.stackexchange.com/questions/26391/is-there-a-family-of-monotonically-non-decreasing-noise-functions/26424#26424
-    static monotoneRandom(n: number, roughness: number, strength: number): Float32Array {
+    static monotoneRandom(random: Random, n: number, roughness: number, strength: number): Float32Array {
         const sequence = new Float32Array(n + 1)
         let sum = 0.0
         for (let i = 1; i <= n; ++i) {
-            const x = Math.floor(Math.random() * roughness) + 1.0
+            const x = Math.floor(random.nextDouble(0.0, roughness)) + 1.0
             sum += x
             sequence[i] = x
         }

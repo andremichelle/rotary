@@ -3,12 +3,13 @@ import {RotaryUI} from "./rotary/ui"
 import {RotaryRenderer} from "./rotary/render"
 import MenuBar = menu.MenuBar
 import ListItem = menu.ListItem
+import {Mulberry32} from "./lib/math"
 
 const canvas = document.querySelector("canvas")
 const labelSize = document.querySelector("label.size")
 const context = canvas.getContext("2d", {alpha: true})
 
-const model = new RotaryModel().randomize()
+const model = new RotaryModel().randomize(new Mulberry32(0x987123F))
 const renderer = new RotaryRenderer(context, model)
 const ui = RotaryUI.create(model, renderer)
 
@@ -57,8 +58,6 @@ MenuBar.install()
             }))
     )
     .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
-        .addListItem(ListItem.default("Nothing yet", "", false)))
-    .addButton(nav.querySelector("[data-menu='create']"), ListItem.root()
         .addListItem(ListItem.default("Nothing yet", "", false)))
     .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
         .addListItem(ListItem.default("Nothing yet", "", false)))

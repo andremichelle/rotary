@@ -1,4 +1,21 @@
+declare module "lib/math" {
+    export interface Random {
+        nextDouble(min: number, max: number): number;
+    }
+    export class JsRandom implements Random {
+        static Instance: JsRandom;
+        nextDouble(min: number, max: number): number;
+        private constructor();
+    }
+    export class Mulberry32 implements Random {
+        private seed;
+        constructor(seed: number);
+        nextDouble(min: number, max: number): number;
+        private uniform;
+    }
+}
 declare module "lib/common" {
+    import { Random } from "lib/math";
     export const TAU: number;
     export interface Terminable {
         terminate(): void;
@@ -181,12 +198,13 @@ declare module "lib/common" {
     }
     export const binarySearch: (values: Float32Array, key: number) => number;
     export class UniformRandomMapping implements ValueMapping<number> {
+        private readonly random;
         private readonly resolution;
         private readonly roughness;
         private readonly strength;
         private readonly values;
-        constructor(resolution?: number, roughness?: number, strength?: number);
-        static monotoneRandom(n: number, roughness: number, strength: number): Float32Array;
+        constructor(random: Random, resolution?: number, roughness?: number, strength?: number);
+        static monotoneRandom(random: Random, n: number, roughness: number, strength: number): Float32Array;
         clamp(y: number): number;
         x(y: number): number;
         y(x: number): number;
@@ -194,6 +212,7 @@ declare module "lib/common" {
 }
 declare module "rotary/model" {
     import { BoundNumericValue, ObservableCollection, ObservableValueImpl, Serializer, Terminable } from "lib/common";
+    import { Random } from "lib/math";
     interface RotaryFormat {
         radiusMin: number;
         tracks: RotaryTrackFormat[];
@@ -215,7 +234,7 @@ declare module "rotary/model" {
         private readonly terminator;
         readonly radiusMin: BoundNumericValue;
         constructor();
-        randomize(): RotaryModel;
+        randomize(random: Random): RotaryModel;
         createTrack(index?: number): RotaryTrackModel | null;
         copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
         removeTrack(track: RotaryTrackModel): boolean;
@@ -234,7 +253,7 @@ declare module "rotary/model" {
     }
     export type Move = (x: number) => number;
     export const Movements: Map<string, (x: any) => any>;
-    export const randomMovement: () => Move;
+    export const randomMovement: (random: Random) => Move;
     export const Fills: Map<string, Fill>;
     export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminable {
         private readonly terminator;
@@ -252,7 +271,7 @@ declare module "rotary/model" {
         constructor();
         opaque(): string;
         transparent(): string;
-        randomize(): RotaryTrackModel;
+        randomize(random: Random): RotaryTrackModel;
         terminate(): void;
         serialize(): RotaryTrackFormat;
         deserialize(format: RotaryTrackFormat): void;
@@ -380,6 +399,7 @@ declare module "rotary/ui" {
         private readonly terminator;
         private readonly editor;
         private readonly map;
+        private readonly random;
         constructor(form: HTMLFormElement, selectors: Element, template: Element, model: RotaryModel, renderer: RotaryRenderer);
         static create(rotary: RotaryModel, renderer: RotaryRenderer): RotaryUI;
         createNew(model: RotaryTrackModel, copy: boolean): void;

@@ -4,11 +4,13 @@ import {NumericStepperInput} from "../dom/inputs"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor"
 import {Dom} from "../dom/common"
 import {RotaryRenderer} from "./render"
+import {Mulberry32, Random} from "../lib/math"
 
 export class RotaryUI implements RotaryTrackEditorExecutor {
     private readonly terminator: Terminator = new Terminator()
     private readonly editor = new RotaryTrackEditor(this, document)
     private readonly map: Map<RotaryTrackModel, RotaryTrackSelector> = new Map()
+    private readonly random: Random = new Mulberry32(0x123abc456)
 
     constructor(private readonly form: HTMLFormElement,
                 private readonly selectors: Element,
@@ -35,7 +37,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         }))
         this.terminator.with(Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", event => {
             event.preventDefault()
-            this.select(this.model.createTrack(0).randomize())
+            this.select(this.model.createTrack(0).randomize(this.random))
         }))
         this.model.tracks.forEach(track => this.createSelector(track))
         if (0 < this.model.tracks.size()) this.select(this.model.tracks.get(0))
@@ -51,14 +53,14 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
 
     createNew(model: RotaryTrackModel, copy: boolean) {
         if ((model = model || this.editor.subject) === null) {
-            this.select(this.model.createTrack(0).randomize())
+            this.select(this.model.createTrack(0).randomize(this.random))
             return
         }
         const index = this.model.tracks.indexOf(model)
         console.assert(-1 !== index, "Could not find model")
         const newModel = copy
             ? this.model.copyTrack(model, index + 1)
-            : this.model.createTrack(index + 1).randomize()
+            : this.model.createTrack(index + 1).randomize(this.random)
         this.select(newModel)
     }
 
