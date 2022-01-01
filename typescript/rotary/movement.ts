@@ -1,9 +1,9 @@
-import {BoundNumericValue, Linear, Serializer, Terminable, Terminator} from "../lib/common";
+import {BoundNumericValue, Linear, Serializer, Terminable, Terminator} from "../lib/common"
 
 export interface Movement<FORMAT> extends Serializer<FORMAT>, Terminable {
-    map(x: number): number
-
     readonly name: (() => string)
+
+    map(x: number): number
 }
 
 declare interface ExponentialFormat {
@@ -12,6 +12,7 @@ declare interface ExponentialFormat {
 
 export class Exponential implements Movement<ExponentialFormat> {
     private readonly terminator: Terminator = new Terminator()
+
     readonly exponent = this.terminator.with(new BoundNumericValue(new Linear(-4.0, 4.0), 2.0))
 
     serialize(): ExponentialFormat {
@@ -41,7 +42,8 @@ declare interface CShapeFormat {
 
 export class CShape implements Movement<CShapeFormat> {
     private readonly terminator: Terminator = new Terminator()
-    private readonly shape = this.terminator.with(new BoundNumericValue(new Linear(-2.0, 2.0), 2.0))
+
+    readonly shape = this.terminator.with(new BoundNumericValue(new Linear(-2.0, 2.0), 2.0))
 
     private o: number
     private c: number

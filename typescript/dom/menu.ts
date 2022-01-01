@@ -11,24 +11,24 @@ namespace menu {
     }
 
     export class ListItem {
+        separatorBefore: boolean = false
+        selectable: boolean = true
+        private readonly permanentChildren: ListItem[] = []
+        private readonly transientChildren: ListItem[] = []
+        private transientChildrenCallback: (parent: ListItem) => void = null
+        private openingCallback: (listItem: ListItem) => void = null
+        private triggerCallback: (listItem: ListItem) => void = null
+        private isOpening: boolean = false
+
+        constructor(readonly data) {
+        }
+
         static root() {
             return new ListItem(null)
         }
 
         static default(label: string, shortcut, checked: boolean) {
             return new ListItem(new ListItemDefaultData(label, shortcut, checked))
-        }
-
-        private readonly permanentChildren: ListItem[] = []
-        private readonly transientChildren: ListItem[] = []
-        private transientChildrenCallback: (parent: ListItem) => void = null
-        private openingCallback: (listItem: ListItem) => void = null
-        private triggerCallback: (listItem: ListItem) => void = null
-        separatorBefore: boolean = false
-        selectable: boolean = true
-        private isOpening: boolean = false
-
-        constructor(readonly data) {
         }
 
         addListItem(listItem: ListItem): ListItem {
@@ -179,13 +179,11 @@ namespace menu {
     export class Menu {
         static Controller: Controller = new Controller()
         static Renderer: Map<any, (element: HTMLElement, data: any) => void> = new Map()
-
+        childMenu: Menu = null
         private element: HTMLElement = document.createElement("nav")
         private readonly container: HTMLElement = document.createElement("div")
         private readonly scrollUp: HTMLElement = document.createElement("div")
         private readonly scrollDown: HTMLElement = document.createElement("div")
-
-        childMenu: Menu = null
         private selectedDiv: HTMLDivElement = null
         private x: number = 0 | 0
         private y: number = 0 | 0
@@ -308,6 +306,39 @@ namespace menu {
             }
         }
 
+        dispose(): void {
+            if (null !== this.childMenu) {
+                this.childMenu.dispose()
+                this.childMenu = null
+            }
+            Menu.Controller.onDispose(this)
+            this.element.remove()
+            this.element = null
+            this.listItem.removeTransientChildren()
+            this.listItem = null
+            this.selectedDiv = null
+        }
+
+        domElement(): HTMLElement {
+            return this.element
+        }
+
+        isChild(target: Node): boolean {
+            if (null === this.childMenu) {
+                return false
+            }
+            while (null !== target) {
+                if (target === this.element) {
+                    return false
+                }
+                if (target === this.childMenu.domElement()) {
+                    return true
+                }
+                target = target.parentNode
+            }
+            return false
+        }
+
         private makeScrollable(): void {
             const scroll = direction => this.container.scrollTop += direction
             this.element.classList.add("overflowing")
@@ -350,39 +381,6 @@ namespace menu {
             setup(this.scrollUp, -8)
             setup(this.scrollDown, 8)
         }
-
-        dispose(): void {
-            if (null !== this.childMenu) {
-                this.childMenu.dispose()
-                this.childMenu = null
-            }
-            Menu.Controller.onDispose(this)
-            this.element.remove()
-            this.element = null
-            this.listItem.removeTransientChildren()
-            this.listItem = null
-            this.selectedDiv = null
-        }
-
-        domElement(): HTMLElement {
-            return this.element
-        }
-
-        isChild(target: Node): boolean {
-            if (null === this.childMenu) {
-                return false
-            }
-            while (null !== target) {
-                if (target === this.element) {
-                    return false
-                }
-                if (target === this.childMenu.domElement()) {
-                    return true
-                }
-                target = target.parentNode
-            }
-            return false
-        }
     }
 
 
@@ -399,15 +397,15 @@ namespace menu {
     })
 
     export class MenuBar {
-        static install(): MenuBar {
-            return new MenuBar()
-        }
-
         private offsetX: number = 0
         private offsetY: number = 0
         private openListItem: ListItem = null
 
         constructor() {
+        }
+
+        static install(): MenuBar {
+            return new MenuBar()
         }
 
         offset(x: number, y: number): MenuBar {

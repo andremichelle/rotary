@@ -5,7 +5,7 @@ import MenuBar = menu.MenuBar
 import ListItem = menu.ListItem
 
 const canvas = document.querySelector("canvas")
-const labelSize = document.querySelector("label.size");
+const labelSize = document.querySelector("label.size")
 const context = canvas.getContext("2d", {alpha: true})
 
 const model = new RotaryModel().randomize()
@@ -62,7 +62,7 @@ MenuBar.install()
         .addListItem(ListItem.default("Nothing yet", "", false)))
     .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
         .addListItem(ListItem.default("Nothing yet", "", false)))
-;
+
 
 let frame: number = 0;
 

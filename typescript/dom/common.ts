@@ -1,4 +1,4 @@
-import {Terminable} from "../lib/common";
+import {Terminable} from "../lib/common"
 
 export class Dom {
     static bindEventListener(target: EventTarget,
@@ -42,7 +42,7 @@ export class Dom {
                 lastTime = NaN
                 delay = Number.MAX_VALUE
             }, {once: true})
-        };
+        }
         button.addEventListener("mousedown", mouseDownListener)
         return {terminate: () => button.removeEventListener("mousedown", mouseDownListener)}
     }

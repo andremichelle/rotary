@@ -29,10 +29,9 @@ declare interface RotaryTrackFormat {
 }
 
 export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
-    private readonly terminator: Terminator = new Terminator()
-
-    readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
+    private readonly terminator: Terminator = new Terminator()
+    readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
 
     constructor() {
     }
@@ -136,9 +135,6 @@ export const Fills = new Map<string, Fill>(
 
 export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
-
-    private readonly gradient: string[] = [] // opaque[0], transparent[1]
-
     readonly segments = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 8))
     readonly width = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 12))
     readonly widthPadding = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 0))
@@ -149,6 +145,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     readonly movement = this.terminator.with(new ObservableValueImpl<Move>(Movements.values().next().value))
     readonly reverse = this.terminator.with(new ObservableValueImpl<boolean>(false))
     readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
+    private readonly gradient: string[] = [] // opaque[0], transparent[1]
 
     constructor() {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))

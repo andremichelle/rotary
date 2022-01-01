@@ -3,17 +3,9 @@ import {RotaryModel, RotaryTrackModel} from "./model"
 import {NumericStepperInput} from "../dom/inputs"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor"
 import {Dom} from "../dom/common"
-import {RotaryRenderer} from "./render";
+import {RotaryRenderer} from "./render"
 
 export class RotaryUI implements RotaryTrackEditorExecutor {
-    static create(rotary: RotaryModel, renderer: RotaryRenderer): RotaryUI {
-        const form = document.querySelector("form.track-nav") as HTMLFormElement
-        const selectors = form.querySelector("#track-selectors")
-        const template = selectors.querySelector("#template-selector-track")
-        template.remove()
-        return new RotaryUI(form, selectors, template, rotary, renderer)
-    }
-
     private readonly terminator: Terminator = new Terminator()
     private readonly editor = new RotaryTrackEditor(this, document)
     private readonly map: Map<RotaryTrackModel, RotaryTrackSelector> = new Map()
@@ -47,6 +39,14 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         }))
         this.model.tracks.forEach(track => this.createSelector(track))
         if (0 < this.model.tracks.size()) this.select(this.model.tracks.get(0))
+    }
+
+    static create(rotary: RotaryModel, renderer: RotaryRenderer): RotaryUI {
+        const form = document.querySelector("form.track-nav") as HTMLFormElement
+        const selectors = form.querySelector("#track-selectors")
+        const template = selectors.querySelector("#template-selector-track")
+        template.remove()
+        return new RotaryUI(form, selectors, template, rotary, renderer)
     }
 
     createNew(model: RotaryTrackModel, copy: boolean) {

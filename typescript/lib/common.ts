@@ -68,12 +68,11 @@ export interface Serializer<T> {
 
 // noinspection JSUnusedLocalSymbols
 export abstract class Range {
+    min: number
+    max: number
+
     private constructor() {
     }
-
-    min: number
-
-    max: number
 
     clamp(value: number): number {
         return Math.min(this.max, Math.max(this.min, value))
@@ -108,7 +107,7 @@ export class Linear implements ValueMapping<number>, Range {
     }
 
     clamp(y: number): number {
-        return Math.min(this.max, Math.max(this.min, y));
+        return Math.min(this.max, Math.max(this.min, y))
     }
 }
 
@@ -134,7 +133,7 @@ export class LinearInteger implements ValueMapping<number>, Range {
     }
 
     clamp(y: number): number {
-        return Math.min(this.max, Math.max(this.min, y));
+        return Math.min(this.max, Math.max(this.min, y))
     }
 }
 
@@ -158,7 +157,7 @@ export class Exp implements ValueMapping<number>, Range {
     }
 
     clamp(y: number): number {
-        return Math.min(this.max, Math.max(this.min, y));
+        return Math.min(this.max, Math.max(this.min, y))
     }
 }
 
@@ -172,7 +171,7 @@ export class Boolean implements ValueMapping<boolean> {
     }
 
     clamp(y: boolean): boolean {
-        return y;
+        return y
     }
 }
 
@@ -195,39 +194,39 @@ export class Volume implements ValueMapping<number>, Range {
     constructor(readonly min = -72.0,
                 readonly mid = -12.0,
                 readonly max = 0.0) {
-        const min2 = min * min;
-        const max2 = max * max;
-        const mid2 = mid * mid;
-        const tmp0 = min + max - 2.0 * mid;
-        const tmp1 = max - mid;
-        this.a = ((2.0 * max - mid) * min - mid * max) / tmp0;
+        const min2 = min * min
+        const max2 = max * max
+        const mid2 = mid * mid
+        const tmp0 = min + max - 2.0 * mid
+        const tmp1 = max - mid
+        this.a = ((2.0 * max - mid) * min - mid * max) / tmp0
         this.b = (tmp1 * min2 + (mid2 - max2) * min + mid * max2 - mid2 * max)
-            / (min2 + (2.0 * max - 4.0 * mid) * min + max2 - 4.0 * mid * max + 4 * mid2);
-        this.c = -tmp1 / tmp0;
+            / (min2 + (2.0 * max - 4.0 * mid) * min + max2 - 4.0 * mid * max + 4 * mid2)
+        this.c = -tmp1 / tmp0
     }
 
     y(x) {
         if (0.0 >= x) {
-            return Number.NEGATIVE_INFINITY; // in order to get a true zero gain
+            return Number.NEGATIVE_INFINITY // in order to get a true zero gain
         }
         if (1.0 <= x) {
-            return this.max;
+            return this.max
         }
-        return this.a - this.b / (x + this.c);
+        return this.a - this.b / (x + this.c)
     }
 
     x(y) {
         if (this.min >= y) {
-            return 0.0;
+            return 0.0
         }
         if (this.max <= y) {
-            return 1.0;
+            return 1.0
         }
-        return -this.b / (y - this.a) - this.c;
+        return -this.b / (y - this.a) - this.c
     }
 
     clamp(y: number): number {
-        return Math.min(this.max, Math.max(this.min, y));
+        return Math.min(this.max, Math.max(this.min, y))
     }
 }
 
@@ -235,20 +234,11 @@ export type Parser<Y> = (text: string) => Y | null
 export type Printer<Y> = (value: Y) => string
 
 export class PrintMapping<Y> {
-    static integer(postUnit: string): PrintMapping<number> {
-        return new PrintMapping(text => {
-            const value = parseInt(text, 10)
-            if (isNaN(value)) return null
-            return value | 0
-        }, value => String(value), "", postUnit)
-    }
-
     static UnipolarPercent = new PrintMapping(text => {
         const value = parseFloat(text)
         if (isNaN(value)) return null
         return value / 100.0
     }, value => (value * 100.0).toFixed(1), "", "%")
-
     static RGB = new PrintMapping<number>(text => {
         if (3 === text.length) {
             text = text.charAt(0) + text.charAt(0) + text.charAt(1) + text.charAt(1) + text.charAt(2) + text.charAt(2)
@@ -264,6 +254,14 @@ export class PrintMapping<Y> {
                 private readonly printer: Printer<Y>,
                 private readonly preUnit = "",
                 private readonly postUnit = "") {
+    }
+
+    static integer(postUnit: string): PrintMapping<number> {
+        return new PrintMapping(text => {
+            const value = parseInt(text, 10)
+            if (isNaN(value)) return null
+            return value | 0
+        }, value => String(value), "", postUnit)
     }
 
     parse(text: string): Y | null {
@@ -412,7 +410,7 @@ export class ObservableValueImpl<T> implements ObservableValue<T> {
     }
 
     get(): T {
-        return this.value;
+        return this.value
     }
 
     set(value: T): boolean {
@@ -421,7 +419,7 @@ export class ObservableValueImpl<T> implements ObservableValue<T> {
         }
         this.value = value
         this.observable.notify(this)
-        return true;
+        return true
     }
 
     addObserver(observer: Observer<ObservableValueImpl<T>>): Terminable {
@@ -467,7 +465,7 @@ export class BoundNumericValue implements ObservableValue<number> {
     }
 
     get(): number {
-        return this.value;
+        return this.value
     }
 
     set(value: number): boolean {
@@ -516,6 +514,14 @@ export const binarySearch = (values: Float32Array, key: number): number => {
 }
 
 export class UniformRandomMapping implements ValueMapping<number> {
+    private readonly values: Float32Array
+
+    constructor(private readonly resolution: number = 1024,
+                private readonly roughness: number = 4.0,
+                private readonly strength: number = 0.2) {
+        this.values = UniformRandomMapping.monotoneRandom(resolution, roughness, strength)
+    }
+
     // http://gamedev.stackexchange.com/questions/26391/is-there-a-family-of-monotonically-non-decreasing-noise-functions/26424#26424
     static monotoneRandom(n: number, roughness: number, strength: number): Float32Array {
         const sequence = new Float32Array(n + 1)
@@ -533,14 +539,6 @@ export class UniformRandomMapping implements ValueMapping<number> {
         return sequence
     }
 
-    private readonly values: Float32Array
-
-    constructor(private readonly resolution: number = 1024,
-                private readonly roughness: number = 4.0,
-                private readonly strength: number = 0.2) {
-        this.values = UniformRandomMapping.monotoneRandom(resolution, roughness, strength)
-    }
-
     clamp(y: number): number {
         return Math.max(0.0, Math.min(1.0, y))
     }
@@ -548,17 +546,17 @@ export class UniformRandomMapping implements ValueMapping<number> {
     x(y: number): number {
         if (y <= 0.0) return 0.0
         if (y >= 1.0) return 1.0
-        const index = binarySearch(this.values, y);
+        const index = binarySearch(this.values, y)
         const a = this.values[index]
         const b = this.values[index + 1]
         const nInverse = 1.0 / this.resolution
-        return index * nInverse + nInverse / (b - a) * (y - a);
+        return index * nInverse + nInverse / (b - a) * (y - a)
     }
 
     y(x: number): number {
         if (x <= 0.0) return 0.0
         if (x >= 1.0) return 1.0
-        const xd = x * this.resolution;
+        const xd = x * this.resolution
         const xi = xd | 0
         const a = xd - xi
         const q = this.values[xi]

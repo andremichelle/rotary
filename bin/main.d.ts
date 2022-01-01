@@ -29,9 +29,9 @@ declare module "lib/common" {
         deserialize(format: T): void;
     }
     export abstract class Range {
-        private constructor();
         min: number;
         max: number;
+        private constructor();
         clamp(value: number): number;
     }
     export interface ValueMapping<Y> {
@@ -95,10 +95,10 @@ declare module "lib/common" {
         private readonly printer;
         private readonly preUnit;
         private readonly postUnit;
-        static integer(postUnit: string): PrintMapping<number>;
         static UnipolarPercent: PrintMapping<number>;
         static RGB: PrintMapping<number>;
         constructor(parser: Parser<Y>, printer: Printer<Y>, preUnit?: string, postUnit?: string);
+        static integer(postUnit: string): PrintMapping<number>;
         parse(text: string): Y | null;
         print(value: Y): string;
     }
@@ -184,9 +184,9 @@ declare module "lib/common" {
         private readonly resolution;
         private readonly roughness;
         private readonly strength;
-        static monotoneRandom(n: number, roughness: number, strength: number): Float32Array;
         private readonly values;
         constructor(resolution?: number, roughness?: number, strength?: number);
+        static monotoneRandom(n: number, roughness: number, strength: number): Float32Array;
         clamp(y: number): number;
         x(y: number): number;
         y(x: number): number;
@@ -211,9 +211,9 @@ declare module "rotary/model" {
         phase: number;
     }
     export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
+        readonly tracks: ObservableCollection<RotaryTrackModel>;
         private readonly terminator;
         readonly radiusMin: BoundNumericValue;
-        readonly tracks: ObservableCollection<RotaryTrackModel>;
         constructor();
         randomize(): RotaryModel;
         createTrack(index?: number): RotaryTrackModel | null;
@@ -238,7 +238,6 @@ declare module "rotary/model" {
     export const Fills: Map<string, Fill>;
     export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminable {
         private readonly terminator;
-        private readonly gradient;
         readonly segments: BoundNumericValue;
         readonly width: BoundNumericValue;
         readonly widthPadding: BoundNumericValue;
@@ -249,6 +248,7 @@ declare module "rotary/model" {
         readonly movement: ObservableValueImpl<Move>;
         readonly reverse: ObservableValueImpl<boolean>;
         readonly rgb: ObservableValueImpl<number>;
+        private readonly gradient;
         constructor();
         opaque(): string;
         transparent(): string;
@@ -273,25 +273,25 @@ declare module "dom/inputs" {
     export class Checkbox implements Terminable {
         private readonly element;
         private readonly terminator;
-        private readonly observer;
         private value;
         constructor(element: HTMLInputElement);
         withValue(value: ObservableValue<boolean>): Checkbox;
         init(): void;
         update(): void;
         terminate(): void;
+        private readonly observer;
     }
     export class SelectInput<T> implements Terminable {
         private readonly select;
         private readonly map;
         private readonly terminator;
         private value;
-        private observer;
         private readonly options;
         private readonly values;
         constructor(select: HTMLSelectElement, map: Map<string, T>);
         withValue(value: ObservableValue<T>): SelectInput<T>;
         terminate(): void;
+        private observer;
         private update;
         private connect;
     }
@@ -300,7 +300,6 @@ declare module "dom/inputs" {
         private readonly printMapping;
         private readonly stepper;
         private readonly terminator;
-        private readonly observer;
         private value;
         private readonly decreaseButton;
         private readonly increaseButton;
@@ -311,12 +310,12 @@ declare module "dom/inputs" {
         parse(): number | null;
         update(): void;
         terminate(): void;
+        private readonly observer;
     }
     export class NumericInput implements Terminable {
         private readonly input;
         private readonly printMapping;
         private readonly terminator;
-        private readonly observer;
         private value;
         constructor(input: HTMLInputElement, printMapping: PrintMapping<number>);
         withValue(value: ObservableValue<number>): NumericInput;
@@ -324,6 +323,7 @@ declare module "dom/inputs" {
         parse(): number | null;
         update(): void;
         terminate(): void;
+        private readonly observer;
     }
 }
 declare module "rotary/editor" {
@@ -334,6 +334,7 @@ declare module "rotary/editor" {
     }
     export class RotaryTrackEditor implements Terminable {
         private readonly executor;
+        subject: RotaryTrackModel | null;
         private readonly terminator;
         private readonly segments;
         private readonly width;
@@ -345,7 +346,6 @@ declare module "rotary/editor" {
         private readonly rgb;
         private readonly movement;
         private readonly reverse;
-        subject: RotaryTrackModel | null;
         constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
         edit(model: RotaryTrackModel): void;
         clear(): void;
@@ -377,11 +377,11 @@ declare module "rotary/ui" {
         private readonly template;
         private readonly model;
         private readonly renderer;
-        static create(rotary: RotaryModel, renderer: RotaryRenderer): RotaryUI;
         private readonly terminator;
         private readonly editor;
         private readonly map;
         constructor(form: HTMLFormElement, selectors: Element, template: Element, model: RotaryModel, renderer: RotaryRenderer);
+        static create(rotary: RotaryModel, renderer: RotaryRenderer): RotaryUI;
         createNew(model: RotaryTrackModel, copy: boolean): void;
         delete(model?: RotaryTrackModel): void;
         select(model: RotaryTrackModel): void;
@@ -414,17 +414,17 @@ declare namespace menu {
     }
     export class ListItem {
         readonly data: any;
-        static root(): ListItem;
-        static default(label: string, shortcut: any, checked: boolean): ListItem;
+        separatorBefore: boolean;
+        selectable: boolean;
         private readonly permanentChildren;
         private readonly transientChildren;
         private transientChildrenCallback;
         private openingCallback;
         private triggerCallback;
-        separatorBefore: boolean;
-        selectable: boolean;
         private isOpening;
         constructor(data: any);
+        static root(): ListItem;
+        static default(label: string, shortcut: any, checked: boolean): ListItem;
         addListItem(listItem: ListItem): ListItem;
         opening(): void;
         trigger(): void;
@@ -454,28 +454,28 @@ declare namespace menu {
         private listItem;
         static Controller: Controller;
         static Renderer: Map<any, (element: HTMLElement, data: any) => void>;
+        childMenu: Menu;
         private element;
         private readonly container;
         private readonly scrollUp;
         private readonly scrollDown;
-        childMenu: Menu;
         private selectedDiv;
         private x;
         private y;
         constructor(listItem: ListItem, docked?: boolean);
         moveTo(x: any, y: any): void;
         attach(parentNode: Element, parentMenu?: Menu): void;
-        private makeScrollable;
         dispose(): void;
         domElement(): HTMLElement;
         isChild(target: Node): boolean;
+        private makeScrollable;
     }
     export class MenuBar {
-        static install(): MenuBar;
         private offsetX;
         private offsetY;
         private openListItem;
         constructor();
+        static install(): MenuBar;
         offset(x: number, y: number): MenuBar;
         addButton(button: HTMLElement, listItem: ListItem): MenuBar;
         open(button: HTMLElement, listItem: ListItem): void;
@@ -485,8 +485,8 @@ declare namespace menu {
 declare module "rotary/movement" {
     import { BoundNumericValue, Serializer, Terminable } from "lib/common";
     export interface Movement<FORMAT> extends Serializer<FORMAT>, Terminable {
-        map(x: number): number;
         readonly name: (() => string);
+        map(x: number): number;
     }
     interface ExponentialFormat {
         exponent: number;
@@ -505,7 +505,7 @@ declare module "rotary/movement" {
     }
     export class CShape implements Movement<CShapeFormat> {
         private readonly terminator;
-        private readonly shape;
+        readonly shape: BoundNumericValue;
         private o;
         private c;
         constructor();
