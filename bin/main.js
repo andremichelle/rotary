@@ -670,7 +670,8 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         __extends(PowMotion, _super);
         function PowMotion() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.exponent = _this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.Linear(-3.0, 3.0), 2.0));
+            _this.range = new mapping_2.Linear(1.0, 16.0);
+            _this.exponent = _this.terminator["with"](new common_1.BoundNumericValue(_this.range, 2.0));
             return _this;
         }
         PowMotion.prototype.map = function (x) {
@@ -685,6 +686,7 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         };
         PowMotion.prototype.randomize = function (random) {
             _super.prototype.randomize.call(this, random);
+            this.exponent.set(random.nextDouble(this.range.min, this.range.max));
             return this;
         };
         return PowMotion;

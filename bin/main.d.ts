@@ -20,8 +20,8 @@ declare module "lib/math" {
 }
 declare module "lib/mapping" {
     export abstract class Range {
-        min: number;
-        max: number;
+        readonly min: number;
+        readonly max: number;
         private constructor();
         clamp(value: number): number;
     }
@@ -254,6 +254,7 @@ declare module "rotary/motion" {
         exponent: number;
     }
     export class PowMotion extends Motion<PowData> {
+        private readonly range;
         readonly exponent: BoundNumericValue;
         map(x: number): number;
         serialize(): MotionFormat<PowData>;

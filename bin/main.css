@@ -419,15 +419,15 @@ body main > .preview {
   justify-content: center;
   position: relative;
 }
-body main > .preview svg {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-}
 body main > .preview .rotary {
   padding: 64px;
   border: 1px rgba(255, 255, 255, 0.1) dashed;
   position: relative;
+}
+body main > .preview .rotary svg {
+  right: -4px;
+  top: -4px;
+  position: absolute;
 }
 body main > .preview .rotary label.size {
   left: 0;

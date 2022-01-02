@@ -102,7 +102,9 @@ declare interface PowData {
 }
 
 export class PowMotion extends Motion<PowData> {
-    readonly exponent = this.terminator.with(new BoundNumericValue(new Linear(-3.0, 3.0), 2.0))
+    private readonly range = new Linear(1.0, 16.0)
+
+    readonly exponent = this.terminator.with(new BoundNumericValue(this.range, 2.0))
 
     map(x: number): number {
         return Math.pow(x, this.exponent.get())
@@ -119,7 +121,7 @@ export class PowMotion extends Motion<PowData> {
 
     randomize(random: Random): Motion<PowData> {
         super.randomize(random)
-        // this.exponent.set(random.nextDouble(-3.0, 3.0))
+        this.exponent.set(random.nextDouble(this.range.min, this.range.max))
         return this
     }
 }

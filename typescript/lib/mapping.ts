@@ -1,6 +1,6 @@
 export abstract class Range {
-    min: number
-    max: number
+    readonly min: number
+    readonly max: number
 
     // noinspection JSUnusedLocalSymbols
     private constructor() {
