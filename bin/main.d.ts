@@ -130,13 +130,13 @@ declare module "lib/common" {
         set(value: T): boolean;
         get(): T;
     }
-    export interface ObservableValue<T> extends Value<T>, Observable<ObservableValue<T>> {
+    export interface ObservableValue<T> extends Value<T>, Observable<T> {
     }
     export class ObservableValueVoid implements ObservableValue<any> {
         static Instance: ObservableValueVoid;
-        addObserver(observer: Observer<ObservableValue<any>>): Terminable;
+        addObserver(observer: Observer<never>): Terminable;
         get(): any;
-        removeObserver(observer: Observer<ObservableValue<any>>): boolean;
+        removeObserver(observer: Observer<any>): boolean;
         set(value: any): boolean;
         terminate(): void;
     }
@@ -176,8 +176,8 @@ declare module "lib/common" {
         constructor(value: T);
         get(): T;
         set(value: T): boolean;
-        addObserver(observer: Observer<ObservableValueImpl<T>>): Terminable;
-        removeObserver(observer: Observer<ObservableValueImpl<T>>): boolean;
+        addObserver(observer: Observer<T>): Terminable;
+        removeObserver(observer: Observer<T>): boolean;
         terminate(): void;
     }
     export interface Stepper {
@@ -199,8 +199,8 @@ declare module "lib/common" {
         constructor(range?: Range, value?: number);
         get(): number;
         set(value: number): boolean;
-        addObserver(observer: Observer<BoundNumericValue>): Terminable;
-        removeObserver(observer: Observer<BoundNumericValue>): boolean;
+        addObserver(observer: Observer<number>): Terminable;
+        removeObserver(observer: Observer<number>): boolean;
         terminate(): void;
     }
     export const binarySearch: (values: Float32Array, key: number) => number;
@@ -380,9 +380,9 @@ declare module "dom/inputs" {
         private readonly select;
         private readonly map;
         private readonly terminator;
-        private value;
         private readonly options;
         private readonly values;
+        private value;
         constructor(select: HTMLSelectElement, map: Map<string, T>);
         withValue(value: ObservableValue<T>): SelectInput<T>;
         terminate(): void;
@@ -429,7 +429,6 @@ declare module "rotary/editor" {
     }
     export class RotaryTrackEditor implements Terminable {
         private readonly executor;
-        subject: RotaryTrackModel | null;
         private readonly terminator;
         private readonly segments;
         private readonly width;
@@ -438,6 +437,7 @@ declare module "rotary/editor" {
         private readonly lengthRatio;
         private readonly fill;
         private readonly rgb;
+        subject: RotaryTrackModel | null;
         constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
         edit(model: RotaryTrackModel): void;
         clear(): void;
@@ -493,6 +493,7 @@ declare module "rotary/ui" {
         readonly button: HTMLButtonElement;
         private readonly terminator;
         constructor(ui: RotaryUI, model: RotaryTrackModel, element: HTMLElement, radio: HTMLInputElement, button: HTMLButtonElement);
+        setIndex(index: number): void;
         terminate(): void;
     }
 }

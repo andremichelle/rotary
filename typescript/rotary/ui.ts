@@ -102,7 +102,9 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         const element = this.template.cloneNode(true) as HTMLElement
         const radio = element.querySelector("input[type=radio]") as HTMLInputElement
         const button = element.querySelector("button") as HTMLButtonElement
-        this.map.set(track, new RotaryTrackSelector(this, track, element, radio, button))
+        const selector = new RotaryTrackSelector(this, track, element, radio, button)
+        this.map.set(track, selector)
+        selector.setIndex(Math.min(index, this.map.size))
         Dom.insertElement(this.selectors, element, index)
     }
 
@@ -115,10 +117,11 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
 
     private reorderSelectors(): void {
         Dom.emptyNode(this.selectors)
-        this.model.tracks.forEach(track => {
+        this.model.tracks.forEach((track, index) => {
             const selector = this.map.get(track)
             console.assert(selector !== undefined, "Cannot reorder selector")
             this.selectors.appendChild(selector.element)
+            selector.setIndex(index)
         })
     }
 }
@@ -142,6 +145,10 @@ export class RotaryTrackSelector implements Terminable {
                 event.preventDefault()
                 this.ui.createNew(this.model, event.shiftKey)
             }))
+    }
+
+    setIndex(index: number): void {
+        this.element.querySelector("span").textContent = String(index)
     }
 
     terminate(): void {

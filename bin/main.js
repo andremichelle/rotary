@@ -327,7 +327,6 @@ define("lib/common", ["require", "exports", "lib/mapping"], function (require, e
             return TerminableVoid.Instance;
         };
         ObservableValueVoid.prototype.get = function () {
-            return undefined;
         };
         ObservableValueVoid.prototype.removeObserver = function (observer) {
             return false;
@@ -450,7 +449,7 @@ define("lib/common", ["require", "exports", "lib/mapping"], function (require, e
                 return false;
             }
             this.value = value;
-            this.observable.notify(this);
+            this.observable.notify(value);
             return true;
         };
         ObservableValueImpl.prototype.addObserver = function (observer) {
@@ -498,7 +497,7 @@ define("lib/common", ["require", "exports", "lib/mapping"], function (require, e
                 return false;
             }
             this.value = value;
-            this.observable.notify(this);
+            this.observable.notify(value);
             return true;
         };
         BoundNumericValue.prototype.addObserver = function (observer) {
@@ -779,7 +778,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
         };
         RotaryModel.prototype.test = function () {
             var trackModel = new RotaryTrackModel();
-            trackModel.motion.set(new motion_1.SmoothStepMotion());
+            trackModel.motion.set(new motion_1.LinearMotion());
             this.tracks.clear();
             this.tracks.add(trackModel);
             return this;
@@ -855,7 +854,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             this.length = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 1.0));
             this.lengthRatio = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 0.5));
             this.fill = this.terminator["with"](new common_2.ObservableValueImpl(Fill.Flat));
-            this.motion = this.terminator["with"](new common_2.ObservableValueImpl(new motion_1.PowMotion()));
+            this.motion = this.terminator["with"](new common_2.ObservableValueImpl(new motion_1.LinearMotion()));
             this.rgb = this.terminator["with"](new common_2.ObservableValueImpl((0xFFFFFF)));
             this.gradient = [];
             this.terminator["with"](this.rgb.addObserver(function () { return _this.updateGradient(); }));
@@ -1013,9 +1012,9 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.select = select;
             this.map = map;
             this.terminator = new common_4.Terminator();
-            this.value = common_4.ObservableValueVoid.Instance;
             this.options = new Map();
             this.values = [];
+            this.value = common_4.ObservableValueVoid.Instance;
             this.observer = function () { return _this.update(); };
             this.connect();
         }
@@ -1224,8 +1223,8 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
         function RotaryTrackEditor(executor, parentNode) {
             var _this = this;
             this.executor = executor;
-            this.subject = null;
             this.terminator = new common_5.Terminator();
+            this.subject = null;
             this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"), mapping_4.PrintMapping.integer(""), common_5.NumericStepper.Integer));
             this.width = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
             this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width-padding']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
@@ -1450,7 +1449,9 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             var element = this.template.cloneNode(true);
             var radio = element.querySelector("input[type=radio]");
             var button = element.querySelector("button");
-            this.map.set(track, new RotaryTrackSelector(this, track, element, radio, button));
+            var selector = new RotaryTrackSelector(this, track, element, radio, button);
+            this.map.set(track, selector);
+            selector.setIndex(Math.min(index, this.map.size));
             common_9.Dom.insertElement(this.selectors, element, index);
         };
         RotaryUI.prototype.removeSelector = function (track) {
@@ -1462,10 +1463,11 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
         RotaryUI.prototype.reorderSelectors = function () {
             var _this = this;
             common_9.Dom.emptyNode(this.selectors);
-            this.model.tracks.forEach(function (track) {
+            this.model.tracks.forEach(function (track, index) {
                 var selector = _this.map.get(track);
                 console.assert(selector !== undefined, "Cannot reorder selector");
                 _this.selectors.appendChild(selector.element);
+                selector.setIndex(index);
             });
         };
         return RotaryUI;
@@ -1488,6 +1490,9 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
                 _this.ui.createNew(_this.model, event.shiftKey);
             }));
         }
+        RotaryTrackSelector.prototype.setIndex = function (index) {
+            this.element.querySelector("span").textContent = String(index);
+        };
         RotaryTrackSelector.prototype.terminate = function () {
             this.element.remove();
             this.terminator.terminate();

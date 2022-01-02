@@ -53,56 +53,58 @@ body
       padding: 0 12px 16px 12px
       background-color: rgba(white, 0.12)
 
-    > .columns
-      display: flex
-      flex-direction: row
-      padding: 16px
-      background-color: rgba(white, 0.08)
-
-      > .track-editor
-        display: grid
-        grid-template-columns: min-content min-content min-content
-        column-gap: $SIZE
-        border-radius: 2px
-
-    > .actions
+    > .editing
+      flex: 1 0 0
       display: flex
 
-    > .preview
-      flex: 1
-      display: flex
-      align-items: center
-      justify-content: center
-      position: relative
+      > .columns
+        display: flex
+        flex-direction: row
+        padding: 16px
+        background-color: rgba(white, 0.08)
 
-      .rotary
-        padding: 64px
-        border: 1px rgba(white, 0.1) dashed
+        > .track-editor
+          display: grid
+          grid-template-columns: min-content min-content min-content
+          column-gap: $SIZE
+          border-radius: 2px
+
+      > .actions
+        display: flex
+
+      > .preview
+        flex: 1
+        display: flex
+        align-items: center
+        justify-content: center
         position: relative
 
-        svg
-          right: -4px
-          top: -4px
-          position: absolute
+        .rotary
+          padding: 64px
+          border: 1px rgba(white, 0.1) dashed
+          position: relative
 
-        label.size
-          left: 0
-          bottom: -20px
-          white-space: nowrap
-          position: absolute
+          svg
+            top: -4px
+            right: -4px
+            position: absolute
 
-          &:before
-            content: "size: "
+          label.size
+            top: 4px
+            left: 4px
+            color: #AAA
+            white-space: nowrap
+            position: absolute
 
-          &:after
-            opacity: 0.6
-            content: "px"
+            &:after
+              opacity: 0.6
+              content: "px"
 
 div.two-columns
   display: grid
   align-items: center
   grid-template-columns: min-content min-content
-  row-gap: 3px
+  row-gap: 6px
   column-gap: 3px
   line-height: $SIZE
   height: min-content

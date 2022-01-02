@@ -75,21 +75,20 @@ export interface Value<T> {
     get(): T
 }
 
-export interface ObservableValue<T> extends Value<T>, Observable<ObservableValue<T>> {
+export interface ObservableValue<T> extends Value<T>, Observable<T> {
 }
 
 export class ObservableValueVoid implements ObservableValue<any> {
     static Instance = new ObservableValueVoid()
 
-    addObserver(observer: Observer<ObservableValue<any>>): Terminable {
+    addObserver(observer: Observer<never>): Terminable {
         return TerminableVoid.Instance
     }
 
     get(): any {
-        return undefined
     }
 
-    removeObserver(observer: Observer<ObservableValue<any>>): boolean {
+    removeObserver(observer: Observer<any>): boolean {
         return false
     }
 
@@ -200,7 +199,7 @@ export class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
 }
 
 export class ObservableValueImpl<T> implements ObservableValue<T> {
-    private readonly observable = new ObservableImpl<ObservableValueImpl<T>>()
+    private readonly observable = new ObservableImpl<T>()
 
     constructor(private value: T) {
     }
@@ -214,15 +213,15 @@ export class ObservableValueImpl<T> implements ObservableValue<T> {
             return false
         }
         this.value = value
-        this.observable.notify(this)
+        this.observable.notify(value)
         return true
     }
 
-    addObserver(observer: Observer<ObservableValueImpl<T>>): Terminable {
+    addObserver(observer: Observer<T>): Terminable {
         return this.observable.addObserver(observer)
     }
 
-    removeObserver(observer: Observer<ObservableValueImpl<T>>): boolean {
+    removeObserver(observer: Observer<T>): boolean {
         return this.observable.removeObserver(observer)
     }
 
@@ -254,7 +253,7 @@ export class NumericStepper implements Stepper {
 }
 
 export class BoundNumericValue implements ObservableValue<number> {
-    private readonly observable = new ObservableImpl<BoundNumericValue>()
+    private readonly observable = new ObservableImpl<number>()
 
     constructor(private readonly range: Range = Linear.Identity,
                 private value: number = 0.5) {
@@ -270,15 +269,15 @@ export class BoundNumericValue implements ObservableValue<number> {
             return false
         }
         this.value = value
-        this.observable.notify(this)
+        this.observable.notify(value)
         return true
     }
 
-    addObserver(observer: Observer<BoundNumericValue>): Terminable {
+    addObserver(observer: Observer<number>): Terminable {
         return this.observable.addObserver(observer)
     }
 
-    removeObserver(observer: Observer<BoundNumericValue>): boolean {
+    removeObserver(observer: Observer<number>): boolean {
         return this.observable.removeObserver(observer)
     }
 

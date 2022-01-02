@@ -37,9 +37,10 @@ export class Checkbox implements Terminable {
 
 export class SelectInput<T> implements Terminable {
     private readonly terminator = new Terminator()
-    private value: ObservableValue<T> = ObservableValueVoid.Instance
     private readonly options = new Map<T, HTMLOptionElement>()
     private readonly values: T[] = []
+    
+    private value: ObservableValue<T> = ObservableValueVoid.Instance
 
     constructor(private readonly select: HTMLSelectElement,
                 private readonly map: Map<string, T>) {
