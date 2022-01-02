@@ -22,13 +22,13 @@ export class RotaryRenderer {
               position: number): void {
         const segments = model.segments.get()
         const scale = model.length.get() / segments
-        const phase = model.motion.get().map(position - Math.floor(position))
+        const phase = model.motion.get().moveTo(position)
         const width = model.width.get()
         const thickness = model.widthPadding.get() * 0.5
         const r0 = radiusMin + thickness
         const r1 = radiusMin + thickness + width
         for (let i = 0; i < segments; i++) {
-            const angleMin = i * scale + phase
+            const angleMin = phase + i * scale
             const angleMax = angleMin + scale * model.lengthRatio.get()
             this.drawSection(model, r0, r1, angleMin, angleMax, model.fill.get())
         }

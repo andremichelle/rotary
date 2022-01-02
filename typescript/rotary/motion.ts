@@ -68,7 +68,7 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
     }
 
     moveTo(phase: number): number {
-        const x = this.phaseOffset.get() + phase * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get()
+        const x = this.phaseOffset.get() + (phase - Math.floor(phase)) * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get()
         return this.map(x - Math.floor(x))
     }
 
@@ -131,7 +131,9 @@ declare interface CShapeData {
 }
 
 export class CShapeMotion extends Motion<CShapeData> {
-    readonly shape = this.terminator.with(new BoundNumericValue(new Linear(-2.0, 2.0), 2.0))
+    private readonly range = new Linear(0.0, 4.0)
+
+    readonly shape = this.terminator.with(new BoundNumericValue(this.range, 1.0))
 
     private o: number
     private c: number
@@ -158,7 +160,7 @@ export class CShapeMotion extends Motion<CShapeData> {
 
     randomize(random: Random): Motion<CShapeData> {
         super.randomize(random)
-        // this.shape.set(random.nextDouble(-2.0, 2.0))
+        this.shape.set(random.nextDouble(this.range.min, this.range.max))
         return this
     }
 
@@ -198,8 +200,9 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
 
     randomize(random: Random): Motion<SmoothStepData> {
         super.randomize(random)
-        // this.edge0.set(random.nextDouble(0.0, 0.495))
-        // this.edge1.set(random.nextDouble(0.505, 1.0))
+        const limit = random.nextDouble(0.0, 1.0)
+        this.edge0.set(limit)
+        this.edge1.set(random.nextDouble(limit, 1.0))
         return this
     }
 }

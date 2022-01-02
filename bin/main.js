@@ -84,10 +84,10 @@ define("lib/math", ["require", "exports"], function (require, exports) {
             return x * x * (3.0 - 2.0 * x);
         };
         SmoothStep.edge = function (edge0, edge1, x) {
-            console.assert(0.0 <= edge0 && 1.0 >= edge0, "edge(" + edge0 + ") must be between 0 and 1");
-            console.assert(0.0 <= edge1 && 1.0 >= edge1, "edge(" + edge1 + ") must be between 0 and 1");
+            console.assert(0.0 <= edge0 && 1.0 >= edge0, "edge0(" + edge0 + ") must be between 0 and 1");
+            console.assert(0.0 <= edge1 && 1.0 >= edge1, "edge1(" + edge1 + ") must be between 0 and 1");
             console.assert(edge0 !== edge1, "edge0(" + edge0 + ") must not be equal to edge1(" + edge1 + ")");
-            return SmoothStep.fx((Math.max(0.0, Math.min(1.0, x)) - edge0) / (edge1 - edge0));
+            return SmoothStep.fx(Math.min(1.0, Math.max(0.0, (x - edge0) / (edge1 - edge0))));
         };
         return SmoothStep;
     }());
@@ -635,7 +635,7 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             return format.data;
         };
         Motion.prototype.moveTo = function (phase) {
-            var x = this.phaseOffset.get() + phase * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get();
+            var x = this.phaseOffset.get() + (phase - Math.floor(phase)) * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get();
             return this.map(x - Math.floor(x));
         };
         Motion.prototype.terminate = function () {
@@ -696,7 +696,8 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         __extends(CShapeMotion, _super);
         function CShapeMotion() {
             var _this = _super.call(this) || this;
-            _this.shape = _this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.Linear(-2.0, 2.0), 2.0));
+            _this.range = new mapping_2.Linear(0.0, 4.0);
+            _this.shape = _this.terminator["with"](new common_1.BoundNumericValue(_this.range, 1.0));
             _this.terminator["with"](_this.shape.addObserver(function () { return _this.update(); }));
             _this.update();
             return _this;
@@ -713,6 +714,7 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         };
         CShapeMotion.prototype.randomize = function (random) {
             _super.prototype.randomize.call(this, random);
+            this.shape.set(random.nextDouble(this.range.min, this.range.max));
             return this;
         };
         CShapeMotion.prototype.update = function () {
@@ -744,6 +746,9 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         };
         SmoothStepMotion.prototype.randomize = function (random) {
             _super.prototype.randomize.call(this, random);
+            var limit = random.nextDouble(0.0, 1.0);
+            this.edge0.set(limit);
+            this.edge1.set(random.nextDouble(limit, 1.0));
             return this;
         };
         return SmoothStepMotion;
@@ -774,7 +779,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
         };
         RotaryModel.prototype.test = function () {
             var trackModel = new RotaryTrackModel();
-            trackModel.motion.set(new motion_1.PowMotion());
+            trackModel.motion.set(new motion_1.SmoothStepMotion());
             this.tracks.clear();
             this.tracks.add(trackModel);
             return this;
@@ -867,7 +872,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             var lengthRatioExp = -Math.floor(random.nextDouble(0.0, 3.0));
             var lengthRatio = 0 === lengthRatioExp ? 0.5 : random.nextDouble(0.0, 1.0) < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp);
             var width = random.nextDouble(0.0, 1.0) < 0.1 ? 24.0 : 12.0;
-            var widthPadding = random.nextDouble(0.0, 1.0) < 0.1 ? 0.0 : 3.0;
+            var widthPadding = random.nextDouble(0.0, 1.0) < 0.5 ? 0.0 : 3.0;
             var length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0;
             var fill = 2 === segments ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat;
             this.segments.set(0 === lengthRatioExp ? 1 : segments);
@@ -1282,13 +1287,13 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
         RotaryRenderer.prototype.drawTrack = function (model, radiusMin, position) {
             var segments = model.segments.get();
             var scale = model.length.get() / segments;
-            var phase = model.motion.get().map(position - Math.floor(position));
+            var phase = model.motion.get().moveTo(position);
             var width = model.width.get();
             var thickness = model.widthPadding.get() * 0.5;
             var r0 = radiusMin + thickness;
             var r1 = radiusMin + thickness + width;
             for (var i = 0; i < segments; i++) {
-                var angleMin = i * scale + phase;
+                var angleMin = phase + i * scale;
                 var angleMax = angleMin + scale * model.lengthRatio.get();
                 this.drawSection(model, r0, r1, angleMin, angleMax, model.fill.get());
             }
@@ -1491,7 +1496,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
     }());
     exports.RotaryTrackSelector = RotaryTrackSelector;
 });
-define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render"], function (require, exports, model_3, ui_1, render_1) {
+define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render", "lib/math"], function (require, exports, model_3, ui_1, render_1, math_3) {
     "use strict";
     exports.__esModule = true;
     var MenuBar = menu.MenuBar;
@@ -1499,7 +1504,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
     var canvas = document.querySelector("canvas");
     var labelSize = document.querySelector("label.size");
     var context = canvas.getContext("2d", { alpha: true });
-    var model = new model_3.RotaryModel().test();
+    var model = new model_3.RotaryModel().randomize(new math_3.Mulberry32(Math.floor(0x987123F * Math.random())));
     var renderer = new render_1.RotaryRenderer(context, model);
     var ui = ui_1.RotaryUI.create(model, renderer);
     var pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
@@ -1583,8 +1588,13 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
     var frame = 0;
     (function () {
         console.log("ready...");
-        var enterFrame = function () {
-            var position = frame / 320.0;
+        var prevTime = NaN;
+        var seconds = 8.0;
+        var enterFrame = function (time) {
+            if (!isNaN(prevTime)) {
+            }
+            prevTime = time;
+            var position = time / (1000.0 * seconds);
             var progress = position - Math.floor(position);
             var size = model.measureRadius() * 2;
             var ratio = Math.ceil(devicePixelRatio);
@@ -1603,7 +1613,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
             frame++;
             requestAnimationFrame(enterFrame);
         };
-        enterFrame();
+        requestAnimationFrame(enterFrame);
     })();
 });
 var menu;

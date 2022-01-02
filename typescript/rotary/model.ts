@@ -8,7 +8,7 @@ import {
 } from "../lib/common"
 import {Random} from "../lib/math"
 import {Linear, LinearInteger} from "../lib/mapping"
-import {PowMotion, Motion, MotionFormat, LinearMotion} from "./motion"
+import {PowMotion, Motion, MotionFormat, LinearMotion, CShapeMotion, SmoothStepMotion} from "./motion"
 
 declare interface RotaryFormat {
     radiusMin: number
@@ -46,7 +46,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
 
     test(): RotaryModel {
         const trackModel = new RotaryTrackModel()
-        trackModel.motion.set(new PowMotion())
+        trackModel.motion.set(new SmoothStepMotion())
 
         this.tracks.clear()
         this.tracks.add(trackModel)
@@ -146,7 +146,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         const lengthRatioExp = -Math.floor(random.nextDouble(0.0, 3.0))
         const lengthRatio = 0 === lengthRatioExp ? 0.5 : random.nextDouble(0.0, 1.0) < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
         const width = random.nextDouble(0.0, 1.0) < 0.1 ? 24.0 : 12.0
-        const widthPadding = random.nextDouble(0.0, 1.0) < 0.1 ? 0.0 : 3.0
+        const widthPadding = random.nextDouble(0.0, 1.0) < 0.5 ? 0.0 : 3.0
         const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0
         const fill = 2 === segments ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
         this.segments.set(0 === lengthRatioExp ? 1 : segments)

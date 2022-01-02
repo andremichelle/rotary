@@ -9,7 +9,7 @@ const canvas = document.querySelector("canvas")
 const labelSize = document.querySelector("label.size")
 const context = canvas.getContext("2d", {alpha: true})
 
-const model = new RotaryModel().test()//.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))
+const model = new RotaryModel().randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))
 const renderer = new RotaryRenderer(context, model)
 const ui = RotaryUI.create(model, renderer)
 
@@ -72,8 +72,14 @@ let frame: number = 0;
 (() => {
     console.log("ready...")
 
-    const enterFrame = () => {
-        const position = frame / 320.0
+    let prevTime = NaN
+    const seconds = 8.0
+    const enterFrame = (time) => {
+        if (!isNaN(prevTime)) {
+            // console.log(time - prevTime)
+        }
+        prevTime = time
+        const position = time / (1000.0 * seconds)
         const progress = position - Math.floor(position)
         const size = model.measureRadius() * 2
         const ratio = Math.ceil(devicePixelRatio)
@@ -96,5 +102,5 @@ let frame: number = 0;
         frame++
         requestAnimationFrame(enterFrame)
     }
-    enterFrame()
+    requestAnimationFrame(enterFrame)
 })()

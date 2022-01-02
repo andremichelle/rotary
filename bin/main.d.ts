@@ -265,6 +265,7 @@ declare module "rotary/motion" {
         shape: number;
     }
     export class CShapeMotion extends Motion<CShapeData> {
+        private readonly range;
         readonly shape: BoundNumericValue;
         private o;
         private c;
