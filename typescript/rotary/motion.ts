@@ -1,14 +1,10 @@
-import {BoundNumericValue, ObservableValueImpl, Serializer, Terminable, Terminator} from "../lib/common"
-import {Linear, LinearInteger} from "../lib/mapping"
+import {BoundNumericValue, Serializer, Terminable, Terminator} from "../lib/common"
+import {Linear} from "../lib/mapping"
 import {Random, SmoothStep} from "../lib/math"
 
 type Data = PowData | CShapeData | SmoothStepData
 
 export declare interface MotionFormat<DATA extends Data> {
-    phaseOffset: number
-    frequency: number
-    reverse: boolean
-
     class: string
     data: DATA
 }
@@ -32,44 +28,24 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
 
     protected readonly terminator: Terminator = new Terminator()
 
-    readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0))
-    readonly frequency = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
-    readonly reverse = this.terminator.with(new ObservableValueImpl<boolean>(false))
-
     abstract map(x: number): number
 
     abstract deserialize(format: MotionFormat<DATA>): Motion<DATA>
 
     abstract serialize(): MotionFormat<DATA>
 
-    randomize(random: Random): Motion<DATA> {
-        this.phaseOffset.set(random.nextDouble(0.0, 1.0))
-        this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)))
-        this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5)
-        return this
-    }
+    abstract randomize(random: Random): Motion<DATA>
 
     pack(data: DATA): MotionFormat<DATA> {
         return {
             class: this.constructor.name,
-            phaseOffset: this.phaseOffset.get(),
-            frequency: this.frequency.get(),
-            reverse: this.reverse.get(),
             data: data
         }
     }
 
     unpack(format: MotionFormat<DATA>): DATA {
         console.assert(this.constructor.name === format.class)
-        this.phaseOffset.set(format.phaseOffset)
-        this.frequency.set(format.frequency)
-        this.reverse.set(format.reverse)
         return format.data
-    }
-
-    moveTo(phase: number): number {
-        const x = this.phaseOffset.get() + (phase - Math.floor(phase)) * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get()
-        return this.map(x - Math.floor(x))
     }
 
     terminate(): void {
@@ -92,7 +68,6 @@ export class LinearMotion extends Motion<never> {
     }
 
     randomize(random: Random): Motion<never> {
-        super.randomize(random)
         return this
     }
 }
@@ -120,7 +95,6 @@ export class PowMotion extends Motion<PowData> {
     }
 
     randomize(random: Random): Motion<PowData> {
-        super.randomize(random)
         this.exponent.set(random.nextDouble(this.range.min, this.range.max))
         return this
     }
@@ -159,7 +133,6 @@ export class CShapeMotion extends Motion<CShapeData> {
     }
 
     randomize(random: Random): Motion<CShapeData> {
-        super.randomize(random)
         this.shape.set(random.nextDouble(this.range.min, this.range.max))
         return this
     }
@@ -199,7 +172,6 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
     }
 
     randomize(random: Random): Motion<SmoothStepData> {
-        super.randomize(random)
         const limit = random.nextDouble(0.0, 1.0)
         this.edge0.set(limit)
         this.edge1.set(random.nextDouble(limit, 1.0))

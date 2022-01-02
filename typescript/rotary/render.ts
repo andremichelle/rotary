@@ -20,9 +20,9 @@ export class RotaryRenderer {
     drawTrack(model: RotaryTrackModel,
               radiusMin: number,
               position: number): void {
+        const phase = model.map(position)
         const segments = model.segments.get()
         const scale = model.length.get() / segments
-        const phase = model.motion.get().moveTo(position)
         const width = model.width.get()
         const thickness = model.widthPadding.get() * 0.5
         const r0 = radiusMin + thickness

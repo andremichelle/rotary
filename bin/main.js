@@ -595,9 +595,6 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
     var Motion = (function () {
         function Motion() {
             this.terminator = new common_1.Terminator();
-            this.phaseOffset = this.terminator["with"](new common_1.BoundNumericValue(mapping_2.Linear.Identity, 0.0));
-            this.frequency = this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.LinearInteger(1, 16), 1.0));
-            this.reverse = this.terminator["with"](new common_1.ObservableValueImpl(false));
         }
         Motion.from = function (format) {
             switch (format["class"]) {
@@ -611,31 +608,15 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         Motion.random = function (random) {
             return new available[Math.floor(random.nextDouble(0.0, available.length))]().randomize(random);
         };
-        Motion.prototype.randomize = function (random) {
-            this.phaseOffset.set(random.nextDouble(0.0, 1.0));
-            this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)));
-            this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5);
-            return this;
-        };
         Motion.prototype.pack = function (data) {
             return {
                 "class": this.constructor.name,
-                phaseOffset: this.phaseOffset.get(),
-                frequency: this.frequency.get(),
-                reverse: this.reverse.get(),
                 data: data
             };
         };
         Motion.prototype.unpack = function (format) {
             console.assert(this.constructor.name === format["class"]);
-            this.phaseOffset.set(format.phaseOffset);
-            this.frequency.set(format.frequency);
-            this.reverse.set(format.reverse);
             return format.data;
-        };
-        Motion.prototype.moveTo = function (phase) {
-            var x = this.phaseOffset.get() + (phase - Math.floor(phase)) * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get();
-            return this.map(x - Math.floor(x));
         };
         Motion.prototype.terminate = function () {
             this.terminator.terminate();
@@ -659,7 +640,6 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             return this;
         };
         LinearMotion.prototype.randomize = function (random) {
-            _super.prototype.randomize.call(this, random);
             return this;
         };
         return LinearMotion;
@@ -684,7 +664,6 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             return this;
         };
         PowMotion.prototype.randomize = function (random) {
-            _super.prototype.randomize.call(this, random);
             this.exponent.set(random.nextDouble(this.range.min, this.range.max));
             return this;
         };
@@ -712,7 +691,6 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             return this;
         };
         CShapeMotion.prototype.randomize = function (random) {
-            _super.prototype.randomize.call(this, random);
             this.shape.set(random.nextDouble(this.range.min, this.range.max));
             return this;
         };
@@ -744,7 +722,6 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             return _super.prototype.pack.call(this, { edge0: this.edge0.get(), edge1: this.edge1.get() });
         };
         SmoothStepMotion.prototype.randomize = function (random) {
-            _super.prototype.randomize.call(this, random);
             var limit = random.nextDouble(0.0, 1.0);
             this.edge0.set(limit);
             this.edge1.set(random.nextDouble(limit, 1.0));
@@ -854,12 +831,19 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             this.length = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 1.0));
             this.lengthRatio = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 0.5));
             this.fill = this.terminator["with"](new common_2.ObservableValueImpl(Fill.Flat));
-            this.motion = this.terminator["with"](new common_2.ObservableValueImpl(new motion_1.LinearMotion()));
             this.rgb = this.terminator["with"](new common_2.ObservableValueImpl((0xFFFFFF)));
+            this.motion = this.terminator["with"](new common_2.ObservableValueImpl(new motion_1.LinearMotion()));
+            this.phaseOffset = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 0.0));
+            this.frequency = this.terminator["with"](new common_2.BoundNumericValue(new mapping_3.LinearInteger(1, 16), 1.0));
+            this.reverse = this.terminator["with"](new common_2.ObservableValueImpl(false));
             this.gradient = [];
             this.terminator["with"](this.rgb.addObserver(function () { return _this.updateGradient(); }));
             this.updateGradient();
         }
+        RotaryTrackModel.prototype.map = function (phase) {
+            var x = this.phaseOffset.get() + (phase - Math.floor(phase)) * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get();
+            return this.motion.get().map(x - Math.floor(x));
+        };
         RotaryTrackModel.prototype.opaque = function () {
             return this.gradient[0];
         };
@@ -881,6 +865,9 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             this.lengthRatio.set(lengthRatio);
             this.fill.set(fill);
             this.motion.set(motion_1.Motion.random(random));
+            this.phaseOffset.set(random.nextDouble(0.0, 1.0));
+            this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)));
+            this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5);
             return this;
         };
         RotaryTrackModel.prototype.terminate = function () {
@@ -895,7 +882,10 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
                 lengthRatio: this.lengthRatio.get(),
                 fill: this.fill.get(),
                 rgb: this.rgb.get(),
-                motion: this.motion.get().serialize()
+                motion: this.motion.get().serialize(),
+                phaseOffset: this.phaseOffset.get(),
+                frequency: this.frequency.get(),
+                reverse: this.reverse.get()
             };
         };
         RotaryTrackModel.prototype.deserialize = function (format) {
@@ -907,6 +897,9 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             this.fill.set(format.fill);
             this.rgb.set(format.rgb);
             this.motion.set(motion_1.Motion.from(format.motion));
+            this.phaseOffset.set(format.phaseOffset);
+            this.frequency.set(format.frequency);
+            this.reverse.set(format.reverse);
             return this;
         };
         RotaryTrackModel.prototype.updateGradient = function () {
@@ -1232,6 +1225,9 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
             this.fill = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='fill']"), model_1.Fills));
             this.rgb = this.terminator["with"](new inputs_1.NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), mapping_4.PrintMapping.RGB));
+            this.phaseOffset = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
+            this.frequency = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"), mapping_4.PrintMapping.integer("x"), common_5.NumericStepper.Integer));
+            this.reverse = this.terminator["with"](new inputs_1.Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
             this.terminator["with"](common_6.Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", function (event) {
                 event.preventDefault();
                 if (_this.subject !== null) {
@@ -1247,6 +1243,9 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             this.lengthRatio.withValue(model.lengthRatio);
             this.fill.withValue(model.fill);
             this.rgb.withValue(model.rgb);
+            this.phaseOffset.withValue(model.phaseOffset);
+            this.frequency.withValue(model.frequency);
+            this.reverse.withValue(model.reverse);
             this.subject = model;
         };
         RotaryTrackEditor.prototype.clear = function () {
@@ -1257,6 +1256,9 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             this.lengthRatio.withValue(common_5.ObservableValueVoid.Instance);
             this.fill.withValue(common_5.ObservableValueVoid.Instance);
             this.rgb.withValue(common_5.ObservableValueVoid.Instance);
+            this.phaseOffset.withValue(common_5.ObservableValueVoid.Instance);
+            this.frequency.withValue(common_5.ObservableValueVoid.Instance);
+            this.reverse.withValue(common_5.ObservableValueVoid.Instance);
             this.subject = null;
         };
         RotaryTrackEditor.prototype.terminate = function () {
@@ -1284,9 +1286,9 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
             }
         };
         RotaryRenderer.prototype.drawTrack = function (model, radiusMin, position) {
+            var phase = model.map(position);
             var segments = model.segments.get();
             var scale = model.length.get() / segments;
-            var phase = model.motion.get().moveTo(position);
             var width = model.width.get();
             var thickness = model.widthPadding.get() * 0.5;
             var r0 = radiusMin + thickness;

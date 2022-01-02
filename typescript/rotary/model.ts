@@ -24,6 +24,9 @@ declare interface RotaryTrackFormat {
     fill: number
     rgb: number
     motion: MotionFormat<any>
+    phaseOffset: number
+    frequency: number
+    reverse: boolean
 }
 
 export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
@@ -44,6 +47,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         return this
     }
 
+    // noinspection JSUnusedGlobalSymbols
     test(): RotaryModel {
         const trackModel = new RotaryTrackModel()
         trackModel.motion.set(new LinearMotion())
@@ -124,13 +128,21 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     readonly length = this.terminator.with(new BoundNumericValue(Linear.Identity, 1.0))
     readonly lengthRatio = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.5))
     readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
-    readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
     readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
+    readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
+    readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0))
+    readonly frequency = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
+    readonly reverse = this.terminator.with(new ObservableValueImpl<boolean>(false))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
 
     constructor() {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
         this.updateGradient()
+    }
+
+    map(phase: number): number {
+        const x = this.phaseOffset.get() + (phase - Math.floor(phase)) * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get()
+        return this.motion.get().map(x - Math.floor(x))
     }
 
     opaque(): string {
@@ -156,6 +168,9 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         this.lengthRatio.set(lengthRatio)
         this.fill.set(fill)
         this.motion.set(Motion.random(random))
+        this.phaseOffset.set(random.nextDouble(0.0, 1.0))
+        this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)))
+        this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5)
         return this
     }
 
@@ -172,7 +187,10 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
             lengthRatio: this.lengthRatio.get(),
             fill: this.fill.get(),
             rgb: this.rgb.get(),
-            motion: this.motion.get().serialize()
+            motion: this.motion.get().serialize(),
+            phaseOffset: this.phaseOffset.get(),
+            frequency: this.frequency.get(),
+            reverse: this.reverse.get()
         }
     }
 
@@ -185,6 +203,9 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         this.fill.set(format.fill)
         this.rgb.set(format.rgb)
         this.motion.set(Motion.from(format.motion))
+        this.phaseOffset.set(format.phaseOffset)
+        this.frequency.set(format.frequency)
+        this.reverse.set(format.reverse)
         return this
     }
 

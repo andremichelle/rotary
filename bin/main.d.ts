@@ -218,13 +218,10 @@ declare module "lib/common" {
     }
 }
 declare module "rotary/motion" {
-    import { BoundNumericValue, ObservableValueImpl, Serializer, Terminable, Terminator } from "lib/common";
+    import { BoundNumericValue, Serializer, Terminable, Terminator } from "lib/common";
     import { Random } from "lib/math";
     type Data = PowData | CShapeData | SmoothStepData;
     export interface MotionFormat<DATA extends Data> {
-        phaseOffset: number;
-        frequency: number;
-        reverse: boolean;
         class: string;
         data: DATA;
     }
@@ -232,16 +229,12 @@ declare module "rotary/motion" {
         static from(format: MotionFormat<any>): Motion<any>;
         static random(random: Random): Motion<any>;
         protected readonly terminator: Terminator;
-        readonly phaseOffset: BoundNumericValue;
-        readonly frequency: BoundNumericValue;
-        readonly reverse: ObservableValueImpl<boolean>;
         abstract map(x: number): number;
         abstract deserialize(format: MotionFormat<DATA>): Motion<DATA>;
         abstract serialize(): MotionFormat<DATA>;
-        randomize(random: Random): Motion<DATA>;
+        abstract randomize(random: Random): Motion<DATA>;
         pack(data: DATA): MotionFormat<DATA>;
         unpack(format: MotionFormat<DATA>): DATA;
-        moveTo(phase: number): number;
         terminate(): void;
     }
     export class LinearMotion extends Motion<never> {
@@ -307,6 +300,9 @@ declare module "rotary/model" {
         fill: number;
         rgb: number;
         motion: MotionFormat<any>;
+        phaseOffset: number;
+        frequency: number;
+        reverse: boolean;
     }
     export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         private readonly terminator;
@@ -340,10 +336,14 @@ declare module "rotary/model" {
         readonly length: BoundNumericValue;
         readonly lengthRatio: BoundNumericValue;
         readonly fill: ObservableValueImpl<Fill>;
-        readonly motion: ObservableValueImpl<Motion<any>>;
         readonly rgb: ObservableValueImpl<number>;
+        readonly motion: ObservableValueImpl<Motion<any>>;
+        readonly phaseOffset: BoundNumericValue;
+        readonly frequency: BoundNumericValue;
+        readonly reverse: ObservableValueImpl<boolean>;
         private readonly gradient;
         constructor();
+        map(phase: number): number;
         opaque(): string;
         transparent(): string;
         randomize(random: Random): RotaryTrackModel;
@@ -437,6 +437,9 @@ declare module "rotary/editor" {
         private readonly lengthRatio;
         private readonly fill;
         private readonly rgb;
+        private readonly phaseOffset;
+        private readonly frequency;
+        private readonly reverse;
         subject: RotaryTrackModel | null;
         constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
         edit(model: RotaryTrackModel): void;

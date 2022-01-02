@@ -1,5 +1,5 @@
 import {NumericStepper, ObservableValueVoid, Terminable, Terminator} from "../lib/common"
-import {NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs"
+import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs"
 import {Fill, Fills, RotaryTrackModel} from "./model"
 import {Dom} from "../dom/common"
 import {PrintMapping} from "../lib/mapping"
@@ -17,6 +17,9 @@ export class RotaryTrackEditor implements Terminable {
     private readonly lengthRatio: NumericStepperInput
     private readonly fill: SelectInput<Fill>
     private readonly rgb: NumericInput
+    private readonly phaseOffset: NumericStepperInput
+    private readonly frequency: NumericStepperInput
+    private readonly reverse: Checkbox
 
     subject: RotaryTrackModel | null = null
 
@@ -33,6 +36,11 @@ export class RotaryTrackEditor implements Terminable {
             PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
         this.fill = this.terminator.with(new SelectInput<Fill>(parentNode.querySelector("select[data-parameter='fill']"), Fills))
         this.rgb = this.terminator.with(new NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB))
+        this.phaseOffset = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"),
+            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
+        this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"),
+            PrintMapping.integer("x"), NumericStepper.Integer))
+        this.reverse = this.terminator.with(new Checkbox(parentNode.querySelector("input[data-parameter='reverse']")))
 
         this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault()
@@ -50,6 +58,9 @@ export class RotaryTrackEditor implements Terminable {
         this.lengthRatio.withValue(model.lengthRatio)
         this.fill.withValue(model.fill)
         this.rgb.withValue(model.rgb)
+        this.phaseOffset.withValue(model.phaseOffset)
+        this.frequency.withValue(model.frequency)
+        this.reverse.withValue(model.reverse)
 
         this.subject = model
     }
@@ -62,6 +73,9 @@ export class RotaryTrackEditor implements Terminable {
         this.lengthRatio.withValue(ObservableValueVoid.Instance)
         this.fill.withValue(ObservableValueVoid.Instance)
         this.rgb.withValue(ObservableValueVoid.Instance)
+        this.phaseOffset.withValue(ObservableValueVoid.Instance)
+        this.frequency.withValue(ObservableValueVoid.Instance)
+        this.reverse.withValue(ObservableValueVoid.Instance)
 
         this.subject = null
     }
