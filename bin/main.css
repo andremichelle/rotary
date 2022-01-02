@@ -397,7 +397,7 @@ body main > form.track-nav > button.delete {
 body main > .global-editor {
   flex: 0 0 auto;
   padding: 0 12px 16px 12px;
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: #202020;
 }
 body main > .editing {
   margin: 1px 0 0 0;
@@ -408,7 +408,7 @@ body main > .editing > .columns {
   display: flex;
   flex-direction: row;
   padding: 16px;
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: #202020;
 }
 body main > .editing > .columns > .track-editor {
   display: grid;
@@ -426,7 +426,7 @@ body main > .editing > .preview {
   align-items: center;
   justify-content: center;
   position: relative;
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: #222;
 }
 body main > .editing > .preview .rotary {
   padding: 64px;
