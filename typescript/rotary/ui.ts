@@ -103,8 +103,8 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         const radio = element.querySelector("input[type=radio]") as HTMLInputElement
         const button = element.querySelector("button") as HTMLButtonElement
         const selector = new RotaryTrackSelector(this, track, element, radio, button)
-        this.map.set(track, selector)
         selector.setIndex(Math.min(index, this.map.size))
+        this.map.set(track, selector)
         Dom.insertElement(this.selectors, element, index)
     }
 
@@ -113,6 +113,11 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         const deleted = this.map.delete(track)
         console.assert(selector !== undefined && deleted, "Cannot remove selector")
         selector.terminate()
+        this.model.tracks.forEach((track, index) => {
+            const selector = this.map.get(track)
+            console.assert(selector !== undefined, "Cannot reorder selector")
+            selector.setIndex(index)
+        })
     }
 
     private reorderSelectors(): void {
@@ -148,7 +153,7 @@ export class RotaryTrackSelector implements Terminable {
     }
 
     setIndex(index: number): void {
-        this.element.querySelector("span").textContent = String(index)
+        this.element.querySelector("span").textContent = String(index + 1)
     }
 
     terminate(): void {

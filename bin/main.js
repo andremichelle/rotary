@@ -1284,7 +1284,7 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
         function RotaryRenderer(context, rotary) {
             this.context = context;
             this.rotary = rotary;
-            this.hightlight = null;
+            this.highlight = null;
         }
         RotaryRenderer.prototype.draw = function (position) {
             var radiusMin = this.rotary.radiusMin.get();
@@ -1313,7 +1313,7 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
             console.assert(angleMin < angleMax, "angleMax(" + angleMax + ") must be greater then angleMin(" + angleMin + ")");
             var radianMin = angleMin * common_7.TAU;
             var radianMax = angleMax * common_7.TAU;
-            this.context.globalAlpha = model === this.hightlight || null === this.hightlight ? 1.0 : 0.2;
+            this.context.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.2;
             if (fill === model_2.Fill.Flat) {
                 this.context.fillStyle = model.opaque();
             }
@@ -1356,10 +1356,10 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
             }
         };
         RotaryRenderer.prototype.showHighlight = function (model) {
-            this.hightlight = model;
+            this.highlight = model;
         };
         RotaryRenderer.prototype.releaseHighlight = function () {
-            this.hightlight = null;
+            this.highlight = null;
         };
         return RotaryRenderer;
     }());
@@ -1461,15 +1461,21 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             var radio = element.querySelector("input[type=radio]");
             var button = element.querySelector("button");
             var selector = new RotaryTrackSelector(this, track, element, radio, button);
-            this.map.set(track, selector);
             selector.setIndex(Math.min(index, this.map.size));
+            this.map.set(track, selector);
             common_9.Dom.insertElement(this.selectors, element, index);
         };
         RotaryUI.prototype.removeSelector = function (track) {
+            var _this = this;
             var selector = this.map.get(track);
             var deleted = this.map["delete"](track);
             console.assert(selector !== undefined && deleted, "Cannot remove selector");
             selector.terminate();
+            this.model.tracks.forEach(function (track, index) {
+                var selector = _this.map.get(track);
+                console.assert(selector !== undefined, "Cannot reorder selector");
+                selector.setIndex(index);
+            });
         };
         RotaryUI.prototype.reorderSelectors = function () {
             var _this = this;
@@ -1502,7 +1508,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             }));
         }
         RotaryTrackSelector.prototype.setIndex = function (index) {
-            this.element.querySelector("span").textContent = String(index);
+            this.element.querySelector("span").textContent = String(index + 1);
         };
         RotaryTrackSelector.prototype.terminate = function () {
             this.element.remove();

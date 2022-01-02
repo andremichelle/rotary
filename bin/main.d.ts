@@ -457,7 +457,7 @@ declare module "rotary/render" {
     export class RotaryRenderer {
         private readonly context;
         private readonly rotary;
-        private hightlight;
+        private highlight;
         constructor(context: CanvasRenderingContext2D, rotary: RotaryModel);
         draw(position: number): void;
         drawTrack(model: RotaryTrackModel, radiusMin: number, position: number): void;
