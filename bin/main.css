@@ -378,9 +378,9 @@ body main > form.track-nav {
   display: flex;
   column-gap: 2px;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.12);
   border: none;
   outline: none;
+  background-color: rgba(255, 255, 255, 0.12);
 }
 body main > form.track-nav > #track-selectors {
   display: flex;
@@ -400,6 +400,7 @@ body main > .global-editor {
   background-color: rgba(255, 255, 255, 0.12);
 }
 body main > .editing {
+  margin: 1px 0 0 0;
   flex: 1 0 0;
   display: flex;
 }
@@ -407,7 +408,7 @@ body main > .editing > .columns {
   display: flex;
   flex-direction: row;
   padding: 16px;
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.12);
 }
 body main > .editing > .columns > .track-editor {
   display: grid;
@@ -419,25 +420,28 @@ body main > .editing > .actions {
   display: flex;
 }
 body main > .editing > .preview {
+  margin: 0 0 0 1px;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  background-color: rgba(255, 255, 255, 0.12);
 }
 body main > .editing > .preview .rotary {
   padding: 64px;
-  border: 1px rgba(255, 255, 255, 0.1) dashed;
   position: relative;
+  background-color: black;
+  box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.4);
 }
 body main > .editing > .preview .rotary svg {
-  top: -4px;
-  right: -4px;
+  top: 0;
+  right: 0;
   position: absolute;
 }
 body main > .editing > .preview .rotary label.size {
-  top: 4px;
-  left: 4px;
+  top: 8px;
+  left: 8px;
   color: #AAA;
   white-space: nowrap;
   position: absolute;
