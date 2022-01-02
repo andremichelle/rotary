@@ -789,8 +789,11 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
         }
         RotaryModel.prototype.randomize = function (random) {
             var tracks = [];
-            for (var i = 0; i < 12; i++) {
-                tracks.push(new RotaryTrackModel().randomize(random));
+            var radius = this.radiusMin.get();
+            while (radius < 256) {
+                var track = new RotaryTrackModel().randomize(random);
+                tracks.push(track);
+                radius += track.width.get() + track.widthPadding.get();
             }
             this.tracks.clear();
             this.tracks.addAll(tracks);
@@ -907,8 +910,8 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             var segments = 1 + Math.floor(random.nextDouble(0.0, 9.0));
             var lengthRatioExp = -Math.floor(random.nextDouble(0.0, 3.0));
             var lengthRatio = 0 === lengthRatioExp ? 0.5 : random.nextDouble(0.0, 1.0) < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp);
-            var width = random.nextDouble(0.0, 1.0) < 0.1 ? 24.0 : 12.0;
-            var widthPadding = random.nextDouble(0.0, 1.0) < 0.5 ? 0.0 : 3.0;
+            var width = random.nextDouble(0.0, 1.0) < 0.2 ? 20.0 : 12.0;
+            var widthPadding = random.nextDouble(0.0, 1.0) < 0.25 ? 0.0 : 12.0;
             var length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0;
             var fill = 2 === segments ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat;
             this.segments.set(0 === lengthRatioExp ? 1 : segments);
@@ -1328,7 +1331,8 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             this.terminator.terminate();
         };
         RotaryTrackEditor.prototype.updateMotionType = function (model) {
-            var motionType = model.motion.get().constructor;
+            var motion = model.motion.get();
+            var motionType = motion.constructor;
             console.log("updateMotionType: " + motionType.name);
             this.editMotionType.set(motionType);
             switch (motionType) {
@@ -1608,7 +1612,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
     var canvas = document.querySelector("canvas");
     var labelSize = document.querySelector("label.size");
     var context = canvas.getContext("2d", { alpha: true });
-    var model = new model_3.RotaryModel().test();
+    var model = new model_3.RotaryModel().randomize(new math_3.Mulberry32(Math.floor(0x987123F * Math.random())));
     var renderer = new render_1.RotaryRenderer(context, model);
     var ui = ui_1.RotaryUI.create(model, renderer);
     var pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };

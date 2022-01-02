@@ -106,7 +106,8 @@ export class RotaryTrackEditor implements Terminable {
     }
 
     private updateMotionType(model: RotaryTrackModel): void {
-        const motionType: MotionType = model.motion.get().constructor as MotionType
+        const motion = model.motion.get()
+        const motionType: MotionType = motion.constructor as MotionType
         console.log(`updateMotionType: ${motionType.name}`)
         this.editMotionType.set(motionType)
 

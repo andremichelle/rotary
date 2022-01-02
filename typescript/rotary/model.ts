@@ -39,8 +39,11 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
 
     randomize(random: Random): RotaryModel {
         const tracks = []
-        for (let i = 0; i < 12; i++) {
-            tracks.push(new RotaryTrackModel().randomize(random))
+        let radius = this.radiusMin.get()
+        while (radius < 256) {
+            const track = new RotaryTrackModel().randomize(random)
+            tracks.push(track)
+            radius += track.width.get() + track.widthPadding.get()
         }
         this.tracks.clear()
         this.tracks.addAll(tracks)
@@ -169,8 +172,8 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         const segments = 1 + Math.floor(random.nextDouble(0.0, 9.0))
         const lengthRatioExp = -Math.floor(random.nextDouble(0.0, 3.0))
         const lengthRatio = 0 === lengthRatioExp ? 0.5 : random.nextDouble(0.0, 1.0) < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
-        const width = random.nextDouble(0.0, 1.0) < 0.1 ? 24.0 : 12.0
-        const widthPadding = random.nextDouble(0.0, 1.0) < 0.5 ? 0.0 : 3.0
+        const width = random.nextDouble(0.0, 1.0) < 0.2 ? 20.0 : 12.0
+        const widthPadding = random.nextDouble(0.0, 1.0) < 0.25 ? 0.0 : 12.0
         const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0
         const fill = 2 === segments ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
         this.segments.set(0 === lengthRatioExp ? 1 : segments)

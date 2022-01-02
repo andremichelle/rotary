@@ -9,8 +9,8 @@ const canvas = document.querySelector("canvas")
 const labelSize = document.querySelector("label.size")
 const context = canvas.getContext("2d", {alpha: true})
 
-const model = new RotaryModel().test()
-// const model = new RotaryModel().randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))
+// const model = new RotaryModel().test()
+const model = new RotaryModel().randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))
 const renderer = new RotaryRenderer(context, model)
 const ui = RotaryUI.create(model, renderer)
 
