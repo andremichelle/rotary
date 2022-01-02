@@ -8,7 +8,7 @@ import {
 } from "../lib/common"
 import {Random} from "../lib/math"
 import {Linear, LinearInteger} from "../lib/mapping"
-import {ExponentialMotion, Motion, MotionFormat} from "./motion"
+import {PowMotion, Motion, MotionFormat} from "./motion"
 
 declare interface RotaryFormat {
     radiusMin: number
@@ -115,7 +115,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     readonly length = this.terminator.with(new BoundNumericValue(Linear.Identity, 1.0))
     readonly lengthRatio = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.5))
     readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
-    readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new ExponentialMotion()))
+    readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new PowMotion()))
     readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
 
@@ -146,7 +146,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         this.length.set(length)
         this.lengthRatio.set(lengthRatio)
         this.fill.set(fill)
-        this.motion.set(new ExponentialMotion())
+        this.motion.set(Motion.random(random))
         return this
     }
 

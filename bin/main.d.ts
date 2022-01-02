@@ -13,6 +13,10 @@ declare module "lib/math" {
         nextDouble(min: number, max: number): number;
         private uniform;
     }
+    export class SmoothStep {
+        static fx(x: number): number;
+        static edge(edge0: number, edge1: number, x: number): number;
+    }
 }
 declare module "lib/mapping" {
     export abstract class Range {
@@ -215,7 +219,8 @@ declare module "lib/common" {
 }
 declare module "rotary/motion" {
     import { BoundNumericValue, ObservableValueImpl, Serializer, Terminable, Terminator } from "lib/common";
-    type Data = ExponentialData | CShapeData;
+    import { Random } from "lib/math";
+    type Data = PowData | CShapeData | SmoothStepData;
     export interface MotionFormat<DATA extends Data> {
         phaseOffset: number;
         frequency: number;
@@ -224,7 +229,8 @@ declare module "rotary/motion" {
         data: DATA;
     }
     export abstract class Motion<DATA extends Data> implements Serializer<MotionFormat<DATA>>, Terminable {
-        static from(format: MotionFormat<any>): ExponentialMotion | CShapeMotion;
+        static from(format: MotionFormat<any>): Motion<any>;
+        static random(random: Random): Motion<any>;
         protected readonly terminator: Terminator;
         readonly phaseOffset: BoundNumericValue;
         readonly frequency: BoundNumericValue;
@@ -232,21 +238,23 @@ declare module "rotary/motion" {
         abstract map(x: number): number;
         abstract deserialize(format: MotionFormat<DATA>): Motion<DATA>;
         abstract serialize(): MotionFormat<DATA>;
+        randomize(random: Random): Motion<DATA>;
         pack(data: DATA): MotionFormat<DATA>;
         unpack(format: MotionFormat<DATA>): DATA;
         moveTo(phase: number): number;
         terminate(): void;
     }
-    export interface ExponentialData {
+    interface PowData {
         exponent: number;
     }
-    export class ExponentialMotion extends Motion<ExponentialData> {
+    export class PowMotion extends Motion<PowData> {
         readonly exponent: BoundNumericValue;
-        serialize(): MotionFormat<ExponentialData>;
-        deserialize(format: MotionFormat<ExponentialData>): ExponentialMotion;
         map(x: number): number;
+        serialize(): MotionFormat<PowData>;
+        deserialize(format: MotionFormat<PowData>): PowMotion;
+        randomize(random: Random): Motion<PowData>;
     }
-    export interface CShapeData {
+    interface CShapeData {
         shape: number;
     }
     export class CShapeMotion extends Motion<CShapeData> {
@@ -254,10 +262,24 @@ declare module "rotary/motion" {
         private o;
         private c;
         constructor();
+        map(x: number): number;
         serialize(): MotionFormat<CShapeData>;
         deserialize(format: MotionFormat<CShapeData>): CShapeMotion;
-        map(x: number): number;
+        randomize(random: Random): Motion<CShapeData>;
         private update;
+    }
+    interface SmoothStepData {
+        edge0: number;
+        edge1: number;
+    }
+    export class SmoothStepMotion extends Motion<SmoothStepData> {
+        readonly edge0: BoundNumericValue;
+        readonly edge1: BoundNumericValue;
+        constructor();
+        map(x: number): number;
+        deserialize(format: MotionFormat<SmoothStepData>): SmoothStepMotion;
+        serialize(): MotionFormat<SmoothStepData>;
+        randomize(random: Random): Motion<SmoothStepData>;
     }
 }
 declare module "rotary/model" {

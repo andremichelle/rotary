@@ -77,6 +77,21 @@ define("lib/math", ["require", "exports"], function (require, exports) {
         return Mulberry32;
     }());
     exports.Mulberry32 = Mulberry32;
+    var SmoothStep = (function () {
+        function SmoothStep() {
+        }
+        SmoothStep.fx = function (x) {
+            return x * x * (3.0 - 2.0 * x);
+        };
+        SmoothStep.edge = function (edge0, edge1, x) {
+            console.assert(0.0 <= edge0 && 1.0 >= edge0, "edge(" + edge0 + ") must be between 0 and 1");
+            console.assert(0.0 <= edge1 && 1.0 >= edge1, "edge(" + edge1 + ") must be between 0 and 1");
+            console.assert(edge0 !== edge1, "edge0(" + edge0 + ") must not be equal to edge1(" + edge1 + ")");
+            return SmoothStep.fx((Math.max(0.0, Math.min(1.0, x)) - edge0) / (edge1 - edge0));
+        };
+        return SmoothStep;
+    }());
+    exports.SmoothStep = SmoothStep;
 });
 define("lib/mapping", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -574,9 +589,10 @@ define("lib/common", ["require", "exports", "lib/mapping"], function (require, e
     }());
     exports.UniformRandomMapping = UniformRandomMapping;
 });
-define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping"], function (require, exports, common_1, mapping_2) {
+define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib/math"], function (require, exports, common_1, mapping_2, math_1) {
     "use strict";
     exports.__esModule = true;
+    var available = [];
     var Motion = (function () {
         function Motion() {
             this.terminator = new common_1.Terminator();
@@ -586,12 +602,21 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping"], fun
         }
         Motion.from = function (format) {
             switch (format["class"]) {
-                case ExponentialMotion.name:
-                    return new ExponentialMotion().deserialize(format);
+                case PowMotion.name:
+                    return new PowMotion().deserialize(format);
                 case CShapeMotion.name:
                     return new CShapeMotion().deserialize(format);
             }
             throw new Error("Unknown movement format");
+        };
+        Motion.random = function (random) {
+            return new available[Math.floor(random.nextDouble(0.0, available.length))]().randomize(random);
+        };
+        Motion.prototype.randomize = function (random) {
+            this.phaseOffset.set(random.nextDouble(0.0, 1.0));
+            this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)));
+            this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5);
+            return this;
         };
         Motion.prototype.pack = function (data) {
             return {
@@ -619,26 +644,30 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping"], fun
         return Motion;
     }());
     exports.Motion = Motion;
-    var ExponentialMotion = (function (_super) {
-        __extends(ExponentialMotion, _super);
-        function ExponentialMotion() {
+    var PowMotion = (function (_super) {
+        __extends(PowMotion, _super);
+        function PowMotion() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.exponent = _this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.Linear(-4.0, 4.0), 2.0));
+            _this.exponent = _this.terminator["with"](new common_1.BoundNumericValue(new mapping_2.Linear(-3.0, 3.0), 2.0));
             return _this;
         }
-        ExponentialMotion.prototype.serialize = function () {
+        PowMotion.prototype.map = function (x) {
+            return Math.pow(x, this.exponent.get());
+        };
+        PowMotion.prototype.serialize = function () {
             return _super.prototype.pack.call(this, { exponent: this.exponent.get() });
         };
-        ExponentialMotion.prototype.deserialize = function (format) {
+        PowMotion.prototype.deserialize = function (format) {
             this.exponent.set(_super.prototype.unpack.call(this, format).exponent);
             return this;
         };
-        ExponentialMotion.prototype.map = function (x) {
-            return Math.pow(x, this.exponent.get());
+        PowMotion.prototype.randomize = function (random) {
+            _super.prototype.randomize.call(this, random);
+            return this;
         };
-        return ExponentialMotion;
+        return PowMotion;
     }(Motion));
-    exports.ExponentialMotion = ExponentialMotion;
+    exports.PowMotion = PowMotion;
     var CShapeMotion = (function (_super) {
         __extends(CShapeMotion, _super);
         function CShapeMotion() {
@@ -648,6 +677,9 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping"], fun
             _this.update();
             return _this;
         }
+        CShapeMotion.prototype.map = function (x) {
+            return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5;
+        };
         CShapeMotion.prototype.serialize = function () {
             return _super.prototype.pack.call(this, { shape: this.shape.get() });
         };
@@ -655,8 +687,9 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping"], fun
             this.shape.set(_super.prototype.unpack.call(this, format).shape);
             return this;
         };
-        CShapeMotion.prototype.map = function (x) {
-            return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5;
+        CShapeMotion.prototype.randomize = function (random) {
+            _super.prototype.randomize.call(this, random);
+            return this;
         };
         CShapeMotion.prototype.update = function () {
             this.o = Math.pow(2.0, this.shape.get());
@@ -665,6 +698,36 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping"], fun
         return CShapeMotion;
     }(Motion));
     exports.CShapeMotion = CShapeMotion;
+    var SmoothStepMotion = (function (_super) {
+        __extends(SmoothStepMotion, _super);
+        function SmoothStepMotion() {
+            var _this = _super.call(this) || this;
+            _this.edge0 = _this.terminator["with"](new common_1.BoundNumericValue(mapping_2.Linear.Identity, 0.25));
+            _this.edge1 = _this.terminator["with"](new common_1.BoundNumericValue(mapping_2.Linear.Identity, 0.75));
+            return _this;
+        }
+        SmoothStepMotion.prototype.map = function (x) {
+            return math_1.SmoothStep.edge(this.edge0.get(), this.edge1.get(), x);
+        };
+        SmoothStepMotion.prototype.deserialize = function (format) {
+            var data = this.unpack(format);
+            this.edge0.set(data.edge0);
+            this.edge1.set(data.edge1);
+            return this;
+        };
+        SmoothStepMotion.prototype.serialize = function () {
+            return _super.prototype.pack.call(this, { edge0: this.edge0.get(), edge1: this.edge1.get() });
+        };
+        SmoothStepMotion.prototype.randomize = function (random) {
+            _super.prototype.randomize.call(this, random);
+            return this;
+        };
+        return SmoothStepMotion;
+    }(Motion));
+    exports.SmoothStepMotion = SmoothStepMotion;
+    available.push(PowMotion);
+    available.push(CShapeMotion);
+    available.push(SmoothStepMotion);
 });
 define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rotary/motion"], function (require, exports, common_2, mapping_3, motion_1) {
     "use strict";
@@ -755,7 +818,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             this.length = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 1.0));
             this.lengthRatio = this.terminator["with"](new common_2.BoundNumericValue(mapping_3.Linear.Identity, 0.5));
             this.fill = this.terminator["with"](new common_2.ObservableValueImpl(Fill.Flat));
-            this.motion = this.terminator["with"](new common_2.ObservableValueImpl(new motion_1.ExponentialMotion()));
+            this.motion = this.terminator["with"](new common_2.ObservableValueImpl(new motion_1.PowMotion()));
             this.rgb = this.terminator["with"](new common_2.ObservableValueImpl((0xFFFFFF)));
             this.gradient = [];
             this.terminator["with"](this.rgb.addObserver(function () { return _this.updateGradient(); }));
@@ -781,7 +844,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             this.length.set(length);
             this.lengthRatio.set(lengthRatio);
             this.fill.set(fill);
-            this.motion.set(new motion_1.ExponentialMotion());
+            this.motion.set(motion_1.Motion.random(random));
             return this;
         };
         RotaryTrackModel.prototype.terminate = function () {
@@ -1255,7 +1318,7 @@ define("rotary/render", ["require", "exports", "rotary/model", "lib/common"], fu
     }());
     exports.RotaryRenderer = RotaryRenderer;
 });
-define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/editor", "dom/common", "lib/math", "lib/mapping"], function (require, exports, common_8, inputs_2, editor_1, common_9, math_1, mapping_5) {
+define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/editor", "dom/common", "lib/math", "lib/mapping"], function (require, exports, common_8, inputs_2, editor_1, common_9, math_2, mapping_5) {
     "use strict";
     exports.__esModule = true;
     var RotaryUI = (function () {
@@ -1269,7 +1332,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             this.terminator = new common_8.Terminator();
             this.editor = new editor_1.RotaryTrackEditor(this, document);
             this.map = new Map();
-            this.random = new math_1.Mulberry32(0x123abc456);
+            this.random = new math_2.Mulberry32(0x123abc456);
             this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), mapping_5.PrintMapping.integer("px"), new common_8.NumericStepper(1))).withValue(model.radiusMin);
             this.terminator["with"](model.tracks.addObserver(function (event) {
                 switch (event.type) {
@@ -1396,7 +1459,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
     }());
     exports.RotaryTrackSelector = RotaryTrackSelector;
 });
-define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render", "lib/math"], function (require, exports, model_3, ui_1, render_1, math_2) {
+define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render", "lib/math"], function (require, exports, model_3, ui_1, render_1, math_3) {
     "use strict";
     exports.__esModule = true;
     var MenuBar = menu.MenuBar;
@@ -1404,7 +1467,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
     var canvas = document.querySelector("canvas");
     var labelSize = document.querySelector("label.size");
     var context = canvas.getContext("2d", { alpha: true });
-    var model = new model_3.RotaryModel().randomize(new math_2.Mulberry32(0x987123F));
+    var model = new model_3.RotaryModel().randomize(new math_3.Mulberry32(Math.floor(0x987123F * Math.random())));
     var renderer = new render_1.RotaryRenderer(context, model);
     var ui = ui_1.RotaryUI.create(model, renderer);
     var pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
