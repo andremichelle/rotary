@@ -1,6 +1,7 @@
 import {RotaryModel} from "./rotary/model"
 import {RotaryUI} from "./rotary/ui"
 import {RotaryRenderer} from "./rotary/render"
+import {Mulberry32} from "./lib/math"
 import MenuBar = menu.MenuBar
 import ListItem = menu.ListItem
 
@@ -37,9 +38,11 @@ MenuBar.install()
                 await fileStream.close()
             }))
         .addListItem(ListItem.default("Clear", "", false)
-            .onTrigger(() => {
-                model.clear()
-            }))
+            .onTrigger(() => model.clear()))
+        .addListItem(ListItem.default("Randomize", "", false)
+            .onTrigger(() => model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))))
+        .addListItem(ListItem.default("Randomize Track(s)", "", false)
+            .onTrigger(() => model.randomizeTracks(new Mulberry32(Math.floor(0x987123F * Math.random())))))
     )
     .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
         .addListItem(ListItem.default("Create Track", "", false)

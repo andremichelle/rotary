@@ -1,9 +1,16 @@
-import {NumericStepper, ObservableValueVoid, Terminable, Terminator} from "../lib/common"
+import {
+    NumericStepper,
+    ObservableValue,
+    ObservableValueImpl,
+    ObservableValueVoid,
+    Terminable,
+    Terminator
+} from "../lib/common"
 import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs"
 import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model"
 import {Dom} from "../dom/common"
 import {PrintMapping} from "../lib/mapping"
-import {MotionType} from "./motion"
+import {MotionType, PowMotion} from "./motion"
 
 export interface RotaryTrackEditorExecutor {
     delete(subject: RotaryTrackModel): void
@@ -23,6 +30,9 @@ export class RotaryTrackEditor implements Terminable {
     private readonly frequency: NumericStepperInput
     private readonly reverse: Checkbox
 
+    private readonly editTerminator: Terminator = new Terminator()
+    private readonly motionType: ObservableValue<MotionType> = new ObservableValueImpl(MotionTypes[0])
+
     subject: RotaryTrackModel | null = null
 
     constructor(private readonly executor: RotaryTrackEditorExecutor, parentNode: ParentNode) {
@@ -39,6 +49,7 @@ export class RotaryTrackEditor implements Terminable {
         this.fill = this.terminator.with(new SelectInput<Fill>(parentNode.querySelector("select[data-parameter='fill']"), Fills))
         this.rgb = this.terminator.with(new NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB))
         this.motion = this.terminator.with(new SelectInput<MotionType>(parentNode.querySelector("select[data-parameter='motion']"), MotionTypes))
+            .withValue(this.motionType)
         this.phaseOffset = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"),
             PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
         this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"),
@@ -54,6 +65,8 @@ export class RotaryTrackEditor implements Terminable {
     }
 
     edit(model: RotaryTrackModel): void {
+        this.editTerminator.terminate()
+
         this.segments.withValue(model.segments)
         this.width.withValue(model.width)
         this.widthPadding.withValue(model.widthPadding)
@@ -61,15 +74,18 @@ export class RotaryTrackEditor implements Terminable {
         this.lengthRatio.withValue(model.lengthRatio)
         this.fill.withValue(model.fill)
         this.rgb.withValue(model.rgb)
-        // this.motion.withValue(model.motion) TODO
         this.phaseOffset.withValue(model.phaseOffset)
         this.frequency.withValue(model.frequency)
         this.reverse.withValue(model.reverse)
+
+        this.editTerminator.with(model.motion.addObserver(() => this.updateMotionType(model)))
+        this.updateMotionType(model)
 
         this.subject = model
     }
 
     clear(): void {
+        this.editTerminator.terminate()
         this.segments.withValue(ObservableValueVoid.Instance)
         this.width.withValue(ObservableValueVoid.Instance)
         this.widthPadding.withValue(ObservableValueVoid.Instance)
@@ -86,5 +102,16 @@ export class RotaryTrackEditor implements Terminable {
 
     terminate() {
         this.terminator.terminate()
+    }
+
+    private updateMotionType(model: RotaryTrackModel): void {
+        const motionType: MotionType = model.motion.get().constructor as MotionType
+        this.motionType.set(motionType)
+        // this.editTerminator.with(this.motionType.addObserver(motionType => {
+        //     model.motion.set(new motionType())
+        // }))
+        console.log('update ui')
+
+        // TODO Update Motion Editor
     }
 }

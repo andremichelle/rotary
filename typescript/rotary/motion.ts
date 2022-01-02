@@ -11,7 +11,7 @@ export declare interface MotionFormat<DATA extends Data> {
     data: DATA
 }
 
-const available: MotionType[] = []
+const MotionTypes: MotionType[] = []
 
 export abstract class Motion<DATA extends Data> implements Serializer<MotionFormat<DATA>>, Terminable {
     static from(format: MotionFormat<any>): Motion<any> {
@@ -27,7 +27,7 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
     }
 
     static random(random: Random): Motion<any> {
-        return new available[Math.floor(random.nextDouble(0.0, available.length))]().randomize(random)
+        return new MotionTypes[Math.floor(random.nextDouble(0.0, MotionTypes.length))]().randomize(random)
     }
 
     protected readonly terminator: Terminator = new Terminator()
@@ -183,7 +183,7 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
     }
 }
 
-available.push(LinearMotion)
-available.push(PowMotion)
-available.push(CShapeMotion)
-available.push(SmoothStepMotion)
+MotionTypes.push(LinearMotion)
+MotionTypes.push(PowMotion)
+MotionTypes.push(CShapeMotion)
+MotionTypes.push(SmoothStepMotion)

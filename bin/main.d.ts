@@ -313,6 +313,7 @@ declare module "rotary/model" {
         readonly radiusMin: BoundNumericValue;
         constructor();
         randomize(random: Random): RotaryModel;
+        randomizeTracks(random: Random): RotaryModel;
         test(): RotaryModel;
         createTrack(index?: number): RotaryTrackModel | null;
         copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
@@ -445,11 +446,14 @@ declare module "rotary/editor" {
         private readonly phaseOffset;
         private readonly frequency;
         private readonly reverse;
+        private readonly editTerminator;
+        private readonly motionType;
         subject: RotaryTrackModel | null;
         constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
         edit(model: RotaryTrackModel): void;
         clear(): void;
         terminate(): void;
+        private updateMotionType;
     }
 }
 declare module "rotary/render" {

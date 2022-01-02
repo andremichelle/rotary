@@ -47,6 +47,11 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         return this
     }
 
+    randomizeTracks(random: Random): RotaryModel {
+        this.tracks.forEach(track => track.randomize(random))
+        return this
+    }
+
     // noinspection JSUnusedGlobalSymbols
     test(): RotaryModel {
         const trackModel = new RotaryTrackModel()

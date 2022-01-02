@@ -591,7 +591,7 @@ define("lib/common", ["require", "exports", "lib/mapping"], function (require, e
 define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib/math"], function (require, exports, common_1, mapping_2, math_1) {
     "use strict";
     exports.__esModule = true;
-    var available = [];
+    var MotionTypes = [];
     var Motion = (function () {
         function Motion() {
             this.terminator = new common_1.Terminator();
@@ -608,7 +608,7 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             throw new Error("Unknown movement format");
         };
         Motion.random = function (random) {
-            return new available[Math.floor(random.nextDouble(0.0, available.length))]().randomize(random);
+            return new MotionTypes[Math.floor(random.nextDouble(0.0, MotionTypes.length))]().randomize(random);
         };
         Motion.prototype.pack = function (data) {
             return {
@@ -732,10 +732,10 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         return SmoothStepMotion;
     }(Motion));
     exports.SmoothStepMotion = SmoothStepMotion;
-    available.push(LinearMotion);
-    available.push(PowMotion);
-    available.push(CShapeMotion);
-    available.push(SmoothStepMotion);
+    MotionTypes.push(LinearMotion);
+    MotionTypes.push(PowMotion);
+    MotionTypes.push(CShapeMotion);
+    MotionTypes.push(SmoothStepMotion);
 });
 define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rotary/motion"], function (require, exports, common_2, mapping_3, motion_1) {
     "use strict";
@@ -753,6 +753,10 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             }
             this.tracks.clear();
             this.tracks.addAll(tracks);
+            return this;
+        };
+        RotaryModel.prototype.randomizeTracks = function (random) {
+            this.tracks.forEach(function (track) { return track.randomize(random); });
             return this;
         };
         RotaryModel.prototype.test = function () {
@@ -1225,6 +1229,8 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             var _this = this;
             this.executor = executor;
             this.terminator = new common_5.Terminator();
+            this.editTerminator = new common_5.Terminator();
+            this.motionType = new common_5.ObservableValueImpl(model_1.MotionTypes[0]);
             this.subject = null;
             this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"), mapping_4.PrintMapping.integer(""), common_5.NumericStepper.Integer));
             this.width = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
@@ -1233,7 +1239,8 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
             this.fill = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='fill']"), model_1.Fills));
             this.rgb = this.terminator["with"](new inputs_1.NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), mapping_4.PrintMapping.RGB));
-            this.motion = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='motion']"), model_1.MotionTypes));
+            this.motion = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='motion']"), model_1.MotionTypes))
+                .withValue(this.motionType);
             this.phaseOffset = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
             this.frequency = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"), mapping_4.PrintMapping.integer("x"), common_5.NumericStepper.Integer));
             this.reverse = this.terminator["with"](new inputs_1.Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
@@ -1245,6 +1252,8 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             }));
         }
         RotaryTrackEditor.prototype.edit = function (model) {
+            var _this = this;
+            this.editTerminator.terminate();
             this.segments.withValue(model.segments);
             this.width.withValue(model.width);
             this.widthPadding.withValue(model.widthPadding);
@@ -1255,9 +1264,12 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             this.phaseOffset.withValue(model.phaseOffset);
             this.frequency.withValue(model.frequency);
             this.reverse.withValue(model.reverse);
+            this.editTerminator["with"](model.motion.addObserver(function () { return _this.updateMotionType(model); }));
+            this.updateMotionType(model);
             this.subject = model;
         };
         RotaryTrackEditor.prototype.clear = function () {
+            this.editTerminator.terminate();
             this.segments.withValue(common_5.ObservableValueVoid.Instance);
             this.width.withValue(common_5.ObservableValueVoid.Instance);
             this.widthPadding.withValue(common_5.ObservableValueVoid.Instance);
@@ -1272,6 +1284,11 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
         };
         RotaryTrackEditor.prototype.terminate = function () {
             this.terminator.terminate();
+        };
+        RotaryTrackEditor.prototype.updateMotionType = function (model) {
+            var motionType = model.motion.get().constructor;
+            this.motionType.set(motionType);
+            console.log('update ui');
         };
         return RotaryTrackEditor;
     }());
@@ -1518,7 +1535,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
     }());
     exports.RotaryTrackSelector = RotaryTrackSelector;
 });
-define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render"], function (require, exports, model_3, ui_1, render_1) {
+define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render", "lib/math"], function (require, exports, model_3, ui_1, render_1, math_3) {
     "use strict";
     exports.__esModule = true;
     var MenuBar = menu.MenuBar;
@@ -1581,9 +1598,11 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
         });
     }); }))
         .addListItem(ListItem["default"]("Clear", "", false)
-        .onTrigger(function () {
-        model.clear();
-    })))
+        .onTrigger(function () { return model.clear(); }))
+        .addListItem(ListItem["default"]("Randomize", "", false)
+        .onTrigger(function () { return model.randomize(new math_3.Mulberry32(Math.floor(0x987123F * Math.random()))); }))
+        .addListItem(ListItem["default"]("Randomize Track(s)", "", false)
+        .onTrigger(function () { return model.randomizeTracks(new math_3.Mulberry32(Math.floor(0x987123F * Math.random()))); })))
         .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
         .addListItem(ListItem["default"]("Create Track", "", false)
         .onTrigger(function (item) {
