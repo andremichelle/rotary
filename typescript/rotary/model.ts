@@ -46,7 +46,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
 
     test(): RotaryModel {
         const trackModel = new RotaryTrackModel()
-        trackModel.motion.set(new LinearMotion())
+        trackModel.motion.set(new PowMotion())
 
         this.tracks.clear()
         this.tracks.add(trackModel)

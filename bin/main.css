@@ -417,6 +417,12 @@ body main > .preview {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+body main > .preview svg {
+  position: absolute;
+  top: 16px;
+  right: 16px;
 }
 body main > .preview .rotary {
   padding: 64px;

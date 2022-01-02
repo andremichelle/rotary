@@ -62,6 +62,10 @@ MenuBar.install()
     .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
         .addListItem(ListItem.default("Nothing yet", "", false)))
 
+const progressIndicator = document.getElementById("progress")
+const radiant = parseInt(progressIndicator.getAttribute("r"), 10) * 2.0 * Math.PI
+progressIndicator.setAttribute("stroke-dasharray", radiant.toFixed(2))
+const setProgress = value => progressIndicator.setAttribute("stroke-dashoffset", ((1.0 - value) * radiant).toFixed(2))
 
 let frame: number = 0;
 
@@ -69,8 +73,11 @@ let frame: number = 0;
     console.log("ready...")
 
     const enterFrame = () => {
+        const position = frame / 320.0
+        const progress = position - Math.floor(position)
         const size = model.measureRadius() * 2
         const ratio = Math.ceil(devicePixelRatio)
+
         canvas.width = size * ratio
         canvas.height = size * ratio
         canvas.style.width = `${size}px`
@@ -81,8 +88,10 @@ let frame: number = 0;
         context.save()
         context.scale(ratio, ratio)
         context.translate(size >> 1, size >> 1)
-        renderer.draw(frame / 320.0)
+        renderer.draw(progress)
         context.restore()
+
+        setProgress(progress)
 
         frame++
         requestAnimationFrame(enterFrame)

@@ -772,7 +772,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
         };
         RotaryModel.prototype.test = function () {
             var trackModel = new RotaryTrackModel();
-            trackModel.motion.set(new motion_1.LinearMotion());
+            trackModel.motion.set(new motion_1.PowMotion());
             this.tracks.clear();
             this.tracks.add(trackModel);
             return this;
@@ -1574,10 +1574,16 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
         .addListItem(ListItem["default"]("Nothing yet", "", false)))
         .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
         .addListItem(ListItem["default"]("Nothing yet", "", false)));
+    var progressIndicator = document.getElementById("progress");
+    var radiant = parseInt(progressIndicator.getAttribute("r"), 10) * 2.0 * Math.PI;
+    progressIndicator.setAttribute("stroke-dasharray", radiant.toFixed(2));
+    var setProgress = function (value) { return progressIndicator.setAttribute("stroke-dashoffset", ((1.0 - value) * radiant).toFixed(2)); };
     var frame = 0;
     (function () {
         console.log("ready...");
         var enterFrame = function () {
+            var position = frame / 320.0;
+            var progress = position - Math.floor(position);
             var size = model.measureRadius() * 2;
             var ratio = Math.ceil(devicePixelRatio);
             canvas.width = size * ratio;
@@ -1589,8 +1595,9 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
             context.save();
             context.scale(ratio, ratio);
             context.translate(size >> 1, size >> 1);
-            renderer.draw(frame / 320.0);
+            renderer.draw(progress);
             context.restore();
+            setProgress(progress);
             frame++;
             requestAnimationFrame(enterFrame);
         };
