@@ -4,12 +4,14 @@ import {Random, SmoothStep} from "../lib/math"
 
 type Data = PowData | CShapeData | SmoothStepData
 
+export type MotionType = { new(): Motion<any> }
+
 export declare interface MotionFormat<DATA extends Data> {
     class: string
     data: DATA
 }
 
-const available: { new(): Motion<any> }[] = []
+const available: MotionType[] = []
 
 export abstract class Motion<DATA extends Data> implements Serializer<MotionFormat<DATA>>, Terminable {
     static from(format: MotionFormat<any>): Motion<any> {
@@ -18,6 +20,8 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
                 return new PowMotion().deserialize(format)
             case CShapeMotion.name:
                 return new CShapeMotion().deserialize(format)
+            case SmoothStepMotion.name:
+                return new SmoothStepMotion().deserialize(format)
         }
         throw new Error("Unknown movement format")
     }

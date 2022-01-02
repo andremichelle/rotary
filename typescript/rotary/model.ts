@@ -8,7 +8,7 @@ import {
 } from "../lib/common"
 import {Random} from "../lib/math"
 import {Linear, LinearInteger} from "../lib/mapping"
-import {LinearMotion, Motion, MotionFormat} from "./motion"
+import {CShapeMotion, LinearMotion, Motion, MotionFormat, MotionType, PowMotion, SmoothStepMotion} from "./motion"
 
 declare interface RotaryFormat {
     radiusMin: number
@@ -116,6 +116,13 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
 export enum Fill {
     Flat, Stroke, Line, Positive, Negative
 }
+
+export const MotionTypes = new Map<string, MotionType>([
+    ["Linear", LinearMotion],
+    ["Power", PowMotion],
+    ["CShape", CShapeMotion],
+    ["SmoothStep", SmoothStepMotion]
+])
 
 export const Fills = new Map<string, Fill>(
     [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])

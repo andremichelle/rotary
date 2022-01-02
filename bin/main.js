@@ -602,6 +602,8 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
                     return new PowMotion().deserialize(format);
                 case CShapeMotion.name:
                     return new CShapeMotion().deserialize(format);
+                case SmoothStepMotion.name:
+                    return new SmoothStepMotion().deserialize(format);
             }
             throw new Error("Unknown movement format");
         };
@@ -820,6 +822,12 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
         Fill[Fill["Positive"] = 3] = "Positive";
         Fill[Fill["Negative"] = 4] = "Negative";
     })(Fill = exports.Fill || (exports.Fill = {}));
+    exports.MotionTypes = new Map([
+        ["Linear", motion_1.LinearMotion],
+        ["Power", motion_1.PowMotion],
+        ["CShape", motion_1.CShapeMotion],
+        ["SmoothStep", motion_1.SmoothStepMotion]
+    ]);
     exports.Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
     var RotaryTrackModel = (function () {
         function RotaryTrackModel() {
@@ -1225,6 +1233,7 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
             this.fill = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='fill']"), model_1.Fills));
             this.rgb = this.terminator["with"](new inputs_1.NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), mapping_4.PrintMapping.RGB));
+            this.motion = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='motion']"), model_1.MotionTypes));
             this.phaseOffset = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
             this.frequency = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"), mapping_4.PrintMapping.integer("x"), common_5.NumericStepper.Integer));
             this.reverse = this.terminator["with"](new inputs_1.Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
@@ -1503,7 +1512,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
     }());
     exports.RotaryTrackSelector = RotaryTrackSelector;
 });
-define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render", "lib/math"], function (require, exports, model_3, ui_1, render_1, math_3) {
+define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render"], function (require, exports, model_3, ui_1, render_1) {
     "use strict";
     exports.__esModule = true;
     var MenuBar = menu.MenuBar;
@@ -1511,7 +1520,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
     var canvas = document.querySelector("canvas");
     var labelSize = document.querySelector("label.size");
     var context = canvas.getContext("2d", { alpha: true });
-    var model = new model_3.RotaryModel().randomize(new math_3.Mulberry32(Math.floor(0x987123F * Math.random())));
+    var model = new model_3.RotaryModel().test();
     var renderer = new render_1.RotaryRenderer(context, model);
     var ui = ui_1.RotaryUI.create(model, renderer);
     var pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };

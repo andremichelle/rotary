@@ -134,7 +134,7 @@ declare module "lib/common" {
     }
     export class ObservableValueVoid implements ObservableValue<any> {
         static Instance: ObservableValueVoid;
-        addObserver(observer: Observer<never>): Terminable;
+        addObserver(observer: Observer<any>): Terminable;
         get(): any;
         removeObserver(observer: Observer<any>): boolean;
         set(value: any): boolean;
@@ -221,6 +221,9 @@ declare module "rotary/motion" {
     import { BoundNumericValue, Serializer, Terminable, Terminator } from "lib/common";
     import { Random } from "lib/math";
     type Data = PowData | CShapeData | SmoothStepData;
+    export type MotionType = {
+        new (): Motion<any>;
+    };
     export interface MotionFormat<DATA extends Data> {
         class: string;
         data: DATA;
@@ -286,7 +289,7 @@ declare module "rotary/motion" {
 declare module "rotary/model" {
     import { BoundNumericValue, ObservableCollection, ObservableValueImpl, Serializer, Terminable } from "lib/common";
     import { Random } from "lib/math";
-    import { Motion, MotionFormat } from "rotary/motion";
+    import { Motion, MotionFormat, MotionType } from "rotary/motion";
     interface RotaryFormat {
         radiusMin: number;
         tracks: RotaryTrackFormat[];
@@ -327,6 +330,7 @@ declare module "rotary/model" {
         Positive = 3,
         Negative = 4
     }
+    export const MotionTypes: Map<string, MotionType>;
     export const Fills: Map<string, Fill>;
     export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminable {
         private readonly terminator;
@@ -436,6 +440,7 @@ declare module "rotary/editor" {
         private readonly length;
         private readonly lengthRatio;
         private readonly fill;
+        private readonly motion;
         private readonly rgb;
         private readonly phaseOffset;
         private readonly frequency;

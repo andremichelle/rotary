@@ -1,8 +1,9 @@
 import {NumericStepper, ObservableValueVoid, Terminable, Terminator} from "../lib/common"
 import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs"
-import {Fill, Fills, RotaryTrackModel} from "./model"
+import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model"
 import {Dom} from "../dom/common"
 import {PrintMapping} from "../lib/mapping"
+import {MotionType} from "./motion"
 
 export interface RotaryTrackEditorExecutor {
     delete(subject: RotaryTrackModel): void
@@ -16,6 +17,7 @@ export class RotaryTrackEditor implements Terminable {
     private readonly length: NumericStepperInput
     private readonly lengthRatio: NumericStepperInput
     private readonly fill: SelectInput<Fill>
+    private readonly motion: SelectInput<MotionType>
     private readonly rgb: NumericInput
     private readonly phaseOffset: NumericStepperInput
     private readonly frequency: NumericStepperInput
@@ -36,6 +38,7 @@ export class RotaryTrackEditor implements Terminable {
             PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
         this.fill = this.terminator.with(new SelectInput<Fill>(parentNode.querySelector("select[data-parameter='fill']"), Fills))
         this.rgb = this.terminator.with(new NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB))
+        this.motion = this.terminator.with(new SelectInput<MotionType>(parentNode.querySelector("select[data-parameter='motion']"), MotionTypes))
         this.phaseOffset = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"),
             PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
         this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"),
@@ -58,6 +61,7 @@ export class RotaryTrackEditor implements Terminable {
         this.lengthRatio.withValue(model.lengthRatio)
         this.fill.withValue(model.fill)
         this.rgb.withValue(model.rgb)
+        // this.motion.withValue(model.motion) TODO
         this.phaseOffset.withValue(model.phaseOffset)
         this.frequency.withValue(model.frequency)
         this.reverse.withValue(model.reverse)
