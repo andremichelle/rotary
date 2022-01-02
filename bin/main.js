@@ -644,6 +644,28 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         return Motion;
     }());
     exports.Motion = Motion;
+    var LinearMotion = (function (_super) {
+        __extends(LinearMotion, _super);
+        function LinearMotion() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        LinearMotion.prototype.map = function (x) {
+            return x;
+        };
+        LinearMotion.prototype.serialize = function () {
+            return _super.prototype.pack.call(undefined);
+        };
+        LinearMotion.prototype.deserialize = function (format) {
+            _super.prototype.unpack.call(this, format);
+            return this;
+        };
+        LinearMotion.prototype.randomize = function (random) {
+            _super.prototype.randomize.call(this, random);
+            return this;
+        };
+        return LinearMotion;
+    }(Motion));
+    exports.LinearMotion = LinearMotion;
     var PowMotion = (function (_super) {
         __extends(PowMotion, _super);
         function PowMotion() {
@@ -725,6 +747,7 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         return SmoothStepMotion;
     }(Motion));
     exports.SmoothStepMotion = SmoothStepMotion;
+    available.push(LinearMotion);
     available.push(PowMotion);
     available.push(CShapeMotion);
     available.push(SmoothStepMotion);
@@ -745,6 +768,13 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             }
             this.tracks.clear();
             this.tracks.addAll(tracks);
+            return this;
+        };
+        RotaryModel.prototype.test = function () {
+            var trackModel = new RotaryTrackModel();
+            trackModel.motion.set(new motion_1.LinearMotion());
+            this.tracks.clear();
+            this.tracks.add(trackModel);
             return this;
         };
         RotaryModel.prototype.createTrack = function (index) {
@@ -1459,7 +1489,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
     }());
     exports.RotaryTrackSelector = RotaryTrackSelector;
 });
-define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render", "lib/math"], function (require, exports, model_3, ui_1, render_1, math_3) {
+define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/render"], function (require, exports, model_3, ui_1, render_1) {
     "use strict";
     exports.__esModule = true;
     var MenuBar = menu.MenuBar;
@@ -1467,7 +1497,7 @@ define("main", ["require", "exports", "rotary/model", "rotary/ui", "rotary/rende
     var canvas = document.querySelector("canvas");
     var labelSize = document.querySelector("label.size");
     var context = canvas.getContext("2d", { alpha: true });
-    var model = new model_3.RotaryModel().randomize(new math_3.Mulberry32(Math.floor(0x987123F * Math.random())));
+    var model = new model_3.RotaryModel().test();
     var renderer = new render_1.RotaryRenderer(context, model);
     var ui = ui_1.RotaryUI.create(model, renderer);
     var pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };

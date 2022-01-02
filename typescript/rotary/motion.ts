@@ -2,8 +2,6 @@ import {BoundNumericValue, ObservableValueImpl, Serializer, Terminable, Terminat
 import {Linear, LinearInteger} from "../lib/mapping"
 import {Random, SmoothStep} from "../lib/math"
 
-// TODO LinearMotion
-
 type Data = PowData | CShapeData | SmoothStepData
 
 export declare interface MotionFormat<DATA extends Data> {
@@ -76,6 +74,26 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
 
     terminate(): void {
         this.terminator.terminate()
+    }
+}
+
+export class LinearMotion extends Motion<never> {
+    map(x: number): number {
+        return x
+    }
+
+    serialize(): MotionFormat<never> {
+        return super.pack.call(undefined) // this might break in future version of typescript
+    }
+
+    deserialize(format: MotionFormat<never>): LinearMotion {
+        super.unpack(format)
+        return this
+    }
+
+    randomize(random: Random): Motion<never> {
+        super.randomize(random)
+        return this
     }
 }
 
@@ -184,6 +202,7 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
     }
 }
 
+available.push(LinearMotion)
 available.push(PowMotion)
 available.push(CShapeMotion)
 available.push(SmoothStepMotion)

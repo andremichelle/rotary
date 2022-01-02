@@ -8,7 +8,7 @@ import {
 } from "../lib/common"
 import {Random} from "../lib/math"
 import {Linear, LinearInteger} from "../lib/mapping"
-import {PowMotion, Motion, MotionFormat} from "./motion"
+import {PowMotion, Motion, MotionFormat, LinearMotion} from "./motion"
 
 declare interface RotaryFormat {
     radiusMin: number
@@ -41,6 +41,15 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         }
         this.tracks.clear()
         this.tracks.addAll(tracks)
+        return this
+    }
+
+    test(): RotaryModel {
+        const trackModel = new RotaryTrackModel()
+        trackModel.motion.set(new LinearMotion())
+
+        this.tracks.clear()
+        this.tracks.add(trackModel)
         return this
     }
 

@@ -244,6 +244,12 @@ declare module "rotary/motion" {
         moveTo(phase: number): number;
         terminate(): void;
     }
+    export class LinearMotion extends Motion<never> {
+        map(x: number): number;
+        serialize(): MotionFormat<never>;
+        deserialize(format: MotionFormat<never>): LinearMotion;
+        randomize(random: Random): Motion<never>;
+    }
     interface PowData {
         exponent: number;
     }
@@ -306,6 +312,7 @@ declare module "rotary/model" {
         readonly radiusMin: BoundNumericValue;
         constructor();
         randomize(random: Random): RotaryModel;
+        test(): RotaryModel;
         createTrack(index?: number): RotaryTrackModel | null;
         copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
         removeTrack(track: RotaryTrackModel): boolean;
