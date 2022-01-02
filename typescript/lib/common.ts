@@ -81,7 +81,7 @@ export interface ObservableValue<T> extends Value<T>, Observable<T> {
 export class ObservableValueVoid implements ObservableValue<any> {
     static Instance = new ObservableValueVoid()
 
-    addObserver(observer: Observer<never>): Terminable {
+    addObserver(observer: Observer<any>): Terminable {
         return TerminableVoid.Instance
     }
 
