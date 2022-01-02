@@ -1525,7 +1525,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             selector.radio.checked = true;
         };
         RotaryUI.prototype.hasSelected = function () {
-            return this.editor.subject !== null;
+            return this.editor.subject.nonEmpty();
         };
         RotaryUI.prototype.showHighlight = function (model) {
             this.renderer.showHighlight(model);
@@ -1542,6 +1542,8 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             selector.setIndex(Math.min(index, this.map.size));
             this.map.set(track, selector);
             common_9.Dom.insertElement(this.selectors, element, index);
+            if (!this.hasSelected() && 0 < this.model.tracks.size())
+                this.select(this.model.tracks.get(0));
         };
         RotaryUI.prototype.removeSelector = function (track) {
             var _this = this;
@@ -1554,6 +1556,8 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
                 console.assert(selector !== undefined, "Cannot reorder selector");
                 selector.setIndex(index);
             });
+            if (this.editor.subject.contains(track))
+                this.editor.clear();
         };
         RotaryUI.prototype.reorderSelectors = function () {
             var _this = this;

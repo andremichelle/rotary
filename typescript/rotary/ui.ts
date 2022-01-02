@@ -89,7 +89,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
     }
 
     hasSelected(): boolean {
-        return this.editor.subject !== null
+        return this.editor.subject.nonEmpty()
     }
 
     showHighlight(model: RotaryTrackModel): void {
@@ -108,6 +108,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         selector.setIndex(Math.min(index, this.map.size))
         this.map.set(track, selector)
         Dom.insertElement(this.selectors, element, index)
+        if (!this.hasSelected() && 0 < this.model.tracks.size()) this.select(this.model.tracks.get(0))
     }
 
     private removeSelector(track: RotaryTrackModel): void {
@@ -120,6 +121,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
             console.assert(selector !== undefined, "Cannot reorder selector")
             selector.setIndex(index)
         })
+        if(this.editor.subject.contains(track)) this.editor.clear()
     }
 
     private reorderSelectors(): void {
