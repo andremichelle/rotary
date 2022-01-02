@@ -2,7 +2,7 @@ import {Fill, RotaryModel, RotaryTrackModel} from "./model"
 import {TAU} from "../lib/common"
 
 export class RotaryRenderer {
-    private hightlight: RotaryTrackModel = null
+    private highlight: RotaryTrackModel = null
 
     constructor(private readonly context: CanvasRenderingContext2D,
                 private readonly rotary: RotaryModel) {
@@ -42,7 +42,7 @@ export class RotaryRenderer {
         console.assert(angleMin < angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`)
         const radianMin = angleMin * TAU
         const radianMax = angleMax * TAU
-        this.context.globalAlpha = model === this.hightlight || null === this.hightlight ? 1.0 : 0.2
+        this.context.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.2
         if (fill === Fill.Flat) {
             this.context.fillStyle = model.opaque()
         } else if (fill === Fill.Stroke || fill === Fill.Line) {
@@ -81,10 +81,10 @@ export class RotaryRenderer {
     }
 
     showHighlight(model: RotaryTrackModel) {
-        this.hightlight = model
+        this.highlight = model
     }
 
     releaseHighlight() {
-        this.hightlight = null
+        this.highlight = null
     }
 }
