@@ -110,6 +110,35 @@ declare module "lib/common" {
         with<T extends Terminable>(terminable: T): T;
         terminate(): void;
     }
+    export interface Option<T> {
+        get(): T;
+        ifPresent(callback: (value: T) => void): void;
+        contains(value: T): boolean;
+        isEmpty(): boolean;
+        nonEmpty(): boolean;
+    }
+    export class Options {
+        static valueOf<T>(value: T): Option<T>;
+        static Some: {
+            new <T>(value: T): {
+                readonly value: T;
+                get: () => T;
+                contains: (value: T) => boolean;
+                ifPresent: (callback: (value: T) => void) => void;
+                isEmpty: () => boolean;
+                nonEmpty: () => boolean;
+                toString(): string;
+            };
+        };
+        static None: {
+            get: () => never;
+            contains: (_: never) => boolean;
+            ifPresent: (_: (value: never) => void) => void;
+            isEmpty: () => boolean;
+            nonEmpty: () => boolean;
+            toString(): string;
+        };
+    }
     export type Observer<VALUE> = (value: VALUE) => void;
     export interface Observable<VALUE> extends Terminable {
         addObserver(observer: Observer<VALUE>): Terminable;
@@ -427,10 +456,10 @@ declare module "dom/inputs" {
     }
 }
 declare module "rotary/editor" {
-    import { Terminable } from "lib/common";
+    import { Option, Terminable } from "lib/common";
     import { RotaryTrackModel } from "rotary/model";
     export interface RotaryTrackEditorExecutor {
-        delete(subject: RotaryTrackModel): void;
+        deleteTrack(): void;
     }
     export class RotaryTrackEditor implements Terminable {
         private readonly executor;
@@ -447,8 +476,8 @@ declare module "rotary/editor" {
         private readonly frequency;
         private readonly reverse;
         private readonly editTerminator;
-        private readonly motionType;
-        subject: RotaryTrackModel | null;
+        private readonly editMotionType;
+        subject: Option<RotaryTrackModel>;
         constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
         edit(model: RotaryTrackModel): void;
         clear(): void;
@@ -487,8 +516,8 @@ declare module "rotary/ui" {
         private readonly random;
         constructor(form: HTMLFormElement, selectors: Element, template: Element, model: RotaryModel, renderer: RotaryRenderer);
         static create(rotary: RotaryModel, renderer: RotaryRenderer): RotaryUI;
-        createNew(model: RotaryTrackModel, copy: boolean): void;
-        delete(model?: RotaryTrackModel): void;
+        createNew(model: RotaryTrackModel | null, copy: boolean): void;
+        deleteTrack(): void;
         select(model: RotaryTrackModel): void;
         hasSelected(): boolean;
         showHighlight(model: RotaryTrackModel): void;

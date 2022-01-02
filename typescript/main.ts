@@ -46,18 +46,18 @@ MenuBar.install()
     )
     .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
         .addListItem(ListItem.default("Create Track", "", false)
-            .onTrigger(item => {
+            .onTrigger(() => {
                 ui.createNew(null, false)
             }))
         .addListItem(ListItem.default("Copy Track", "", false)
             .onOpening(item => item.isSelectable(ui.hasSelected()))
-            .onTrigger(item => {
+            .onTrigger(() => {
                 ui.createNew(null, true)
             }))
         .addListItem(ListItem.default("Delete Track", "", false)
             .onOpening(item => item.isSelectable(ui.hasSelected()))
-            .onTrigger(item => {
-                ui.delete()
+            .onTrigger(() => {
+                ui.deleteTrack()
             }))
     )
     .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()

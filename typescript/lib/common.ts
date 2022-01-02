@@ -29,6 +29,55 @@ export class Terminator implements Terminable {
     }
 }
 
+export interface Option<T> {
+    get(): T
+
+    ifPresent(callback: (value: T) => void): void
+
+    contains(value: T): boolean
+
+    isEmpty(): boolean
+
+    nonEmpty(): boolean
+}
+
+export class Options {
+    static valueOf<T>(value: T): Option<T> {
+        return null === value || undefined === value ? Options.None : new Options.Some(value)
+    }
+
+    static Some = class<T> implements Option<T> {
+        constructor(readonly value: T) {
+            console.assert(null !== value && undefined !== value, "Cannot be null or undefined")
+        }
+
+        get = (): T => this.value
+        contains = (value: T): boolean => value === this.value
+        ifPresent = (callback: (value: T) => void): void => callback(this.value)
+        isEmpty = (): boolean => false
+        nonEmpty = (): boolean => true
+
+        toString(): string {
+            return `Options.Some(${this.value})`
+        }
+    }
+
+    static None = new class implements Option<never> {
+        get = (): never => {
+            throw new Error("Option has no value")
+        }
+        contains = (_: never): boolean => false
+        ifPresent = (_: (value: never) => void): void => {
+        }
+        isEmpty = (): boolean => true
+        nonEmpty = (): boolean => false
+
+        toString(): string {
+            return `Options.None`
+        }
+    }
+}
+
 export type Observer<VALUE> = (value: VALUE) => void
 
 export interface Observable<VALUE> extends Terminable {

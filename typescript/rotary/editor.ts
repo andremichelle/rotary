@@ -3,6 +3,8 @@ import {
     ObservableValue,
     ObservableValueImpl,
     ObservableValueVoid,
+    Option,
+    Options,
     Terminable,
     Terminator
 } from "../lib/common"
@@ -10,10 +12,10 @@ import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/i
 import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model"
 import {Dom} from "../dom/common"
 import {PrintMapping} from "../lib/mapping"
-import {MotionType, PowMotion} from "./motion"
+import {CShapeMotion, LinearMotion, MotionType, PowMotion, SmoothStepMotion} from "./motion"
 
 export interface RotaryTrackEditorExecutor {
-    delete(subject: RotaryTrackModel): void
+    deleteTrack(): void
 }
 
 export class RotaryTrackEditor implements Terminable {
@@ -31,9 +33,9 @@ export class RotaryTrackEditor implements Terminable {
     private readonly reverse: Checkbox
 
     private readonly editTerminator: Terminator = new Terminator()
-    private readonly motionType: ObservableValue<MotionType> = new ObservableValueImpl(MotionTypes[0])
+    private readonly editMotionType: ObservableValue<MotionType> = new ObservableValueImpl(MotionTypes[0])
 
-    subject: RotaryTrackModel | null = null
+    subject: Option<RotaryTrackModel> = Options.None
 
     constructor(private readonly executor: RotaryTrackEditorExecutor, parentNode: ParentNode) {
         this.segments = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"),
@@ -49,7 +51,7 @@ export class RotaryTrackEditor implements Terminable {
         this.fill = this.terminator.with(new SelectInput<Fill>(parentNode.querySelector("select[data-parameter='fill']"), Fills))
         this.rgb = this.terminator.with(new NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB))
         this.motion = this.terminator.with(new SelectInput<MotionType>(parentNode.querySelector("select[data-parameter='motion']"), MotionTypes))
-            .withValue(this.motionType)
+            .withValue(this.editMotionType)
         this.phaseOffset = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"),
             PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
         this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"),
@@ -58,10 +60,10 @@ export class RotaryTrackEditor implements Terminable {
 
         this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault()
-            if (this.subject !== null) {
-                executor.delete(this.subject)
-            }
+            this.subject.ifPresent(() => executor.deleteTrack())
         }))
+        this.terminator.with(this.editMotionType.addObserver(motionType =>
+            this.subject.ifPresent(model => model.motion.set(new motionType()))))
     }
 
     edit(model: RotaryTrackModel): void {
@@ -78,10 +80,11 @@ export class RotaryTrackEditor implements Terminable {
         this.frequency.withValue(model.frequency)
         this.reverse.withValue(model.reverse)
 
+        this.editTerminator.with({terminate: () => this.subject = Options.None})
         this.editTerminator.with(model.motion.addObserver(() => this.updateMotionType(model)))
         this.updateMotionType(model)
 
-        this.subject = model
+        this.subject = Options.valueOf(model)
     }
 
     clear(): void {
@@ -96,8 +99,6 @@ export class RotaryTrackEditor implements Terminable {
         this.phaseOffset.withValue(ObservableValueVoid.Instance)
         this.frequency.withValue(ObservableValueVoid.Instance)
         this.reverse.withValue(ObservableValueVoid.Instance)
-
-        this.subject = null
     }
 
     terminate() {
@@ -106,12 +107,27 @@ export class RotaryTrackEditor implements Terminable {
 
     private updateMotionType(model: RotaryTrackModel): void {
         const motionType: MotionType = model.motion.get().constructor as MotionType
-        this.motionType.set(motionType)
-        // this.editTerminator.with(this.motionType.addObserver(motionType => {
-        //     model.motion.set(new motionType())
-        // }))
-        console.log('update ui')
+        console.log(`updateMotionType: ${motionType.name}`)
+        this.editMotionType.set(motionType)
 
         // TODO Update Motion Editor
+        switch (motionType) {
+            case LinearMotion: {
+                console.log("LinearMotion")
+                break
+            }
+            case PowMotion: {
+                console.log("PowMotion")
+                break
+            }
+            case CShapeMotion: {
+                console.log("CShapeMotion")
+                break
+            }
+            case SmoothStepMotion: {
+                console.log("SmoothStepMotion")
+                break
+            }
+        }
     }
 }

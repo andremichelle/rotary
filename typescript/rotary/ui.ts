@@ -52,11 +52,12 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         return new RotaryUI(form, selectors, template, rotary, renderer)
     }
 
-    createNew(model: RotaryTrackModel, copy: boolean) {
-        if ((model = model || this.editor.subject) === null) {
+    createNew(model: RotaryTrackModel | null, copy: boolean) {
+        if (this.editor.subject.isEmpty()) {
             this.select(this.model.createTrack(0).randomize(this.random))
             return
         }
+        model = null === model ? this.editor.subject.get() : model
         const index = this.model.tracks.indexOf(model)
         console.assert(-1 !== index, "Could not find model")
         const newModel = copy
@@ -65,17 +66,18 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         this.select(newModel)
     }
 
-    delete(model: RotaryTrackModel = null): void {
-        if ((model = model || this.editor.subject) === null) return
-        const beforeIndex = this.model.tracks.indexOf(model)
-        console.assert(-1 !== beforeIndex, "Could not find model")
-        this.model.removeTrack(model)
-        const numTracks = this.model.tracks.size()
-        if (0 < numTracks) {
-            this.select(this.model.tracks.get(Math.min(beforeIndex, numTracks - 1)))
-        } else {
-            this.editor.clear()
-        }
+    deleteTrack(): void {
+        this.editor.subject.ifPresent(model => {
+            const beforeIndex = this.model.tracks.indexOf(model)
+            console.assert(-1 !== beforeIndex, "Could not find model")
+            this.model.removeTrack(model)
+            const numTracks = this.model.tracks.size()
+            if (0 < numTracks) {
+                this.select(this.model.tracks.get(Math.min(beforeIndex, numTracks - 1)))
+            } else {
+                this.editor.clear()
+            }
+        })
     }
 
     select(model: RotaryTrackModel): void {
