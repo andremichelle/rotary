@@ -8,7 +8,7 @@ import {
 } from "../lib/common"
 import {Random} from "../lib/math"
 import {Linear, LinearInteger} from "../lib/mapping"
-import {PowMotion, Motion, MotionFormat, LinearMotion, CShapeMotion, SmoothStepMotion} from "./motion"
+import {LinearMotion, Motion, MotionFormat} from "./motion"
 
 declare interface RotaryFormat {
     radiusMin: number
@@ -46,7 +46,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
 
     test(): RotaryModel {
         const trackModel = new RotaryTrackModel()
-        trackModel.motion.set(new SmoothStepMotion())
+        trackModel.motion.set(new LinearMotion())
 
         this.tracks.clear()
         this.tracks.add(trackModel)
@@ -124,7 +124,7 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     readonly length = this.terminator.with(new BoundNumericValue(Linear.Identity, 1.0))
     readonly lengthRatio = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.5))
     readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
-    readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new PowMotion()))
+    readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
     readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
 
