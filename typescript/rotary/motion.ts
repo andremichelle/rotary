@@ -111,7 +111,7 @@ export class PowMotion extends Motion<PowData> {
     }
 
     randomize(random: Random): Motion<PowData> {
-        this.exponent.set(random.nextDouble(this.range.min, this.range.max))
+        this.exponent.set(random.nextDouble(2.0, 4.0))
         return this
     }
 }
@@ -155,7 +155,7 @@ export class CShapeMotion extends Motion<CShapeData> {
     }
 
     randomize(random: Random): Motion<CShapeData> {
-        this.slope.set(random.nextDouble(this.range.min, this.range.max))
+        this.slope.set(random.nextDouble(1.0, 4.0))
         return this
     }
 
@@ -201,9 +201,8 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
     }
 
     randomize(random: Random): Motion<SmoothStepData> {
-        const limit = random.nextDouble(0.0, 1.0)
-        this.edge0.set(limit)
-        this.edge1.set(random.nextDouble(limit, 1.0))
+        this.edge0.set(random.nextDouble(0.125, 0.375))
+        this.edge1.set(random.nextDouble(0.625, 0.875))
         return this
     }
 }

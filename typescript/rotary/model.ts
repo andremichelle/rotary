@@ -156,8 +156,12 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     }
 
     map(phase: number): number {
-        const x = this.phaseOffset.get() + (phase - Math.floor(phase)) * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get()
-        return this.motion.get().map(x - Math.floor(x))
+        phase -= Math.floor(phase)
+        phase *= this.frequency.get()
+        phase -= Math.floor(phase)
+        phase = this.phaseOffset.get() + (this.reverse.get() ? 1.0 - phase : phase)
+        phase -= Math.floor(phase)
+        return this.motion.get().map(phase)
     }
 
     opaque(): string {

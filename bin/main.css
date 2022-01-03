@@ -445,16 +445,23 @@ body main > .editing > .preview .rotary svg {
   right: 0;
   position: absolute;
 }
-body main > .editing > .preview .rotary label.size {
+body main > .editing > .preview .rotary label.size, body main > .editing > .preview .rotary label.zoom {
   top: 8px;
   left: 8px;
   color: #AAA;
   white-space: nowrap;
   position: absolute;
 }
+body main > .editing > .preview .rotary label.zoom {
+  left: 48px;
+}
 body main > .editing > .preview .rotary label.size:after {
   opacity: 0.6;
   content: "px";
+}
+body main > .editing > .preview .rotary label.zoom:after {
+  opacity: 0.6;
+  content: "%";
 }
 
 div.two-columns {
@@ -481,6 +488,9 @@ div.two-columns label {
 }
 div.two-columns label.name {
   padding-right: 4px;
+}
+div.two-columns label.bold {
+  font-weight: 700;
 }
 div.two-columns fieldset.stepper {
   display: grid;

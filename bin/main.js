@@ -723,7 +723,7 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             return motion;
         };
         PowMotion.prototype.randomize = function (random) {
-            this.exponent.set(random.nextDouble(this.range.min, this.range.max));
+            this.exponent.set(random.nextDouble(2.0, 4.0));
             return this;
         };
         return PowMotion;
@@ -755,7 +755,7 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             return motion;
         };
         CShapeMotion.prototype.randomize = function (random) {
-            this.slope.set(random.nextDouble(this.range.min, this.range.max));
+            this.slope.set(random.nextDouble(1.0, 4.0));
             return this;
         };
         CShapeMotion.prototype.update = function () {
@@ -792,9 +792,8 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             return motion;
         };
         SmoothStepMotion.prototype.randomize = function (random) {
-            var limit = random.nextDouble(0.0, 1.0);
-            this.edge0.set(limit);
-            this.edge1.set(random.nextDouble(limit, 1.0));
+            this.edge0.set(random.nextDouble(0.125, 0.375));
+            this.edge1.set(random.nextDouble(0.625, 0.875));
             return this;
         };
         return SmoothStepMotion;
@@ -924,8 +923,12 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             this.updateGradient();
         }
         RotaryTrackModel.prototype.map = function (phase) {
-            var x = this.phaseOffset.get() + (phase - Math.floor(phase)) * (this.reverse.get() ? -1.0 : 1.0) * this.frequency.get();
-            return this.motion.get().map(x - Math.floor(x));
+            phase -= Math.floor(phase);
+            phase *= this.frequency.get();
+            phase -= Math.floor(phase);
+            phase = this.phaseOffset.get() + (this.reverse.get() ? 1.0 - phase : phase);
+            phase -= Math.floor(phase);
+            return this.motion.get().map(phase);
         };
         RotaryTrackModel.prototype.opaque = function () {
             return this.gradient[0];
