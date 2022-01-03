@@ -399,18 +399,23 @@ declare module "dom/common" {
 declare module "dom/inputs" {
     import { NumericStepper, ObservableValue, Terminable } from "lib/common";
     import { PrintMapping } from "lib/mapping";
-    export class Checkbox implements Terminable {
+    export interface Editor<T> extends Terminable {
+        with(value: T): void;
+        clear(): void;
+    }
+    export class Checkbox implements Editor<ObservableValue<boolean>> {
         private readonly element;
         private readonly terminator;
         private value;
         constructor(element: HTMLInputElement);
-        withValue(value: ObservableValue<boolean>): Checkbox;
+        with(value: ObservableValue<boolean>): void;
+        clear(): void;
         init(): void;
         update(): void;
         terminate(): void;
         private readonly observer;
     }
-    export class SelectInput<T> implements Terminable {
+    export class SelectInput<T> implements Editor<ObservableValue<T>> {
         private readonly select;
         private readonly map;
         private readonly terminator;
@@ -418,13 +423,14 @@ declare module "dom/inputs" {
         private readonly values;
         private value;
         constructor(select: HTMLSelectElement, map: Map<string, T>);
-        withValue(value: ObservableValue<T>): SelectInput<T>;
+        with(value: ObservableValue<T>): void;
+        clear(): void;
         terminate(): void;
         private observer;
         private update;
         private connect;
     }
-    export class NumericStepperInput implements Terminable {
+    export class NumericStepperInput implements Editor<ObservableValue<number>> {
         private readonly parent;
         private readonly printMapping;
         private readonly stepper;
@@ -434,20 +440,22 @@ declare module "dom/inputs" {
         private readonly increaseButton;
         private readonly input;
         constructor(parent: HTMLElement, printMapping: PrintMapping<number>, stepper: NumericStepper);
-        withValue(value: ObservableValue<number>): NumericStepperInput;
+        with(value: ObservableValue<number>): void;
+        clear(): void;
         connect(): void;
         parse(): number | null;
         update(): void;
         terminate(): void;
         private readonly observer;
     }
-    export class NumericInput implements Terminable {
+    export class NumericInput implements Editor<ObservableValue<number>> {
         private readonly input;
         private readonly printMapping;
         private readonly terminator;
         private value;
         constructor(input: HTMLInputElement, printMapping: PrintMapping<number>);
-        withValue(value: ObservableValue<number>): NumericInput;
+        with(value: ObservableValue<number>): void;
+        clear(): void;
         connect(): void;
         parse(): number | null;
         update(): void;
@@ -456,10 +464,51 @@ declare module "dom/inputs" {
     }
 }
 declare module "rotary/editor" {
-    import { Option, Terminable } from "lib/common";
+    import { ObservableValue, Option, Terminable } from "lib/common";
+    import { Editor } from "dom/inputs";
     import { RotaryTrackModel } from "rotary/model";
+    import { CShapeMotion, Motion, PowMotion, SmoothStepMotion } from "rotary/motion";
     export interface RotaryTrackEditorExecutor {
         deleteTrack(): void;
+    }
+    export class PowMotionEditor implements Editor<PowMotion> {
+        private readonly input;
+        constructor(element: Element);
+        with(value: PowMotion): void;
+        clear(): void;
+        terminate(): void;
+    }
+    export class CShapeMotionEditor implements Editor<CShapeMotion> {
+        private readonly input;
+        constructor(element: Element);
+        with(value: CShapeMotion): void;
+        clear(): void;
+        terminate(): void;
+    }
+    export class SmoothStepMotionEditor implements Editor<SmoothStepMotion> {
+        private readonly input0;
+        private readonly input1;
+        constructor(element: Element);
+        with(value: SmoothStepMotion): void;
+        clear(): void;
+        terminate(): void;
+    }
+    export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
+        private readonly editor;
+        private readonly element;
+        private readonly terminator;
+        private readonly motionTypeValue;
+        private readonly typeSelectInput;
+        private readonly powMotionEditor;
+        private readonly cShapeMotionEditor;
+        private readonly smoothStepMotionEditor;
+        private editable;
+        private subscription;
+        constructor(editor: RotaryTrackEditor, element: Element);
+        with(value: ObservableValue<Motion<any>>): void;
+        clear(): void;
+        terminate(): void;
+        private updateMotionType;
     }
     export class RotaryTrackEditor implements Terminable {
         private readonly executor;
@@ -475,14 +524,11 @@ declare module "rotary/editor" {
         private readonly phaseOffset;
         private readonly frequency;
         private readonly reverse;
-        private readonly editTerminator;
-        private readonly editMotionType;
         subject: Option<RotaryTrackModel>;
-        constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
+        constructor(executor: RotaryTrackEditorExecutor, document: Document);
         edit(model: RotaryTrackModel): void;
         clear(): void;
         terminate(): void;
-        private updateMotionType;
     }
 }
 declare module "rotary/render" {

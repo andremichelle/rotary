@@ -8,14 +8,160 @@ import {
     Terminable,
     Terminator
 } from "../lib/common"
-import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs"
+import {Checkbox, Editor, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs"
 import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model"
 import {Dom} from "../dom/common"
 import {PrintMapping} from "../lib/mapping"
-import {CShapeMotion, LinearMotion, MotionType, PowMotion, SmoothStepMotion} from "./motion"
+import {CShapeMotion, LinearMotion, Motion, MotionType, PowMotion, SmoothStepMotion} from "./motion"
 
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void
+}
+
+export class PowMotionEditor implements Editor<PowMotion> {
+    private readonly input: NumericStepperInput
+
+    constructor(element: Element) {
+        this.input = new NumericStepperInput(
+            element.querySelector("fieldset[data-motion='pow'][data-parameter='exponent']"),
+            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent)
+    }
+
+    with(value: PowMotion): void {
+        this.input.with(value.exponent)
+    }
+
+    clear(): void {
+        this.input.with(ObservableValueVoid.Instance)
+    }
+
+    terminate(): void {
+        this.input.terminate()
+    }
+}
+
+export class CShapeMotionEditor implements Editor<CShapeMotion> {
+    private readonly input: NumericStepperInput
+
+    constructor(element: Element) {
+        this.input = new NumericStepperInput(
+            element.querySelector("fieldset[data-motion='cshape'][data-parameter='shape']"),
+            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent)
+    }
+
+    with(value: CShapeMotion): void {
+        this.input.with(value.shape)
+    }
+
+    clear(): void {
+        this.input.with(ObservableValueVoid.Instance)
+    }
+
+    terminate(): void {
+        this.input.terminate()
+    }
+}
+
+export class SmoothStepMotionEditor implements Editor<SmoothStepMotion> {
+    private readonly input0: NumericStepperInput
+    private readonly input1: NumericStepperInput
+
+    constructor(element: Element) {
+        this.input0 = new NumericStepperInput(
+            element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge0']"),
+            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent)
+        this.input1 = new NumericStepperInput(
+            element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge1']"),
+            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent)
+    }
+
+    with(value: SmoothStepMotion): void {
+        this.input0.with(value.edge0)
+        this.input1.with(value.edge1)
+    }
+
+    clear(): void {
+        this.input0.with(ObservableValueVoid.Instance)
+        this.input1.with(ObservableValueVoid.Instance)
+    }
+
+    terminate(): void {
+        this.input0.terminate()
+        this.input1.terminate()
+    }
+}
+
+export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
+    private readonly terminator: Terminator = new Terminator()
+    private readonly motionTypeValue: ObservableValue<MotionType> = this.terminator.with(new ObservableValueImpl(MotionTypes[0]))
+    private readonly typeSelectInput: SelectInput<MotionType>
+
+    private readonly powMotionEditor: PowMotionEditor
+    private readonly cShapeMotionEditor: CShapeMotionEditor
+    private readonly smoothStepMotionEditor: SmoothStepMotionEditor
+
+    // private readonly editTerminator: Terminator = new Terminator()
+    private editable: Option<ObservableValue<Motion<any>>> = Options.None
+    private subscription: Option<Terminable> = Options.None
+
+    constructor(private readonly editor: RotaryTrackEditor, private readonly element: Element) {
+        this.typeSelectInput = this.terminator.with(new SelectInput<MotionType>(element.querySelector("select[data-parameter='motion']"), MotionTypes))
+        this.typeSelectInput.with(this.motionTypeValue)
+
+        this.powMotionEditor = this.terminator.with(new PowMotionEditor(element))
+        this.cShapeMotionEditor = this.terminator.with(new CShapeMotionEditor(element))
+        this.smoothStepMotionEditor = this.terminator.with(new SmoothStepMotionEditor(element))
+
+        this.terminator.with(this.motionTypeValue.addObserver(motionType => this.editable.ifPresent(value => value.set(new motionType()))))
+    }
+
+    with(value: ObservableValue<Motion<any>>): void {
+        this.subscription.ifPresent(_ => _.terminate())
+        this.subscription = Options.None
+        this.editable = Options.valueOf(value)
+        this.subscription = Options.valueOf(value.addObserver(value => this.updateMotionType(value)))
+        this.updateMotionType(value.get())
+    }
+
+    clear(): void {
+        this.subscription.ifPresent(_ => _.terminate())
+        this.subscription = Options.None
+        this.editable = Options.None
+    }
+
+    terminate(): void {
+        this.terminator.terminate()
+    }
+
+    private updateMotionType(motion: Motion<any>): void {
+        const motionType: MotionType = motion.constructor as MotionType
+        console.log(`updateMotionType: ${motionType.name}`)
+        this.motionTypeValue.set(motionType)
+
+        if (motion instanceof LinearMotion) {
+            this.element.setAttribute("data-motion", "linear")
+            this.powMotionEditor.clear()
+            this.cShapeMotionEditor.clear()
+            this.smoothStepMotionEditor.clear()
+        } else if (motion instanceof PowMotion) {
+            this.element.setAttribute("data-motion", "pow")
+            this.powMotionEditor.with(motion)
+            this.cShapeMotionEditor.clear()
+            this.smoothStepMotionEditor.clear()
+        } else if (motion instanceof CShapeMotion) {
+            this.element.setAttribute("data-motion", "cshape")
+            this.powMotionEditor.clear()
+            this.cShapeMotionEditor.with(motion)
+            this.smoothStepMotionEditor.clear()
+        } else if (motion instanceof SmoothStepMotion) {
+            this.element.setAttribute("data-motion", "smoothstep")
+            this.powMotionEditor.clear()
+            this.cShapeMotionEditor.clear()
+            this.smoothStepMotionEditor.with(motion)
+        } else {
+            this.element.removeAttribute("data-motion")
+        }
+    }
 }
 
 export class RotaryTrackEditor implements Terminable {
@@ -26,109 +172,72 @@ export class RotaryTrackEditor implements Terminable {
     private readonly length: NumericStepperInput
     private readonly lengthRatio: NumericStepperInput
     private readonly fill: SelectInput<Fill>
-    private readonly motion: SelectInput<MotionType>
+    private readonly motion: MotionEditor
     private readonly rgb: NumericInput
     private readonly phaseOffset: NumericStepperInput
     private readonly frequency: NumericStepperInput
     private readonly reverse: Checkbox
 
-    private readonly editTerminator: Terminator = new Terminator()
-    private readonly editMotionType: ObservableValue<MotionType> = new ObservableValueImpl(MotionTypes[0])
-
     subject: Option<RotaryTrackModel> = Options.None
 
-    constructor(private readonly executor: RotaryTrackEditorExecutor, parentNode: ParentNode) {
-        this.segments = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"),
+    constructor(private readonly executor: RotaryTrackEditorExecutor, document: Document) {
+        this.segments = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='segments']"),
             PrintMapping.integer(""), NumericStepper.Integer))
-        this.width = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width']"),
+        this.width = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='width']"),
             PrintMapping.integer("px"), NumericStepper.Integer))
-        this.widthPadding = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width-padding']"),
+        this.widthPadding = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='width-padding']"),
             PrintMapping.integer("px"), NumericStepper.Integer))
-        this.length = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length']"),
+        this.length = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='length']"),
             PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
-        this.lengthRatio = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"),
+        this.lengthRatio = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='length-ratio']"),
             PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
-        this.fill = this.terminator.with(new SelectInput<Fill>(parentNode.querySelector("select[data-parameter='fill']"), Fills))
-        this.rgb = this.terminator.with(new NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB))
-        this.motion = this.terminator.with(new SelectInput<MotionType>(parentNode.querySelector("select[data-parameter='motion']"), MotionTypes))
-            .withValue(this.editMotionType)
-        this.phaseOffset = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"),
+        this.fill = this.terminator.with(new SelectInput<Fill>(document.querySelector("select[data-parameter='fill']"), Fills))
+        this.rgb = this.terminator.with(new NumericInput(document.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB))
+        this.motion = new MotionEditor(this, document.querySelector(".track-editor"))
+        this.phaseOffset = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='phase-offset']"),
             PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
-        this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"),
+        this.frequency = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='frequency']"),
             PrintMapping.integer("x"), NumericStepper.Integer))
-        this.reverse = this.terminator.with(new Checkbox(parentNode.querySelector("input[data-parameter='reverse']")))
+        this.reverse = this.terminator.with(new Checkbox(document.querySelector("input[data-parameter='reverse']")))
 
-        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
+        this.terminator.with(Dom.bindEventListener(document.querySelector("button.delete"), "click", event => {
             event.preventDefault()
             this.subject.ifPresent(() => executor.deleteTrack())
         }))
-        this.terminator.with(this.editMotionType.addObserver(motionType =>
-            this.subject.ifPresent(model => model.motion.set(new motionType()))))
     }
 
     edit(model: RotaryTrackModel): void {
-        this.editTerminator.terminate()
-
-        this.segments.withValue(model.segments)
-        this.width.withValue(model.width)
-        this.widthPadding.withValue(model.widthPadding)
-        this.length.withValue(model.length)
-        this.lengthRatio.withValue(model.lengthRatio)
-        this.fill.withValue(model.fill)
-        this.rgb.withValue(model.rgb)
-        this.phaseOffset.withValue(model.phaseOffset)
-        this.frequency.withValue(model.frequency)
-        this.reverse.withValue(model.reverse)
-
-        this.editTerminator.with({terminate: () => this.subject = Options.None})
-        this.editTerminator.with(model.motion.addObserver(() => this.updateMotionType(model)))
-        this.updateMotionType(model)
-
+        this.segments.with(model.segments)
+        this.width.with(model.width)
+        this.widthPadding.with(model.widthPadding)
+        this.length.with(model.length)
+        this.lengthRatio.with(model.lengthRatio)
+        this.fill.with(model.fill)
+        this.rgb.with(model.rgb)
+        this.motion.with(model.motion)
+        this.phaseOffset.with(model.phaseOffset)
+        this.frequency.with(model.frequency)
+        this.reverse.with(model.reverse)
         this.subject = Options.valueOf(model)
     }
 
     clear(): void {
-        this.editTerminator.terminate()
-        this.segments.withValue(ObservableValueVoid.Instance)
-        this.width.withValue(ObservableValueVoid.Instance)
-        this.widthPadding.withValue(ObservableValueVoid.Instance)
-        this.length.withValue(ObservableValueVoid.Instance)
-        this.lengthRatio.withValue(ObservableValueVoid.Instance)
-        this.fill.withValue(ObservableValueVoid.Instance)
-        this.rgb.withValue(ObservableValueVoid.Instance)
-        this.phaseOffset.withValue(ObservableValueVoid.Instance)
-        this.frequency.withValue(ObservableValueVoid.Instance)
-        this.reverse.withValue(ObservableValueVoid.Instance)
+        this.subject = Options.None
+        this.segments.clear()
+        this.width.clear()
+        this.widthPadding.clear()
+        this.length.clear()
+        this.lengthRatio.clear()
+        this.fill.clear()
+        this.rgb.clear()
+        this.motion.clear()
+        this.phaseOffset.clear()
+        this.frequency.clear()
+        this.reverse.clear()
     }
 
     terminate() {
+        this.clear()
         this.terminator.terminate()
-    }
-
-    private updateMotionType(model: RotaryTrackModel): void {
-        const motion = model.motion.get()
-        const motionType: MotionType = motion.constructor as MotionType
-        console.log(`updateMotionType: ${motionType.name}`)
-        this.editMotionType.set(motionType)
-
-        // TODO Update Motion Editor
-        switch (motionType) {
-            case LinearMotion: {
-                console.log("LinearMotion")
-                break
-            }
-            case PowMotion: {
-                console.log("PowMotion")
-                break
-            }
-            case CShapeMotion: {
-                console.log("CShapeMotion")
-                break
-            }
-            case SmoothStepMotion: {
-                console.log("SmoothStepMotion")
-                break
-            }
-        }
     }
 }

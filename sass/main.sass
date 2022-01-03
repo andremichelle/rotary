@@ -70,6 +70,12 @@ body
           column-gap: 32px
           border-radius: 2px
 
+          &[data-motion="linear"] [data-exclude="motion"]:not([data-motion="linear"]),
+          &[data-motion="pow"] [data-exclude="motion"]:not([data-motion="pow"]),
+          &[data-motion="cshape"] [data-exclude="motion"]:not([data-motion="cshape"]),
+          &[data-motion="smoothstep"] [data-exclude="motion"]:not([data-motion="smoothstep"])
+            display: none
+
       > .actions
         display: flex
 
@@ -107,7 +113,7 @@ body
 div.two-columns
   display: grid
   align-items: center
-  grid-template-columns: min-content min-content
+  grid-template-columns: 64px min-content
   row-gap: 6px
   column-gap: 8px
   line-height: $SIZE
@@ -121,14 +127,15 @@ div.two-columns
   > .empty
     grid-column: 1 / 3
 
-  > label
+  label
     white-space: nowrap
     color: rgba(white, 0.3)
+    text-align: right
 
     &.name
       padding-right: 4px
 
-  > fieldset.stepper
+  fieldset.stepper
     display: grid
     grid-template-columns: $SIZE auto 19px
     column-gap: 1px
@@ -158,5 +165,5 @@ div.two-columns
     > input[type=text]
       width: 64px
 
-  > select
+  select
     grid-column: 2 / 3

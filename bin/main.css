@@ -419,6 +419,9 @@ body main > .editing > .columns > .track-editor {
   column-gap: 32px;
   border-radius: 2px;
 }
+body main > .editing > .columns > .track-editor[data-motion=linear] [data-exclude=motion]:not([data-motion=linear]), body main > .editing > .columns > .track-editor[data-motion=pow] [data-exclude=motion]:not([data-motion=pow]), body main > .editing > .columns > .track-editor[data-motion=cshape] [data-exclude=motion]:not([data-motion=cshape]), body main > .editing > .columns > .track-editor[data-motion=smoothstep] [data-exclude=motion]:not([data-motion=smoothstep]) {
+  display: none;
+}
 body main > .editing > .actions {
   display: flex;
 }
@@ -457,7 +460,7 @@ body main > .editing > .preview .rotary label.size:after {
 div.two-columns {
   display: grid;
   align-items: center;
-  grid-template-columns: min-content min-content;
+  grid-template-columns: 64px min-content;
   row-gap: 6px;
   column-gap: 8px;
   line-height: 19px;
@@ -471,14 +474,15 @@ div.two-columns > * {
 div.two-columns > .empty {
   grid-column: 1/3;
 }
-div.two-columns > label {
+div.two-columns label {
   white-space: nowrap;
   color: rgba(255, 255, 255, 0.3);
+  text-align: right;
 }
-div.two-columns > label.name {
+div.two-columns label.name {
   padding-right: 4px;
 }
-div.two-columns > fieldset.stepper {
+div.two-columns fieldset.stepper {
   display: grid;
   grid-template-columns: 19px auto 19px;
   column-gap: 1px;
@@ -488,7 +492,7 @@ div.two-columns > fieldset.stepper {
   padding: 0;
   margin: 0;
 }
-div.two-columns > fieldset.stepper > button {
+div.two-columns fieldset.stepper > button {
   color: rgba(255, 255, 255, 0.2);
   font-size: 8px;
   font-family: "IBM Plex Sans", sans-serif;
@@ -499,16 +503,16 @@ div.two-columns > fieldset.stepper > button {
   padding: 0;
   border: none;
 }
-div.two-columns > fieldset.stepper > button:hover {
+div.two-columns fieldset.stepper > button:hover {
   color: rgba(255, 255, 255, 0.6);
 }
-div.two-columns > fieldset.stepper > button:active {
+div.two-columns fieldset.stepper > button:active {
   color: white;
 }
-div.two-columns > fieldset.stepper > input[type=text] {
+div.two-columns fieldset.stepper > input[type=text] {
   width: 64px;
 }
-div.two-columns > select {
+div.two-columns select {
   grid-column: 2/3;
 }
 

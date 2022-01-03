@@ -1034,12 +1034,14 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.observer = function () { return _this.update(); };
             this.init();
         }
-        Checkbox.prototype.withValue = function (value) {
+        Checkbox.prototype["with"] = function (value) {
             this.value.removeObserver(this.observer);
             this.value = value;
             this.value.addObserver(this.observer);
             this.update();
-            return this;
+        };
+        Checkbox.prototype.clear = function () {
+            this["with"](common_4.ObservableValueVoid.Instance);
         };
         Checkbox.prototype.init = function () {
             var _this = this;
@@ -1067,12 +1069,14 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.observer = function () { return _this.update(); };
             this.connect();
         }
-        SelectInput.prototype.withValue = function (value) {
+        SelectInput.prototype["with"] = function (value) {
             this.value.removeObserver(this.observer);
             this.value = value;
             this.value.addObserver(this.observer);
             this.update();
-            return this;
+        };
+        SelectInput.prototype.clear = function () {
+            this["with"](common_4.ObservableValueVoid.Instance);
         };
         SelectInput.prototype.terminate = function () {
             this.value.removeObserver(this.observer);
@@ -1114,12 +1118,14 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.input = this.parent.querySelector("input[type=text]");
             this.connect();
         }
-        NumericStepperInput.prototype.withValue = function (value) {
+        NumericStepperInput.prototype["with"] = function (value) {
             this.value.removeObserver(this.observer);
             this.value = value;
             this.value.addObserver(this.observer);
             this.update();
-            return this;
+        };
+        NumericStepperInput.prototype.clear = function () {
+            this["with"](common_4.ObservableValueVoid.Instance);
         };
         NumericStepperInput.prototype.connect = function () {
             var _this = this;
@@ -1201,12 +1207,14 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
             this.observer = function () { return _this.update(); };
             this.connect();
         }
-        NumericInput.prototype.withValue = function (value) {
+        NumericInput.prototype["with"] = function (value) {
             this.value.removeObserver(this.observer);
             this.value = value;
             this.value.addObserver(this.observer);
             this.update();
-            return this;
+        };
+        NumericInput.prototype.clear = function () {
+            this["with"](common_4.ObservableValueVoid.Instance);
         };
         NumericInput.prototype.connect = function () {
             var _this = this;
@@ -1268,91 +1276,178 @@ define("dom/inputs", ["require", "exports", "dom/common", "lib/common"], functio
 define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rotary/model", "dom/common", "lib/mapping", "rotary/motion"], function (require, exports, common_5, inputs_1, model_1, common_6, mapping_4, motion_2) {
     "use strict";
     exports.__esModule = true;
+    var PowMotionEditor = (function () {
+        function PowMotionEditor(element) {
+            this.input = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='pow'][data-parameter='exponent']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent);
+        }
+        PowMotionEditor.prototype["with"] = function (value) {
+            this.input["with"](value.exponent);
+        };
+        PowMotionEditor.prototype.clear = function () {
+            this.input["with"](common_5.ObservableValueVoid.Instance);
+        };
+        PowMotionEditor.prototype.terminate = function () {
+            this.input.terminate();
+        };
+        return PowMotionEditor;
+    }());
+    exports.PowMotionEditor = PowMotionEditor;
+    var CShapeMotionEditor = (function () {
+        function CShapeMotionEditor(element) {
+            this.input = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='cshape'][data-parameter='shape']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent);
+        }
+        CShapeMotionEditor.prototype["with"] = function (value) {
+            this.input["with"](value.shape);
+        };
+        CShapeMotionEditor.prototype.clear = function () {
+            this.input["with"](common_5.ObservableValueVoid.Instance);
+        };
+        CShapeMotionEditor.prototype.terminate = function () {
+            this.input.terminate();
+        };
+        return CShapeMotionEditor;
+    }());
+    exports.CShapeMotionEditor = CShapeMotionEditor;
+    var SmoothStepMotionEditor = (function () {
+        function SmoothStepMotionEditor(element) {
+            this.input0 = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge0']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent);
+            this.input1 = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge1']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent);
+        }
+        SmoothStepMotionEditor.prototype["with"] = function (value) {
+            this.input0["with"](value.edge0);
+            this.input1["with"](value.edge1);
+        };
+        SmoothStepMotionEditor.prototype.clear = function () {
+            this.input0["with"](common_5.ObservableValueVoid.Instance);
+            this.input1["with"](common_5.ObservableValueVoid.Instance);
+        };
+        SmoothStepMotionEditor.prototype.terminate = function () {
+            this.input0.terminate();
+            this.input1.terminate();
+        };
+        return SmoothStepMotionEditor;
+    }());
+    exports.SmoothStepMotionEditor = SmoothStepMotionEditor;
+    var MotionEditor = (function () {
+        function MotionEditor(editor, element) {
+            var _this = this;
+            this.editor = editor;
+            this.element = element;
+            this.terminator = new common_5.Terminator();
+            this.motionTypeValue = this.terminator["with"](new common_5.ObservableValueImpl(model_1.MotionTypes[0]));
+            this.editable = common_5.Options.None;
+            this.subscription = common_5.Options.None;
+            this.typeSelectInput = this.terminator["with"](new inputs_1.SelectInput(element.querySelector("select[data-parameter='motion']"), model_1.MotionTypes));
+            this.typeSelectInput["with"](this.motionTypeValue);
+            this.powMotionEditor = this.terminator["with"](new PowMotionEditor(element));
+            this.cShapeMotionEditor = this.terminator["with"](new CShapeMotionEditor(element));
+            this.smoothStepMotionEditor = this.terminator["with"](new SmoothStepMotionEditor(element));
+            this.terminator["with"](this.motionTypeValue.addObserver(function (motionType) { return _this.editable.ifPresent(function (value) { return value.set(new motionType()); }); }));
+        }
+        MotionEditor.prototype["with"] = function (value) {
+            var _this = this;
+            this.subscription.ifPresent(function (_) { return _.terminate(); });
+            this.subscription = common_5.Options.None;
+            this.editable = common_5.Options.valueOf(value);
+            this.subscription = common_5.Options.valueOf(value.addObserver(function (value) { return _this.updateMotionType(value); }));
+            this.updateMotionType(value.get());
+        };
+        MotionEditor.prototype.clear = function () {
+            this.subscription.ifPresent(function (_) { return _.terminate(); });
+            this.subscription = common_5.Options.None;
+            this.editable = common_5.Options.None;
+        };
+        MotionEditor.prototype.terminate = function () {
+            this.terminator.terminate();
+        };
+        MotionEditor.prototype.updateMotionType = function (motion) {
+            var motionType = motion.constructor;
+            console.log("updateMotionType: " + motionType.name);
+            this.motionTypeValue.set(motionType);
+            if (motion instanceof motion_2.LinearMotion) {
+                this.element.setAttribute("data-motion", "linear");
+                this.powMotionEditor.clear();
+                this.cShapeMotionEditor.clear();
+                this.smoothStepMotionEditor.clear();
+            }
+            else if (motion instanceof motion_2.PowMotion) {
+                this.element.setAttribute("data-motion", "pow");
+                this.powMotionEditor["with"](motion);
+                this.cShapeMotionEditor.clear();
+                this.smoothStepMotionEditor.clear();
+            }
+            else if (motion instanceof motion_2.CShapeMotion) {
+                this.element.setAttribute("data-motion", "cshape");
+                this.powMotionEditor.clear();
+                this.cShapeMotionEditor["with"](motion);
+                this.smoothStepMotionEditor.clear();
+            }
+            else if (motion instanceof motion_2.SmoothStepMotion) {
+                this.element.setAttribute("data-motion", "smoothstep");
+                this.powMotionEditor.clear();
+                this.cShapeMotionEditor.clear();
+                this.smoothStepMotionEditor["with"](motion);
+            }
+            else {
+                this.element.removeAttribute("data-motion");
+            }
+        };
+        return MotionEditor;
+    }());
+    exports.MotionEditor = MotionEditor;
     var RotaryTrackEditor = (function () {
-        function RotaryTrackEditor(executor, parentNode) {
+        function RotaryTrackEditor(executor, document) {
             var _this = this;
             this.executor = executor;
             this.terminator = new common_5.Terminator();
-            this.editTerminator = new common_5.Terminator();
-            this.editMotionType = new common_5.ObservableValueImpl(model_1.MotionTypes[0]);
             this.subject = common_5.Options.None;
-            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"), mapping_4.PrintMapping.integer(""), common_5.NumericStepper.Integer));
-            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
-            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width-padding']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
-            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
-            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
-            this.fill = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='fill']"), model_1.Fills));
-            this.rgb = this.terminator["with"](new inputs_1.NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), mapping_4.PrintMapping.RGB));
-            this.motion = this.terminator["with"](new inputs_1.SelectInput(parentNode.querySelector("select[data-parameter='motion']"), model_1.MotionTypes))
-                .withValue(this.editMotionType);
-            this.phaseOffset = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
-            this.frequency = this.terminator["with"](new inputs_1.NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"), mapping_4.PrintMapping.integer("x"), common_5.NumericStepper.Integer));
-            this.reverse = this.terminator["with"](new inputs_1.Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
-            this.terminator["with"](common_6.Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", function (event) {
+            this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='segments']"), mapping_4.PrintMapping.integer(""), common_5.NumericStepper.Integer));
+            this.width = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='width']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
+            this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='width-padding']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
+            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='length']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
+            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='length-ratio']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
+            this.fill = this.terminator["with"](new inputs_1.SelectInput(document.querySelector("select[data-parameter='fill']"), model_1.Fills));
+            this.rgb = this.terminator["with"](new inputs_1.NumericInput(document.querySelector("input[data-parameter='rgb']"), mapping_4.PrintMapping.RGB));
+            this.motion = new MotionEditor(this, document.querySelector(".track-editor"));
+            this.phaseOffset = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='phase-offset']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
+            this.frequency = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='frequency']"), mapping_4.PrintMapping.integer("x"), common_5.NumericStepper.Integer));
+            this.reverse = this.terminator["with"](new inputs_1.Checkbox(document.querySelector("input[data-parameter='reverse']")));
+            this.terminator["with"](common_6.Dom.bindEventListener(document.querySelector("button.delete"), "click", function (event) {
                 event.preventDefault();
                 _this.subject.ifPresent(function () { return executor.deleteTrack(); });
             }));
-            this.terminator["with"](this.editMotionType.addObserver(function (motionType) {
-                return _this.subject.ifPresent(function (model) { return model.motion.set(new motionType()); });
-            }));
         }
         RotaryTrackEditor.prototype.edit = function (model) {
-            var _this = this;
-            this.editTerminator.terminate();
-            this.segments.withValue(model.segments);
-            this.width.withValue(model.width);
-            this.widthPadding.withValue(model.widthPadding);
-            this.length.withValue(model.length);
-            this.lengthRatio.withValue(model.lengthRatio);
-            this.fill.withValue(model.fill);
-            this.rgb.withValue(model.rgb);
-            this.phaseOffset.withValue(model.phaseOffset);
-            this.frequency.withValue(model.frequency);
-            this.reverse.withValue(model.reverse);
-            this.editTerminator["with"]({ terminate: function () { return _this.subject = common_5.Options.None; } });
-            this.editTerminator["with"](model.motion.addObserver(function () { return _this.updateMotionType(model); }));
-            this.updateMotionType(model);
+            this.segments["with"](model.segments);
+            this.width["with"](model.width);
+            this.widthPadding["with"](model.widthPadding);
+            this.length["with"](model.length);
+            this.lengthRatio["with"](model.lengthRatio);
+            this.fill["with"](model.fill);
+            this.rgb["with"](model.rgb);
+            this.motion["with"](model.motion);
+            this.phaseOffset["with"](model.phaseOffset);
+            this.frequency["with"](model.frequency);
+            this.reverse["with"](model.reverse);
             this.subject = common_5.Options.valueOf(model);
         };
         RotaryTrackEditor.prototype.clear = function () {
-            this.editTerminator.terminate();
-            this.segments.withValue(common_5.ObservableValueVoid.Instance);
-            this.width.withValue(common_5.ObservableValueVoid.Instance);
-            this.widthPadding.withValue(common_5.ObservableValueVoid.Instance);
-            this.length.withValue(common_5.ObservableValueVoid.Instance);
-            this.lengthRatio.withValue(common_5.ObservableValueVoid.Instance);
-            this.fill.withValue(common_5.ObservableValueVoid.Instance);
-            this.rgb.withValue(common_5.ObservableValueVoid.Instance);
-            this.phaseOffset.withValue(common_5.ObservableValueVoid.Instance);
-            this.frequency.withValue(common_5.ObservableValueVoid.Instance);
-            this.reverse.withValue(common_5.ObservableValueVoid.Instance);
+            this.subject = common_5.Options.None;
+            this.segments.clear();
+            this.width.clear();
+            this.widthPadding.clear();
+            this.length.clear();
+            this.lengthRatio.clear();
+            this.fill.clear();
+            this.rgb.clear();
+            this.motion.clear();
+            this.phaseOffset.clear();
+            this.frequency.clear();
+            this.reverse.clear();
         };
         RotaryTrackEditor.prototype.terminate = function () {
+            this.clear();
             this.terminator.terminate();
-        };
-        RotaryTrackEditor.prototype.updateMotionType = function (model) {
-            var motion = model.motion.get();
-            var motionType = motion.constructor;
-            console.log("updateMotionType: " + motionType.name);
-            this.editMotionType.set(motionType);
-            switch (motionType) {
-                case motion_2.LinearMotion: {
-                    console.log("LinearMotion");
-                    break;
-                }
-                case motion_2.PowMotion: {
-                    console.log("PowMotion");
-                    break;
-                }
-                case motion_2.CShapeMotion: {
-                    console.log("CShapeMotion");
-                    break;
-                }
-                case motion_2.SmoothStepMotion: {
-                    console.log("SmoothStepMotion");
-                    break;
-                }
-            }
         };
         return RotaryTrackEditor;
     }());
@@ -1461,7 +1556,7 @@ define("rotary/ui", ["require", "exports", "lib/common", "dom/inputs", "rotary/e
             this.editor = new editor_1.RotaryTrackEditor(this, document);
             this.map = new Map();
             this.random = new math_2.Mulberry32(0x123abc456);
-            this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), mapping_5.PrintMapping.integer("px"), new common_8.NumericStepper(1))).withValue(model.radiusMin);
+            this.terminator["with"](new inputs_2.NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), mapping_5.PrintMapping.integer("px"), new common_8.NumericStepper(1)))["with"](model.radiusMin);
             this.terminator["with"](model.tracks.addObserver(function (event) {
                 switch (event.type) {
                     case common_8.CollectionEventType.Add: {

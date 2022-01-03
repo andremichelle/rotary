@@ -36,7 +36,7 @@
     </div>
     <div class="editing">
         <div class="columns">
-            <div class="track-editor">
+            <div class="track-editor" data-motion="linear">
                 <div class="two-columns">
                     <label class="name">segments</label>
                     <fieldset class="stepper" data-parameter="segments">
@@ -95,6 +95,31 @@
                     </fieldset>
                     <label class="name">color</label>
                     <input type="text" value="#FFFFFF" data-parameter="rgb">
+                    <div class="empty"></div>
+                    <label class="name" data-exclude="motion" data-motion="pow">exponent</label>
+                    <fieldset class="stepper" data-exclude="motion" data-motion="pow" data-parameter="exponent">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name" data-exclude="motion" data-motion="cshape">shape</label>
+                    <fieldset class="stepper" data-exclude="motion" data-motion="cshape" data-parameter="shape">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name" data-exclude="motion" data-motion="smoothstep">edge0</label>
+                    <fieldset class="stepper" data-exclude="motion" data-motion="smoothstep" data-parameter="edge0">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name" data-exclude="motion" data-motion="smoothstep">edge1</label>
+                    <fieldset class="stepper" data-exclude="motion" data-motion="smoothstep" data-parameter="edge1">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
                 </div>
             </div>
             <div class="actions">

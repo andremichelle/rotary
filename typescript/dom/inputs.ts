@@ -2,7 +2,13 @@ import {Dom} from "./common"
 import {NumericStepper, ObservableValue, ObservableValueVoid, Terminable, Terminator} from "../lib/common"
 import {PrintMapping} from "../lib/mapping"
 
-export class Checkbox implements Terminable {
+export interface Editor<T> extends Terminable {
+    with(value: T): void
+
+    clear(): void
+}
+
+export class Checkbox implements Editor<ObservableValue<boolean>> {
     private readonly terminator = new Terminator()
     private value: ObservableValue<boolean> = ObservableValueVoid.Instance
 
@@ -10,12 +16,15 @@ export class Checkbox implements Terminable {
         this.init()
     }
 
-    withValue(value: ObservableValue<boolean>): Checkbox {
+    with(value: ObservableValue<boolean>): void {
         this.value.removeObserver(this.observer)
         this.value = value
         this.value.addObserver(this.observer)
         this.update()
-        return this
+    }
+
+    clear(): void {
+        this.with(ObservableValueVoid.Instance)
     }
 
     init(): void {
@@ -35,11 +44,11 @@ export class Checkbox implements Terminable {
     private readonly observer = () => this.update()
 }
 
-export class SelectInput<T> implements Terminable {
+export class SelectInput<T> implements Editor<ObservableValue<T>> {
     private readonly terminator = new Terminator()
     private readonly options = new Map<T, HTMLOptionElement>()
     private readonly values: T[] = []
-    
+
     private value: ObservableValue<T> = ObservableValueVoid.Instance
 
     constructor(private readonly select: HTMLSelectElement,
@@ -47,12 +56,15 @@ export class SelectInput<T> implements Terminable {
         this.connect()
     }
 
-    withValue(value: ObservableValue<T>): SelectInput<T> {
+    with(value: ObservableValue<T>): void {
         this.value.removeObserver(this.observer)
         this.value = value
         this.value.addObserver(this.observer)
         this.update()
-        return this
+    }
+
+    clear(): void {
+        this.with(ObservableValueVoid.Instance)
     }
 
     terminate() {
@@ -82,7 +94,7 @@ export class SelectInput<T> implements Terminable {
     }
 }
 
-export class NumericStepperInput implements Terminable {
+export class NumericStepperInput implements Editor<ObservableValue<number>> {
     private readonly terminator: Terminator = new Terminator()
     private value: ObservableValue<number> = ObservableValueVoid.Instance
     private readonly decreaseButton: HTMLButtonElement
@@ -99,12 +111,15 @@ export class NumericStepperInput implements Terminable {
         this.connect()
     }
 
-    withValue(value: ObservableValue<number>): NumericStepperInput {
+    with(value: ObservableValue<number>): void {
         this.value.removeObserver(this.observer)
         this.value = value
         this.value.addObserver(this.observer)
         this.update()
-        return this
+    }
+
+    clear(): void {
+        this.with(ObservableValueVoid.Instance)
     }
 
     connect() {
@@ -177,7 +192,7 @@ export class NumericStepperInput implements Terminable {
     private readonly observer = () => this.update()
 }
 
-export class NumericInput implements Terminable {
+export class NumericInput implements Editor<ObservableValue<number>> {
     private readonly terminator: Terminator = new Terminator()
     private value: ObservableValue<number> = ObservableValueVoid.Instance
 
@@ -186,12 +201,15 @@ export class NumericInput implements Terminable {
         this.connect()
     }
 
-    withValue(value: ObservableValue<number>): NumericInput {
+    with(value: ObservableValue<number>): void {
         this.value.removeObserver(this.observer)
         this.value = value
         this.value.addObserver(this.observer)
         this.update()
-        return this
+    }
+
+    clear(): void {
+        this.with(ObservableValueVoid.Instance)
     }
 
     connect() {

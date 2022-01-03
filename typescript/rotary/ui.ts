@@ -19,7 +19,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
                 private readonly model: RotaryModel,
                 private readonly renderer: RotaryRenderer) {
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"),
-            PrintMapping.integer("px"), new NumericStepper(1))).withValue(model.radiusMin)
+            PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin)
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
             switch (event.type) {
                 case CollectionEventType.Add: {
