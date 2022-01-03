@@ -182,18 +182,26 @@ export class PrintMapping<Y> {
         }
     }, value => value.toString(16).padStart(6, "0").toUpperCase(), "#", "")
 
-    constructor(private readonly parser: Parser<Y>,
-                private readonly printer: Printer<Y>,
-                private readonly preUnit = "",
-                private readonly postUnit = "") {
-    }
-
     static integer(postUnit: string): PrintMapping<number> {
         return new PrintMapping(text => {
             const value = parseInt(text, 10)
             if (isNaN(value)) return null
             return value | 0
         }, value => String(value), "", postUnit)
+    }
+
+    static float(numPrecision: number, preUnit: string, postUnit: string): PrintMapping<number> {
+        return new PrintMapping(text => {
+            const value = parseFloat(text)
+            if (isNaN(value)) return null
+            return value | 0
+        }, value => value.toFixed(numPrecision), preUnit, postUnit)
+    }
+
+    constructor(private readonly parser: Parser<Y>,
+                private readonly printer: Printer<Y>,
+                private readonly preUnit = "",
+                private readonly postUnit = "") {
     }
 
     parse(text: string): Y | null {

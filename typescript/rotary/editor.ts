@@ -24,7 +24,7 @@ export class PowMotionEditor implements Editor<PowMotion> {
     constructor(element: Element) {
         this.input = new NumericStepperInput(
             element.querySelector("fieldset[data-motion='pow'][data-parameter='exponent']"),
-            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent)
+            PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth)
     }
 
     with(value: PowMotion): void {
@@ -45,12 +45,12 @@ export class CShapeMotionEditor implements Editor<CShapeMotion> {
 
     constructor(element: Element) {
         this.input = new NumericStepperInput(
-            element.querySelector("fieldset[data-motion='cshape'][data-parameter='shape']"),
-            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent)
+            element.querySelector("fieldset[data-motion='cshape'][data-parameter='slope']"),
+            PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
     }
 
     with(value: CShapeMotion): void {
-        this.input.with(value.shape)
+        this.input.with(value.slope)
     }
 
     clear(): void {
@@ -69,10 +69,10 @@ export class SmoothStepMotionEditor implements Editor<SmoothStepMotion> {
     constructor(element: Element) {
         this.input0 = new NumericStepperInput(
             element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge0']"),
-            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent)
+            PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
         this.input1 = new NumericStepperInput(
             element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge1']"),
-            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent)
+            PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
     }
 
     with(value: SmoothStepMotion): void {
@@ -100,7 +100,6 @@ export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
     private readonly cShapeMotionEditor: CShapeMotionEditor
     private readonly smoothStepMotionEditor: SmoothStepMotionEditor
 
-    // private readonly editTerminator: Terminator = new Terminator()
     private editable: Option<ObservableValue<Motion<any>>> = Options.None
     private subscription: Option<Terminable> = Options.None
 
@@ -117,16 +116,21 @@ export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
 
     with(value: ObservableValue<Motion<any>>): void {
         this.subscription.ifPresent(_ => _.terminate())
-        this.subscription = Options.None
-        this.editable = Options.valueOf(value)
+        this.editable = Options.None
         this.subscription = Options.valueOf(value.addObserver(value => this.updateMotionType(value)))
         this.updateMotionType(value.get())
+        this.editable = Options.valueOf(value)
     }
 
     clear(): void {
         this.subscription.ifPresent(_ => _.terminate())
         this.subscription = Options.None
         this.editable = Options.None
+
+        this.element.removeAttribute("data-motion")
+        this.powMotionEditor.clear()
+        this.cShapeMotionEditor.clear()
+        this.smoothStepMotionEditor.clear()
     }
 
     terminate(): void {
@@ -135,9 +139,7 @@ export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
 
     private updateMotionType(motion: Motion<any>): void {
         const motionType: MotionType = motion.constructor as MotionType
-        console.log(`updateMotionType: ${motionType.name}`)
         this.motionTypeValue.set(motionType)
-
         if (motion instanceof LinearMotion) {
             this.element.setAttribute("data-motion", "linear")
             this.powMotionEditor.clear()
@@ -158,8 +160,6 @@ export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
             this.powMotionEditor.clear()
             this.cShapeMotionEditor.clear()
             this.smoothStepMotionEditor.with(motion)
-        } else {
-            this.element.removeAttribute("data-motion")
         }
     }
 }
@@ -188,14 +188,14 @@ export class RotaryTrackEditor implements Terminable {
         this.widthPadding = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='width-padding']"),
             PrintMapping.integer("px"), NumericStepper.Integer))
         this.length = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='length']"),
-            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
+            PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
         this.lengthRatio = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='length-ratio']"),
-            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
+            PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
         this.fill = this.terminator.with(new SelectInput<Fill>(document.querySelector("select[data-parameter='fill']"), Fills))
         this.rgb = this.terminator.with(new NumericInput(document.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB))
         this.motion = new MotionEditor(this, document.querySelector(".track-editor"))
         this.phaseOffset = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='phase-offset']"),
-            PrintMapping.UnipolarPercent, NumericStepper.FloatPercent))
+            PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
         this.frequency = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='frequency']"),
             PrintMapping.integer("x"), NumericStepper.Integer))
         this.reverse = this.terminator.with(new Checkbox(document.querySelector("input[data-parameter='reverse']")))

@@ -287,7 +287,7 @@ export interface Stepper {
 
 export class NumericStepper implements Stepper {
     static Integer = new NumericStepper(1)
-    static FloatPercent = new NumericStepper(0.01)
+    static Hundredth = new NumericStepper(0.01)
 
     constructor(private readonly step: number = 1) {
     }

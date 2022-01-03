@@ -88,8 +88,9 @@ declare module "lib/mapping" {
         private readonly postUnit;
         static UnipolarPercent: PrintMapping<number>;
         static RGB: PrintMapping<number>;
-        constructor(parser: Parser<Y>, printer: Printer<Y>, preUnit?: string, postUnit?: string);
         static integer(postUnit: string): PrintMapping<number>;
+        static float(numPrecision: number, preUnit: string, postUnit: string): PrintMapping<number>;
+        constructor(parser: Parser<Y>, printer: Printer<Y>, preUnit?: string, postUnit?: string);
         parse(text: string): Y | null;
         print(value: Y): string;
     }
@@ -216,7 +217,7 @@ declare module "lib/common" {
     export class NumericStepper implements Stepper {
         private readonly step;
         static Integer: NumericStepper;
-        static FloatPercent: NumericStepper;
+        static Hundredth: NumericStepper;
         constructor(step?: number);
         decrease(value: ObservableValue<number>): void;
         increase(value: ObservableValue<number>): void;
@@ -264,6 +265,7 @@ declare module "rotary/motion" {
         abstract map(x: number): number;
         abstract deserialize(format: MotionFormat<DATA>): Motion<DATA>;
         abstract serialize(): MotionFormat<DATA>;
+        abstract copy(): Motion<DATA>;
         abstract randomize(random: Random): Motion<DATA>;
         pack(data: DATA): MotionFormat<DATA>;
         unpack(format: MotionFormat<DATA>): DATA;
@@ -273,6 +275,7 @@ declare module "rotary/motion" {
         map(x: number): number;
         serialize(): MotionFormat<never>;
         deserialize(format: MotionFormat<never>): LinearMotion;
+        copy(): LinearMotion;
         randomize(random: Random): Motion<never>;
     }
     interface PowData {
@@ -284,20 +287,22 @@ declare module "rotary/motion" {
         map(x: number): number;
         serialize(): MotionFormat<PowData>;
         deserialize(format: MotionFormat<PowData>): PowMotion;
+        copy(): PowMotion;
         randomize(random: Random): Motion<PowData>;
     }
     interface CShapeData {
-        shape: number;
+        slope: number;
     }
     export class CShapeMotion extends Motion<CShapeData> {
         private readonly range;
-        readonly shape: BoundNumericValue;
+        readonly slope: BoundNumericValue;
         private o;
         private c;
         constructor();
         map(x: number): number;
         serialize(): MotionFormat<CShapeData>;
         deserialize(format: MotionFormat<CShapeData>): CShapeMotion;
+        copy(): CShapeMotion;
         randomize(random: Random): Motion<CShapeData>;
         private update;
     }
@@ -312,6 +317,7 @@ declare module "rotary/motion" {
         map(x: number): number;
         deserialize(format: MotionFormat<SmoothStepData>): SmoothStepMotion;
         serialize(): MotionFormat<SmoothStepData>;
+        copy(): SmoothStepMotion;
         randomize(random: Random): Motion<SmoothStepData>;
     }
 }

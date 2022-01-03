@@ -38,6 +38,8 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
 
     abstract serialize(): MotionFormat<DATA>
 
+    abstract copy(): Motion<DATA>
+
     abstract randomize(random: Random): Motion<DATA>
 
     pack(data: DATA): MotionFormat<DATA> {
@@ -71,6 +73,10 @@ export class LinearMotion extends Motion<never> {
         return this
     }
 
+    copy(): LinearMotion {
+        return new LinearMotion()
+    }
+
     randomize(random: Random): Motion<never> {
         return this
     }
@@ -98,6 +104,12 @@ export class PowMotion extends Motion<PowData> {
         return this
     }
 
+    copy(): PowMotion {
+        const motion = new PowMotion()
+        motion.exponent.set(this.exponent.get())
+        return motion
+    }
+
     randomize(random: Random): Motion<PowData> {
         this.exponent.set(random.nextDouble(this.range.min, this.range.max))
         return this
@@ -105,20 +117,20 @@ export class PowMotion extends Motion<PowData> {
 }
 
 declare interface CShapeData {
-    shape: number
+    slope: number
 }
 
 export class CShapeMotion extends Motion<CShapeData> {
-    private readonly range = new Linear(0.0, 4.0)
+    private readonly range = new Linear(0.0, 8.0)
 
-    readonly shape = this.terminator.with(new BoundNumericValue(this.range, 1.0))
+    readonly slope = this.terminator.with(new BoundNumericValue(this.range, 1.0))
 
     private o: number
     private c: number
 
     constructor() {
         super()
-        this.terminator.with(this.shape.addObserver(() => this.update()))
+        this.terminator.with(this.slope.addObserver(() => this.update()))
         this.update()
     }
 
@@ -128,21 +140,27 @@ export class CShapeMotion extends Motion<CShapeData> {
     }
 
     serialize(): MotionFormat<CShapeData> {
-        return super.pack({shape: this.shape.get()})
+        return super.pack({slope: this.slope.get()})
     }
 
     deserialize(format: MotionFormat<CShapeData>): CShapeMotion {
-        this.shape.set(super.unpack(format).shape)
+        this.slope.set(super.unpack(format).slope)
         return this
     }
 
+    copy(): CShapeMotion {
+        const motion = new CShapeMotion()
+        motion.slope.set(this.slope.get())
+        return motion
+    }
+
     randomize(random: Random): Motion<CShapeData> {
-        this.shape.set(random.nextDouble(this.range.min, this.range.max))
+        this.slope.set(random.nextDouble(this.range.min, this.range.max))
         return this
     }
 
     private update(): void {
-        this.o = Math.pow(2.0, this.shape.get())
+        this.o = Math.pow(2.0, this.slope.get())
         this.c = Math.pow(2.0, this.o - 1)
     }
 }
@@ -173,6 +191,13 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
 
     serialize(): MotionFormat<SmoothStepData> {
         return super.pack({edge0: this.edge0.get(), edge1: this.edge1.get()})
+    }
+
+    copy(): SmoothStepMotion {
+        const motion = new SmoothStepMotion()
+        motion.edge0.set(this.edge0.get())
+        motion.edge1.set(this.edge1.get())
+        return motion
     }
 
     randomize(random: Random): Motion<SmoothStepData> {

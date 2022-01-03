@@ -238,6 +238,14 @@ define("lib/mapping", ["require", "exports"], function (require, exports) {
                 return value | 0;
             }, function (value) { return String(value); }, "", postUnit);
         };
+        PrintMapping.float = function (numPrecision, preUnit, postUnit) {
+            return new PrintMapping(function (text) {
+                var value = parseFloat(text);
+                if (isNaN(value))
+                    return null;
+                return value | 0;
+            }, function (value) { return value.toFixed(numPrecision); }, preUnit, postUnit);
+        };
         PrintMapping.prototype.parse = function (text) {
             return this.parser(text.replace(this.preUnit, "").replace(this.postUnit, ""));
         };
@@ -517,7 +525,7 @@ define("lib/common", ["require", "exports", "lib/mapping"], function (require, e
             value.set(Math.round((value.get() + this.step) / this.step) * this.step);
         };
         NumericStepper.Integer = new NumericStepper(1);
-        NumericStepper.FloatPercent = new NumericStepper(0.01);
+        NumericStepper.Hundredth = new NumericStepper(0.01);
         return NumericStepper;
     }());
     exports.NumericStepper = NumericStepper;
@@ -682,6 +690,9 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             _super.prototype.unpack.call(this, format);
             return this;
         };
+        LinearMotion.prototype.copy = function () {
+            return new LinearMotion();
+        };
         LinearMotion.prototype.randomize = function (random) {
             return this;
         };
@@ -706,6 +717,11 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             this.exponent.set(_super.prototype.unpack.call(this, format).exponent);
             return this;
         };
+        PowMotion.prototype.copy = function () {
+            var motion = new PowMotion();
+            motion.exponent.set(this.exponent.get());
+            return motion;
+        };
         PowMotion.prototype.randomize = function (random) {
             this.exponent.set(random.nextDouble(this.range.min, this.range.max));
             return this;
@@ -717,9 +733,9 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         __extends(CShapeMotion, _super);
         function CShapeMotion() {
             var _this = _super.call(this) || this;
-            _this.range = new mapping_2.Linear(0.0, 4.0);
-            _this.shape = _this.terminator["with"](new common_1.BoundNumericValue(_this.range, 1.0));
-            _this.terminator["with"](_this.shape.addObserver(function () { return _this.update(); }));
+            _this.range = new mapping_2.Linear(0.0, 8.0);
+            _this.slope = _this.terminator["with"](new common_1.BoundNumericValue(_this.range, 1.0));
+            _this.terminator["with"](_this.slope.addObserver(function () { return _this.update(); }));
             _this.update();
             return _this;
         }
@@ -727,18 +743,23 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
             return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5;
         };
         CShapeMotion.prototype.serialize = function () {
-            return _super.prototype.pack.call(this, { shape: this.shape.get() });
+            return _super.prototype.pack.call(this, { slope: this.slope.get() });
         };
         CShapeMotion.prototype.deserialize = function (format) {
-            this.shape.set(_super.prototype.unpack.call(this, format).shape);
+            this.slope.set(_super.prototype.unpack.call(this, format).slope);
             return this;
         };
+        CShapeMotion.prototype.copy = function () {
+            var motion = new CShapeMotion();
+            motion.slope.set(this.slope.get());
+            return motion;
+        };
         CShapeMotion.prototype.randomize = function (random) {
-            this.shape.set(random.nextDouble(this.range.min, this.range.max));
+            this.slope.set(random.nextDouble(this.range.min, this.range.max));
             return this;
         };
         CShapeMotion.prototype.update = function () {
-            this.o = Math.pow(2.0, this.shape.get());
+            this.o = Math.pow(2.0, this.slope.get());
             this.c = Math.pow(2.0, this.o - 1);
         };
         return CShapeMotion;
@@ -763,6 +784,12 @@ define("rotary/motion", ["require", "exports", "lib/common", "lib/mapping", "lib
         };
         SmoothStepMotion.prototype.serialize = function () {
             return _super.prototype.pack.call(this, { edge0: this.edge0.get(), edge1: this.edge1.get() });
+        };
+        SmoothStepMotion.prototype.copy = function () {
+            var motion = new SmoothStepMotion();
+            motion.edge0.set(this.edge0.get());
+            motion.edge1.set(this.edge1.get());
+            return motion;
         };
         SmoothStepMotion.prototype.randomize = function (random) {
             var limit = random.nextDouble(0.0, 1.0);
@@ -825,7 +852,7 @@ define("rotary/model", ["require", "exports", "lib/common", "lib/mapping", "rota
             copy.lengthRatio.set(source.lengthRatio.get());
             copy.width.set(source.width.get());
             copy.widthPadding.set(source.widthPadding.get());
-            copy.motion.set(source.motion.get());
+            copy.motion.set(source.motion.get().copy());
             return copy;
         };
         RotaryModel.prototype.removeTrack = function (track) {
@@ -1278,7 +1305,7 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
     exports.__esModule = true;
     var PowMotionEditor = (function () {
         function PowMotionEditor(element) {
-            this.input = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='pow'][data-parameter='exponent']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent);
+            this.input = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='pow'][data-parameter='exponent']"), mapping_4.PrintMapping.float(2, "x^", ""), common_5.NumericStepper.Hundredth);
         }
         PowMotionEditor.prototype["with"] = function (value) {
             this.input["with"](value.exponent);
@@ -1294,10 +1321,10 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
     exports.PowMotionEditor = PowMotionEditor;
     var CShapeMotionEditor = (function () {
         function CShapeMotionEditor(element) {
-            this.input = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='cshape'][data-parameter='shape']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent);
+            this.input = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='cshape'][data-parameter='slope']"), mapping_4.PrintMapping.float(2, "", ""), common_5.NumericStepper.Hundredth);
         }
         CShapeMotionEditor.prototype["with"] = function (value) {
-            this.input["with"](value.shape);
+            this.input["with"](value.slope);
         };
         CShapeMotionEditor.prototype.clear = function () {
             this.input["with"](common_5.ObservableValueVoid.Instance);
@@ -1310,8 +1337,8 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
     exports.CShapeMotionEditor = CShapeMotionEditor;
     var SmoothStepMotionEditor = (function () {
         function SmoothStepMotionEditor(element) {
-            this.input0 = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge0']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent);
-            this.input1 = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge1']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent);
+            this.input0 = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge0']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.Hundredth);
+            this.input1 = new inputs_1.NumericStepperInput(element.querySelector("fieldset[data-motion='smoothstep'][data-parameter='edge1']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.Hundredth);
         }
         SmoothStepMotionEditor.prototype["with"] = function (value) {
             this.input0["with"](value.edge0);
@@ -1347,22 +1374,25 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
         MotionEditor.prototype["with"] = function (value) {
             var _this = this;
             this.subscription.ifPresent(function (_) { return _.terminate(); });
-            this.subscription = common_5.Options.None;
-            this.editable = common_5.Options.valueOf(value);
+            this.editable = common_5.Options.None;
             this.subscription = common_5.Options.valueOf(value.addObserver(function (value) { return _this.updateMotionType(value); }));
             this.updateMotionType(value.get());
+            this.editable = common_5.Options.valueOf(value);
         };
         MotionEditor.prototype.clear = function () {
             this.subscription.ifPresent(function (_) { return _.terminate(); });
             this.subscription = common_5.Options.None;
             this.editable = common_5.Options.None;
+            this.element.removeAttribute("data-motion");
+            this.powMotionEditor.clear();
+            this.cShapeMotionEditor.clear();
+            this.smoothStepMotionEditor.clear();
         };
         MotionEditor.prototype.terminate = function () {
             this.terminator.terminate();
         };
         MotionEditor.prototype.updateMotionType = function (motion) {
             var motionType = motion.constructor;
-            console.log("updateMotionType: " + motionType.name);
             this.motionTypeValue.set(motionType);
             if (motion instanceof motion_2.LinearMotion) {
                 this.element.setAttribute("data-motion", "linear");
@@ -1388,9 +1418,6 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
                 this.cShapeMotionEditor.clear();
                 this.smoothStepMotionEditor["with"](motion);
             }
-            else {
-                this.element.removeAttribute("data-motion");
-            }
         };
         return MotionEditor;
     }());
@@ -1404,12 +1431,12 @@ define("rotary/editor", ["require", "exports", "lib/common", "dom/inputs", "rota
             this.segments = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='segments']"), mapping_4.PrintMapping.integer(""), common_5.NumericStepper.Integer));
             this.width = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='width']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
             this.widthPadding = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='width-padding']"), mapping_4.PrintMapping.integer("px"), common_5.NumericStepper.Integer));
-            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='length']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
-            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='length-ratio']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
+            this.length = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='length']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.Hundredth));
+            this.lengthRatio = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='length-ratio']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.Hundredth));
             this.fill = this.terminator["with"](new inputs_1.SelectInput(document.querySelector("select[data-parameter='fill']"), model_1.Fills));
             this.rgb = this.terminator["with"](new inputs_1.NumericInput(document.querySelector("input[data-parameter='rgb']"), mapping_4.PrintMapping.RGB));
             this.motion = new MotionEditor(this, document.querySelector(".track-editor"));
-            this.phaseOffset = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='phase-offset']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.FloatPercent));
+            this.phaseOffset = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='phase-offset']"), mapping_4.PrintMapping.UnipolarPercent, common_5.NumericStepper.Hundredth));
             this.frequency = this.terminator["with"](new inputs_1.NumericStepperInput(document.querySelector("fieldset[data-parameter='frequency']"), mapping_4.PrintMapping.integer("x"), common_5.NumericStepper.Integer));
             this.reverse = this.terminator["with"](new inputs_1.Checkbox(document.querySelector("input[data-parameter='reverse']")));
             this.terminator["with"](common_6.Dom.bindEventListener(document.querySelector("button.delete"), "click", function (event) {

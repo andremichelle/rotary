@@ -79,7 +79,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         copy.lengthRatio.set(source.lengthRatio.get())
         copy.width.set(source.width.get())
         copy.widthPadding.set(source.widthPadding.get())
-        copy.motion.set(source.motion.get())
+        copy.motion.set(source.motion.get().copy())
         return copy
     }
 
