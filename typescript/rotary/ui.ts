@@ -1,11 +1,10 @@
-import {CollectionEvent, CollectionEventType, NumericStepper, Terminable, Terminator} from "../lib/common"
-import {RotaryModel, RotaryTrackModel} from "./model"
-import {NumericStepperInput} from "../dom/inputs"
-import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor"
-import {Dom} from "../dom/common"
-import {RotaryRenderer} from "./render"
-import {Mulberry32, Random} from "../lib/math"
-import {PrintMapping} from "../lib/mapping"
+import {CollectionEvent, CollectionEventType, Terminable, Terminator} from "../lib/common.js"
+import {RotaryModel, RotaryTrackModel} from "./model.js"
+import {NumericStepperInput} from "../dom/inputs.js"
+import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor.js"
+import {Dom, PrintMapping, NumericStepper} from "../dom/common.js"
+import {RotaryRenderer} from "./render.js"
+import {Mulberry32, Random} from "../lib/math.js"
 
 export class RotaryUI implements RotaryTrackEditorExecutor {
     private readonly terminator: Terminator = new Terminator()

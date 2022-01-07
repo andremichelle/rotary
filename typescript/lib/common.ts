@@ -1,5 +1,5 @@
-import {Random} from "./math"
-import {Linear, Range, ValueMapping} from "./mapping"
+import {Random} from "./math.js"
+import {Linear, Range, ValueMapping} from "./mapping.js"
 
 export const TAU = Math.PI * 2.0
 
@@ -276,28 +276,6 @@ export class ObservableValueImpl<T> implements ObservableValue<T> {
 
     terminate(): void {
         this.observable.terminate()
-    }
-}
-
-export interface Stepper {
-    decrease(value: ObservableValue<number>): void
-
-    increase(value: ObservableValue<number>): void
-}
-
-export class NumericStepper implements Stepper {
-    static Integer = new NumericStepper(1)
-    static Hundredth = new NumericStepper(0.01)
-
-    constructor(private readonly step: number = 1) {
-    }
-
-    decrease(value: ObservableValue<number>): void {
-        value.set(Math.round((value.get() - this.step) / this.step) * this.step)
-    }
-
-    increase(value: ObservableValue<number>): void {
-        value.set(Math.round((value.get() + this.step) / this.step) * this.step)
     }
 }
 

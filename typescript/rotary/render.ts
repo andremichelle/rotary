@@ -1,5 +1,5 @@
-import {Fill, RotaryModel, RotaryTrackModel} from "./model"
-import {TAU} from "../lib/common"
+import {TAU} from "../lib/common.js"
+import {Fill, RotaryModel, RotaryTrackModel} from "./model.js"
 
 export class RotaryRenderer {
     private highlight: RotaryTrackModel = null

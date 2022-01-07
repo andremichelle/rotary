@@ -1,6 +1,6 @@
-import {BoundNumericValue, Serializer, Terminable, Terminator} from "../lib/common"
-import {Linear} from "../lib/mapping"
-import {Random, SmoothStep} from "../lib/math"
+import {BoundNumericValue, Serializer, Terminable, Terminator} from "../lib/common.js"
+import {Linear} from "../lib/mapping.js"
+import {Random, SmoothStep} from "../lib/math.js"
 
 type Data = PowData | CShapeData | SmoothStepData
 

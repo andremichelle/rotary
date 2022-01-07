@@ -1,3 +1,25 @@
+interface AudioWorkletProcessor {
+    port: MessagePort
+}
+
+interface AudioParamDescriptor {
+    defaultValue?: number
+    maxValue?: number
+    minValue?: number
+    name: string
+}
+
+declare var AudioWorkletProcessor: {
+    prototype: AudioWorkletProcessor
+    port: MessagePort
+    new(option?: any): AudioWorkletProcessor
+    process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: { [name: string]: Float32Array }): boolean
+}
+
+declare var sampleRate: number
+declare var currentTime: number
+declare function registerProcessor<T extends AudioWorkletProcessor>(name: string, processorCtor: T): void
+
 // noinspection JSUnusedGlobalSymbols
 
 declare interface CanvasFillStrokeStyles {

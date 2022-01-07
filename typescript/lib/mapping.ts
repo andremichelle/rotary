@@ -94,11 +94,11 @@ export class Exp implements ValueMapping<number>, Range {
 }
 
 export class Boolean implements ValueMapping<boolean> {
-    x(y) {
+    x(y: boolean): number {
         return y ? 1.0 : 0.0
     }
 
-    y(x) {
+    y(x: number): boolean {
         return x >= 0.5
     }
 
@@ -137,7 +137,7 @@ export class Volume implements ValueMapping<number>, Range {
         this.c = -tmp1 / tmp0
     }
 
-    y(x) {
+    y(x: number): number {
         if (0.0 >= x) {
             return Number.NEGATIVE_INFINITY // in order to get a true zero gain
         }
@@ -147,7 +147,7 @@ export class Volume implements ValueMapping<number>, Range {
         return this.a - this.b / (x + this.c)
     }
 
-    x(y) {
+    x(y: number): number {
         if (this.min >= y) {
             return 0.0
         }
@@ -159,56 +159,5 @@ export class Volume implements ValueMapping<number>, Range {
 
     clamp(y: number): number {
         return Math.min(this.max, Math.max(this.min, y))
-    }
-}
-
-export type Parser<Y> = (text: string) => Y | null
-export type Printer<Y> = (value: Y) => string
-
-export class PrintMapping<Y> {
-    static UnipolarPercent = new PrintMapping(text => {
-        const value = parseFloat(text)
-        if (isNaN(value)) return null
-        return value / 100.0
-    }, value => (value * 100.0).toFixed(1), "", "%")
-    static RGB = new PrintMapping<number>(text => {
-        if (3 === text.length) {
-            text = text.charAt(0) + text.charAt(0) + text.charAt(1) + text.charAt(1) + text.charAt(2) + text.charAt(2)
-        }
-        if (6 === text.length) {
-            return parseInt(text, 16)
-        } else {
-            return null
-        }
-    }, value => value.toString(16).padStart(6, "0").toUpperCase(), "#", "")
-
-    static integer(postUnit: string): PrintMapping<number> {
-        return new PrintMapping(text => {
-            const value = parseInt(text, 10)
-            if (isNaN(value)) return null
-            return value | 0
-        }, value => String(value), "", postUnit)
-    }
-
-    static float(numPrecision: number, preUnit: string, postUnit: string): PrintMapping<number> {
-        return new PrintMapping(text => {
-            const value = parseFloat(text)
-            if (isNaN(value)) return null
-            return value | 0
-        }, value => value.toFixed(numPrecision), preUnit, postUnit)
-    }
-
-    constructor(private readonly parser: Parser<Y>,
-                private readonly printer: Printer<Y>,
-                private readonly preUnit = "",
-                private readonly postUnit = "") {
-    }
-
-    parse(text: string): Y | null {
-        return this.parser(text.replace(this.preUnit, "").replace(this.postUnit, ""))
-    }
-
-    print(value: Y): string {
-        return undefined === value ? "" : `${this.preUnit}${this.printer(value)}${this.postUnit}`
     }
 }

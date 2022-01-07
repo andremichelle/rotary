@@ -5,10 +5,10 @@ import {
     Serializer,
     Terminable,
     Terminator
-} from "../lib/common"
-import {Random} from "../lib/math"
-import {Linear, LinearInteger} from "../lib/mapping"
-import {CShapeMotion, LinearMotion, Motion, MotionFormat, MotionType, PowMotion, SmoothStepMotion} from "./motion"
+} from "../lib/common.js"
+import {Random} from "../lib/math.js"
+import {Linear, LinearInteger} from "../lib/mapping.js"
+import {CShapeMotion, LinearMotion, Motion, MotionFormat, MotionType, PowMotion, SmoothStepMotion} from "./motion.js"
 
 declare interface RotaryFormat {
     radiusMin: number

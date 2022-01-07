@@ -1,6 +1,5 @@
-import {Dom} from "./common"
-import {NumericStepper, ObservableValue, ObservableValueVoid, Terminable, Terminator} from "../lib/common"
-import {PrintMapping} from "../lib/mapping"
+import {Dom, NumericStepper, PrintMapping} from "./common.js"
+import {ObservableValue, ObservableValueVoid, Terminable, Terminator} from "../lib/common.js"
 
 export interface Editor<T> extends Terminable {
     with(value: T): void
