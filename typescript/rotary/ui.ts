@@ -23,11 +23,13 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
             switch (event.type) {
                 case CollectionEventType.Add: {
-                    this.createSelector(event.item, event.index)
+                    this.createSelector(event.item)
+                    this.reorderSelectors()
                     break
                 }
                 case CollectionEventType.Remove: {
                     this.removeSelector(event.item)
+                    this.reorderSelectors()
                     break
                 }
                 case CollectionEventType.Order: {
@@ -41,6 +43,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
             this.select(this.model.createTrack(0).randomize(this.random))
         }))
         this.model.tracks.forEach(track => this.createSelector(track))
+        this.reorderSelectors()
         if (0 < this.model.tracks.size()) this.select(this.model.tracks.get(0))
     }
 
@@ -100,15 +103,12 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         this.renderer.releaseHighlight()
     }
 
-    private createSelector(track: RotaryTrackModel, index: number = Number.MAX_SAFE_INTEGER): void {
+    private createSelector(track: RotaryTrackModel): void {
         const element = this.template.cloneNode(true) as HTMLElement
         const radio = element.querySelector("input[type=radio]") as HTMLInputElement
         const button = element.querySelector("button") as HTMLButtonElement
         const selector = new RotaryTrackSelector(this, track, element, radio, button)
-        selector.setIndex(Math.min(index, this.map.size))
         this.map.set(track, selector)
-        Dom.insertElement(this.selectors, element, index)
-        if (!this.hasSelected() && 0 < this.model.tracks.size()) this.select(this.model.tracks.get(0))
     }
 
     private removeSelector(track: RotaryTrackModel): void {
@@ -116,12 +116,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
         const deleted = this.map.delete(track)
         console.assert(selector !== undefined && deleted, "Cannot remove selector")
         selector.terminate()
-        this.model.tracks.forEach((track, index) => {
-            const selector = this.map.get(track)
-            console.assert(selector !== undefined, "Cannot reorder selector")
-            selector.setIndex(index)
-        })
-        if(this.editor.subject.contains(track)) this.editor.clear()
+        if (this.editor.subject.contains(track)) this.editor.clear()
     }
 
     private reorderSelectors(): void {
