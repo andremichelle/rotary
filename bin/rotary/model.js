@@ -107,8 +107,32 @@ export class RotaryTrackModel {
         this.frequency = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
         this.reverse = this.terminator.with(new ObservableValueImpl(false));
         this.gradient = [];
+        this.observers = new Map();
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()));
         this.updateGradient();
+    }
+    addObserver(observer) {
+        const mappedObserver = () => observer(this);
+        const terminator = new Terminator();
+        terminator.with(this.segments.addObserver(mappedObserver));
+        terminator.with(this.phaseOffset.addObserver(mappedObserver));
+        terminator.with(this.frequency.addObserver(mappedObserver));
+        terminator.with(this.reverse.addObserver(mappedObserver));
+        terminator.with(this.length.addObserver(mappedObserver));
+        terminator.with(this.lengthRatio.addObserver(mappedObserver));
+        terminator.with(this.motion.addObserver(mappedObserver));
+        terminator.with(this.width.addObserver(mappedObserver));
+        terminator.with(this.widthPadding.addObserver(mappedObserver));
+        this.observers.set(observer, terminator);
+        return { terminate: () => this.removeObserver(observer) };
+    }
+    removeObserver(observer) {
+        const terminable = this.observers.get(observer);
+        this.observers.delete(observer);
+        if (undefined === terminable)
+            return false;
+        terminable.terminate();
+        return true;
     }
     map(phase) {
         phase += this.phaseOffset.get();

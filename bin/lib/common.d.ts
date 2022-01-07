@@ -103,9 +103,9 @@ export declare class ObservableCollection<T> implements Observable<CollectionEve
     terminate(): void;
 }
 export declare class ObservableValueImpl<T> implements ObservableValue<T> {
-    private value;
+    private value?;
     private readonly observable;
-    constructor(value: T);
+    constructor(value?: T);
     get(): T;
     set(value: T): boolean;
     addObserver(observer: Observer<T>): Terminable;

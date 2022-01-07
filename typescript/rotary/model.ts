@@ -1,7 +1,9 @@
 import {
     BoundNumericValue,
+    Observable,
     ObservableCollection,
     ObservableValueImpl,
+    Observer,
     Serializer,
     Terminable,
     Terminator
@@ -10,12 +12,12 @@ import {Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {CShapeMotion, LinearMotion, Motion, MotionFormat, MotionType, PowMotion, SmoothStepMotion} from "./motion.js"
 
-declare interface RotaryFormat {
+export declare interface RotaryFormat {
     radiusMin: number
     tracks: RotaryTrackFormat[]
 }
 
-declare interface RotaryTrackFormat {
+export declare interface RotaryTrackFormat {
     segments: number
     width: number
     widthPadding: number
@@ -135,7 +137,7 @@ export const MotionTypes = new Map<string, MotionType>([
 export const Fills = new Map<string, Fill>(
     [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
-export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminable {
+export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
     readonly segments = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 8))
     readonly width = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 12))
@@ -149,10 +151,35 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     readonly frequency = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.terminator.with(new ObservableValueImpl<boolean>(false))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
+    private readonly observers: Map<Observer<RotaryTrackModel>, Terminable> = new Map()
 
     constructor() {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
         this.updateGradient()
+    }
+
+    addObserver(observer: Observer<RotaryTrackModel>): Terminable {
+        const mappedObserver: () => void = () => observer(this)
+        const terminator = new Terminator()
+        terminator.with(this.segments.addObserver(mappedObserver))
+        terminator.with(this.phaseOffset.addObserver(mappedObserver))
+        terminator.with(this.frequency.addObserver(mappedObserver))
+        terminator.with(this.reverse.addObserver(mappedObserver))
+        terminator.with(this.length.addObserver(mappedObserver))
+        terminator.with(this.lengthRatio.addObserver(mappedObserver))
+        terminator.with(this.motion.addObserver(mappedObserver))
+        terminator.with(this.width.addObserver(mappedObserver))
+        terminator.with(this.widthPadding.addObserver(mappedObserver))
+        this.observers.set(observer, terminator)
+        return {terminate: () => this.removeObserver(observer)}
+    }
+
+    removeObserver(observer: Observer<RotaryTrackModel>): boolean {
+        const terminable = this.observers.get(observer)
+        this.observers.delete(observer)
+        if (undefined === terminable) return false
+        terminable.terminate()
+        return true
     }
 
     map(phase: number): number {
@@ -172,11 +199,11 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
         phase -= Math.floor(phase)
         phase = 1.0 - phase
         phase /= this.length.get()
-        if(phase >= 1.0) return 0.0
+        if (phase >= 1.0) return 0.0
         phase %= 1.0 / this.segments.get()
         phase *= this.segments.get()
         phase /= this.lengthRatio.get()
-        if(phase > 1.0) return 0.0
+        if (phase > 1.0) return 0.0
         phase = 1.0 - phase
         return phase
     }

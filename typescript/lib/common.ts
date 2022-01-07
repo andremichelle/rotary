@@ -250,7 +250,7 @@ export class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
 export class ObservableValueImpl<T> implements ObservableValue<T> {
     private readonly observable = new ObservableImpl<T>()
 
-    constructor(private value: T) {
+    constructor(private value?: T) {
     }
 
     get(): T {

@@ -16,6 +16,8 @@ const MotionTypes: MotionType[] = []
 export abstract class Motion<DATA extends Data> implements Serializer<MotionFormat<DATA>>, Terminable {
     static from(format: MotionFormat<any>): Motion<any> {
         switch (format.class) {
+            case LinearMotion.name:
+                return new LinearMotion()
             case PowMotion.name:
                 return new PowMotion().deserialize(format)
             case CShapeMotion.name:
@@ -65,7 +67,7 @@ export class LinearMotion extends Motion<never> {
     }
 
     serialize(): MotionFormat<never> {
-        return super.pack.call(undefined) // this might break in future version of typescript
+        return super.pack.call(this) // this might break in future version of typescript
     }
 
     deserialize(format: MotionFormat<never>): LinearMotion {

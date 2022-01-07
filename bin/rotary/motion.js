@@ -8,6 +8,8 @@ export class Motion {
     }
     static from(format) {
         switch (format.class) {
+            case LinearMotion.name:
+                return new LinearMotion();
             case PowMotion.name:
                 return new PowMotion().deserialize(format);
             case CShapeMotion.name:
@@ -39,7 +41,7 @@ export class LinearMotion extends Motion {
         return x;
     }
     serialize() {
-        return super.pack.call(undefined);
+        return super.pack.call(this);
     }
     deserialize(format) {
         super.unpack(format);

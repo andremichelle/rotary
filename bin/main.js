@@ -11,12 +11,17 @@ import { RotaryModel } from "./rotary/model.js";
 import { RotaryUI } from "./rotary/ui.js";
 import { RotaryRenderer } from "./rotary/render.js";
 import { Mulberry32 } from "./lib/math.js";
-import { Chords } from "./lib/chords.js";
-import { DSP, pulsarDelay } from "./lib/dsp.js";
-import { readAudio } from "./lib/common.js";
+import { pulsarDelay } from "./lib/dsp.js";
+import { CollectionEventType, readAudio } from "./lib/common.js";
 import { exportVideo } from "./rotary/export.js";
 import { ListItem, MenuBar } from "./dom/menu.js";
-(() => {
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    const context = new AudioContext();
+    if (context.state !== "running") {
+        window.addEventListener("mousedown", () => context.resume(), { once: true });
+    }
+    else {
+    }
     const canvas = document.querySelector("canvas");
     const labelSize = document.querySelector("label.size");
     const c2D = canvas.getContext("2d", { alpha: true });
@@ -77,62 +82,61 @@ import { ListItem, MenuBar } from "./dom/menu.js";
     const radiant = parseInt(progressIndicator.getAttribute("r"), 10) * 2.0 * Math.PI;
     progressIndicator.setAttribute("stroke-dasharray", radiant.toFixed(2));
     const setProgress = value => progressIndicator.setAttribute("stroke-dashoffset", ((1.0 - value) * radiant).toFixed(2));
-    const context = new AudioContext();
-    if (context.state !== "running") {
-        window.addEventListener("mousedown", () => context.resume(), { once: true });
-    }
-    else {
-    }
-    const compose = Chords.compose(Chords.Minor, 60, 0, 5);
-    const gains = [];
-    const sum = context.createGain();
-    for (let i = 0; i < model.tracks.size(); i++) {
-        const t = model.tracks.size() - i - 1;
-        const oscillator = context.createOscillator();
-        const o = Math.floor(t / compose.length);
-        const n = t % compose.length;
-        oscillator.frequency.value = DSP.midiToHz(compose[n] + o * 12);
-        oscillator.start();
-        const gainNode = context.createGain();
-        gainNode.gain.value = 0.0;
-        oscillator.connect(gainNode);
-        gainNode.connect(sum);
-        gains[i] = gainNode;
-    }
-    let frame = 0;
+    const loopInSeconds = 8.0;
     context.audioWorklet.addModule("bin/worklets/rotary.js").then(() => {
-        const node = new AudioWorkletNode(context, "rotary", {
+        const rotary = new AudioWorkletNode(context, "rotary", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
-            outputChannelCount: [2],
+            outputChannelCount: [1],
             channelCount: 1,
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
-        node.port.postMessage("hello");
+        const updateAll = () => {
+            rotary.port.postMessage({
+                action: "format",
+                value: model.serialize()
+            });
+        };
+        rotary.port.postMessage({
+            action: "loopInSeconds",
+            value: loopInSeconds
+        });
+        const observer = () => updateAll();
+        const observers = new Map();
+        model.tracks.forEach((track, index) => observers.set(track, track.addObserver(observer)));
+        model.tracks.addObserver((event) => {
+            if (event.type === CollectionEventType.Add) {
+                observers.set(event.item, event.item.addObserver(observer));
+            }
+            else if (event.type === CollectionEventType.Remove) {
+                const observer = observers.get(event.item);
+                console.assert(observer !== undefined);
+                observers.delete(event.item);
+                observer.terminate();
+            }
+            else if (event.type === CollectionEventType.Order) {
+            }
+            updateAll();
+        });
+        updateAll();
+        const convolverNode = context.createConvolver();
+        readAudio(context, "../impulse/Deep Space.ogg").then(buffer => convolverNode.buffer = buffer);
+        const pulsar = context.createGain();
+        pulsarDelay(context, rotary, pulsar, 0.500, 0.750, 0.250, 0.5, 20000.0, 20.0);
+        pulsar.connect(convolverNode).connect(context.destination);
+        rotary.connect(context.destination);
     });
-    const convolverNode = context.createConvolver();
-    readAudio(context, "../impulse/Deep Space.ogg").then(buffer => convolverNode.buffer = buffer);
-    const wetGain = context.createGain();
-    wetGain.gain.value = 0.5;
-    sum.connect(convolverNode).connect(wetGain).connect(context.destination);
-    sum.connect(context.destination);
-    pulsarDelay(context, sum, context.destination, 0.500, 0.750, 0.250, 0.5, 20000.0, 20.0);
     console.log("ready...");
     let prevTime = NaN;
-    const seconds = 8.0;
     const enterFrame = (time) => {
         if (!isNaN(prevTime)) {
         }
         prevTime = time;
-        let progress = context.currentTime * 0.125;
+        let progress = context.currentTime / loopInSeconds;
         progress -= Math.floor(progress);
         const size = model.measureRadius() * 2;
         const ratio = Math.ceil(devicePixelRatio);
-        for (let i = 0; i < gains.length; i++) {
-            const value = model.tracks.get(i).ratio(progress);
-            gains[i].gain.linearRampToValueAtTime(0.0 < value ? 0.04 * value * value * value : 0.0, context.currentTime + 0.04);
-        }
         canvas.width = size * ratio;
         canvas.height = size * ratio;
         canvas.style.width = `${size}px`;
@@ -145,9 +149,8 @@ import { ListItem, MenuBar } from "./dom/menu.js";
         renderer.draw(progress);
         c2D.restore();
         setProgress(progress);
-        frame++;
         requestAnimationFrame(enterFrame);
     };
     requestAnimationFrame(enterFrame);
-})();
+}))();
 //# sourceMappingURL=main.js.map
