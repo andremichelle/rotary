@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "module": "amd",
+    "target": "es6",
     "removeComments": true,
-    "outFile": "../bin/main.js",
-    "baseUrl": "./",
+    "outFile": "../../bin/main.js",
     "sourceMap": true,
     "lib": [
       "es2020",
@@ -13,9 +13,9 @@
     "declaration": true
   },
   "include": [
-    "./**/*.ts"
+    "**/*.ts"
   ],
   "exclude": [
-    "../bin/main.d.ts"
+    "../../bin/main.d.ts"
   ]
 }

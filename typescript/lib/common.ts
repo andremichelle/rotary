@@ -408,3 +408,20 @@ export class UniformRandomMapping implements ValueMapping<number> {
         return q + a * (this.values[xi + 1] - q)
     }
 }
+
+export const readBinary = (url: string): Promise<ArrayBuffer> => {
+    return new Promise((resolve, reject) => {
+        const r = new XMLHttpRequest()
+        r.open("GET", url, true)
+        r.responseType = "arraybuffer"
+        r.onload = ignore => resolve(r.response)
+        r.onerror = event => reject(event)
+        r.send(null)
+    })
+}
+export const readAudio = (context: AudioContext, url: string): Promise<AudioBuffer> => {
+    return readBinary(url).then(buffer => decodeAudioData(context, buffer))
+}
+export const decodeAudioData = (context: AudioContext, buffer: ArrayBuffer): Promise<AudioBuffer> => {
+    return context.decodeAudioData(buffer)
+}

@@ -58,8 +58,8 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
     // noinspection JSUnusedGlobalSymbols
     test(): RotaryModel {
         const trackModel = new RotaryTrackModel()
-        trackModel.motion.set(new LinearMotion())
-
+        trackModel.test()
+        this.radiusMin.set(128)
         this.tracks.clear()
         this.tracks.add(trackModel)
         return this
@@ -156,12 +156,40 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     }
 
     map(phase: number): number {
+        phase += this.phaseOffset.get()
         phase -= Math.floor(phase)
         phase *= this.frequency.get()
         phase -= Math.floor(phase)
-        phase = this.phaseOffset.get() + (this.reverse.get() ? 1.0 - phase : phase)
+        phase = (this.reverse.get() ? 1.0 - phase : phase)
         phase -= Math.floor(phase)
-        return this.motion.get().map(phase)
+        phase = this.motion.get().map(phase)
+        return phase
+    }
+
+    ratio(phase: number): number {
+        phase -= Math.floor(phase)
+        phase = this.map(phase)
+        phase -= Math.floor(phase)
+        phase = 1.0 - phase
+        phase /= this.length.get()
+        if(phase >= 1.0) return 0.0
+        phase %= 1.0 / this.segments.get()
+        phase *= this.segments.get()
+        phase /= this.lengthRatio.get()
+        if(phase > 1.0) return 0.0
+        phase = 1.0 - phase
+        return phase
+    }
+
+    test() {
+        this.phaseOffset.set(0.0)
+        this.frequency.set(1.0)
+        this.reverse.set(false)
+        this.length.set(0.5)
+        this.lengthRatio.set(0.5)
+        this.segments.set(4)
+        this.motion.set(new SmoothStepMotion())
+        this.width.set(128)
     }
 
     opaque(): string {
@@ -173,11 +201,11 @@ export class RotaryTrackModel implements Serializer<RotaryTrackFormat>, Terminab
     }
 
     randomize(random: Random): RotaryTrackModel {
-        const segments = 1 + Math.floor(random.nextDouble(0.0, 9.0))
+        const segments = 1 + Math.floor(random.nextDouble(0.0, 9.0)) * 2
         const lengthRatioExp = -Math.floor(random.nextDouble(0.0, 3.0))
         const lengthRatio = 0 === lengthRatioExp ? 0.5 : random.nextDouble(0.0, 1.0) < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
-        const width = random.nextDouble(0.0, 1.0) < 0.2 ? 20.0 : 12.0
-        const widthPadding = random.nextDouble(0.0, 1.0) < 0.25 ? 0.0 : 12.0
+        const width = random.nextDouble(0.0, 1.0) < 0.2 ? 18.0 : 6.0
+        const widthPadding = random.nextDouble(0.0, 1.0) < 0.25 ? 0.0 : 6.0
         const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0
         const fill = 2 === segments ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
         this.segments.set(0 === lengthRatioExp ? 1 : segments)
