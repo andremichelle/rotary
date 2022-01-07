@@ -40,5 +40,4 @@ export const pulsarDelay = (context: AudioContext,
     feedbackSplitter.connect(feedbackMerger, 0, 1)
     feedbackSplitter.connect(feedbackMerger, 1, 0)
     input.connect(output)
-    feedbackGain.connect(output)
 }

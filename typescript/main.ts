@@ -120,12 +120,14 @@ import {ListItem, MenuBar} from "./dom/menu.js"
         updateAll()
 
         const convolverNode = context.createConvolver()
-        readAudio(context, "../impulse/Deep Space.ogg").then(buffer => convolverNode.buffer = buffer)
+        convolverNode.normalize = false
+        readAudio(context, "../impulse/Large Wide Echo Hall.ogg").then(buffer => convolverNode.buffer = buffer)
 
-        const pulsar = context.createGain()
-        pulsarDelay(context, rotary, pulsar, 0.500, 0.750, 0.250, 0.5, 20000.0, 20.0)
+        pulsarDelay(context, rotary, convolverNode, 0.500, 0.750, 0.250, 0.2, 20000.0, 20.0)
 
-        pulsar.connect(convolverNode).connect(context.destination)
+        const wetGain = context.createGain()
+        wetGain.gain.value = 0.5
+        convolverNode.connect(wetGain).connect(context.destination)
         rotary.connect(context.destination)
     })
 
