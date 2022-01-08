@@ -8,6 +8,7 @@ import {
     Terminable,
     Terminator
 } from "../lib/common.js"
+import {Color} from "../dom/common.js"
 import {Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {CShapeMotion, LinearMotion, Motion, MotionFormat, MotionType, PowMotion, SmoothStepMotion} from "./motion.js"
@@ -246,6 +247,11 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)))
         this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5)
         return this
+    }
+
+    randomizeRGB(random: Random): void {
+        const hue: number = random.nextDouble(0.0, 1.0)
+        this.rgb.set(Color.hslToRgb(hue, 0.6, 0.6))
     }
 
     terminate(): void {

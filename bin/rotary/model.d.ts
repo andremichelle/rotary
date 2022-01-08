@@ -68,6 +68,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     opaque(): string;
     transparent(): string;
     randomize(random: Random): RotaryTrackModel;
+    randomizeRGB(random: Random): void;
     terminate(): void;
     serialize(): RotaryTrackFormat;
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;

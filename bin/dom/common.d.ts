@@ -32,3 +32,6 @@ export declare class NumericStepper implements Stepper {
     decrease(value: ObservableValue<number>): void;
     increase(value: ObservableValue<number>): void;
 }
+export declare class Color {
+    static hslToRgb(h?: number, s?: number, l?: number): number;
+}

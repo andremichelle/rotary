@@ -6,6 +6,7 @@ import {pulsarDelay} from "./lib/dsp.js"
 import {CollectionEvent, CollectionEventType, readAudio, Terminable} from "./lib/common.js"
 import {exportVideo} from "./rotary/export.js"
 import {ListItem, MenuBar} from "./dom/menu.js"
+import {Color} from "./dom/common.js"
 
 (async () => {
     const canvas = document.querySelector("canvas")
@@ -43,10 +44,12 @@ import {ListItem, MenuBar} from "./dom/menu.js"
                 .onTrigger(() => exportVideo()))
             .addListItem(ListItem.default("Clear", "", false)
                 .onTrigger(() => model.clear()))
-            .addListItem(ListItem.default("Randomize", "", false)
+            .addListItem(ListItem.default("Randomize All", "", false)
                 .onTrigger(() => model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))))
-            .addListItem(ListItem.default("Randomize Track(s)", "", false)
+            .addListItem(ListItem.default("Randomize Existing Tracks", "", false)
                 .onTrigger(() => model.randomizeTracks(new Mulberry32(Math.floor(0x987123F * Math.random())))))
+            .addListItem(ListItem.default("Randomize Track Colours", "", false)
+                .onTrigger(() => model.tracks.forEach(track => track.randomizeRGB(new Mulberry32(Math.floor(0x987123F * Math.random()))))))
         )
         .addButton(nav.querySelector("[data-menu='edit']"), ListItem.root()
             .addListItem(ListItem.default("Create Track", "", false)
