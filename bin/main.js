@@ -16,12 +16,6 @@ import { CollectionEventType, readAudio } from "./lib/common.js";
 import { exportVideo } from "./rotary/export.js";
 import { ListItem, MenuBar } from "./dom/menu.js";
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    const context = new AudioContext();
-    if (context.state !== "running") {
-        window.addEventListener("mousedown", () => context.resume(), { once: true });
-    }
-    else {
-    }
     const canvas = document.querySelector("canvas");
     const labelSize = document.querySelector("label.size");
     const c2D = canvas.getContext("2d", { alpha: true });
@@ -83,51 +77,59 @@ import { ListItem, MenuBar } from "./dom/menu.js";
     progressIndicator.setAttribute("stroke-dasharray", radiant.toFixed(2));
     const setProgress = value => progressIndicator.setAttribute("stroke-dashoffset", ((1.0 - value) * radiant).toFixed(2));
     const loopInSeconds = 8.0;
-    context.audioWorklet.addModule("bin/worklets/rotary.js").then(() => {
-        const rotary = new AudioWorkletNode(context, "rotary", {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            outputChannelCount: [1],
-            channelCount: 1,
-            channelCountMode: "explicit",
-            channelInterpretation: "speakers"
+    const context = new AudioContext();
+    yield context.suspend();
+    yield context.audioWorklet.addModule("bin/worklets/rotary.js");
+    const rotaryNode = new AudioWorkletNode(context, "rotary", {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        outputChannelCount: [1],
+        channelCount: 1,
+        channelCountMode: "explicit",
+        channelInterpretation: "speakers"
+    });
+    const updateAll = () => {
+        rotaryNode.port.postMessage({
+            action: "format",
+            value: model.serialize()
         });
-        const updateAll = () => {
-            rotary.port.postMessage({
-                action: "format",
-                value: model.serialize()
-            });
-        };
-        rotary.port.postMessage({
-            action: "loopInSeconds",
-            value: loopInSeconds
-        });
-        const observer = () => updateAll();
-        const observers = new Map();
-        model.tracks.forEach((track, index) => observers.set(track, track.addObserver(observer)));
-        model.tracks.addObserver((event) => {
-            if (event.type === CollectionEventType.Add) {
-                observers.set(event.item, event.item.addObserver(observer));
-            }
-            else if (event.type === CollectionEventType.Remove) {
-                const observer = observers.get(event.item);
-                console.assert(observer !== undefined);
-                observers.delete(event.item);
-                observer.terminate();
-            }
-            else if (event.type === CollectionEventType.Order) {
-            }
-            updateAll();
-        });
+    };
+    rotaryNode.port.postMessage({
+        action: "loopInSeconds",
+        value: loopInSeconds
+    });
+    const observer = () => updateAll();
+    const observers = new Map();
+    model.tracks.forEach((track, index) => observers.set(track, track.addObserver(observer)));
+    model.tracks.addObserver((event) => {
+        if (event.type === CollectionEventType.Add) {
+            observers.set(event.item, event.item.addObserver(observer));
+        }
+        else if (event.type === CollectionEventType.Remove) {
+            const observer = observers.get(event.item);
+            console.assert(observer !== undefined);
+            observers.delete(event.item);
+            observer.terminate();
+        }
+        else if (event.type === CollectionEventType.Order) {
+        }
         updateAll();
-        const convolverNode = context.createConvolver();
-        convolverNode.normalize = false;
-        readAudio(context, "../impulse/Large Wide Echo Hall.ogg").then(buffer => convolverNode.buffer = buffer);
-        pulsarDelay(context, rotary, convolverNode, 0.500, 0.750, 0.250, 0.2, 20000.0, 20.0);
-        const wetGain = context.createGain();
-        wetGain.gain.value = 0.5;
-        convolverNode.connect(wetGain).connect(context.destination);
-        rotary.connect(context.destination);
+    });
+    updateAll();
+    const convolverNode = context.createConvolver();
+    convolverNode.normalize = false;
+    readAudio(context, "../impulse/Large Wide Echo Hall.ogg").then(buffer => convolverNode.buffer = buffer);
+    pulsarDelay(context, rotaryNode, convolverNode, 0.500, 0.750, 0.250, 0.2, 20000.0, 20.0);
+    const wetGain = context.createGain();
+    wetGain.gain.value = 0.5;
+    convolverNode.connect(wetGain).connect(context.destination);
+    rotaryNode.connect(context.destination);
+    const playButton = document.querySelector("[data-parameter='transport']");
+    playButton.onchange = () => __awaiter(void 0, void 0, void 0, function* () {
+        if (playButton.checked)
+            yield context.resume();
+        else
+            yield context.suspend();
     });
     console.log("ready...");
     let prevTime = NaN;

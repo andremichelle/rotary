@@ -94,28 +94,32 @@ body
           box-shadow: 0 8px 8px 0 rgba(black, 0.4)
           height: min-content
 
-          svg
+          div.top-overlay
             top: 0
-            right: 0
-            position: absolute
-
-          label.size, label.zoom
-            top: 8px
             left: 8px
-            color: #AAA
-            white-space: nowrap
+            width: calc(100% - 8px)
+            display: flex
             position: absolute
+            align-items: center
+            column-gap: 8px
 
-          label.zoom
-            left: 48px
+            > div.spacer
+              flex: 1
 
-          label.size:after
-            opacity: 0.6
-            content: "px"
+            svg
+              background-color: transparent
 
-          label.zoom:after
-            opacity: 0.6
-            content: "%"
+            label.size, label.zoom, label.transport
+              color: #AAA
+              white-space: nowrap
+
+            label.size:after
+              opacity: 0.6
+              content: "px"
+
+            label.zoom:after
+              opacity: 0.6
+              content: "%"
 
 div.two-columns
   display: grid

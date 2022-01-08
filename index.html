@@ -73,7 +73,7 @@
                         <button>▶</button>
                     </fieldset>
                     <label class="name">reverse</label>
-                    <label class="checkbox">
+                    <label class="checkbox slider">
                         <input type="checkbox" data-parameter="reverse"/>
                         <span></span>
                     </label>
@@ -127,17 +127,34 @@
         </div>
         <div class="preview">
             <div class="rotary">
+                <div class="top-overlay">
+                    <label class="size"></label>
+                    <label class="zoom">100</label>
+                    <div class="spacer"></div>
+                    <label class="checkbox toggle transport">
+                        <input type="checkbox" data-parameter="transport"/>
+                        <span class="unchecked">
+                            <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4.532 1.271c-1.398-0.888-2.532-0.271-2.532 1.393v10.675c0 1.657 1.131 2.283 2.532 1.393l8.911-5.657c0.933-0.593 0.927-1.557 0-2.146l-8.911-5.657z"/>
+                            </svg>
+                        </span>
+                        <span class="checked">
+                            <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="1" width="4" height="14"></rect>
+                                <rect x="10" y="1" width="4" height="14"></rect>
+                            </svg>
+                        </span>
+                    </label>
+                    <svg width="32" height="32" viewPort="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <circle r="8" cx="16" cy="16" fill="transparent" stroke="#222" stroke-width="3"></circle>
+                        <circle r="8" cx="16" cy="16" fill="transparent" stroke="#666" stroke-width="1.5"
+                                stroke-dasharray="175.93"
+                                stroke-dashoffset="0"
+                                id="progress">
+                        </circle>
+                    </svg>
+                </div>
                 <canvas></canvas>
-                <svg width="32" height="32" viewPort="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                    <circle r="8" cx="16" cy="16" fill="transparent" stroke="#222" stroke-width="3"></circle>
-                    <circle r="8" cx="16" cy="16" fill="transparent" stroke="#666" stroke-width="1.5"
-                            stroke-dasharray="175.93"
-                            stroke-dashoffset="0"
-                            id="progress">
-                    </circle>
-                </svg>
-                <label class="size"></label>
-                <label class="zoom">100</label>
             </div>
         </div>
     </div>

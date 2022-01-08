@@ -29,36 +29,55 @@ button
     opacity: 0.3
 
 label.checkbox
-  font-size: 12px
-  background-color: $background
   border: none
   outline: none
   white-space: nowrap
   appearance: none
   margin: 0
   padding: 0
-  max-height: 15px
-  width: 32px
-  border-radius: 19px !important
   position: relative
-
-  & span
-    top: 3px
-    left: 3px
-    right: unset
-    width: 9px
-    height: 9px
-    border-radius: 11px
-    position: absolute
-    background-color: rgba(white, 0.4)
 
   input[type=checkbox]
     appearance: none
     display: none
 
-    &:checked + span
+  &.slider
+    min-height: 15px
+    max-height: 15px
+    width: 32px
+    border-radius: 15px !important
+    font-size: 12px
+    background-color: $background
+    & span
+      top: 3px
+      left: 3px
+      right: unset
+      width: 9px
+      height: 9px
+      border-radius: 11px
+      position: absolute
+      background-color: rgba(white, 0.4)
+
+    & input[type=checkbox]:checked + span
       left: unset
       right: 3px
+
+  &.toggle
+    height: 16px
+    font-size: 16px
+    span.checked
+      display: none
+    span.unchecked
+      display: block
+
+    span svg
+      fill: currentColor
+
+    input[type=checkbox]:checked
+      ~ span.checked
+        display: block !important
+      ~ span.unchecked
+        display: none !important
 
 label.radio.big
   width: 24px

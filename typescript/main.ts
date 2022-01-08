@@ -8,13 +8,6 @@ import {exportVideo} from "./rotary/export.js"
 import {ListItem, MenuBar} from "./dom/menu.js"
 
 (async () => {
-    const context = new AudioContext()
-    if (context.state !== "running") {
-        window.addEventListener("mousedown", () => context.resume(), {once: true})
-    } else {
-        // context.suspend()
-    }
-
     const canvas = document.querySelector("canvas")
     const labelSize = document.querySelector("label.size")
     const c2D = canvas.getContext("2d", {alpha: true})
@@ -83,53 +76,61 @@ import {ListItem, MenuBar} from "./dom/menu.js"
 
     const loopInSeconds = 8.0
 
-    context.audioWorklet.addModule("bin/worklets/rotary.js").then(() => {
-        const rotary = new AudioWorkletNode(context, "rotary", {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            outputChannelCount: [1],
-            channelCount: 1,
-            channelCountMode: "explicit",
-            channelInterpretation: "speakers"
-        })
-        const updateAll = () => {
-            rotary.port.postMessage({
-                action: "format",
-                value: model.serialize()
-            })
-        }
-        rotary.port.postMessage({
-            action: "loopInSeconds",
-            value: loopInSeconds
-        })
-        const observer = () => updateAll()
-        const observers: Map<RotaryTrackModel, Terminable> = new Map()
-        model.tracks.forEach((track, index) => observers.set(track, track.addObserver(observer)))
-        model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
-            if (event.type === CollectionEventType.Add) {
-                observers.set(event.item, event.item.addObserver(observer))
-            } else if (event.type === CollectionEventType.Remove) {
-                const observer = observers.get(event.item)
-                console.assert(observer !== undefined)
-                observers.delete(event.item)
-                observer.terminate()
-            } else if (event.type === CollectionEventType.Order) {
-            }
-            updateAll()
-        })
-        updateAll()
+    const context = new AudioContext()
+    await context.suspend()
+    await context.audioWorklet.addModule("bin/worklets/rotary.js")
 
-        const convolverNode = context.createConvolver()
-        convolverNode.normalize = false
-        readAudio(context, "../impulse/Large Wide Echo Hall.ogg").then(buffer => convolverNode.buffer = buffer)
-
-        pulsarDelay(context, rotary, convolverNode, 0.500, 0.750, 0.250, 0.2, 20000.0, 20.0)
-
-        const wetGain = context.createGain()
-        wetGain.gain.value = 0.5
-        convolverNode.connect(wetGain).connect(context.destination)
-        rotary.connect(context.destination)
+    const rotaryNode = new AudioWorkletNode(context, "rotary", {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        outputChannelCount: [1],
+        channelCount: 1,
+        channelCountMode: "explicit",
+        channelInterpretation: "speakers"
     })
+    const updateAll = () => {
+        rotaryNode.port.postMessage({
+            action: "format",
+            value: model.serialize()
+        })
+    }
+    rotaryNode.port.postMessage({
+        action: "loopInSeconds",
+        value: loopInSeconds
+    })
+    const observer = () => updateAll()
+    const observers: Map<RotaryTrackModel, Terminable> = new Map()
+    model.tracks.forEach((track, index) => observers.set(track, track.addObserver(observer)))
+    model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
+        if (event.type === CollectionEventType.Add) {
+            observers.set(event.item, event.item.addObserver(observer))
+        } else if (event.type === CollectionEventType.Remove) {
+            const observer = observers.get(event.item)
+            console.assert(observer !== undefined)
+            observers.delete(event.item)
+            observer.terminate()
+        } else if (event.type === CollectionEventType.Order) {
+        }
+        updateAll()
+    })
+    updateAll()
+
+    const convolverNode = context.createConvolver()
+    convolverNode.normalize = false
+    readAudio(context, "../impulse/Large Wide Echo Hall.ogg").then(buffer => convolverNode.buffer = buffer)
+
+    pulsarDelay(context, rotaryNode, convolverNode, 0.500, 0.750, 0.250, 0.2, 20000.0, 20.0)
+
+    const wetGain = context.createGain()
+    wetGain.gain.value = 0.5
+    convolverNode.connect(wetGain).connect(context.destination)
+    rotaryNode.connect(context.destination)
+
+    const playButton = document.querySelector("[data-parameter='transport']") as HTMLInputElement
+    playButton.onchange = async () => {
+        if(playButton.checked) await context.resume()
+        else await context.suspend()
+    }
 
     console.log("ready...")
 
