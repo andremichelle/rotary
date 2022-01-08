@@ -2,7 +2,7 @@ import {CollectionEvent, CollectionEventType, Terminable, Terminator} from "../l
 import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {NumericStepperInput} from "../dom/inputs.js"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor.js"
-import {Dom, PrintMapping, NumericStepper} from "../dom/common.js"
+import {Dom, NumericStepper, PrintMapping} from "../dom/common.js"
 import {RotaryRenderer} from "./render.js"
 import {Mulberry32, Random} from "../lib/math.js"
 
@@ -36,6 +36,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
                     break
                 }
             }
+            if (0 < this.model.tracks.size() && !this.hasSelected()) this.select(this.model.tracks.get(0))
         }))
         this.terminator.with(Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", event => {
             event.preventDefault()

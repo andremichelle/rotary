@@ -388,7 +388,7 @@ html, body {
 }
 
 body {
-  display: flex !important;
+  display: flex;
   flex-direction: column;
 }
 body main {

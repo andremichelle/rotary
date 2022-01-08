@@ -1,7 +1,7 @@
 import { CollectionEventType, Terminator } from "../lib/common.js";
 import { NumericStepperInput } from "../dom/inputs.js";
 import { RotaryTrackEditor } from "./editor.js";
-import { Dom, PrintMapping, NumericStepper } from "../dom/common.js";
+import { Dom, NumericStepper, PrintMapping } from "../dom/common.js";
 import { Mulberry32 } from "../lib/math.js";
 export class RotaryUI {
     constructor(form, selectors, template, model, renderer) {
@@ -32,6 +32,8 @@ export class RotaryUI {
                     break;
                 }
             }
+            if (0 < this.model.tracks.size() && !this.hasSelected())
+                this.select(this.model.tracks.get(0));
         }));
         this.terminator.with(Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", event => {
             event.preventDefault();

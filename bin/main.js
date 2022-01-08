@@ -102,7 +102,7 @@ import { ListItem, MenuBar } from "./dom/menu.js";
     });
     const observer = () => updateAll();
     const observers = new Map();
-    model.tracks.forEach((track, index) => observers.set(track, track.addObserver(observer)));
+    model.tracks.forEach((track) => observers.set(track, track.addObserver(observer)));
     model.tracks.addObserver((event) => {
         if (event.type === CollectionEventType.Add) {
             observers.set(event.item, event.item.addObserver(observer));
@@ -120,7 +120,7 @@ import { ListItem, MenuBar } from "./dom/menu.js";
     updateAll();
     const convolverNode = context.createConvolver();
     convolverNode.normalize = false;
-    readAudio(context, "../impulse/Large Wide Echo Hall.ogg").then(buffer => convolverNode.buffer = buffer);
+    readAudio(context, "./impulse/LargeWideEchoHall.ogg").then(buffer => convolverNode.buffer = buffer);
     pulsarDelay(context, rotaryNode, convolverNode, 0.500, 0.750, 0.250, 0.2, 20000.0, 20.0);
     const wetGain = context.createGain();
     wetGain.gain.value = 0.5;
@@ -133,12 +133,9 @@ import { ListItem, MenuBar } from "./dom/menu.js";
         else
             yield context.suspend();
     });
+    document.getElementById("preloader").remove();
     console.log("ready...");
-    let prevTime = NaN;
-    const enterFrame = (time) => {
-        if (!isNaN(prevTime)) {
-        }
-        prevTime = time;
+    const enterFrame = () => {
         let progress = context.currentTime / loopInSeconds;
         progress -= Math.floor(progress);
         const size = model.measureRadius() * 2;

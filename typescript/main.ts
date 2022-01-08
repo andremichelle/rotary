@@ -6,7 +6,6 @@ import {pulsarDelay} from "./lib/dsp.js"
 import {CollectionEvent, CollectionEventType, readAudio, Terminable} from "./lib/common.js"
 import {exportVideo} from "./rotary/export.js"
 import {ListItem, MenuBar} from "./dom/menu.js"
-import {Color} from "./dom/common.js"
 
 (async () => {
     const canvas = document.querySelector("canvas")
@@ -103,7 +102,7 @@ import {Color} from "./dom/common.js"
     })
     const observer = () => updateAll()
     const observers: Map<RotaryTrackModel, Terminable> = new Map()
-    model.tracks.forEach((track, index) => observers.set(track, track.addObserver(observer)))
+    model.tracks.forEach((track: RotaryTrackModel) => observers.set(track, track.addObserver(observer)))
     model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
         if (event.type === CollectionEventType.Add) {
             observers.set(event.item, event.item.addObserver(observer))
@@ -120,7 +119,7 @@ import {Color} from "./dom/common.js"
 
     const convolverNode = context.createConvolver()
     convolverNode.normalize = false
-    readAudio(context, "../impulse/Large Wide Echo Hall.ogg").then(buffer => convolverNode.buffer = buffer)
+    readAudio(context, "./impulse/LargeWideEchoHall.ogg").then(buffer => convolverNode.buffer = buffer)
 
     pulsarDelay(context, rotaryNode, convolverNode, 0.500, 0.750, 0.250, 0.2, 20000.0, 20.0)
 
@@ -131,19 +130,14 @@ import {Color} from "./dom/common.js"
 
     const playButton = document.querySelector("[data-parameter='transport']") as HTMLInputElement
     playButton.onchange = async () => {
-        if(playButton.checked) await context.resume()
+        if (playButton.checked) await context.resume()
         else await context.suspend()
     }
 
+    document.getElementById("preloader").remove()
     console.log("ready...")
 
-    let prevTime = NaN
-
-    const enterFrame = (time) => {
-        if (!isNaN(prevTime)) {
-            // console.log(time - prevTime)
-        }
-        prevTime = time
+    const enterFrame = () => {
         let progress = context.currentTime / loopInSeconds
         progress -= Math.floor(progress)
         const size = model.measureRadius() * 2
