@@ -64,11 +64,11 @@ export declare class Menu {
     private makeScrollable;
 }
 export declare class MenuBar {
+    static install(): MenuBar;
     private offsetX;
     private offsetY;
     private openListItem;
-    constructor();
-    static install(): MenuBar;
+    private constructor();
     offset(x: number, y: number): MenuBar;
     addButton(button: HTMLElement, listItem: ListItem): MenuBar;
     open(button: HTMLElement, listItem: ListItem): void;

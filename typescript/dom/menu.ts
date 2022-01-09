@@ -386,25 +386,25 @@ export class Menu {
 Menu.Renderer.set(ListItemDefaultData, (element: HTMLElement, data: any) => {
     element.classList.add("default")
     element.innerHTML =
-        `<svg class="check-icon"><use xlink:href="#menu-checked"></use></svg>
-             <span class="label">${data.label}</span>
-             <span class="shortcut">${data.shortcut}</span>
-             <svg class="children-icon"><use xlink:href="#menu-children"></use></svg>`
+        `<svg class="check-icon" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><path d="M2 7L5 10L10 3"/></svg>
+         <span class="label">${data.label}</span>
+         <span class="shortcut">${data.shortcut}</span>
+         <svg class="children-icon" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><path d="M4 2L8 6L4 10"/></svg>`
     if (data.checked) {
         element.classList.add("checked")
     }
 })
 
 export class MenuBar {
+    static install(): MenuBar {
+        return new MenuBar()
+    }
+
     private offsetX: number = 0
     private offsetY: number = 0
     private openListItem: ListItem = null
 
-    constructor() {
-    }
-
-    static install(): MenuBar {
-        return new MenuBar()
+    private constructor() {
     }
 
     offset(x: number, y: number): MenuBar {

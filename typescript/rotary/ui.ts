@@ -36,7 +36,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
     private readonly c2D: CanvasRenderingContext2D = this.elements.canvas.getContext("2d", {alpha: true})
     private readonly renderer: RotaryRenderer = new RotaryRenderer(this.c2D, this.model)
 
-    readonly zoom = new ObservableValueImpl<number>(1.0)
+    readonly zoom = new ObservableValueImpl<number>(0.5)
 
     private constructor(private readonly model: RotaryModel,
                         private readonly elements: DomElements) {

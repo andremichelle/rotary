@@ -43,7 +43,7 @@ nav.menu
   border-collapse: collapse
   display: flex
   flex-direction: column
-  font-size: 12px
+  font-size: 13px
   color: #F2F2F2
   background-color: #2D2D2D
   border: 1px #575757 solid
@@ -55,8 +55,8 @@ nav.menu
   box-shadow: 0 0 0 1px rgba(black, 0.6), 0 8px 8px 0 rgba(black, 0.3)
   pointer-events: all
 
-  &.docked
-    padding: 6px 0 8px 0
+  //&.docked
+  //  padding: 6px 0 8px 0
 
   &.shutdown
     pointer-events: none
@@ -71,12 +71,13 @@ nav.menu
     overflow: hidden
 
     > div.default
-      flex: 1 0 24px
+      flex: 1 0 22px
       display: flex
       align-items: center
-      padding: 0 8px
-      opacity: 0.3
-      pointer-events: none
+      border-radius: 4px
+      margin: 0 4px
+      padding: 0 8px 0 4px
+      pointer-events: inherit
       white-space: nowrap
 
       &.selected
@@ -91,7 +92,10 @@ nav.menu
 
       > svg.check-icon, svg.children-icon
         pointer-events: none
-        fill: #F2F2F2
+        fill: none
+        stroke: #F2F2F2
+        stroke-width: 1.5
+        stroke-linecap: round
         width: 12px
         height: 12px
 
@@ -109,9 +113,9 @@ nav.menu
         > svg.children-icon
           display: block
 
-      &.selectable
-        opacity: 1.0
-        pointer-events: inherit
+      &:not(.selectable)
+        color: #6d6d6d
+        pointer-events: none
 
       > span.label
         pointer-events: none
@@ -123,10 +127,11 @@ nav.menu
         margin: 0
 
     > hr
-      width: 100%
+      margin: 5px 12px
+      width: calc(100% - 24px)
       height: 0
       border: 0
-      border-top: 1px solid lighten($background, 5%)
+      border-top: 1px solid #515151
       pointer-events: none
 
   > div.scroll
