@@ -11,41 +11,45 @@ import { CollectionEventType, readAudio } from "./lib/common.js";
 import { Mulberry32 } from "./lib/math.js";
 import { pulsarDelay } from "./lib/dsp.js";
 import { RotaryModel } from "./rotary/model.js";
-import { RotaryUI } from "./rotary/ui.js";
+import { RotaryApp } from "./rotary/app.js";
 import { installApplicationMenu } from "./rotary/env.js";
+import { RotaryWorkletNode } from "./rotary/audio.js";
+const showError = (message) => {
+    const preloader = document.getElementById("preloader");
+    if (null === preloader) {
+        alert(message);
+    }
+    else {
+        preloader.innerHTML = `<span style="color: #F33">${message}</span>`;
+    }
+};
+window.onerror = (message) => {
+    showError(message);
+    return true;
+};
+window.onunhandledrejection = (event) => {
+    if (event.reason instanceof Error) {
+        showError(event.reason.message);
+    }
+    else {
+        showError(event.reason);
+    }
+};
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const model = new RotaryModel().randomize(new Mulberry32(Math.floor(0x987123F * Math.random())));
-    const ui = RotaryUI.create(model);
-    const nav = document.querySelector("nav#app-menu");
-    installApplicationMenu(nav, model, ui);
+    const ui = RotaryApp.create(model);
+    installApplicationMenu(document.querySelector("nav#app-menu"), model, ui);
     const loopInSeconds = 8.0;
     const context = new AudioContext();
     yield context.suspend();
-    yield context.audioWorklet.addModule("bin/worklets/rotary.js");
-    const rotaryNode = new AudioWorkletNode(context, "rotary", {
-        numberOfInputs: 1,
-        numberOfOutputs: 1,
-        outputChannelCount: [1],
-        channelCount: 1,
-        channelCountMode: "explicit",
-        channelInterpretation: "speakers"
-    });
-    const updateAll = () => {
-        rotaryNode.port.postMessage({
-            action: "format",
-            value: model.serialize()
-        });
-    };
-    rotaryNode.port.postMessage({
-        action: "loopInSeconds",
-        value: loopInSeconds
-    });
-    const observer = () => updateAll();
+    const rotaryNode = yield RotaryWorkletNode.build(context);
+    rotaryNode.updateLoopDuration(loopInSeconds);
+    const updateFormat = () => rotaryNode.updateFormat(model);
     const observers = new Map();
-    model.tracks.forEach((track) => observers.set(track, track.addObserver(observer)));
+    model.tracks.forEach((track) => observers.set(track, track.addObserver(updateFormat)));
     model.tracks.addObserver((event) => {
         if (event.type === CollectionEventType.Add) {
-            observers.set(event.item, event.item.addObserver(observer));
+            observers.set(event.item, event.item.addObserver(updateFormat));
         }
         else if (event.type === CollectionEventType.Remove) {
             const observer = observers.get(event.item);
@@ -55,15 +59,15 @@ import { installApplicationMenu } from "./rotary/env.js";
         }
         else if (event.type === CollectionEventType.Order) {
         }
-        updateAll();
+        updateFormat();
     });
-    updateAll();
+    updateFormat();
     const convolverNode = context.createConvolver();
     convolverNode.normalize = false;
-    readAudio(context, "./impulse/LargeWideEchoHall.ogg").then(buffer => convolverNode.buffer = buffer);
-    pulsarDelay(context, rotaryNode, convolverNode, 0.500, 0.750, 0.250, 0.2, 20000.0, 20.0);
+    convolverNode.buffer = yield readAudio(context, "./impulse/LargeWideEchoHall.ogg");
+    pulsarDelay(context, rotaryNode, convolverNode, 0.500, 0.250, 0.750, 0.2, 20000.0, 20.0);
     const wetGain = context.createGain();
-    wetGain.gain.value = 0.5;
+    wetGain.gain.value = 0.1;
     convolverNode.connect(wetGain).connect(context.destination);
     rotaryNode.connect(context.destination);
     const playButton = document.querySelector("[data-parameter='transport']");

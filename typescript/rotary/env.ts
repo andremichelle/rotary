@@ -1,15 +1,14 @@
 import {ListItem, MenuBar} from "../dom/menu.js"
 import {Mulberry32} from "../lib/math.js"
 import {RotaryModel} from "./model.js"
-import {RotaryUI} from "./ui.js"
+import {RotaryApp} from "./app.js"
 import {open, save, render} from "./file.js"
-
 
 const zoomLevel: Map<string, number> = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
 ])
 
-export const installApplicationMenu = (element: HTMLElement, model: RotaryModel, ui: RotaryUI) => {
+export const installApplicationMenu = (element: HTMLElement, model: RotaryModel, ui: RotaryApp): void => {
     MenuBar.install()
         .offset(0, 0)
         .addButton(element.querySelector("[data-menu='file']"), ListItem.root()

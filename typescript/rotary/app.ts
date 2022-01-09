@@ -16,9 +16,9 @@ export interface DomElements {
     progressIndicator: SVGCircleElement
 }
 
-export class RotaryUI implements RotaryTrackEditorExecutor {
-    static create(rotary: RotaryModel): RotaryUI {
-        return new RotaryUI(rotary, {
+export class RotaryApp implements RotaryTrackEditorExecutor {
+    static create(rotary: RotaryModel): RotaryApp {
+        return new RotaryApp(rotary, {
             form: document.querySelector("form.track-nav") as HTMLFormElement,
             selectors: document.querySelector("#track-selectors"),
             template: document.querySelector("#template-selector-track"),
@@ -175,7 +175,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
 export class RotaryTrackSelector implements Terminable {
     private readonly terminator = new Terminator()
 
-    constructor(readonly ui: RotaryUI,
+    constructor(readonly ui: RotaryApp,
                 readonly model: RotaryTrackModel,
                 readonly element: HTMLElement,
                 readonly radio: HTMLInputElement,
