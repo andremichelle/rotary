@@ -1,4 +1,26 @@
-export const exportVideo = async () => {
+import {RotaryModel} from "./model.js"
+
+const pickerOpts = {types: [{description: "rotary", accept: {"json/*": [".json"]}}]}
+
+export const open = async (model: RotaryModel) => {
+    const fileHandles = await window.showOpenFilePicker(pickerOpts)
+    if (0 === fileHandles.length) {
+        return
+    }
+    const fileStream = await fileHandles[0].getFile()
+    const text: string = await fileStream.text()
+    const format = await JSON.parse(text)
+    model.deserialize(format)
+}
+
+export const save = async (model: RotaryModel) => {
+    const fileHandle = await window.showSaveFilePicker(pickerOpts)
+    const fileStream = await fileHandle.createWritable()
+    await fileStream.write(new Blob([JSON.stringify(model.serialize())], {type: "application/json"}))
+    await fileStream.close()
+}
+
+export const render = async () => {
     const chunks: EncodedVideoChunk[] = []
     let bytesTotal: number = 0|0
     const encoder = new VideoEncoder({
@@ -51,4 +73,5 @@ export const exportVideo = async () => {
         chunk.copyTo(view)
     }
     console.log(bytes)
+    alert("Not yet implemented")
 }
