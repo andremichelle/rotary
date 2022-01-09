@@ -37,8 +37,8 @@ window.onunhandledrejection = (event) => {
 };
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const model = new RotaryModel().randomize(new Mulberry32(Math.floor(0x987123F * Math.random())));
-    const ui = RotaryApp.create(model);
-    installApplicationMenu(document.querySelector("nav#app-menu"), model, ui);
+    const app = RotaryApp.create(model);
+    installApplicationMenu(document.querySelector("nav#app-menu"), model, app);
     const loopInSeconds = 8.0;
     const context = new AudioContext();
     yield context.suspend();
@@ -81,7 +81,7 @@ window.onunhandledrejection = (event) => {
     console.log("ready...");
     const enterFrame = () => {
         const progress = context.currentTime / loopInSeconds;
-        ui.render(progress - Math.floor(progress));
+        app.render(progress - Math.floor(progress));
         requestAnimationFrame(enterFrame);
     };
     requestAnimationFrame(enterFrame);
