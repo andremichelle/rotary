@@ -9,21 +9,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { RotaryModel } from "./rotary/model.js";
 import { RotaryUI } from "./rotary/ui.js";
-import { RotaryRenderer } from "./rotary/render.js";
 import { Mulberry32 } from "./lib/math.js";
 import { pulsarDelay } from "./lib/dsp.js";
 import { CollectionEventType, readAudio } from "./lib/common.js";
 import { exportVideo } from "./rotary/export.js";
 import { ListItem, MenuBar } from "./dom/menu.js";
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    const canvas = document.querySelector("canvas");
-    const labelSize = document.querySelector("label.size");
-    const c2D = canvas.getContext("2d", { alpha: true });
     const model = new RotaryModel().randomize(new Mulberry32(Math.floor(0x987123F * Math.random())));
-    const renderer = new RotaryRenderer(c2D, model);
-    const ui = RotaryUI.create(model, renderer);
+    const ui = RotaryUI.create(model);
     const pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
     const nav = document.querySelector("nav#app-menu");
+    const zoomLevel = new Map([
+        ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
+    ]);
     MenuBar.install()
         .offset(0, 0)
         .addButton(nav.querySelector("[data-menu='file']"), ListItem.root()
@@ -71,13 +69,15 @@ import { ListItem, MenuBar } from "./dom/menu.js";
         ui.deleteTrack();
     })))
         .addButton(nav.querySelector("[data-menu='view']"), ListItem.root()
-        .addListItem(ListItem.default("Nothing yet", "", false)))
+        .addListItem(ListItem.default("Zoom", "", false)
+        .addRuntimeChildrenCallback(parent => {
+        for (const level of zoomLevel) {
+            parent.addListItem(ListItem.default(level[0], "", ui.zoom.get() === level[1])
+                .onTrigger(item => ui.zoom.set(level[1])));
+        }
+    })))
         .addButton(nav.querySelector("[data-menu='help']"), ListItem.root()
         .addListItem(ListItem.default("Nothing yet", "", false)));
-    const progressIndicator = document.getElementById("progress");
-    const radiant = parseInt(progressIndicator.getAttribute("r"), 10) * 2.0 * Math.PI;
-    progressIndicator.setAttribute("stroke-dasharray", radiant.toFixed(2));
-    const setProgress = value => progressIndicator.setAttribute("stroke-dashoffset", ((1.0 - value) * radiant).toFixed(2));
     const loopInSeconds = 8.0;
     const context = new AudioContext();
     yield context.suspend();
@@ -136,22 +136,8 @@ import { ListItem, MenuBar } from "./dom/menu.js";
     document.getElementById("preloader").remove();
     console.log("ready...");
     const enterFrame = () => {
-        let progress = context.currentTime / loopInSeconds;
-        progress -= Math.floor(progress);
-        const size = model.measureRadius() * 2;
-        const ratio = Math.ceil(devicePixelRatio);
-        canvas.width = size * ratio;
-        canvas.height = size * ratio;
-        canvas.style.width = `${size}px`;
-        canvas.style.height = `${size}px`;
-        labelSize.textContent = `${size}`;
-        c2D.clearRect(0.0, 0.0, size, size);
-        c2D.save();
-        c2D.scale(ratio, ratio);
-        c2D.translate(size >> 1, size >> 1);
-        renderer.draw(progress);
-        c2D.restore();
-        setProgress(progress);
+        const progress = context.currentTime / loopInSeconds;
+        ui.render(progress - Math.floor(progress));
         requestAnimationFrame(enterFrame);
     };
     requestAnimationFrame(enterFrame);

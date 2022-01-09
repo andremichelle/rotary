@@ -1,25 +1,34 @@
-import { Terminable } from "../lib/common.js";
+import { ObservableValueImpl, Terminable } from "../lib/common.js";
 import { RotaryModel, RotaryTrackModel } from "./model.js";
 import { RotaryTrackEditorExecutor } from "./editor.js";
-import { RotaryRenderer } from "./render.js";
+export interface DomElements {
+    form: HTMLFormElement;
+    selectors: HTMLElement;
+    template: HTMLElement;
+    canvas: HTMLCanvasElement;
+    labelSize: HTMLLabelElement;
+    labelZoom: HTMLLabelElement;
+    progressIndicator: SVGCircleElement;
+}
 export declare class RotaryUI implements RotaryTrackEditorExecutor {
-    private readonly form;
-    private readonly selectors;
-    private readonly template;
     private readonly model;
-    private readonly renderer;
+    private readonly elements;
+    static create(rotary: RotaryModel): RotaryUI;
     private readonly terminator;
     private readonly editor;
     private readonly map;
     private readonly random;
-    constructor(form: HTMLFormElement, selectors: Element, template: Element, model: RotaryModel, renderer: RotaryRenderer);
-    static create(rotary: RotaryModel, renderer: RotaryRenderer): RotaryUI;
+    private readonly c2D;
+    private readonly renderer;
+    readonly zoom: ObservableValueImpl<number>;
+    private constructor();
     createNew(model: RotaryTrackModel | null, copy: boolean): void;
     deleteTrack(): void;
-    select(model: RotaryTrackModel): void;
+    select(track: RotaryTrackModel): void;
     hasSelected(): boolean;
-    showHighlight(model: RotaryTrackModel): void;
+    showHighlight(track: RotaryTrackModel): void;
     releaseHighlight(): void;
+    render(progress?: number): void;
     private createSelector;
     private removeSelector;
     private reorderSelectors;

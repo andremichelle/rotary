@@ -109,17 +109,12 @@ body
             svg
               background-color: transparent
 
-            label.size, label.zoom, label.transport
+            label
               color: #AAA
               white-space: nowrap
-
-            label.size:after
-              opacity: 0.6
-              content: "px"
-
-            label.zoom:after
-              opacity: 0.6
-              content: "%"
+              &:after
+                opacity: 0.6
+                content: attr(data-unit)
 
 div.two-columns
   display: grid

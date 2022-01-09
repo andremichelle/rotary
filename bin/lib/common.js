@@ -145,6 +145,9 @@ export class ObservableCollection {
     get(index) {
         return this.values[index];
     }
+    first() {
+        return 0 < this.values.length ? Options.valueOf(this.values[0]) : Options.None;
+    }
     indexOf(value) {
         return this.values.indexOf(value);
     }

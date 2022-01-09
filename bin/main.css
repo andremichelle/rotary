@@ -199,43 +199,34 @@ select {
   appearance: none;
 }
 
-@keyframes menu-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.98;
-  }
-}
 @keyframes menu-item-trigger {
   0% {
-    color: #606057;
-    background-color: #606057;
+    color: black;
+    background-color: black;
   }
   50%, 100% {
     color: #333333;
-    background-color: white;
+    background-color: #ececec;
   }
 }
 nav#app-menu {
   display: flex;
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: #202020;
   margin: 0;
   padding: 0 8px;
 }
 nav#app-menu > button {
   width: auto;
   height: auto;
-  color: white;
-  padding: 8px 12px;
-  font-size: 11px;
+  color: #E9E9E9;
+  padding: 6px 12px;
+  font-size: 13px;
   background: transparent;
-  border-radius: 0;
-  font-weight: bold;
+  border-radius: 4px;
 }
 nav#app-menu > button.selected {
-  color: black;
-  background-color: white;
+  color: #E9E9E9;
+  background-color: #3A3A3A;
 }
 
 div.menu-layer {
@@ -253,24 +244,19 @@ nav.menu {
   display: flex;
   flex-direction: column;
   font-size: 12px;
-  color: #606057;
-  background-color: #e7e7e4;
-  border-radius: 3px;
+  color: #F2F2F2;
+  background-color: #2D2D2D;
+  border: 1px #575757 solid;
+  border-radius: 4px;
   overflow: hidden;
-  opacity: 0;
   min-width: 128px;
   max-height: 100%;
   padding: 8px 0;
-  animation-name: menu-fade-in;
-  animation-duration: 101ms;
-  animation-fill-mode: forwards;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 8px 8px 0 rgba(0, 0, 0, 0.3);
   pointer-events: all;
 }
 nav.menu.docked {
   padding: 6px 0 8px 0;
-  border-radius: 0 0 3px 3px;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.1) inset;
 }
 nav.menu.shutdown {
   pointer-events: none;
@@ -293,8 +279,7 @@ nav.menu > div.container > div.default {
   white-space: nowrap;
 }
 nav.menu > div.container > div.default.selected {
-  color: white;
-  background-color: #606057;
+  background-color: #797979;
 }
 nav.menu > div.container > div.default.triggered {
   animation-name: menu-item-trigger;
@@ -305,7 +290,7 @@ nav.menu > div.container > div.default.triggered {
 }
 nav.menu > div.container > div.default > svg.check-icon, nav.menu > div.container > div.default svg.children-icon {
   pointer-events: none;
-  fill: currentColor;
+  fill: #F2F2F2;
   width: 12px;
   height: 12px;
 }
@@ -338,7 +323,7 @@ nav.menu > div.container > hr {
   width: 100%;
   height: 0;
   border: 0;
-  border-top: 1px solid #e9e9e7;
+  border-top: 1px solid #3a3a3a;
   pointer-events: none;
 }
 nav.menu > div.scroll {
@@ -477,17 +462,13 @@ body main > .editing > .preview .rotary div.top-overlay > div.spacer {
 body main > .editing > .preview .rotary div.top-overlay svg {
   background-color: transparent;
 }
-body main > .editing > .preview .rotary div.top-overlay label.size, body main > .editing > .preview .rotary div.top-overlay label.zoom, body main > .editing > .preview .rotary div.top-overlay label.transport {
+body main > .editing > .preview .rotary div.top-overlay label {
   color: #AAA;
   white-space: nowrap;
 }
-body main > .editing > .preview .rotary div.top-overlay label.size:after {
+body main > .editing > .preview .rotary div.top-overlay label:after {
   opacity: 0.6;
-  content: "px";
-}
-body main > .editing > .preview .rotary div.top-overlay label.zoom:after {
-  opacity: 0.6;
-  content: "%";
+  content: attr(data-unit);
 }
 
 div.two-columns {

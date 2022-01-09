@@ -1,19 +1,21 @@
-import { CollectionEventType, Terminator } from "../lib/common.js";
+import { CollectionEventType, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { NumericStepperInput } from "../dom/inputs.js";
 import { RotaryTrackEditor } from "./editor.js";
 import { Dom, NumericStepper, PrintMapping } from "../dom/common.js";
+import { RotaryRenderer } from "./render.js";
 import { Mulberry32 } from "../lib/math.js";
 export class RotaryUI {
-    constructor(form, selectors, template, model, renderer) {
-        this.form = form;
-        this.selectors = selectors;
-        this.template = template;
+    constructor(model, elements) {
         this.model = model;
-        this.renderer = renderer;
+        this.elements = elements;
         this.terminator = new Terminator();
         this.editor = new RotaryTrackEditor(this, document);
         this.map = new Map();
         this.random = new Mulberry32(0x123abc456);
+        this.c2D = this.elements.canvas.getContext("2d", { alpha: true });
+        this.renderer = new RotaryRenderer(this.c2D, this.model);
+        this.zoom = new ObservableValueImpl(1.0);
+        this.elements.template.remove();
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin);
         this.terminator.with(model.tracks.addObserver((event) => {
             switch (event.type) {
@@ -32,24 +34,30 @@ export class RotaryUI {
                     break;
                 }
             }
-            if (0 < this.model.tracks.size() && !this.hasSelected())
-                this.select(this.model.tracks.get(0));
+            if (!this.hasSelected())
+                this.model.tracks.first().ifPresent(track => this.select(track));
         }));
-        this.terminator.with(Dom.bindEventListener(form.querySelector("#unshift-new-track"), "click", event => {
+        this.terminator.with(Dom.bindEventListener(elements.form.querySelector("#unshift-new-track"), "click", event => {
             event.preventDefault();
             this.select(this.model.createTrack(0).randomize(this.random));
         }));
+        const zoomObserver = () => this.elements.labelZoom.textContent = `${Math.floor(this.zoom.get() * 100.0)}`;
+        this.terminator.with(this.zoom.addObserver(zoomObserver));
+        zoomObserver();
         this.model.tracks.forEach(track => this.createSelector(track));
         this.reorderSelectors();
-        if (0 < this.model.tracks.size())
-            this.select(this.model.tracks.get(0));
+        this.model.tracks.first().ifPresent(track => this.select(track));
     }
-    static create(rotary, renderer) {
-        const form = document.querySelector("form.track-nav");
-        const selectors = form.querySelector("#track-selectors");
-        const template = selectors.querySelector("#template-selector-track");
-        template.remove();
-        return new RotaryUI(form, selectors, template, rotary, renderer);
+    static create(rotary) {
+        return new RotaryUI(rotary, {
+            form: document.querySelector("form.track-nav"),
+            selectors: document.querySelector("#track-selectors"),
+            template: document.querySelector("#template-selector-track"),
+            canvas: document.querySelector("canvas"),
+            labelSize: document.querySelector("label.size"),
+            labelZoom: document.querySelector("label.zoom"),
+            progressIndicator: document.getElementById("progress")
+        });
     }
     createNew(model, copy) {
         if (this.editor.subject.isEmpty()) {
@@ -65,10 +73,10 @@ export class RotaryUI {
         this.select(newModel);
     }
     deleteTrack() {
-        this.editor.subject.ifPresent(model => {
-            const beforeIndex = this.model.tracks.indexOf(model);
+        this.editor.subject.ifPresent(track => {
+            const beforeIndex = this.model.tracks.indexOf(track);
             console.assert(-1 !== beforeIndex, "Could not find model");
-            this.model.removeTrack(model);
+            this.model.removeTrack(track);
             const numTracks = this.model.tracks.size();
             if (0 < numTracks) {
                 this.select(this.model.tracks.get(Math.min(beforeIndex, numTracks - 1)));
@@ -78,24 +86,43 @@ export class RotaryUI {
             }
         });
     }
-    select(model) {
-        console.assert(model != undefined, "Cannot select");
-        this.editor.edit(model);
-        const selector = this.map.get(model);
+    select(track) {
+        console.assert(track != undefined, "Cannot select");
+        this.editor.edit(track);
+        const selector = this.map.get(track);
         console.assert(selector != undefined, "Cannot select");
         selector.radio.checked = true;
     }
     hasSelected() {
         return this.editor.subject.nonEmpty();
     }
-    showHighlight(model) {
-        this.renderer.showHighlight(model);
+    showHighlight(track) {
+        this.renderer.showHighlight(track);
     }
     releaseHighlight() {
         this.renderer.releaseHighlight();
     }
+    render(progress = 0.0) {
+        const zoom = this.zoom.get();
+        const size = this.model.measureRadius() * 2;
+        const ratio = Math.ceil(devicePixelRatio);
+        this.elements.canvas.width = size * ratio;
+        this.elements.canvas.height = size * ratio;
+        this.elements.canvas.style.width = `${size * zoom}px`;
+        this.elements.canvas.style.height = `${size * zoom}px`;
+        this.elements.labelSize.textContent = `${size}`;
+        this.c2D.save();
+        this.c2D.scale(ratio, ratio);
+        this.c2D.translate(size >> 1, size >> 1);
+        this.renderer.draw(progress);
+        this.c2D.restore();
+        const circle = this.elements.progressIndicator;
+        const radiant = parseInt(circle.getAttribute("r"), 10) * 2.0 * Math.PI;
+        circle.setAttribute("stroke-dasharray", radiant.toFixed(2));
+        circle.setAttribute("stroke-dashoffset", ((1.0 - progress) * radiant).toFixed(2));
+    }
     createSelector(track) {
-        const element = this.template.cloneNode(true);
+        const element = this.elements.template.cloneNode(true);
         const radio = element.querySelector("input[type=radio]");
         const button = element.querySelector("button");
         const selector = new RotaryTrackSelector(this, track, element, radio, button);
@@ -110,11 +137,11 @@ export class RotaryUI {
             this.editor.clear();
     }
     reorderSelectors() {
-        Dom.emptyNode(this.selectors);
+        Dom.emptyNode(this.elements.selectors);
         this.model.tracks.forEach((track, index) => {
             const selector = this.map.get(track);
             console.assert(selector !== undefined, "Cannot reorder selector");
-            this.selectors.appendChild(selector.element);
+            this.elements.selectors.appendChild(selector.element);
             selector.setIndex(index);
         });
     }

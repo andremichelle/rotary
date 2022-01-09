@@ -204,6 +204,10 @@ export class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
         return this.values[index]
     }
 
+    first(): Option<T> {
+        return 0 < this.values.length ? Options.valueOf(this.values[0]) : Options.None
+    }
+
     indexOf(value: T): number {
         return this.values.indexOf(value)
     }

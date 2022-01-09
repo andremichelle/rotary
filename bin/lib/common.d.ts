@@ -93,6 +93,7 @@ export declare class ObservableCollection<T> implements Observable<CollectionEve
     removeIndex(index: number): boolean;
     clear(): void;
     get(index: number): T;
+    first(): Option<T>;
     indexOf(value: T): number;
     size(): number;
     map<U>(fn: (value: T, index: number, array: T[]) => U): U[];
