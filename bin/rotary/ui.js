@@ -14,7 +14,7 @@ export class RotaryUI {
         this.random = new Mulberry32(0x123abc456);
         this.c2D = this.elements.canvas.getContext("2d", { alpha: true });
         this.renderer = new RotaryRenderer(this.c2D, this.model);
-        this.zoom = new ObservableValueImpl(1.0);
+        this.zoom = new ObservableValueImpl(0.5);
         this.elements.template.remove();
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin);
         this.terminator.with(model.tracks.addObserver((event) => {
