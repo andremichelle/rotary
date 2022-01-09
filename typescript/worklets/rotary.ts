@@ -41,7 +41,7 @@ class Rotary extends AudioWorkletProcessor {
         for (let i = 0; i < out.length; i++) {
             let amp = 0.0
             tracks.forEach((track, index) => {
-                if (index >= 32) return
+                if (index >= Rotary.MAX_NOTES) return
                 const level = track.ratio(localPhase)
                 const env = this.envelopes[index]
                 this.envelopes[index] = level + this.coeff * (env - level)
