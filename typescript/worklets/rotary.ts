@@ -1,11 +1,12 @@
 import {RotaryFormat, RotaryModel} from "../rotary/model.js"
-import {Chords} from "../lib/chords.js"
 import {DSP} from "../lib/dsp.js"
 
-registerProcessor("rotary", class extends AudioWorkletProcessor {
+class Rotary extends AudioWorkletProcessor {
+    static MAX_NOTES = 32
+
     private readonly model: RotaryModel = new RotaryModel()
-    private readonly phaseIncrements = new Float32Array(32)
-    private readonly envelopes = new Float32Array(32)
+    private readonly phaseIncrements = new Float32Array(Rotary.MAX_NOTES)
+    private readonly envelopes = new Float32Array(Rotary.MAX_NOTES)
     private readonly coeff: number = 0.0
     private phase: number = 0.0
     private loopInSeconds: number = 1.0
@@ -13,11 +14,11 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
     constructor() {
         super()
 
-        const compose = Chords.compose(Chords.Minor, 48, 4, 5)
-        for (let i = 0; i < 32; i++) {
-            const o = Math.floor(i / compose.length)
-            const n = i % compose.length
-            this.phaseIncrements[i] = DSP.midiToHz(compose[n] + o * 12) * 2.0 * Math.PI
+        const notes = new Uint8Array([60, 62, 65, 67, 69])
+        for (let i = 0; i < Rotary.MAX_NOTES; i++) {
+            const o = Math.floor(i / notes.length) - 1
+            const n = i % notes.length
+            this.phaseIncrements[i] = DSP.midiToHz(notes[n] + o * 12) * 2.0 * Math.PI
         }
 
         const time = .005
@@ -51,4 +52,6 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         }
         return true
     }
-})
+}
+
+registerProcessor("rotary", Rotary)

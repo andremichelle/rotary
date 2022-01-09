@@ -1,20 +1,19 @@
 import { RotaryModel } from "../rotary/model.js";
-import { Chords } from "../lib/chords.js";
 import { DSP } from "../lib/dsp.js";
-registerProcessor("rotary", class extends AudioWorkletProcessor {
+class Rotary extends AudioWorkletProcessor {
     constructor() {
         super();
         this.model = new RotaryModel();
-        this.phaseIncrements = new Float32Array(32);
-        this.envelopes = new Float32Array(32);
+        this.phaseIncrements = new Float32Array(Rotary.MAX_NOTES);
+        this.envelopes = new Float32Array(Rotary.MAX_NOTES);
         this.coeff = 0.0;
         this.phase = 0.0;
         this.loopInSeconds = 1.0;
-        const compose = Chords.compose(Chords.Minor, 48, 4, 5);
-        for (let i = 0; i < 32; i++) {
-            const o = Math.floor(i / compose.length);
-            const n = i % compose.length;
-            this.phaseIncrements[i] = DSP.midiToHz(compose[n] + o * 12) * 2.0 * Math.PI;
+        const notes = new Uint8Array([60, 62, 65, 67, 69]);
+        for (let i = 0; i < Rotary.MAX_NOTES; i++) {
+            const o = Math.floor(i / notes.length) - 1;
+            const n = i % notes.length;
+            this.phaseIncrements[i] = DSP.midiToHz(notes[n] + o * 12) * 2.0 * Math.PI;
         }
         const time = .005;
         this.coeff = Math.exp(-1.0 / (sampleRate * time));
@@ -47,5 +46,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         }
         return true;
     }
-});
+}
+Rotary.MAX_NOTES = 32;
+registerProcessor("rotary", Rotary);
 //# sourceMappingURL=rotary.js.map

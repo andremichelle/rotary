@@ -125,7 +125,7 @@ export class RotaryUI implements RotaryTrackEditorExecutor {
     render(progress: number = 0.0): void {
         const zoom = this.zoom.get()
         const size = this.model.measureRadius() * 2
-        const ratio = Math.ceil(devicePixelRatio)
+        const ratio = Math.ceil(devicePixelRatio) * zoom
 
         this.elements.canvas.width = size * ratio
         this.elements.canvas.height = size * ratio
