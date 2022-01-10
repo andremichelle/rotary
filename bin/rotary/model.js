@@ -1,7 +1,7 @@
 import { BoundNumericValue, ObservableCollection, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { Color } from "../dom/common.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
-import { CShapeMotion, LinearMotion, Motion, PowMotion, SmoothStepMotion } from "./motion.js";
+import { CShapeMotion, LinearMotion, Motion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
 export class RotaryModel {
     constructor() {
         this.terminator = new Terminator();
@@ -90,6 +90,7 @@ export const MotionTypes = new Map([
     ["Linear", LinearMotion],
     ["Power", PowMotion],
     ["CShape", CShapeMotion],
+    ["TShape", TShapeMotion],
     ["SmoothStep", SmoothStepMotion]
 ]);
 export const Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);

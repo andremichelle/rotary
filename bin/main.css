@@ -428,7 +428,7 @@ body main > .editing > .columns > .track-editor {
   column-gap: 32px;
   border-radius: 2px;
 }
-body main > .editing > .columns > .track-editor[data-motion=linear] [data-exclude=motion]:not([data-motion=linear]), body main > .editing > .columns > .track-editor[data-motion=pow] [data-exclude=motion]:not([data-motion=pow]), body main > .editing > .columns > .track-editor[data-motion=cshape] [data-exclude=motion]:not([data-motion=cshape]), body main > .editing > .columns > .track-editor[data-motion=smoothstep] [data-exclude=motion]:not([data-motion=smoothstep]) {
+body main > .editing > .columns > .track-editor[data-motion=linear] [data-exclude=motion]:not([data-motion=linear]), body main > .editing > .columns > .track-editor[data-motion=pow] [data-exclude=motion]:not([data-motion=pow]), body main > .editing > .columns > .track-editor[data-motion=cshape] [data-exclude=motion]:not([data-motion=cshape]), body main > .editing > .columns > .track-editor[data-motion=tshape] [data-exclude=motion]:not([data-motion=tshape]), body main > .editing > .columns > .track-editor[data-motion=smoothstep] [data-exclude=motion]:not([data-motion=smoothstep]) {
   display: none;
 }
 body main > .editing > .actions {

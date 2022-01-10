@@ -2,7 +2,7 @@ import { ObservableValueImpl, ObservableValueVoid, Options, Terminator } from ".
 import { Checkbox, NumericInput, NumericStepperInput, SelectInput } from "../dom/inputs.js";
 import { Fills, MotionTypes } from "./model.js";
 import { Dom, PrintMapping, NumericStepper } from "../dom/common.js";
-import { CShapeMotion, LinearMotion, PowMotion, SmoothStepMotion } from "./motion.js";
+import { CShapeMotion, LinearMotion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
 export class PowMotionEditor {
     constructor(element) {
         this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='pow'][data-parameter='exponent']"), PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth);
@@ -23,6 +23,20 @@ export class CShapeMotionEditor {
     }
     with(value) {
         this.input.with(value.slope);
+    }
+    clear() {
+        this.input.with(ObservableValueVoid.Instance);
+    }
+    terminate() {
+        this.input.terminate();
+    }
+}
+export class TShapeMotionEditor {
+    constructor(element) {
+        this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='tshape'][data-parameter='t']"), PrintMapping.float(2, "", ""), NumericStepper.Hundredth);
+    }
+    with(value) {
+        this.input.with(value.t);
     }
     clear() {
         this.input.with(ObservableValueVoid.Instance);
@@ -61,6 +75,7 @@ export class MotionEditor {
         this.typeSelectInput.with(this.motionTypeValue);
         this.powMotionEditor = this.terminator.with(new PowMotionEditor(element));
         this.cShapeMotionEditor = this.terminator.with(new CShapeMotionEditor(element));
+        this.tShapeMotionEditor = this.terminator.with(new TShapeMotionEditor(element));
         this.smoothStepMotionEditor = this.terminator.with(new SmoothStepMotionEditor(element));
         this.terminator.with(this.motionTypeValue.addObserver(motionType => this.editable.ifPresent(value => value.set(new motionType()))));
     }
@@ -90,23 +105,34 @@ export class MotionEditor {
             this.element.setAttribute("data-motion", "linear");
             this.powMotionEditor.clear();
             this.cShapeMotionEditor.clear();
+            this.tShapeMotionEditor.clear();
             this.smoothStepMotionEditor.clear();
         }
         else if (motion instanceof PowMotion) {
             this.element.setAttribute("data-motion", "pow");
             this.powMotionEditor.with(motion);
             this.cShapeMotionEditor.clear();
+            this.tShapeMotionEditor.clear();
             this.smoothStepMotionEditor.clear();
         }
         else if (motion instanceof CShapeMotion) {
             this.element.setAttribute("data-motion", "cshape");
             this.powMotionEditor.clear();
             this.cShapeMotionEditor.with(motion);
+            this.tShapeMotionEditor.clear();
+            this.smoothStepMotionEditor.clear();
+        }
+        else if (motion instanceof TShapeMotion) {
+            this.element.setAttribute("data-motion", "tshape");
+            this.powMotionEditor.clear();
+            this.tShapeMotionEditor.with(motion);
+            this.cShapeMotionEditor.clear();
             this.smoothStepMotionEditor.clear();
         }
         else if (motion instanceof SmoothStepMotion) {
             this.element.setAttribute("data-motion", "smoothstep");
             this.powMotionEditor.clear();
+            this.tShapeMotionEditor.clear();
             this.cShapeMotionEditor.clear();
             this.smoothStepMotionEditor.with(motion);
         }

@@ -12,7 +12,8 @@ export declare class Mulberry32 implements Random {
     nextDouble(min: number, max: number): number;
     private uniform;
 }
-export declare class SmoothStep {
-    static fx(x: number): number;
-    static edge(edge0: number, edge1: number, x: number): number;
+export declare class Function {
+    static smoothStep(x: number): number;
+    static tx(x: number, t: number): number;
+    static step(edge0: number, edge1: number, x: number): number;
 }

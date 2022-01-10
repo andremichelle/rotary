@@ -10,7 +10,7 @@ import {
 import {Checkbox, Editor, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model.js"
 import {Dom, PrintMapping, NumericStepper} from "../dom/common.js"
-import {CShapeMotion, LinearMotion, Motion, MotionType, PowMotion, SmoothStepMotion} from "./motion.js"
+import {CShapeMotion, LinearMotion, Motion, MotionType, PowMotion, SmoothStepMotion, TShapeMotion} from "./motion.js"
 
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void
@@ -60,6 +60,28 @@ export class CShapeMotionEditor implements Editor<CShapeMotion> {
     }
 }
 
+export class TShapeMotionEditor implements Editor<TShapeMotion> {
+    private readonly input: NumericStepperInput
+
+    constructor(element: Element) {
+        this.input = new NumericStepperInput(
+            element.querySelector("fieldset[data-motion='tshape'][data-parameter='t']"),
+            PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
+    }
+
+    with(value: TShapeMotion): void {
+        this.input.with(value.t)
+    }
+
+    clear(): void {
+        this.input.with(ObservableValueVoid.Instance)
+    }
+
+    terminate(): void {
+        this.input.terminate()
+    }
+}
+
 export class SmoothStepMotionEditor implements Editor<SmoothStepMotion> {
     private readonly input0: NumericStepperInput
     private readonly input1: NumericStepperInput
@@ -96,6 +118,7 @@ export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
 
     private readonly powMotionEditor: PowMotionEditor
     private readonly cShapeMotionEditor: CShapeMotionEditor
+    private readonly tShapeMotionEditor: TShapeMotionEditor
     private readonly smoothStepMotionEditor: SmoothStepMotionEditor
 
     private editable: Option<ObservableValue<Motion<any>>> = Options.None
@@ -107,6 +130,7 @@ export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
 
         this.powMotionEditor = this.terminator.with(new PowMotionEditor(element))
         this.cShapeMotionEditor = this.terminator.with(new CShapeMotionEditor(element))
+        this.tShapeMotionEditor = this.terminator.with(new TShapeMotionEditor(element))
         this.smoothStepMotionEditor = this.terminator.with(new SmoothStepMotionEditor(element))
 
         this.terminator.with(this.motionTypeValue.addObserver(motionType => this.editable.ifPresent(value => value.set(new motionType()))))
@@ -142,20 +166,30 @@ export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
             this.element.setAttribute("data-motion", "linear")
             this.powMotionEditor.clear()
             this.cShapeMotionEditor.clear()
+            this.tShapeMotionEditor.clear()
             this.smoothStepMotionEditor.clear()
         } else if (motion instanceof PowMotion) {
             this.element.setAttribute("data-motion", "pow")
             this.powMotionEditor.with(motion)
             this.cShapeMotionEditor.clear()
+            this.tShapeMotionEditor.clear()
             this.smoothStepMotionEditor.clear()
         } else if (motion instanceof CShapeMotion) {
             this.element.setAttribute("data-motion", "cshape")
             this.powMotionEditor.clear()
             this.cShapeMotionEditor.with(motion)
+            this.tShapeMotionEditor.clear()
+            this.smoothStepMotionEditor.clear()
+        } else if (motion instanceof TShapeMotion) {
+            this.element.setAttribute("data-motion", "tshape")
+            this.powMotionEditor.clear()
+            this.tShapeMotionEditor.with(motion)
+            this.cShapeMotionEditor.clear()
             this.smoothStepMotionEditor.clear()
         } else if (motion instanceof SmoothStepMotion) {
             this.element.setAttribute("data-motion", "smoothstep")
             this.powMotionEditor.clear()
+            this.tShapeMotionEditor.clear()
             this.cShapeMotionEditor.clear()
             this.smoothStepMotionEditor.with(motion)
         }

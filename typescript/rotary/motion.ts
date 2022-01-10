@@ -1,8 +1,8 @@
 import {BoundNumericValue, Serializer, Terminable, Terminator} from "../lib/common.js"
 import {Linear} from "../lib/mapping.js"
-import {Random, SmoothStep} from "../lib/math.js"
+import {Function, Random} from "../lib/math.js"
 
-type Data = PowData | CShapeData | SmoothStepData
+type Data = PowData | CShapeData | TShapeData | SmoothStepData
 
 export type MotionType = { new(): Motion<any> }
 
@@ -20,6 +20,8 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
                 return new LinearMotion()
             case PowMotion.name:
                 return new PowMotion().deserialize(format)
+            case TShapeMotion.name:
+                return new TShapeMotion().deserialize(format)
             case CShapeMotion.name:
                 return new CShapeMotion().deserialize(format)
             case SmoothStepMotion.name:
@@ -167,6 +169,44 @@ export class CShapeMotion extends Motion<CShapeData> {
     }
 }
 
+declare interface TShapeData {
+    t: number
+}
+
+export class TShapeMotion extends Motion<TShapeData> {
+    private readonly range = new Linear(-0.99, 0.99)
+
+    readonly t = this.terminator.with(new BoundNumericValue(this.range, 0.5))
+
+    constructor() {
+        super()
+    }
+
+    map(x: number): number {
+        return Function.tx(x, this.t.get())
+    }
+
+    serialize(): MotionFormat<TShapeData> {
+        return super.pack({t: this.t.get()})
+    }
+
+    deserialize(format: MotionFormat<TShapeData>): TShapeMotion {
+        this.t.set(super.unpack(format).t)
+        return this
+    }
+
+    copy(): TShapeMotion {
+        const motion = new TShapeMotion()
+        motion.t.set(this.t.get())
+        return motion
+    }
+
+    randomize(random: Random): Motion<TShapeData> {
+        this.t.set(random.nextDouble(this.range.min, this.range.max))
+        return this
+    }
+}
+
 declare interface SmoothStepData {
     edge0: number
     edge1: number
@@ -181,7 +221,7 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
     }
 
     map(x: number): number {
-        return SmoothStep.edge(this.edge0.get(), this.edge1.get(), x)
+        return Function.smoothStep(Function.step(this.edge0.get(), this.edge1.get(), x))
     }
 
     deserialize(format: MotionFormat<SmoothStepData>): SmoothStepMotion {
@@ -212,4 +252,5 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
 MotionTypes.push(LinearMotion)
 MotionTypes.push(PowMotion)
 MotionTypes.push(CShapeMotion)
+MotionTypes.push(TShapeMotion)
 MotionTypes.push(SmoothStepMotion)

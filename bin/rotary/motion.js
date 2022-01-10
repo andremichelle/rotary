@@ -1,6 +1,6 @@
 import { BoundNumericValue, Terminator } from "../lib/common.js";
 import { Linear } from "../lib/mapping.js";
-import { SmoothStep } from "../lib/math.js";
+import { Function } from "../lib/math.js";
 const MotionTypes = [];
 export class Motion {
     constructor() {
@@ -12,6 +12,8 @@ export class Motion {
                 return new LinearMotion();
             case PowMotion.name:
                 return new PowMotion().deserialize(format);
+            case TShapeMotion.name:
+                return new TShapeMotion().deserialize(format);
             case CShapeMotion.name:
                 return new CShapeMotion().deserialize(format);
             case SmoothStepMotion.name:
@@ -112,6 +114,32 @@ export class CShapeMotion extends Motion {
         this.c = Math.pow(2.0, this.o - 1);
     }
 }
+export class TShapeMotion extends Motion {
+    constructor() {
+        super();
+        this.range = new Linear(-0.99, 0.99);
+        this.t = this.terminator.with(new BoundNumericValue(this.range, 0.5));
+    }
+    map(x) {
+        return Function.tx(x, this.t.get());
+    }
+    serialize() {
+        return super.pack({ t: this.t.get() });
+    }
+    deserialize(format) {
+        this.t.set(super.unpack(format).t);
+        return this;
+    }
+    copy() {
+        const motion = new TShapeMotion();
+        motion.t.set(this.t.get());
+        return motion;
+    }
+    randomize(random) {
+        this.t.set(random.nextDouble(this.range.min, this.range.max));
+        return this;
+    }
+}
 export class SmoothStepMotion extends Motion {
     constructor() {
         super();
@@ -119,7 +147,7 @@ export class SmoothStepMotion extends Motion {
         this.edge1 = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75));
     }
     map(x) {
-        return SmoothStep.edge(this.edge0.get(), this.edge1.get(), x);
+        return Function.smoothStep(Function.step(this.edge0.get(), this.edge1.get(), x));
     }
     deserialize(format) {
         const data = this.unpack(format);
@@ -145,5 +173,6 @@ export class SmoothStepMotion extends Motion {
 MotionTypes.push(LinearMotion);
 MotionTypes.push(PowMotion);
 MotionTypes.push(CShapeMotion);
+MotionTypes.push(TShapeMotion);
 MotionTypes.push(SmoothStepMotion);
 //# sourceMappingURL=motion.js.map

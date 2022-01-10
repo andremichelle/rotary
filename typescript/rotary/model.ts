@@ -11,7 +11,16 @@ import {
 import {Color} from "../dom/common.js"
 import {Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
-import {CShapeMotion, LinearMotion, Motion, MotionFormat, MotionType, PowMotion, SmoothStepMotion} from "./motion.js"
+import {
+    CShapeMotion,
+    LinearMotion,
+    Motion,
+    MotionFormat,
+    MotionType,
+    PowMotion,
+    SmoothStepMotion,
+    TShapeMotion
+} from "./motion.js"
 
 export declare interface RotaryFormat {
     radiusMin: number
@@ -132,6 +141,7 @@ export const MotionTypes = new Map<string, MotionType>([
     ["Linear", LinearMotion],
     ["Power", PowMotion],
     ["CShape", CShapeMotion],
+    ["TShape", TShapeMotion],
     ["SmoothStep", SmoothStepMotion]
 ])
 

@@ -1,7 +1,7 @@
 import { ObservableValue, Option, Terminable } from "../lib/common.js";
 import { Editor } from "../dom/inputs.js";
 import { RotaryTrackModel } from "./model.js";
-import { CShapeMotion, Motion, PowMotion, SmoothStepMotion } from "./motion.js";
+import { CShapeMotion, Motion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void;
 }
@@ -16,6 +16,13 @@ export declare class CShapeMotionEditor implements Editor<CShapeMotion> {
     private readonly input;
     constructor(element: Element);
     with(value: CShapeMotion): void;
+    clear(): void;
+    terminate(): void;
+}
+export declare class TShapeMotionEditor implements Editor<TShapeMotion> {
+    private readonly input;
+    constructor(element: Element);
+    with(value: TShapeMotion): void;
     clear(): void;
     terminate(): void;
 }
@@ -35,6 +42,7 @@ export declare class MotionEditor implements Editor<ObservableValue<Motion<any>>
     private readonly typeSelectInput;
     private readonly powMotionEditor;
     private readonly cShapeMotionEditor;
+    private readonly tShapeMotionEditor;
     private readonly smoothStepMotionEditor;
     private editable;
     private subscription;

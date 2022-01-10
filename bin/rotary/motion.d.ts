@@ -1,6 +1,6 @@
 import { BoundNumericValue, Serializer, Terminable, Terminator } from "../lib/common.js";
 import { Random } from "../lib/math.js";
-declare type Data = PowData | CShapeData | SmoothStepData;
+declare type Data = PowData | CShapeData | TShapeData | SmoothStepData;
 export declare type MotionType = {
     new (): Motion<any>;
 };
@@ -55,6 +55,19 @@ export declare class CShapeMotion extends Motion<CShapeData> {
     copy(): CShapeMotion;
     randomize(random: Random): Motion<CShapeData>;
     private update;
+}
+declare interface TShapeData {
+    t: number;
+}
+export declare class TShapeMotion extends Motion<TShapeData> {
+    private readonly range;
+    readonly t: BoundNumericValue;
+    constructor();
+    map(x: number): number;
+    serialize(): MotionFormat<TShapeData>;
+    deserialize(format: MotionFormat<TShapeData>): TShapeMotion;
+    copy(): TShapeMotion;
+    randomize(random: Random): Motion<TShapeData>;
 }
 declare interface SmoothStepData {
     edge0: number;
