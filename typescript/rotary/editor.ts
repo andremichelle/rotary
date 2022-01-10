@@ -43,7 +43,7 @@ export class CShapeMotionEditor implements Editor<CShapeMotion> {
 
     constructor(element: Element) {
         this.input = new NumericStepperInput(
-            element.querySelector("fieldset[data-motion='cshape'][data-parameter='slope']"),
+            element.querySelector("fieldset[data-motion='cshape'][data-parameter='shape']"),
             PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
     }
 
@@ -65,12 +65,12 @@ export class TShapeMotionEditor implements Editor<TShapeMotion> {
 
     constructor(element: Element) {
         this.input = new NumericStepperInput(
-            element.querySelector("fieldset[data-motion='tshape'][data-parameter='t']"),
+            element.querySelector("fieldset[data-motion='tshape'][data-parameter='shape']"),
             PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
     }
 
     with(value: TShapeMotion): void {
-        this.input.with(value.t)
+        this.input.with(value.shape)
     }
 
     clear(): void {

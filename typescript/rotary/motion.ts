@@ -170,39 +170,39 @@ export class CShapeMotion extends Motion<CShapeData> {
 }
 
 declare interface TShapeData {
-    t: number
+    shape: number
 }
 
 export class TShapeMotion extends Motion<TShapeData> {
     private readonly range = new Linear(-0.99, 0.99)
 
-    readonly t = this.terminator.with(new BoundNumericValue(this.range, 0.5))
+    readonly shape = this.terminator.with(new BoundNumericValue(this.range, 0.5))
 
     constructor() {
         super()
     }
 
     map(x: number): number {
-        return Function.tx(x, this.t.get())
+        return Function.tx(x, this.shape.get())
     }
 
     serialize(): MotionFormat<TShapeData> {
-        return super.pack({t: this.t.get()})
+        return super.pack({shape: this.shape.get()})
     }
 
     deserialize(format: MotionFormat<TShapeData>): TShapeMotion {
-        this.t.set(super.unpack(format).t)
+        this.shape.set(super.unpack(format).shape)
         return this
     }
 
     copy(): TShapeMotion {
         const motion = new TShapeMotion()
-        motion.t.set(this.t.get())
+        motion.shape.set(this.shape.get())
         return motion
     }
 
     randomize(random: Random): Motion<TShapeData> {
-        this.t.set(random.nextDouble(this.range.min, this.range.max))
+        this.shape.set(random.nextDouble(this.range.min, this.range.max))
         return this
     }
 }

@@ -118,25 +118,25 @@ export class TShapeMotion extends Motion {
     constructor() {
         super();
         this.range = new Linear(-0.99, 0.99);
-        this.t = this.terminator.with(new BoundNumericValue(this.range, 0.5));
+        this.shape = this.terminator.with(new BoundNumericValue(this.range, 0.5));
     }
     map(x) {
-        return Function.tx(x, this.t.get());
+        return Function.tx(x, this.shape.get());
     }
     serialize() {
-        return super.pack({ t: this.t.get() });
+        return super.pack({ shape: this.shape.get() });
     }
     deserialize(format) {
-        this.t.set(super.unpack(format).t);
+        this.shape.set(super.unpack(format).shape);
         return this;
     }
     copy() {
         const motion = new TShapeMotion();
-        motion.t.set(this.t.get());
+        motion.shape.set(this.shape.get());
         return motion;
     }
     randomize(random) {
-        this.t.set(random.nextDouble(this.range.min, this.range.max));
+        this.shape.set(random.nextDouble(this.range.min, this.range.max));
         return this;
     }
 }

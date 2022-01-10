@@ -57,11 +57,11 @@ export declare class CShapeMotion extends Motion<CShapeData> {
     private update;
 }
 declare interface TShapeData {
-    t: number;
+    shape: number;
 }
 export declare class TShapeMotion extends Motion<TShapeData> {
     private readonly range;
-    readonly t: BoundNumericValue;
+    readonly shape: BoundNumericValue;
     constructor();
     map(x: number): number;
     serialize(): MotionFormat<TShapeData>;

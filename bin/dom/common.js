@@ -53,7 +53,7 @@ export class PrintMapping {
             const value = parseInt(text, 10);
             if (isNaN(value))
                 return null;
-            return value | 0;
+            return Math.round(value) | 0;
         }, value => String(value), "", postUnit);
     }
     static float(numPrecision, preUnit, postUnit) {
@@ -61,7 +61,7 @@ export class PrintMapping {
             const value = parseFloat(text);
             if (isNaN(value))
                 return null;
-            return value | 0;
+            return value;
         }, value => value.toFixed(numPrecision), preUnit, postUnit);
     }
     parse(text) {

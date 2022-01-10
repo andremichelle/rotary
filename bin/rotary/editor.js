@@ -19,7 +19,7 @@ export class PowMotionEditor {
 }
 export class CShapeMotionEditor {
     constructor(element) {
-        this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='cshape'][data-parameter='slope']"), PrintMapping.float(2, "", ""), NumericStepper.Hundredth);
+        this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='cshape'][data-parameter='shape']"), PrintMapping.float(2, "", ""), NumericStepper.Hundredth);
     }
     with(value) {
         this.input.with(value.slope);
@@ -33,10 +33,10 @@ export class CShapeMotionEditor {
 }
 export class TShapeMotionEditor {
     constructor(element) {
-        this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='tshape'][data-parameter='t']"), PrintMapping.float(2, "", ""), NumericStepper.Hundredth);
+        this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='tshape'][data-parameter='shape']"), PrintMapping.float(2, "", ""), NumericStepper.Hundredth);
     }
     with(value) {
-        this.input.with(value.t);
+        this.input.with(value.shape);
     }
     clear() {
         this.input.with(ObservableValueVoid.Instance);
