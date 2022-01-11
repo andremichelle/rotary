@@ -9,7 +9,7 @@ import {
     Terminator
 } from "../lib/common.js"
 import {Color} from "../dom/common.js"
-import {Random} from "../lib/math.js"
+import {Function, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {
     CShapeMotion,
@@ -37,6 +37,7 @@ export declare interface RotaryTrackFormat {
     rgb: number
     motion: MotionFormat<any>
     phaseOffset: number
+    bend: number
     frequency: number
     reverse: boolean
 }
@@ -45,20 +46,19 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
     readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
-    readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0))
+    readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75))
 
     constructor() {
     }
 
     randomize(random: Random): RotaryModel {
-        const tracks = []
+        this.radiusMin.set(20)
+        this.tracks.clear()
         let radius = this.radiusMin.get()
         while (radius < 256) {
             const track = this.createTrack().randomize(random)
             radius += track.width.get() + track.widthPadding.get()
         }
-        this.tracks.clear()
-        this.tracks.addAll(tracks)
         return this
     }
 
@@ -157,12 +157,13 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
     readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
     readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0))
+    readonly bend = this.terminator.with(new BoundNumericValue(Linear.Bipolar, 0.0))
     readonly frequency = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.terminator.with(new ObservableValueImpl<boolean>(false))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
     private readonly observers: Map<Observer<RotaryTrackModel>, Terminable> = new Map()
 
-    constructor(private readonly root: RotaryModel) {
+    constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
         this.updateGradient()
     }
@@ -172,6 +173,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const terminator = new Terminator()
         terminator.with(this.segments.addObserver(mappedObserver))
         terminator.with(this.phaseOffset.addObserver(mappedObserver))
+        terminator.with(this.bend.addObserver(mappedObserver))
         terminator.with(this.frequency.addObserver(mappedObserver))
         terminator.with(this.reverse.addObserver(mappedObserver))
         terminator.with(this.length.addObserver(mappedObserver))
@@ -193,18 +195,19 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     map(phase: number): number {
         phase *= this.frequency.get()
-        phase += this.phaseOffset.get() + this.root.phaseOffset.get()
+        phase += this.phaseOffset.get()
         phase -= Math.floor(phase)
-        if (this.reverse.get()) phase = 1.0 - phase
-        phase = this.motion.get().map(phase)
+        if (!this.reverse.get()) phase = 1.0 - phase
+        phase += this.root.phaseOffset.get()
+        phase = this.motion.get().map(phase - Math.floor(phase))
         return phase - Math.floor(phase)
     }
 
     ratio(phase: number): number {
+        const intersection: number = 0.75
+        phase = intersection - this.map(phase)
         phase -= Math.floor(phase)
-        phase = this.map(phase)
-        phase -= Math.floor(phase)
-        phase = 1.0 - phase
+        phase = Function.tx(phase, -this.bend.get())
         phase /= this.length.get()
         if (phase >= 1.0) return 0.0
         phase %= 1.0 / this.segments.get()
@@ -217,11 +220,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     test() {
         this.phaseOffset.set(0.0)
+        this.bend.set(0.0)
         this.frequency.set(1.0)
         this.reverse.set(false)
         this.length.set(0.5)
         this.lengthRatio.set(0.5)
-        this.segments.set(2)
+        this.segments.set(8)
         this.motion.set(new LinearMotion())
         this.width.set(128)
     }
@@ -250,6 +254,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.fill.set(fill)
         this.motion.set(Motion.random(random))
         this.phaseOffset.set(random.nextDouble(0.0, 1.0))
+        this.bend.set(random.nextDouble(-.5, .5))
         this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)))
         this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5)
         return this
@@ -275,6 +280,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             rgb: this.rgb.get(),
             motion: this.motion.get().serialize(),
             phaseOffset: this.phaseOffset.get(),
+            bend: this.bend.get(),
             frequency: this.frequency.get(),
             reverse: this.reverse.get()
         }
@@ -290,6 +296,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.rgb.set(format.rgb)
         this.motion.set(Motion.from(format.motion))
         this.phaseOffset.set(format.phaseOffset)
+        this.bend.set(format.bend)
         this.frequency.set(format.frequency)
         this.reverse.set(format.reverse)
         return this

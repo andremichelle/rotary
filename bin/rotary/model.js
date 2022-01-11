@@ -1,5 +1,6 @@
 import { BoundNumericValue, ObservableCollection, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { Color } from "../dom/common.js";
+import { Function } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { CShapeMotion, LinearMotion, Motion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
 export class RotaryModel {
@@ -7,17 +8,16 @@ export class RotaryModel {
         this.terminator = new Terminator();
         this.tracks = new ObservableCollection();
         this.radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20));
-        this.phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0));
+        this.phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75));
     }
     randomize(random) {
-        const tracks = [];
+        this.radiusMin.set(20);
+        this.tracks.clear();
         let radius = this.radiusMin.get();
         while (radius < 256) {
             const track = this.createTrack().randomize(random);
             radius += track.width.get() + track.widthPadding.get();
         }
-        this.tracks.clear();
-        this.tracks.addAll(tracks);
         return this;
     }
     randomizeTracks(random) {
@@ -105,6 +105,7 @@ export class RotaryTrackModel {
         this.rgb = this.terminator.with(new ObservableValueImpl((0xFFFFFF)));
         this.motion = this.terminator.with(new ObservableValueImpl(new LinearMotion()));
         this.phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0));
+        this.bend = this.terminator.with(new BoundNumericValue(Linear.Bipolar, 0.0));
         this.frequency = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
         this.reverse = this.terminator.with(new ObservableValueImpl(false));
         this.gradient = [];
@@ -117,6 +118,7 @@ export class RotaryTrackModel {
         const terminator = new Terminator();
         terminator.with(this.segments.addObserver(mappedObserver));
         terminator.with(this.phaseOffset.addObserver(mappedObserver));
+        terminator.with(this.bend.addObserver(mappedObserver));
         terminator.with(this.frequency.addObserver(mappedObserver));
         terminator.with(this.reverse.addObserver(mappedObserver));
         terminator.with(this.length.addObserver(mappedObserver));
@@ -137,18 +139,19 @@ export class RotaryTrackModel {
     }
     map(phase) {
         phase *= this.frequency.get();
-        phase += this.phaseOffset.get() + this.root.phaseOffset.get();
+        phase += this.phaseOffset.get();
         phase -= Math.floor(phase);
-        if (this.reverse.get())
+        if (!this.reverse.get())
             phase = 1.0 - phase;
-        phase = this.motion.get().map(phase);
+        phase += this.root.phaseOffset.get();
+        phase = this.motion.get().map(phase - Math.floor(phase));
         return phase - Math.floor(phase);
     }
     ratio(phase) {
+        const intersection = 0.75;
+        phase = intersection - this.map(phase);
         phase -= Math.floor(phase);
-        phase = this.map(phase);
-        phase -= Math.floor(phase);
-        phase = 1.0 - phase;
+        phase = Function.tx(phase, -this.bend.get());
         phase /= this.length.get();
         if (phase >= 1.0)
             return 0.0;
@@ -162,11 +165,12 @@ export class RotaryTrackModel {
     }
     test() {
         this.phaseOffset.set(0.0);
+        this.bend.set(0.0);
         this.frequency.set(1.0);
         this.reverse.set(false);
         this.length.set(0.5);
         this.lengthRatio.set(0.5);
-        this.segments.set(2);
+        this.segments.set(8);
         this.motion.set(new LinearMotion());
         this.width.set(128);
     }
@@ -192,6 +196,7 @@ export class RotaryTrackModel {
         this.fill.set(fill);
         this.motion.set(Motion.random(random));
         this.phaseOffset.set(random.nextDouble(0.0, 1.0));
+        this.bend.set(random.nextDouble(-.5, .5));
         this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)));
         this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5);
         return this;
@@ -214,6 +219,7 @@ export class RotaryTrackModel {
             rgb: this.rgb.get(),
             motion: this.motion.get().serialize(),
             phaseOffset: this.phaseOffset.get(),
+            bend: this.bend.get(),
             frequency: this.frequency.get(),
             reverse: this.reverse.get()
         };
@@ -228,6 +234,7 @@ export class RotaryTrackModel {
         this.rgb.set(format.rgb);
         this.motion.set(Motion.from(format.motion));
         this.phaseOffset.set(format.phaseOffset);
+        this.bend.set(format.bend);
         this.frequency.set(format.frequency);
         this.reverse.set(format.reverse);
         return this;

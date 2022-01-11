@@ -24,10 +24,11 @@ export class RotaryRenderer {
         const thickness = model.widthPadding.get() * 0.5;
         const r0 = radiusMin + thickness;
         const r1 = radiusMin + thickness + width;
+        const bend = model.bend.get();
         for (let i = 0; i < segments; i++) {
             const angleMin = i * scale;
             const angleMax = angleMin + scale * model.lengthRatio.get();
-            this.drawSection(model, r0, r1, phase + Function.tx(angleMin, 0.0), phase + Function.tx(angleMax, 0.0), model.fill.get());
+            this.drawSection(model, r0, r1, phase + Function.tx(angleMin, bend), phase + Function.tx(angleMax, bend), model.fill.get());
         }
     }
     drawSection(model, radiusMin, radiusMax, angleMin, angleMax, fill) {

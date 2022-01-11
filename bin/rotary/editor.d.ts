@@ -64,6 +64,7 @@ export declare class RotaryTrackEditor implements Terminable {
     private readonly motion;
     private readonly rgb;
     private readonly phaseOffset;
+    private readonly bend;
     private readonly frequency;
     private readonly reverse;
     subject: Option<RotaryTrackModel>;

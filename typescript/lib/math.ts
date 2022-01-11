@@ -37,6 +37,7 @@ export class Function {
 
     // https://www.desmos.com/calculator/p7pjn3bb6h
     static tx(x: number, t: number) {
+        t *= 1.0 - 1e-7
         return t < 0.0 ? (t * x + x) / (t * x + 1.0) : x / (t * x - t + 1.0)
     }
 

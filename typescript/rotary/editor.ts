@@ -207,6 +207,7 @@ export class RotaryTrackEditor implements Terminable {
     private readonly motion: MotionEditor
     private readonly rgb: NumericInput
     private readonly phaseOffset: NumericStepperInput
+    private readonly bend: NumericStepperInput
     private readonly frequency: NumericStepperInput
     private readonly reverse: Checkbox
 
@@ -228,6 +229,8 @@ export class RotaryTrackEditor implements Terminable {
         this.motion = new MotionEditor(this, parentNode.querySelector(".track-editor"))
         this.phaseOffset = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"),
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
+        this.bend = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='bend']"),
+            PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
         this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"),
             PrintMapping.integer("x"), NumericStepper.Integer))
         this.reverse = this.terminator.with(new Checkbox(parentNode.querySelector("input[data-parameter='reverse']")))
@@ -248,6 +251,7 @@ export class RotaryTrackEditor implements Terminable {
         this.rgb.with(model.rgb)
         this.motion.with(model.motion)
         this.phaseOffset.with(model.phaseOffset)
+        this.bend.with(model.bend)
         this.frequency.with(model.frequency)
         this.reverse.with(model.reverse)
         this.subject = Options.valueOf(model)
@@ -264,6 +268,7 @@ export class RotaryTrackEditor implements Terminable {
         this.rgb.clear()
         this.motion.clear()
         this.phaseOffset.clear()
+        this.bend.clear()
         this.frequency.clear()
         this.reverse.clear()
     }

@@ -15,6 +15,7 @@ export declare interface RotaryTrackFormat {
     rgb: number;
     motion: MotionFormat<any>;
     phaseOffset: number;
+    bend: number;
     frequency: number;
     reverse: boolean;
 }
@@ -46,7 +47,7 @@ export declare enum Fill {
 export declare const MotionTypes: Map<string, MotionType>;
 export declare const Fills: Map<string, Fill>;
 export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
-    private readonly root;
+    readonly root: RotaryModel;
     private readonly terminator;
     readonly segments: BoundNumericValue;
     readonly width: BoundNumericValue;
@@ -57,6 +58,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly rgb: ObservableValueImpl<number>;
     readonly motion: ObservableValueImpl<Motion<any>>;
     readonly phaseOffset: BoundNumericValue;
+    readonly bend: BoundNumericValue;
     readonly frequency: BoundNumericValue;
     readonly reverse: ObservableValueImpl<boolean>;
     private readonly gradient;

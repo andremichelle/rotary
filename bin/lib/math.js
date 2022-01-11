@@ -25,6 +25,7 @@ export class Function {
         return x * x * (3.0 - 2.0 * x);
     }
     static tx(x, t) {
+        t *= 1.0 - 1e-7;
         return t < 0.0 ? (t * x + x) / (t * x + 1.0) : x / (t * x - t + 1.0);
     }
     static step(edge0, edge1, x) {
