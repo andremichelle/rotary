@@ -64,7 +64,7 @@ body
             width: 100%
             height: 100%
             border-radius: 3px
-            background-color: black
+            background-color: #0A0A0A
             box-sizing: border-box
 
           > input[type=radio]
@@ -88,27 +88,37 @@ body
       flex: 1 0 0
       display: flex
 
-      > .columns
+      > .v-split
         display: flex
-        flex-direction: row
-        padding: 16px
-        background-color: #1A1A1A
+        flex-direction: column
 
-        > .track-editor
-          display: grid
-          grid-template-columns: min-content min-content min-content
-          column-gap: 32px
-          border-radius: 2px
+        > .columns
+          display: flex
+          flex-direction: row
+          padding: 16px
+          background-color: #1A1A1A
 
-          &[data-motion="linear"] [data-exclude="motion"]:not([data-motion="linear"]),
-          &[data-motion="pow"] [data-exclude="motion"]:not([data-motion="pow"]),
-          &[data-motion="cshape"] [data-exclude="motion"]:not([data-motion="cshape"]),
-          &[data-motion="tshape"] [data-exclude="motion"]:not([data-motion="tshape"]),
-          &[data-motion="smoothstep"] [data-exclude="motion"]:not([data-motion="smoothstep"])
-            display: none
+          > .track-editor
+            display: grid
+            grid-template-columns: min-content min-content min-content
+            column-gap: 32px
+            border-radius: 2px
 
-      > .actions
-        display: flex
+            &[data-motion="linear"] [data-exclude="motion"]:not([data-motion="linear"]),
+            &[data-motion="pow"] [data-exclude="motion"]:not([data-motion="pow"]),
+            &[data-motion="cshape"] [data-exclude="motion"]:not([data-motion="cshape"]),
+            &[data-motion="tshape"] [data-exclude="motion"]:not([data-motion="tshape"]),
+            &[data-motion="smoothstep"] [data-exclude="motion"]:not([data-motion="smoothstep"])
+              display: none
+
+          > .actions
+            display: flex
+
+        > .sound
+          flex: 1 0 0
+          margin: 1px 0 0 0
+          padding: 16px
+          background-color: #1A1A1A
 
       > .preview
         margin: 0 0 0 1px

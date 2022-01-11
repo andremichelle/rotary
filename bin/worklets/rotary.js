@@ -10,7 +10,7 @@ class Rotary extends AudioWorkletProcessor {
         this.coeff = 0.0;
         this.phase = 0.0;
         this.loopInSeconds = 1.0;
-        this.tMin = 0.96;
+        this.tMin = 0.60;
         this.tMax = 1.00;
         const notes = new Uint8Array([60, 62, 65, 67, 69]);
         for (let i = 0; i < Rotary.MAX_NOTES; i++) {

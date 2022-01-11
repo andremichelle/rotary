@@ -11,7 +11,7 @@ class Rotary extends AudioWorkletProcessor {
     private readonly coeff: number = 0.0
     private phase: number = 0.0
     private loopInSeconds: number = 1.0
-    private tMin: number = 0.96
+    private tMin: number = 0.60
     private tMax: number = 1.00
 
     constructor() {

@@ -393,7 +393,7 @@ body main > form.track-nav > #track-selectors label.radio.big > canvas {
   width: 100%;
   height: 100%;
   border-radius: 3px;
-  background-color: black;
+  background-color: #0A0A0A;
   box-sizing: border-box;
 }
 body main > form.track-nav > #track-selectors label.radio.big > input[type=radio] {
@@ -417,23 +417,33 @@ body main > .editing {
   flex: 1 0 0;
   display: flex;
 }
-body main > .editing > .columns {
+body main > .editing > .v-split {
+  display: flex;
+  flex-direction: column;
+}
+body main > .editing > .v-split > .columns {
   display: flex;
   flex-direction: row;
   padding: 16px;
   background-color: #1A1A1A;
 }
-body main > .editing > .columns > .track-editor {
+body main > .editing > .v-split > .columns > .track-editor {
   display: grid;
   grid-template-columns: min-content min-content min-content;
   column-gap: 32px;
   border-radius: 2px;
 }
-body main > .editing > .columns > .track-editor[data-motion=linear] [data-exclude=motion]:not([data-motion=linear]), body main > .editing > .columns > .track-editor[data-motion=pow] [data-exclude=motion]:not([data-motion=pow]), body main > .editing > .columns > .track-editor[data-motion=cshape] [data-exclude=motion]:not([data-motion=cshape]), body main > .editing > .columns > .track-editor[data-motion=tshape] [data-exclude=motion]:not([data-motion=tshape]), body main > .editing > .columns > .track-editor[data-motion=smoothstep] [data-exclude=motion]:not([data-motion=smoothstep]) {
+body main > .editing > .v-split > .columns > .track-editor[data-motion=linear] [data-exclude=motion]:not([data-motion=linear]), body main > .editing > .v-split > .columns > .track-editor[data-motion=pow] [data-exclude=motion]:not([data-motion=pow]), body main > .editing > .v-split > .columns > .track-editor[data-motion=cshape] [data-exclude=motion]:not([data-motion=cshape]), body main > .editing > .v-split > .columns > .track-editor[data-motion=tshape] [data-exclude=motion]:not([data-motion=tshape]), body main > .editing > .v-split > .columns > .track-editor[data-motion=smoothstep] [data-exclude=motion]:not([data-motion=smoothstep]) {
   display: none;
 }
-body main > .editing > .actions {
+body main > .editing > .v-split > .columns > .actions {
   display: flex;
+}
+body main > .editing > .v-split > .sound {
+  flex: 1 0 0;
+  margin: 1px 0 0 0;
+  padding: 16px;
+  background-color: #1A1A1A;
 }
 body main > .editing > .preview {
   margin: 0 0 0 1px;
