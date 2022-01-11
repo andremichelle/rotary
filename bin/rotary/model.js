@@ -41,9 +41,13 @@ export class RotaryModel {
         copy.rgb.set(source.rgb.get());
         copy.length.set(source.length.get());
         copy.lengthRatio.set(source.lengthRatio.get());
+        copy.outline.set(source.outline.get());
         copy.width.set(source.width.get());
         copy.widthPadding.set(source.widthPadding.get());
         copy.motion.set(source.motion.get().copy());
+        copy.reverse.set(source.reverse.get());
+        copy.bend.set(source.bend.get());
+        copy.phaseOffset.set(source.phaseOffset.get());
         return copy;
     }
     removeTrack(track) {
@@ -202,7 +206,7 @@ export class RotaryTrackModel {
         this.outline.set(fill == Fill.Stroke || fill === Fill.Flat && random.nextDouble(0.0, 1.0) < 0.5 ? 1 : 0);
         this.fill.set(fill);
         this.motion.set(Motion.random(random));
-        this.phaseOffset.set(random.nextDouble(0.0, 1.0));
+        this.phaseOffset.set(Math.floor(random.nextDouble(0.0, 4.0)) * 0.25);
         this.bend.set(random.nextDouble(-.5, .5));
         this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)));
         this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5);

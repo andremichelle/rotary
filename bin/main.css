@@ -56,7 +56,7 @@
 }
 button {
   color: rgba(255, 255, 255, 0.4);
-  font-size: 8px;
+  font-size: 10px;
   font-family: "IBM Plex Sans", sans-serif;
   height: 19px;
   line-height: 19px;
@@ -372,6 +372,11 @@ body main > form.track-nav {
   outline: none;
   background-color: #1A1A1A;
 }
+body main > form.track-nav > span {
+  opacity: 0.2;
+  margin-left: 16px;
+  white-space: nowrap;
+}
 body main > form.track-nav button#unshift-new-track {
   margin-top: 15px;
   align-self: flex-start;
@@ -409,12 +414,14 @@ body main > form.track-nav > #track-selectors label.radio.big > input[type=radio
 body main > form.track-nav > #track-selectors label.radio.big > input[type=radio]:checked + canvas {
   box-shadow: 0 0 1px 1px white inset;
 }
+body main > form.track-nav > #track-selectors label.radio.big > input[type=radio]:hover + canvas {
+  box-shadow: 0 0 1px 1px rgba(255, 255, 255, 0.3) inset;
+}
 body main > form.track-nav > button.delete {
   padding: 1px;
   margin: 0 0 0 32px;
 }
 body main > .editing {
-  margin: 1px 0 0 0;
   flex: 1 0 0;
   display: flex;
 }
@@ -447,7 +454,7 @@ body main > .editing > .v-split > .sound {
   background-color: #1A1A1A;
 }
 body main > .editing > .preview {
-  margin: 0 0 0 1px;
+  margin: 1px 0 0 1px;
   flex: 1;
   display: flex;
   position: relative;

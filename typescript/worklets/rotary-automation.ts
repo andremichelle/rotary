@@ -2,11 +2,11 @@ import {Function} from "../lib/math.js"
 import {RotaryFormat, RotaryModel} from "../rotary/model.js"
 
 registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
-    private readonly model: RotaryModel = new RotaryModel()
     private readonly envelopes = new Float32Array(RotaryModel.MAX_TRACKS)
+    private readonly model: RotaryModel = new RotaryModel()
+    private loopInSeconds: number = 1.0
     private coeff: number = 0.0
     private phase: number = 0.0
-    private loopInSeconds: number = 1.0
     private tMin: number = 0.60
     private tMax: number = 1.00
 
@@ -21,6 +21,9 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
                 this.loopInSeconds = data.value
             } else if (data.action === "envelope") {
                 this.updateEnvelope(data.value)
+            } else if (data.action === "edge") {
+                this.tMin = data.value[0]
+                this.tMax = data.value[1]
             }
         }
         this.updateEnvelope(0.005)
