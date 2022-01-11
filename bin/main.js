@@ -13,7 +13,7 @@ import { pulsarDelay } from "./lib/dsp.js";
 import { RotaryModel } from "./rotary/model.js";
 import { RotaryApp } from "./rotary/app.js";
 import { installApplicationMenu } from "./rotary/env.js";
-import { RotaryWorkletNode } from "./rotary/audio.js";
+import { RotaryAutomationNode, RotarySineNode } from "./rotary/audio.js";
 const showError = (message) => {
     const preloader = document.getElementById("preloader");
     if (null === preloader) {
@@ -42,9 +42,10 @@ window.onunhandledrejection = (event) => {
     const loopInSeconds = 8.0;
     const context = new AudioContext();
     yield context.suspend();
-    const rotaryNode = yield RotaryWorkletNode.build(context);
-    rotaryNode.updateLoopDuration(loopInSeconds);
-    const updateFormat = () => rotaryNode.updateFormat(model);
+    const rotaryAutomationNode = yield RotaryAutomationNode.build(context);
+    rotaryAutomationNode.updateLoopDuration(loopInSeconds);
+    const rotarySineNode = yield RotarySineNode.build(context);
+    const updateFormat = () => rotaryAutomationNode.updateFormat(model);
     const observers = new Map();
     model.tracks.forEach((track) => observers.set(track, track.addObserver(updateFormat)));
     model.tracks.addObserver((event) => {
@@ -62,14 +63,15 @@ window.onunhandledrejection = (event) => {
         updateFormat();
     });
     updateFormat();
+    rotaryAutomationNode.connect(rotarySineNode);
     const convolverNode = context.createConvolver();
     convolverNode.normalize = false;
     convolverNode.buffer = yield readAudio(context, "./impulse/LargeWideEchoHall.ogg");
-    pulsarDelay(context, rotaryNode, convolverNode, 0.500, 0.250, 0.750, 0.2, 20000.0, 20.0);
+    pulsarDelay(context, rotarySineNode, convolverNode, 0.500, 0.250, 0.750, 0.2, 20000.0, 20.0);
     const wetGain = context.createGain();
     wetGain.gain.value = 0.1;
     convolverNode.connect(wetGain).connect(context.destination);
-    rotaryNode.connect(context.destination);
+    rotarySineNode.connect(context.destination);
     const playButton = document.querySelector("[data-parameter='transport']");
     playButton.onchange = () => __awaiter(void 0, void 0, void 0, function* () {
         if (playButton.checked)

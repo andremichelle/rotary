@@ -7,18 +7,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-export class RotaryWorkletNode extends AudioWorkletNode {
+import { RotaryModel } from "./model.js";
+export class RotaryAutomationNode extends AudioWorkletNode {
     static build(context) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield context.audioWorklet.addModule("bin/worklets/rotary.js");
-            return new RotaryWorkletNode(context);
+            yield context.audioWorklet.addModule("bin/worklets/rotary-automation.js");
+            return new RotaryAutomationNode(context);
         });
     }
     constructor(context) {
-        super(context, "rotary", {
+        super(context, "rotary-automation", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
-            outputChannelCount: [1],
+            outputChannelCount: [RotaryModel.MAX_TRACKS],
             channelCount: 1,
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
@@ -34,6 +35,24 @@ export class RotaryWorkletNode extends AudioWorkletNode {
         this.port.postMessage({
             action: "format",
             value: model.serialize()
+        });
+    }
+}
+export class RotarySineNode extends AudioWorkletNode {
+    static build(context) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield context.audioWorklet.addModule("bin/worklets/rotary-sine.js");
+            return new RotarySineNode(context);
+        });
+    }
+    constructor(context) {
+        super(context, "rotary-sine", {
+            numberOfInputs: 1,
+            numberOfOutputs: 1,
+            outputChannelCount: [1],
+            channelCount: RotaryModel.MAX_TRACKS,
+            channelCountMode: "explicit",
+            channelInterpretation: "speakers"
         });
     }
 }

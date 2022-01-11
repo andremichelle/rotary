@@ -1,16 +1,16 @@
 import {RotaryModel} from "./model.js"
 
-export class RotaryWorkletNode extends AudioWorkletNode {
-    static async build(context: AudioContext): Promise<RotaryWorkletNode> {
-        await context.audioWorklet.addModule("bin/worklets/rotary.js")
-        return new RotaryWorkletNode(context)
+export class RotaryAutomationNode extends AudioWorkletNode {
+    static async build(context: AudioContext): Promise<RotaryAutomationNode> {
+        await context.audioWorklet.addModule("bin/worklets/rotary-automation.js")
+        return new RotaryAutomationNode(context)
     }
 
     constructor(context: AudioContext) {
-        super(context, "rotary", {
+        super(context, "rotary-automation", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
-            outputChannelCount: [1],
+            outputChannelCount: [RotaryModel.MAX_TRACKS],
             channelCount: 1,
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
@@ -31,3 +31,22 @@ export class RotaryWorkletNode extends AudioWorkletNode {
         })
     }
 }
+
+export class RotarySineNode extends AudioWorkletNode {
+    static async build(context: AudioContext): Promise<RotarySineNode> {
+        await context.audioWorklet.addModule("bin/worklets/rotary-sine.js")
+        return new RotarySineNode(context)
+    }
+
+    constructor(context: AudioContext) {
+        super(context, "rotary-sine", {
+            numberOfInputs: 1,
+            numberOfOutputs: 1,
+            outputChannelCount: [1],
+            channelCount: RotaryModel.MAX_TRACKS,
+            channelCountMode: "explicit",
+            channelInterpretation: "speakers"
+        })
+    }
+}
+
