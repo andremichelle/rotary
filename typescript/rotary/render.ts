@@ -1,4 +1,5 @@
 import {TAU} from "../lib/common.js"
+import {Function} from "../lib/math.js"
 import {Fill, RotaryModel, RotaryTrackModel} from "./model.js"
 
 export class RotaryRenderer {
@@ -20,6 +21,7 @@ export class RotaryRenderer {
     drawTrack(model: RotaryTrackModel,
               radiusMin: number,
               position: number): void {
+        this.context.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.2
         const phase = model.map(position)
         const segments = model.segments.get()
         const scale = model.length.get() / segments
@@ -28,9 +30,13 @@ export class RotaryRenderer {
         const r0 = radiusMin + thickness
         const r1 = radiusMin + thickness + width
         for (let i = 0; i < segments; i++) {
-            const angleMin = phase + i * scale
+            const angleMin = i * scale
             const angleMax = angleMin + scale * model.lengthRatio.get()
-            this.drawSection(model, r0, r1, angleMin, angleMax, model.fill.get())
+            this.drawSection(model, r0, r1,
+                // TODO tx for ratio(x) (dsp)
+                phase + Function.tx(angleMin, 0.0),
+                phase + Function.tx(angleMax, 0.0),
+                model.fill.get())
         }
     }
 
@@ -42,7 +48,6 @@ export class RotaryRenderer {
         console.assert(angleMin < angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`)
         const radianMin = angleMin * TAU
         const radianMax = angleMax * TAU
-        this.context.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.2
         if (fill === Fill.Flat) {
             this.context.fillStyle = model.opaque()
         } else if (fill === Fill.Stroke || fill === Fill.Line) {

@@ -26,7 +26,7 @@ window.onunhandledrejection = (event) => {
     }
 }
 (async () => {
-    const model = new RotaryModel().randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))
+    const model = new RotaryModel().test()//randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))
     const app = RotaryApp.create(model)
 
     installApplicationMenu(document.querySelector("nav#app-menu"), model, app)

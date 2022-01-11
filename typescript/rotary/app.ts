@@ -30,7 +30,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     }
 
     private readonly terminator: Terminator = new Terminator()
-    private readonly editor = new RotaryTrackEditor(this, document)
+    private readonly editor = new RotaryTrackEditor(this, document.querySelector(".editing"))
     private readonly map: Map<RotaryTrackModel, RotaryTrackSelector> = new Map()
     private readonly random: Random = new Mulberry32(0x123abc456)
     private readonly c2D: CanvasRenderingContext2D = this.elements.canvas.getContext("2d", {alpha: true})
@@ -43,6 +43,8 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.elements.template.remove()
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"),
             PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='phase-offset']"),
+            PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.phaseOffset)
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
             switch (event.type) {
                 case CollectionEventType.Add: {

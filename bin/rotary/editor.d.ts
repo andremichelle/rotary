@@ -67,7 +67,7 @@ export declare class RotaryTrackEditor implements Terminable {
     private readonly frequency;
     private readonly reverse;
     subject: Option<RotaryTrackModel>;
-    constructor(executor: RotaryTrackEditorExecutor, document: Document);
+    constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
     edit(model: RotaryTrackModel): void;
     clear(): void;
     terminate(): void;

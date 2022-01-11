@@ -45,6 +45,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
     readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
+    readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0))
 
     constructor() {
     }
@@ -53,8 +54,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
         const tracks = []
         let radius = this.radiusMin.get()
         while (radius < 256) {
-            const track = new RotaryTrackModel().randomize(random)
-            tracks.push(track)
+            const track = this.createTrack().randomize(random)
             radius += track.width.get() + track.widthPadding.get()
         }
         this.tracks.clear()
@@ -69,16 +69,14 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
 
     // noinspection JSUnusedGlobalSymbols
     test(): RotaryModel {
-        const trackModel = new RotaryTrackModel()
-        trackModel.test()
-        this.radiusMin.set(128)
         this.tracks.clear()
-        this.tracks.add(trackModel)
+        this.radiusMin.set(256)
+        this.createTrack().test()
         return this
     }
 
     createTrack(index: number = Number.MAX_SAFE_INTEGER): RotaryTrackModel | null {
-        const track = new RotaryTrackModel()
+        const track = new RotaryTrackModel(this)
         return this.tracks.add(track, index) ? track : null
     }
 
@@ -125,7 +123,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
 
         this.tracks.clear()
         this.tracks.addAll(format.tracks.map(trackFormat => {
-            const model = new RotaryTrackModel()
+            const model = new RotaryTrackModel(this)
             model.deserialize(trackFormat)
             return model
         }))
@@ -164,7 +162,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
     private readonly observers: Map<Observer<RotaryTrackModel>, Terminable> = new Map()
 
-    constructor() {
+    constructor(private readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
         this.updateGradient()
     }
@@ -194,14 +192,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     }
 
     map(phase: number): number {
-        phase += this.phaseOffset.get()
-        phase -= Math.floor(phase)
         phase *= this.frequency.get()
+        phase += this.phaseOffset.get() + this.root.phaseOffset.get()
         phase -= Math.floor(phase)
-        phase = (this.reverse.get() ? 1.0 - phase : phase)
-        phase -= Math.floor(phase)
+        if (this.reverse.get()) phase = 1.0 - phase
         phase = this.motion.get().map(phase)
-        return phase
+        return phase - Math.floor(phase)
     }
 
     ratio(phase: number): number {
@@ -225,8 +221,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.reverse.set(false)
         this.length.set(0.5)
         this.lengthRatio.set(0.5)
-        this.segments.set(4)
-        this.motion.set(new SmoothStepMotion())
+        this.segments.set(2)
+        this.motion.set(new LinearMotion())
         this.width.set(128)
     }
 

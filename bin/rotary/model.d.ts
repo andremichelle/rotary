@@ -22,6 +22,7 @@ export declare class RotaryModel implements Serializer<RotaryFormat>, Terminable
     private readonly terminator;
     readonly tracks: ObservableCollection<RotaryTrackModel>;
     readonly radiusMin: BoundNumericValue;
+    readonly phaseOffset: BoundNumericValue;
     constructor();
     randomize(random: Random): RotaryModel;
     randomizeTracks(random: Random): RotaryModel;
@@ -45,6 +46,7 @@ export declare enum Fill {
 export declare const MotionTypes: Map<string, MotionType>;
 export declare const Fills: Map<string, Fill>;
 export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
+    private readonly root;
     private readonly terminator;
     readonly segments: BoundNumericValue;
     readonly width: BoundNumericValue;
@@ -59,7 +61,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly reverse: ObservableValueImpl<boolean>;
     private readonly gradient;
     private readonly observers;
-    constructor();
+    constructor(root: RotaryModel);
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
     map(phase: number): number;

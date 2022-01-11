@@ -7,13 +7,13 @@ export class RotaryModel {
         this.terminator = new Terminator();
         this.tracks = new ObservableCollection();
         this.radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20));
+        this.phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0));
     }
     randomize(random) {
         const tracks = [];
         let radius = this.radiusMin.get();
         while (radius < 256) {
-            const track = new RotaryTrackModel().randomize(random);
-            tracks.push(track);
+            const track = this.createTrack().randomize(random);
             radius += track.width.get() + track.widthPadding.get();
         }
         this.tracks.clear();
@@ -25,15 +25,13 @@ export class RotaryModel {
         return this;
     }
     test() {
-        const trackModel = new RotaryTrackModel();
-        trackModel.test();
-        this.radiusMin.set(128);
         this.tracks.clear();
-        this.tracks.add(trackModel);
+        this.radiusMin.set(256);
+        this.createTrack().test();
         return this;
     }
     createTrack(index = Number.MAX_SAFE_INTEGER) {
-        const track = new RotaryTrackModel();
+        const track = new RotaryTrackModel(this);
         return this.tracks.add(track, index) ? track : null;
     }
     copyTrack(source, insertIndex = Number.MAX_SAFE_INTEGER) {
@@ -71,7 +69,7 @@ export class RotaryModel {
         this.radiusMin.set(format['radiusMin']);
         this.tracks.clear();
         this.tracks.addAll(format.tracks.map(trackFormat => {
-            const model = new RotaryTrackModel();
+            const model = new RotaryTrackModel(this);
             model.deserialize(trackFormat);
             return model;
         }));
@@ -95,7 +93,8 @@ export const MotionTypes = new Map([
 ]);
 export const Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
 export class RotaryTrackModel {
-    constructor() {
+    constructor(root) {
+        this.root = root;
         this.terminator = new Terminator();
         this.segments = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 8));
         this.width = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 12));
@@ -137,14 +136,13 @@ export class RotaryTrackModel {
         return true;
     }
     map(phase) {
-        phase += this.phaseOffset.get();
-        phase -= Math.floor(phase);
         phase *= this.frequency.get();
+        phase += this.phaseOffset.get() + this.root.phaseOffset.get();
         phase -= Math.floor(phase);
-        phase = (this.reverse.get() ? 1.0 - phase : phase);
-        phase -= Math.floor(phase);
+        if (this.reverse.get())
+            phase = 1.0 - phase;
         phase = this.motion.get().map(phase);
-        return phase;
+        return phase - Math.floor(phase);
     }
     ratio(phase) {
         phase -= Math.floor(phase);
@@ -168,8 +166,8 @@ export class RotaryTrackModel {
         this.reverse.set(false);
         this.length.set(0.5);
         this.lengthRatio.set(0.5);
-        this.segments.set(4);
-        this.motion.set(new SmoothStepMotion());
+        this.segments.set(2);
+        this.motion.set(new LinearMotion());
         this.width.set(128);
     }
     opaque() {

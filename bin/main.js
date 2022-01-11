@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { CollectionEventType, readAudio } from "./lib/common.js";
-import { Mulberry32 } from "./lib/math.js";
 import { pulsarDelay } from "./lib/dsp.js";
 import { RotaryModel } from "./rotary/model.js";
 import { RotaryApp } from "./rotary/app.js";
@@ -36,7 +35,7 @@ window.onunhandledrejection = (event) => {
     }
 };
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    const model = new RotaryModel().randomize(new Mulberry32(Math.floor(0x987123F * Math.random())));
+    const model = new RotaryModel().test();
     const app = RotaryApp.create(model);
     installApplicationMenu(document.querySelector("nav#app-menu"), model, app);
     const loopInSeconds = 8.0;

@@ -9,7 +9,7 @@ export class RotaryApp {
         this.model = model;
         this.elements = elements;
         this.terminator = new Terminator();
-        this.editor = new RotaryTrackEditor(this, document);
+        this.editor = new RotaryTrackEditor(this, document.querySelector(".editing"));
         this.map = new Map();
         this.random = new Mulberry32(0x123abc456);
         this.c2D = this.elements.canvas.getContext("2d", { alpha: true });
@@ -17,6 +17,7 @@ export class RotaryApp {
         this.zoom = new ObservableValueImpl(0.5);
         this.elements.template.remove();
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin);
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='phase-offset']"), PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.phaseOffset);
         this.terminator.with(model.tracks.addObserver((event) => {
             switch (event.type) {
                 case CollectionEventType.Add: {

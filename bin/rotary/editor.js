@@ -139,22 +139,22 @@ export class MotionEditor {
     }
 }
 export class RotaryTrackEditor {
-    constructor(executor, document) {
+    constructor(executor, parentNode) {
         this.executor = executor;
         this.terminator = new Terminator();
         this.subject = Options.None;
-        this.segments = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='segments']"), PrintMapping.integer(""), NumericStepper.Integer));
-        this.width = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='width']"), PrintMapping.integer("px"), NumericStepper.Integer));
-        this.widthPadding = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='width-padding']"), PrintMapping.integer("px"), NumericStepper.Integer));
-        this.length = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='length']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
-        this.lengthRatio = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='length-ratio']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
-        this.fill = this.terminator.with(new SelectInput(document.querySelector("select[data-parameter='fill']"), Fills));
-        this.rgb = this.terminator.with(new NumericInput(document.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB));
-        this.motion = new MotionEditor(this, document.querySelector(".track-editor"));
-        this.phaseOffset = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='phase-offset']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
-        this.frequency = this.terminator.with(new NumericStepperInput(document.querySelector("fieldset[data-parameter='frequency']"), PrintMapping.integer("x"), NumericStepper.Integer));
-        this.reverse = this.terminator.with(new Checkbox(document.querySelector("input[data-parameter='reverse']")));
-        this.terminator.with(Dom.bindEventListener(document.querySelector("button.delete"), "click", event => {
+        this.segments = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='segments']"), PrintMapping.integer(""), NumericStepper.Integer));
+        this.width = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width']"), PrintMapping.integer("px"), NumericStepper.Integer));
+        this.widthPadding = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width-padding']"), PrintMapping.integer("px"), NumericStepper.Integer));
+        this.length = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
+        this.lengthRatio = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
+        this.fill = this.terminator.with(new SelectInput(parentNode.querySelector("select[data-parameter='fill']"), Fills));
+        this.rgb = this.terminator.with(new NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB));
+        this.motion = new MotionEditor(this, parentNode.querySelector(".track-editor"));
+        this.phaseOffset = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
+        this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"), PrintMapping.integer("x"), NumericStepper.Integer));
+        this.reverse = this.terminator.with(new Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
+        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault();
             this.subject.ifPresent(() => executor.deleteTrack());
         }));
