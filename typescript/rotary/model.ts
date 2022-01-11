@@ -33,6 +33,7 @@ export declare interface RotaryTrackFormat {
     widthPadding: number
     length: number
     lengthRatio: number
+    outline: number
     fill: number
     rgb: number
     motion: MotionFormat<any>
@@ -153,6 +154,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly widthPadding = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 0))
     readonly length = this.terminator.with(new BoundNumericValue(Linear.Identity, 1.0))
     readonly lengthRatio = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.5))
+    readonly outline = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 16), 0))
     readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
     readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
     readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
@@ -178,6 +180,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         terminator.with(this.reverse.addObserver(mappedObserver))
         terminator.with(this.length.addObserver(mappedObserver))
         terminator.with(this.lengthRatio.addObserver(mappedObserver))
+        terminator.with(this.outline.addObserver(mappedObserver))
         terminator.with(this.motion.addObserver(mappedObserver))
         terminator.with(this.width.addObserver(mappedObserver))
         terminator.with(this.widthPadding.addObserver(mappedObserver))
@@ -226,9 +229,11 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.reverse.set(false)
         this.length.set(0.5)
         this.lengthRatio.set(0.5)
+        this.outline.set(1.0)
         this.segments.set(8)
         this.motion.set(new LinearMotion())
         this.width.set(128)
+        this.fill.set(Fill.Stroke)
     }
 
     opaque(): string {
@@ -243,15 +248,16 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const segments = 1 + Math.floor(random.nextDouble(0.0, 9.0)) * 2
         const lengthRatioExp = -Math.floor(random.nextDouble(0.0, 3.0))
         const lengthRatio = 0 === lengthRatioExp ? 0.5 : random.nextDouble(0.0, 1.0) < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp)
-        const width = random.nextDouble(0.0, 1.0) < 0.2 ? 18.0 : 9.0
-        const widthPadding = random.nextDouble(0.0, 1.0) < 0.25 ? 0.0 : 6.0
+        const width = random.nextDouble(0.0, 1.0) < 0.2 ? random.nextDouble(0.0, 1.0) < 0.2 ? 32.0 : 18.0 : 9.0
+        const widthPadding = random.nextDouble(0.0, 1.0) < 0.25 ? random.nextDouble(0.0, 1.0) < 0.25 ? 0.0 : 6.0 : 12.0
         const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0
-        const fill = 2 === segments ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
+        const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
         this.segments.set(0 === lengthRatioExp ? 1 : segments)
         this.width.set(width)
         this.widthPadding.set(widthPadding)
         this.length.set(length)
         this.lengthRatio.set(lengthRatio)
+        this.outline.set(fill == Fill.Stroke || fill === Fill.Flat && random.nextDouble(0.0, 1.0) < 0.5 ? 1 : 0)
         this.fill.set(fill)
         this.motion.set(Motion.random(random))
         this.phaseOffset.set(random.nextDouble(0.0, 1.0))
@@ -277,6 +283,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             widthPadding: this.widthPadding.get(),
             length: this.length.get(),
             lengthRatio: this.lengthRatio.get(),
+            outline: this.outline.get(),
             fill: this.fill.get(),
             rgb: this.rgb.get(),
             motion: this.motion.get().serialize(),
@@ -293,6 +300,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.widthPadding.set(format.widthPadding)
         this.length.set(format.length)
         this.lengthRatio.set(format.lengthRatio)
+        this.outline.set(format.outline)
         this.fill.set(format.fill)
         this.rgb.set(format.rgb)
         this.motion.set(Motion.from(format.motion))

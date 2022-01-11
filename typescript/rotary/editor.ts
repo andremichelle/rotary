@@ -203,6 +203,7 @@ export class RotaryTrackEditor implements Terminable {
     private readonly widthPadding: NumericStepperInput
     private readonly length: NumericStepperInput
     private readonly lengthRatio: NumericStepperInput
+    private readonly outline: NumericStepperInput
     private readonly fill: SelectInput<Fill>
     private readonly motion: MotionEditor
     private readonly rgb: NumericInput
@@ -224,6 +225,8 @@ export class RotaryTrackEditor implements Terminable {
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
         this.lengthRatio = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"),
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
+        this.outline = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='outline']"),
+            PrintMapping.integer("px"), NumericStepper.Integer))
         this.fill = this.terminator.with(new SelectInput<Fill>(parentNode.querySelector("select[data-parameter='fill']"), Fills))
         this.rgb = this.terminator.with(new NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB))
         this.motion = new MotionEditor(this, parentNode.querySelector(".track-editor"))
@@ -247,6 +250,7 @@ export class RotaryTrackEditor implements Terminable {
         this.widthPadding.with(model.widthPadding)
         this.length.with(model.length)
         this.lengthRatio.with(model.lengthRatio)
+        this.outline.with(model.outline)
         this.fill.with(model.fill)
         this.rgb.with(model.rgb)
         this.motion.with(model.motion)
@@ -264,6 +268,7 @@ export class RotaryTrackEditor implements Terminable {
         this.widthPadding.clear()
         this.length.clear()
         this.lengthRatio.clear()
+        this.outline.clear()
         this.fill.clear()
         this.rgb.clear()
         this.motion.clear()

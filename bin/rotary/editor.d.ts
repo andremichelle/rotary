@@ -60,6 +60,7 @@ export declare class RotaryTrackEditor implements Terminable {
     private readonly widthPadding;
     private readonly length;
     private readonly lengthRatio;
+    private readonly outline;
     private readonly fill;
     private readonly motion;
     private readonly rgb;

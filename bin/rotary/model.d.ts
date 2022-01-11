@@ -11,6 +11,7 @@ export declare interface RotaryTrackFormat {
     widthPadding: number;
     length: number;
     lengthRatio: number;
+    outline: number;
     fill: number;
     rgb: number;
     motion: MotionFormat<any>;
@@ -54,6 +55,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly widthPadding: BoundNumericValue;
     readonly length: BoundNumericValue;
     readonly lengthRatio: BoundNumericValue;
+    readonly outline: BoundNumericValue;
     readonly fill: ObservableValueImpl<Fill>;
     readonly rgb: ObservableValueImpl<number>;
     readonly motion: ObservableValueImpl<Motion<any>>;

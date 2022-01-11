@@ -148,6 +148,7 @@ export class RotaryTrackEditor {
         this.widthPadding = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='width-padding']"), PrintMapping.integer("px"), NumericStepper.Integer));
         this.length = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
         this.lengthRatio = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='length-ratio']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
+        this.outline = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='outline']"), PrintMapping.integer("px"), NumericStepper.Integer));
         this.fill = this.terminator.with(new SelectInput(parentNode.querySelector("select[data-parameter='fill']"), Fills));
         this.rgb = this.terminator.with(new NumericInput(parentNode.querySelector("input[data-parameter='rgb']"), PrintMapping.RGB));
         this.motion = new MotionEditor(this, parentNode.querySelector(".track-editor"));
@@ -166,6 +167,7 @@ export class RotaryTrackEditor {
         this.widthPadding.with(model.widthPadding);
         this.length.with(model.length);
         this.lengthRatio.with(model.lengthRatio);
+        this.outline.with(model.outline);
         this.fill.with(model.fill);
         this.rgb.with(model.rgb);
         this.motion.with(model.motion);
@@ -182,6 +184,7 @@ export class RotaryTrackEditor {
         this.widthPadding.clear();
         this.length.clear();
         this.lengthRatio.clear();
+        this.outline.clear();
         this.fill.clear();
         this.rgb.clear();
         this.motion.clear();
