@@ -13,19 +13,11 @@
 <nav id="app-menu">
     <button data-menu="file">File</button>
     <button data-menu="edit">Edit</button>
+    <button data-menu="randomize">Randomize</button>
     <button data-menu="view">View</button>
     <button data-menu="help">Help</button>
 </nav>
 <main>
-    <form class="track-nav">
-        <button id="unshift-new-track">+</button>
-        <div id="track-selectors">
-            <article id="template-selector-track">
-                <label class="radio big"><input type="radio" name="track"><canvas></canvas></label>
-                <button>+</button>
-            </article>
-        </div>
-    </form>
     <div class="global-editor">
         <div class="two-columns">
             <label class="name">start radius</label>
@@ -42,6 +34,15 @@
             </fieldset>
         </div>
     </div>
+    <form class="track-nav">
+        <button id="unshift-new-track">+</button>
+        <div id="track-selectors">
+            <article id="template-selector-track">
+                <label class="radio big"><input type="radio" name="track"><canvas></canvas></label>
+                <button>+</button>
+            </article>
+        </div>
+    </form>
     <div class="editing">
         <div class="v-split">
             <div class="columns">
