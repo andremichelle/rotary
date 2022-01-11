@@ -126,6 +126,7 @@ export class RotaryTrackModel {
         terminator.with(this.motion.addObserver(mappedObserver));
         terminator.with(this.width.addObserver(mappedObserver));
         terminator.with(this.widthPadding.addObserver(mappedObserver));
+        terminator.with(this.rgb.addObserver(mappedObserver));
         this.observers.set(observer, terminator);
         return { terminate: () => this.removeObserver(observer) };
     }
