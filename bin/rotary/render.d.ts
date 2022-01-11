@@ -1,12 +1,12 @@
-import { Fill, RotaryModel, RotaryTrackModel } from "./model.js";
+import { RotaryModel, RotaryTrackModel } from "./model.js";
 export declare class RotaryRenderer {
     private readonly context;
-    private readonly rotary;
+    private readonly model;
+    static renderTrack(context: CanvasRenderingContext2D, model: RotaryTrackModel, radiusMin: number, position: number): void;
+    static renderSection(context: CanvasRenderingContext2D, model: RotaryTrackModel, radiusMin: number, radiusMax: number, angleMin: number, angleMax: number): void;
     private highlight;
-    constructor(context: CanvasRenderingContext2D, rotary: RotaryModel);
+    constructor(context: CanvasRenderingContext2D, model: RotaryModel);
     draw(position: number): void;
-    drawTrack(model: RotaryTrackModel, radiusMin: number, position: number): void;
-    drawSection(model: RotaryTrackModel, radiusMin: number, radiusMax: number, angleMin: number, angleMax: number, fill: Fill): void;
     showHighlight(model: RotaryTrackModel): void;
     releaseHighlight(): void;
 }

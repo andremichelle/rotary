@@ -22,7 +22,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             form: document.querySelector("form.track-nav") as HTMLFormElement,
             selectors: document.querySelector("#track-selectors"),
             template: document.querySelector("#template-selector-track"),
-            canvas: document.querySelector("canvas"),
+            canvas: document.querySelector(".rotary canvas"),
             labelSize: document.querySelector("label.size"),
             labelZoom: document.querySelector("label.zoom"),
             progressIndicator: document.getElementById("progress") as unknown as SVGCircleElement
@@ -169,13 +169,14 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             const selector = this.map.get(track)
             console.assert(selector !== undefined, "Cannot reorder selector")
             this.elements.selectors.appendChild(selector.element)
-            selector.setIndex(index)
         })
     }
 }
 
 export class RotaryTrackSelector implements Terminable {
     private readonly terminator = new Terminator()
+    private readonly canvas: HTMLCanvasElement
+    private readonly context: CanvasRenderingContext2D
 
     constructor(readonly ui: RotaryApp,
                 readonly model: RotaryTrackModel,
@@ -193,10 +194,21 @@ export class RotaryTrackSelector implements Terminable {
                 event.preventDefault()
                 this.ui.createNew(this.model, event.shiftKey)
             }))
+        this.canvas = this.element.querySelector("canvas")
+        this.context = this.canvas.getContext("2d")
+        this.terminator.with(this.model.addObserver(() => this.updatePreview()))
+        requestAnimationFrame(() => this.updatePreview())
     }
 
-    setIndex(index: number): void {
-        this.element.querySelector("span").textContent = String(index + 1)
+    updatePreview(): void {
+        const ratio = Math.ceil(devicePixelRatio)
+        const w = this.canvas.width = this.canvas.clientWidth * ratio
+        const h = this.canvas.height = this.canvas.clientHeight * ratio
+        if (w === 0 || h === 0) return
+        this.context.save()
+        this.context.translate(w >> 1, h >> 1)
+        RotaryRenderer.renderTrack(this.context, this.model, 16.0, 0.0)
+        this.context.restore()
     }
 
     terminate(): void {
