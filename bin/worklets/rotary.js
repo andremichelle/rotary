@@ -5,15 +5,15 @@ class Rotary extends AudioWorkletProcessor {
     constructor() {
         super();
         this.model = new RotaryModel();
-        this.phaseIncrements = new Float32Array(Rotary.MAX_NOTES);
-        this.envelopes = new Float32Array(Rotary.MAX_NOTES);
+        this.phaseIncrements = new Float32Array(RotaryModel.MAX_TRACKS);
+        this.envelopes = new Float32Array(RotaryModel.MAX_TRACKS);
         this.coeff = 0.0;
         this.phase = 0.0;
         this.loopInSeconds = 1.0;
         this.tMin = 0.60;
         this.tMax = 1.00;
         const notes = new Uint8Array([60, 62, 65, 67, 69]);
-        for (let i = 0; i < Rotary.MAX_NOTES; i++) {
+        for (let i = 0; i < RotaryModel.MAX_TRACKS; i++) {
             const o = Math.floor(i / notes.length) - 1;
             const n = i % notes.length;
             this.phaseIncrements[i] = DSP.midiToHz(notes[n] + o * 12) * 2.0 * Math.PI;
@@ -38,7 +38,7 @@ class Rotary extends AudioWorkletProcessor {
         for (let i = 0; i < out.length; i++) {
             let amp = 0.0;
             tracks.forEach((track, index) => {
-                if (index >= Rotary.MAX_NOTES)
+                if (index >= RotaryModel.MAX_TRACKS)
                     return;
                 const x = track.ratio(localPhase);
                 const y = Function.step(this.tMin, this.tMax, x);
@@ -52,6 +52,5 @@ class Rotary extends AudioWorkletProcessor {
         return true;
     }
 }
-Rotary.MAX_NOTES = 32;
 registerProcessor("rotary", Rotary);
 //# sourceMappingURL=rotary.js.map

@@ -3,11 +3,9 @@ import {Function} from "../lib/math.js"
 import {RotaryFormat, RotaryModel} from "../rotary/model.js"
 
 class Rotary extends AudioWorkletProcessor {
-    static MAX_NOTES = 32
-
     private readonly model: RotaryModel = new RotaryModel()
-    private readonly phaseIncrements = new Float32Array(Rotary.MAX_NOTES)
-    private readonly envelopes = new Float32Array(Rotary.MAX_NOTES)
+    private readonly phaseIncrements = new Float32Array(RotaryModel.MAX_TRACKS)
+    private readonly envelopes = new Float32Array(RotaryModel.MAX_TRACKS)
     private readonly coeff: number = 0.0
     private phase: number = 0.0
     private loopInSeconds: number = 1.0
@@ -18,7 +16,7 @@ class Rotary extends AudioWorkletProcessor {
         super()
 
         const notes = new Uint8Array([60, 62, 65, 67, 69])
-        for (let i = 0; i < Rotary.MAX_NOTES; i++) {
+        for (let i = 0; i < RotaryModel.MAX_TRACKS; i++) {
             const o = Math.floor(i / notes.length) - 1
             const n = i % notes.length
             this.phaseIncrements[i] = DSP.midiToHz(notes[n] + o * 12) * 2.0 * Math.PI
@@ -45,7 +43,7 @@ class Rotary extends AudioWorkletProcessor {
         for (let i = 0; i < out.length; i++) {
             let amp = 0.0
             tracks.forEach((track, index) => {
-                if (index >= Rotary.MAX_NOTES) return
+                if (index >= RotaryModel.MAX_TRACKS) return
                 const x = track.ratio(localPhase)
                 const y = Function.step(this.tMin, this.tMax, x)
                 const env = this.envelopes[index]

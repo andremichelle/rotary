@@ -44,6 +44,8 @@ export declare interface RotaryTrackFormat {
 }
 
 export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
+    static MAX_TRACKS = 24
+
     private readonly terminator: Terminator = new Terminator()
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
     readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))

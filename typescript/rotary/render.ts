@@ -12,9 +12,8 @@ export class RotaryRenderer {
         const length = model.length.get()
         const scale = length / segments
         const width = model.width.get()
-        const thickness = model.widthPadding.get() * 0.5
-        const r0 = radiusMin + thickness
-        const r1 = radiusMin + thickness + width
+        const r0 = radiusMin
+        const r1 = radiusMin + width
         const bend = model.bend.get()
         const lengthRatio = model.lengthRatio.get()
         for (let i = 0; i < segments; i++) {

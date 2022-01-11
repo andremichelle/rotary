@@ -76,6 +76,7 @@ export class RotaryModel {
         return this;
     }
 }
+RotaryModel.MAX_TRACKS = 24;
 export var Fill;
 (function (Fill) {
     Fill[Fill["Flat"] = 0] = "Flat";

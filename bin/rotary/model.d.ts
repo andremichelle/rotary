@@ -21,6 +21,7 @@ export declare interface RotaryTrackFormat {
     reverse: boolean;
 }
 export declare class RotaryModel implements Serializer<RotaryFormat>, Terminable {
+    static MAX_TRACKS: number;
     private readonly terminator;
     readonly tracks: ObservableCollection<RotaryTrackModel>;
     readonly radiusMin: BoundNumericValue;
