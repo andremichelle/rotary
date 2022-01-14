@@ -214,7 +214,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     }
 
     ratio(phase: number): number {
-        const intersection: number = 0.75
+        const intersection: number = 0.75 // top
         phase = intersection - this.map(phase)
         phase -= Math.floor(phase)
         phase = Function.tx(phase, -this.bend.get())
@@ -268,7 +268,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.motion.set(Motion.random(random))
         this.phaseOffset.set(Math.floor(random.nextDouble(0.0, 4.0)) * 0.25)
         this.bend.set(random.nextDouble(-.5, .5))
-        this.frequency.set(Math.floor(random.nextDouble(1.0, 4.0)))
+        this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5)
         return this
     }

@@ -56,4 +56,33 @@ export class RotarySineNode extends AudioWorkletNode {
         });
     }
 }
+export class RotarySampleNode extends AudioWorkletNode {
+    static build(context) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield context.audioWorklet.addModule("bin/worklets/rotary-sample.js");
+            return new RotarySampleNode(context);
+        });
+    }
+    constructor(context) {
+        super(context, "rotary-sample", {
+            numberOfInputs: 1,
+            numberOfOutputs: 1,
+            outputChannelCount: [2],
+            channelCount: RotaryModel.MAX_TRACKS,
+            channelCountMode: "explicit",
+            channelInterpretation: "speakers"
+        });
+    }
+    updateNumberOfTracks(numTracks) {
+        this.port.postMessage({ action: "numTracks", value: numTracks });
+    }
+    updateSample(buffer) {
+        this.port.postMessage({
+            action: "sample", sample: [
+                buffer.getChannelData(0),
+                buffer.getChannelData(1)
+            ], numFrames: buffer.length
+        });
+    }
+}
 //# sourceMappingURL=audio.js.map

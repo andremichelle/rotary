@@ -9,3 +9,9 @@ export declare class RotarySineNode extends AudioWorkletNode {
     static build(context: AudioContext): Promise<RotarySineNode>;
     constructor(context: AudioContext);
 }
+export declare class RotarySampleNode extends AudioWorkletNode {
+    static build(context: AudioContext): Promise<RotarySampleNode>;
+    constructor(context: AudioContext);
+    updateNumberOfTracks(numTracks: number): void;
+    updateSample(buffer: AudioBuffer): void;
+}

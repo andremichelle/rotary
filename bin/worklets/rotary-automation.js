@@ -8,7 +8,7 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
         this.loopInSeconds = 1.0;
         this.coeff = 0.0;
         this.phase = 0.0;
-        this.tMin = 0.60;
+        this.tMin = 0.75;
         this.tMax = 1.00;
         this.port.onmessage = (event) => {
             const data = event.data;

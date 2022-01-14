@@ -39,8 +39,17 @@ export const installApplicationMenu = (element, model, app) => {
         .onTrigger(() => model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))))
         .addListItem(ListItem.default("Tracks", "", false)
         .onTrigger(() => model.randomizeTracks(new Mulberry32(Math.floor(0x987123F * Math.random())))))
-        .addListItem(ListItem.default("Colours", "", false)
-        .onTrigger(() => model.tracks.forEach(track => track.randomizeRGB(new Mulberry32(Math.floor(0x987123F * Math.random())))))))
+        .addListItem(ListItem.default("Colorize by colormind.io", "", false)
+        .onTrigger(() => __awaiter(void 0, void 0, void 0, function* () {
+        const colors = yield fetch('http://colormind.io/api/', {
+            method: 'POST',
+            body: JSON.stringify({ model: 'default' })
+        })
+            .then(result => result.json())
+            .then(x => x.result.map(rgb => (rgb[0] << 16) | (rgb[1] << 8) | rgb[2]))
+            .catch(x => new Error(x));
+        model.tracks.forEach(track => track.rgb.set(colors[Math.floor(Math.random() * colors.length)]));
+    }))))
         .addButton(element.querySelector("[data-menu='view']"), ListItem.root()
         .addListItem(ListItem.default("Zoom", "", false)
         .addRuntimeChildrenCallback(parent => {

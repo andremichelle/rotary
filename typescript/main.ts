@@ -36,9 +36,14 @@ window.onunhandledrejection = (event) => {
     await context.suspend()
     const rotaryAutomationNode = await RotaryAutomationNode.build(context)
     rotaryAutomationNode.updateLoopDuration(loopInSeconds)
-    const rotarySineNode = await RotarySineNode.build(context)
+    const rotaryNode = await RotarySineNode.build(context)
+    // const rotaryNode = await RotarySampleNode.build(context)
+    // rotaryNode.updateSample(await readAudio(context, "./samples/subsonic.wav"))
 
-    const updateFormat = () => rotaryAutomationNode.updateFormat(model)
+    const updateFormat = () => {
+        // rotaryNode.updateNumberOfTracks(model.tracks.size())
+        rotaryAutomationNode.updateFormat(model)
+    }
     const observers: Map<RotaryTrackModel, Terminable> = new Map()
     model.tracks.forEach((track: RotaryTrackModel) => observers.set(track, track.addObserver(updateFormat)))
     model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
@@ -56,18 +61,18 @@ window.onunhandledrejection = (event) => {
     })
     updateFormat()
 
-    rotaryAutomationNode.connect(rotarySineNode)
+    rotaryAutomationNode.connect(rotaryNode)
 
     const convolverNode = context.createConvolver()
     convolverNode.normalize = false
     convolverNode.buffer = await readAudio(context, "./impulse/LargeWideEchoHall.ogg")
 
-    pulsarDelay(context, rotarySineNode, convolverNode, 0.500, 0.250, 0.750, 0.2, 20000.0, 20.0)
+    pulsarDelay(context, rotaryNode, convolverNode, 0.500, 0.250, 0.750, 0.2, 20000.0, 20.0)
 
     const wetGain = context.createGain()
     wetGain.gain.value = 0.1
     convolverNode.connect(wetGain).connect(context.destination)
-    rotarySineNode.connect(context.destination)
+    rotaryNode.connect(context.destination)
 
     const playButton = document.querySelector("[data-parameter='transport']") as HTMLInputElement
     playButton.onchange = async () => {

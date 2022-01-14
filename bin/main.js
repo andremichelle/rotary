@@ -44,8 +44,10 @@ window.onunhandledrejection = (event) => {
     yield context.suspend();
     const rotaryAutomationNode = yield RotaryAutomationNode.build(context);
     rotaryAutomationNode.updateLoopDuration(loopInSeconds);
-    const rotarySineNode = yield RotarySineNode.build(context);
-    const updateFormat = () => rotaryAutomationNode.updateFormat(model);
+    const rotaryNode = yield RotarySineNode.build(context);
+    const updateFormat = () => {
+        rotaryAutomationNode.updateFormat(model);
+    };
     const observers = new Map();
     model.tracks.forEach((track) => observers.set(track, track.addObserver(updateFormat)));
     model.tracks.addObserver((event) => {
@@ -63,15 +65,15 @@ window.onunhandledrejection = (event) => {
         updateFormat();
     });
     updateFormat();
-    rotaryAutomationNode.connect(rotarySineNode);
+    rotaryAutomationNode.connect(rotaryNode);
     const convolverNode = context.createConvolver();
     convolverNode.normalize = false;
     convolverNode.buffer = yield readAudio(context, "./impulse/LargeWideEchoHall.ogg");
-    pulsarDelay(context, rotarySineNode, convolverNode, 0.500, 0.250, 0.750, 0.2, 20000.0, 20.0);
+    pulsarDelay(context, rotaryNode, convolverNode, 0.500, 0.250, 0.750, 0.2, 20000.0, 20.0);
     const wetGain = context.createGain();
     wetGain.gain.value = 0.1;
     convolverNode.connect(wetGain).connect(context.destination);
-    rotarySineNode.connect(context.destination);
+    rotaryNode.connect(context.destination);
     const playButton = document.querySelector("[data-parameter='transport']");
     playButton.onchange = () => __awaiter(void 0, void 0, void 0, function* () {
         if (playButton.checked)
