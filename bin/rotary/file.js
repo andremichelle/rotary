@@ -7,6 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { RotaryRenderer } from "./render.js";
 const pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
 export const open = (model) => __awaiter(void 0, void 0, void 0, function* () {
     const fileHandles = yield window.showOpenFilePicker(pickerOpts);
@@ -24,48 +25,36 @@ export const save = (model) => __awaiter(void 0, void 0, void 0, function* () {
     yield fileStream.write(new Blob([JSON.stringify(model.serialize())], { type: "application/json" }));
     yield fileStream.close();
 });
-export const render = () => __awaiter(void 0, void 0, void 0, function* () {
-    const chunks = [];
-    let bytesTotal = 0 | 0;
-    const encoder = new VideoEncoder({
-        output: ((chunk, metadata) => {
-            console.log(chunk, metadata);
-            chunks.push(chunk);
-            bytesTotal += chunk.byteLength;
-        }),
-        error: (error) => {
-            console.warn(error);
-        }
+export const render = (model) => __awaiter(void 0, void 0, void 0, function* () {
+    const canvas = document.createElement("canvas");
+    const size = 256;
+    const numFrames = 60 * 8;
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d");
+    const gif = new GIF({
+        workers: 4,
+        quality: 10,
+        width: size,
+        height: size,
+        workerScript: "lib/gif.worker.js"
     });
-    encoder.configure({
-        width: 512,
-        height: 512,
-        codec: "vp8"
-    });
-    console.log(`encoder.state = ${encoder.state}`);
-    console.log("create canvas");
-    const canvas = document.querySelector("canvas");
-    canvas.width = 512;
-    canvas.height = 512;
-    const context = canvas.getContext("2d", { alpha: true });
-    context.fillStyle = "red";
-    context.fillRect(64, 64, 64, 64);
-    console.log(`flush encodeQueueSize: ${encoder.encodeQueueSize}`);
-    encoder.encode(new VideoFrame(canvas));
-    context.fillStyle = "green";
-    context.fillRect(96, 96, 64, 64);
-    console.log(`flush encodeQueueSize: ${encoder.encodeQueueSize}`);
-    encoder.encode(new VideoFrame(canvas));
-    yield encoder.flush();
-    console.log(`flushed encodeQueueSize: ${encoder.encodeQueueSize}`);
-    console.log("close");
-    encoder.close();
-    const bytes = new Uint8Array(bytesTotal);
-    const view = new DataView(bytes.buffer);
-    for (const chunk of chunks) {
-        chunk.copyTo(view);
+    const scale = size / model.measureRadius() * 0.5;
+    const renderer = new RotaryRenderer(context, model);
+    for (let i = 0; i < numFrames; i++) {
+        context.clearRect(0, 0, size, size);
+        context.save();
+        context.translate(size >> 1, size >> 1);
+        context.scale(scale, scale);
+        renderer.draw(i / numFrames);
+        context.restore();
+        gif.addFrame(canvas, { copy: true, delay: 1000 / 60 });
     }
-    console.log(bytes);
-    alert("Not yet implemented");
+    gif.addListener("progress", progress => console.log(progress));
+    gif.once("finished", (blob) => {
+        console.log("done", blob);
+        window.open(URL.createObjectURL(blob));
+    });
+    console.log(gif.render());
 });
 //# sourceMappingURL=file.js.map

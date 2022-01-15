@@ -48,6 +48,7 @@ export class RotaryModel {
         copy.reverse.set(source.reverse.get());
         copy.bend.set(source.bend.get());
         copy.phaseOffset.set(source.phaseOffset.get());
+        copy.frequency.set(source.frequency.get());
         return copy;
     }
     removeTrack(track) {
@@ -194,7 +195,7 @@ export class RotaryTrackModel {
         const segments = 1 + Math.floor(random.nextDouble(0.0, 9.0)) * 2;
         const lengthRatioExp = -Math.floor(random.nextDouble(0.0, 3.0));
         const lengthRatio = 0 === lengthRatioExp ? 0.5 : random.nextDouble(0.0, 1.0) < 0.5 ? 1.0 - Math.pow(2.0, lengthRatioExp) : Math.pow(2.0, lengthRatioExp);
-        const width = random.nextDouble(0.0, 1.0) < 0.2 ? random.nextDouble(0.0, 1.0) < 0.2 ? 32.0 : 18.0 : 9.0;
+        const width = random.nextDouble(0.0, 1.0) < 0.2 ? random.nextDouble(0.0, 1.0) < 0.2 ? 32.0 : 24.0 : 12.0;
         const widthPadding = random.nextDouble(0.0, 1.0) < 0.25 ? random.nextDouble(0.0, 1.0) < 0.25 ? 0.0 : 6.0 : 12.0;
         const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0;
         const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat;

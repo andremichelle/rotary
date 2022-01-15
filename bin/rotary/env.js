@@ -22,7 +22,7 @@ export const installApplicationMenu = (element, model, app) => {
         .addListItem(ListItem.default("Save...", "", false)
         .onTrigger(() => __awaiter(void 0, void 0, void 0, function* () { return save(model); })))
         .addListItem(ListItem.default("Render...", "", false)
-        .onTrigger(() => render()))
+        .onTrigger(() => render(model)))
         .addListItem(ListItem.default("Clear", "", false)
         .onTrigger(() => model.clear())))
         .addButton(element.querySelector("[data-menu='edit']"), ListItem.root()

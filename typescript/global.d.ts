@@ -16,8 +16,45 @@ declare var AudioWorkletProcessor: {
     process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: { [name: string]: Float32Array }): boolean
 }
 
+type GIFDither = "FloydSteinberg" | "FalseFloydSteinberg" | "Stucki" | "Atkinson"
+
+interface GIFInitOptions {
+    workers?: number
+    quality?: number
+    repeat?: number // repeat count, -1 = no repeat, 0 = forever
+    workerScript?: string
+    background?: string
+    width: number
+    height: number
+    transparent?: boolean
+    dither?: GIFDither | false
+    debug?: boolean
+}
+
+interface GIFFrameOptions {
+    delay?: number
+    copy?: boolean
+    dispose?: number // frame disposal code. See https://www.w3.org/Graphics/GIF/spec-gif89a.txt
+}
+
+interface GIF {
+    addFrame(source: CanvasImageSource, option?: GIFFrameOptions): void
+
+    addListener(type: "progress", onProgress: (progress: number) => void): void
+
+    once(type: "finished", callback: (blob: Blob) => void): void
+
+    render(): boolean
+}
+
+declare var GIF: {
+    readonly running: boolean
+    new(option: GIFInitOptions): GIF
+}
+
 declare var sampleRate: number
 declare var currentTime: number
+
 declare function registerProcessor<T extends AudioWorkletProcessor>(name: string, processorCtor: T): void
 
 // noinspection JSUnusedGlobalSymbols

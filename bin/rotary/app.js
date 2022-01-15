@@ -139,7 +139,7 @@ export class RotaryApp {
     }
     reorderSelectors() {
         Dom.emptyNode(this.elements.selectors);
-        this.model.tracks.forEach((track, index) => {
+        this.model.tracks.forEach((track) => {
             const selector = this.map.get(track);
             console.assert(selector !== undefined, "Cannot reorder selector");
             this.elements.selectors.appendChild(selector.element);

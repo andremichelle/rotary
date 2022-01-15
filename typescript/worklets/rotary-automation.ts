@@ -7,7 +7,7 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
     private loopInSeconds: number = 1.0
     private coeff: number = 0.0
     private phase: number = 0.0
-    private tMin: number = 0.75
+    private tMin: number = 0.00
     private tMax: number = 1.00
 
     constructor() {

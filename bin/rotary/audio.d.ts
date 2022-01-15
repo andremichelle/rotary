@@ -15,3 +15,7 @@ export declare class RotarySampleNode extends AudioWorkletNode {
     updateNumberOfTracks(numTracks: number): void;
     updateSample(buffer: AudioBuffer): void;
 }
+export declare class MappingNode extends AudioWorkletNode {
+    static load(context: AudioContext): Promise<void>;
+    constructor(context: AudioContext);
+}

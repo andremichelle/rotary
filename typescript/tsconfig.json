@@ -11,7 +11,7 @@
     "declaration": true
   },
   "include": [
-    "**/*.ts"
+    "**/*.ts",
   ],
   "exclude": []
 }
