@@ -11,8 +11,9 @@ export interface Message {
 }
 export declare class InitMessage implements Message {
     readonly fftSize: number;
+    readonly sampleRate: number;
     readonly type = "init";
-    constructor(fftSize: number);
+    constructor(fftSize: number, sampleRate: number);
 }
 export declare class CreateMessage implements Message {
     readonly harmonics: Harmonic[];

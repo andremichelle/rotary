@@ -16,8 +16,9 @@ export class Harmonic {
     }
 }
 export class InitMessage {
-    constructor(fftSize) {
+    constructor(fftSize, sampleRate) {
         this.fftSize = fftSize;
+        this.sampleRate = sampleRate;
         this.type = 'init';
     }
 }

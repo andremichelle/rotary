@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { CreateMessage, InitMessage } from "./data.js";
 export class Generator {
-    constructor(fftSize) {
+    constructor(fftSize, sampleRate) {
         this.worker = new Worker("bin/padsynth/worker.js", { type: "module" });
         this.tasks = [];
         this.worker.onerror = ev => console.warn(ev);
@@ -17,7 +17,7 @@ export class Generator {
             const data = event.data;
             this.tasks.shift()(data.wavetable);
         };
-        this.worker.postMessage(new InitMessage(fftSize));
+        this.worker.postMessage(new InitMessage(fftSize, sampleRate));
     }
     render(harmonics) {
         return __awaiter(this, void 0, void 0, function* () {

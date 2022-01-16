@@ -6,6 +6,7 @@ import {TAU} from "../lib/common.js"
 export class WavetableCreator {
     static MIN_EXP = 14.71280603 // This value is the bound at which the values get too small
     static BOUND = Math.sqrt(WavetableCreator.MIN_EXP)
+    static FALL_OFF = 18000.0
 
     static profile(fi: number, bwi: number): number {
         let x = fi / bwi
@@ -17,22 +18,32 @@ export class WavetableCreator {
     private readonly sin: Float32Array
     private readonly cos: Float32Array
     private readonly profiles: Float32Array
+    private readonly falloff: Float32Array
     private readonly real: Float32Array
     private readonly imag: Float32Array
     private readonly fft: FFT
 
-    constructor(private readonly fftSize: number) {
+    constructor(private readonly fftSize: number, private readonly sampleRate: number) {
         this.fftSize = fftSize
         this.fftBins = fftSize >> 1
         this.sin = new Float32Array(this.fftBins)
         this.cos = new Float32Array(this.fftBins)
         this.profiles = new Float32Array(this.fftBins)
+        this.falloff = new Float32Array(this.fftBins)
         this.real = new Float32Array(this.fftSize)
         this.imag = new Float32Array(this.fftSize)
         this.fft = new FFT(this.fftSize)
 
         const random = new Mulberry32(0x91826)
+        const cutIndex = Math.floor(WavetableCreator.FALL_OFF / (sampleRate / fftSize))
+        const a = Math.PI / ((this.fftBins - cutIndex) * 2.0)
         for (let i = 0; i < this.fftBins; i++) {
+            if (i > cutIndex) {
+                const x = Math.cos((i - cutIndex) * a)
+                this.falloff[i] = x * x
+            } else {
+                this.falloff[i] = 1.0
+            }
             const phase = random.nextDouble(0.0, TAU)
             this.sin[i] = Math.sin(phase)
             this.cos[i] = Math.cos(phase)
@@ -68,7 +79,7 @@ export class WavetableCreator {
             }
         }
         for (let i = 0; i < fftBins; i++) {
-            const profile = this.profiles[i]
+            const profile = this.profiles[i] * this.falloff[i]
             this.real[i] = profile * this.sin[i]
             this.imag[i] = profile * this.cos[i]
             this.profiles[i] = 0.0
@@ -102,7 +113,7 @@ onmessage = event => {
     const data = event.data as (InitMessage | CreateMessage)
     switch (data.type) {
         case "init": {
-            creator = new WavetableCreator(data.fftSize)
+            creator = new WavetableCreator(data.fftSize, data.sampleRate)
             break
         }
         case "create": {

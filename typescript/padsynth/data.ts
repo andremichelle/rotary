@@ -36,7 +36,7 @@ export interface Message {
 export class InitMessage implements Message {
     readonly type = 'init'
 
-    constructor(readonly fftSize: number) {
+    constructor(readonly fftSize: number, readonly sampleRate: number) {
     }
 }
 

@@ -70,12 +70,12 @@ window.onunhandledrejection = (event) => {
     convolverNode.normalize = false;
     convolverNode.buffer = yield readAudio(context, "./impulse/PlateMedium.ogg");
     const tracksGain = context.createGain();
-    tracksGain.gain.value = 0.07;
+    tracksGain.gain.value = 0.05;
     yield MappingNode.load(context);
     const channelSplitter = context.createChannelSplitter(RotaryModel.MAX_TRACKS);
     rotaryAutomationNode.connect(channelSplitter);
     const notes = new Uint8Array([60, 62, 65, 67, 69, 72, 74, 77, 79, 81]);
-    const generator = new Generator(1 << 17);
+    const generator = new Generator(1 << 16, context.sampleRate);
     for (let i = 0; i < RotaryModel.MAX_TRACKS; i++) {
         const gainNode = context.createGain();
         gainNode.gain.value = 0.0;
@@ -102,7 +102,7 @@ window.onunhandledrejection = (event) => {
     }
     tracksGain.connect(context.destination);
     const wetGain = context.createGain();
-    wetGain.gain.value = 0.9;
+    wetGain.gain.value = 0.8;
     pulsarDelay(context, tracksGain, wetGain, 0.500, 0.125, 0.750, 0.99, 720.0, 480.0);
     wetGain.connect(convolverNode).connect(context.destination);
     const playButton = document.querySelector("[data-parameter='transport']");
