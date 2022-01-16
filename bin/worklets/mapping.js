@@ -12,7 +12,8 @@ registerProcessor("mapping", class extends AudioWorkletProcessor {
             const inp = input[channelIndex];
             const out = output[channelIndex];
             for (let i = 0; i < 128; i++) {
-                out[i] = this.mapping.y(inp[i]);
+                const x = inp[i];
+                out[i] = this.mapping.y(Math.pow(Math.sin(x * Math.PI), 8.0));
             }
         }
         return true;

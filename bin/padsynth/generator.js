@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { CreateMessage, InitMessage } from "./data.js";
 export class Generator {
     constructor(fftSize) {
-        this.worker = new Worker("padsynth/worker.js", { type: "module" });
+        this.worker = new Worker("bin/padsynth/worker.js", { type: "module" });
         this.tasks = [];
         this.worker.onerror = ev => console.warn(ev);
         this.worker.onmessage = event => {

@@ -29,6 +29,7 @@ export declare class RotaryModel implements Serializer<RotaryFormat>, Terminable
     constructor();
     randomize(random: Random): RotaryModel;
     randomizeTracks(random: Random): RotaryModel;
+    randomizePalette(random: Random): RotaryModel;
     test(): RotaryModel;
     createTrack(index?: number): RotaryTrackModel | null;
     copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
@@ -75,7 +76,6 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     opaque(): string;
     transparent(): string;
     randomize(random: Random): RotaryTrackModel;
-    randomizeRGB(random: Random): void;
     terminate(): void;
     serialize(): RotaryTrackFormat;
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;

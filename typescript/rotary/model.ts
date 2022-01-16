@@ -8,7 +8,6 @@ import {
     Terminable,
     Terminator
 } from "../lib/common.js"
-import {Color} from "../dom/common.js"
 import {Function, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {
@@ -21,6 +20,7 @@ import {
     SmoothStepMotion,
     TShapeMotion
 } from "./motion.js"
+import {Colors} from "../lib/colors.js"
 
 export declare interface RotaryFormat {
     radiusMin: number
@@ -57,9 +57,11 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
     randomize(random: Random): RotaryModel {
         this.radiusMin.set(20)
         this.tracks.clear()
+        const palette = Colors.getRandomPalette(random)
         let radius = this.radiusMin.get()
         while (radius < 256) {
             const track = this.createTrack().randomize(random)
+            track.rgb.set(palette[Math.floor(random.nextDouble(0.0, palette.length))])
             radius += track.width.get() + track.widthPadding.get()
         }
         return this
@@ -67,6 +69,12 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
 
     randomizeTracks(random: Random): RotaryModel {
         this.tracks.forEach(track => track.randomize(random))
+        return this
+    }
+
+    randomizePalette(random: Random): RotaryModel {
+        const palette = Colors.getRandomPalette(random)
+        this.tracks.forEach(track => track.rgb.set(palette[Math.floor(random.nextDouble(0.0, palette.length))]))
         return this
     }
 
@@ -272,11 +280,6 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5)
         return this
-    }
-
-    randomizeRGB(random: Random): void {
-        const hue: number = random.nextDouble(0.0, 1.0)
-        this.rgb.set(Color.hslToRgb(hue, 0.6, 0.6))
     }
 
     terminate(): void {

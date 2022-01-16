@@ -35,17 +35,8 @@ export const installApplicationMenu = (element: HTMLElement, model: RotaryModel,
                 .onTrigger(() => model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))))
             .addListItem(ListItem.default("Tracks", "", false)
                 .onTrigger(() => model.randomizeTracks(new Mulberry32(Math.floor(0x987123F * Math.random())))))
-            .addListItem(ListItem.default("Colorize by colormind.io", "", false)
-                .onTrigger(async () => {
-                    const colors = await fetch('http://colormind.io/api/', {
-                        method: 'POST',
-                        body: JSON.stringify({model: 'default'})
-                    })
-                        .then(result => result.json())
-                        .then(x => x.result.map(rgb => (rgb[0] << 16) | (rgb[1] << 8) | rgb[2]))
-                        .catch(x => new Error(x))
-                    model.tracks.forEach(track => track.rgb.set(colors[Math.floor(Math.random() * colors.length)]))
-                }))
+            .addListItem(ListItem.default("Color", "", false)
+                .onTrigger(async () => model.randomizePalette(new Mulberry32(Math.floor(0x987123F * Math.random())))))
         )
         .addButton(element.querySelector("[data-menu='view']"), ListItem.root()
             .addListItem(ListItem.default("Zoom", "", false)

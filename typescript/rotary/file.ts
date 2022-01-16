@@ -28,6 +28,9 @@ export const render = async (model: RotaryModel) => {
     canvas.width = size
     canvas.height = size
     const context = canvas.getContext("2d")
+
+    // https://github.com/photopea/UPNG.js
+
     const gif = new GIF({
         workers: 4,
         quality: 10,

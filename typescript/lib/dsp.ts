@@ -2,11 +2,9 @@ export class DSP {
     static midiToHz = (note: number = 60.0, baseFrequency: number = 440.0) => baseFrequency * Math.pow(2.0, (note + 3.0) / 12.0 - 6.0)
 }
 
-export const pulsarDelay = (context: AudioContext, 
-                            input: AudioNode, output: AudioNode, 
-                            delayTimeL: number, delayTimeR: number, 
-                            delayTime: number, feedback: number, 
-                            lpf: number, hpf: number) => {
+export const pulsarDelay = (context: AudioContext, input: AudioNode, output: AudioNode,
+                            delayTimeL: number, delayTimeR: number, delayTime: number,
+                            feedback: number, lpf: number, hpf: number) => {
     const preSplitter = context.createChannelSplitter(2)
     const preDelayL = context.createDelay()
     const preDelayR = context.createDelay()
@@ -39,5 +37,5 @@ export const pulsarDelay = (context: AudioContext,
         .connect(feedbackSplitter)
     feedbackSplitter.connect(feedbackMerger, 0, 1)
     feedbackSplitter.connect(feedbackMerger, 1, 0)
-    input.connect(output)
+    feedbackGain.connect(output)
 }

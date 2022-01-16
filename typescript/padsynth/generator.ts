@@ -1,7 +1,7 @@
 import {CreatedMessage, CreateMessage, Harmonic, InitMessage} from "./data.js"
 
 export class Generator {
-    private readonly worker: Worker = new Worker("padsynth/worker.js", {type: "module"})
+    private readonly worker: Worker = new Worker("bin/padsynth/worker.js", {type: "module"})
     private readonly tasks: ((value: Float32Array) => void)[] = []
 
     constructor(fftSize: number) {

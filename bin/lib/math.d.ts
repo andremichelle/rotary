@@ -1,16 +1,18 @@
-export interface Random {
+export declare abstract class Random {
     nextDouble(min: number, max: number): number;
+    nextInt(min: number, max: number): number;
+    nextElement<T>(array: ArrayLike<T>): T;
+    protected abstract uniform(): number;
 }
-export declare class JsRandom implements Random {
+export declare class JsRandom extends Random {
     static Instance: JsRandom;
     private constructor();
-    nextDouble(min: number, max: number): number;
+    protected uniform(): number;
 }
-export declare class Mulberry32 implements Random {
+export declare class Mulberry32 extends Random {
     private seed;
-    constructor(seed: number);
-    nextDouble(min: number, max: number): number;
-    private uniform;
+    constructor(seed?: number);
+    protected uniform(): number;
 }
 export declare class Function {
     static smoothStep(x: number): number;

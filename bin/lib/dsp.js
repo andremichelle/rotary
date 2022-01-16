@@ -34,6 +34,6 @@ export const pulsarDelay = (context, input, output, delayTimeL, delayTimeR, dela
         .connect(feedbackSplitter);
     feedbackSplitter.connect(feedbackMerger, 0, 1);
     feedbackSplitter.connect(feedbackMerger, 1, 0);
-    input.connect(output);
+    feedbackGain.connect(output);
 };
 //# sourceMappingURL=dsp.js.map

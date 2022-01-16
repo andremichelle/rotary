@@ -1,17 +1,27 @@
-export class JsRandom {
-    constructor() {
-    }
+export class Random {
     nextDouble(min, max) {
-        return min + Math.random() * (max - min);
+        return min + this.uniform() * (max - min);
+    }
+    nextInt(min, max) {
+        return min + Math.floor(this.uniform() * (max - min));
+    }
+    nextElement(array) {
+        return array[Math.floor(this.uniform() * array.length)];
+    }
+}
+export class JsRandom extends Random {
+    constructor() {
+        super();
+    }
+    uniform() {
+        return Math.random();
     }
 }
 JsRandom.Instance = new JsRandom();
-export class Mulberry32 {
-    constructor(seed) {
-        this.seed = seed;
-    }
-    nextDouble(min, max) {
-        return min + this.uniform() * (max - min);
+export class Mulberry32 extends Random {
+    constructor(seed = 0x12345678) {
+        super();
+        this.seed = seed | 0;
     }
     uniform() {
         let t = this.seed += 0x6D2B79F5;

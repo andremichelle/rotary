@@ -6,7 +6,7 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
         this.envelopes = new Float32Array(RotaryModel.MAX_TRACKS);
         this.model = new RotaryModel();
         this.loopInSeconds = 1.0;
-        this.coeff = 0.0;
+        this.coeff = NaN;
         this.phase = 0.0;
         this.tMin = 0.00;
         this.tMax = 1.00;

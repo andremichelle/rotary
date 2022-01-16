@@ -5,7 +5,7 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
     private readonly envelopes = new Float32Array(RotaryModel.MAX_TRACKS)
     private readonly model: RotaryModel = new RotaryModel()
     private loopInSeconds: number = 1.0
-    private coeff: number = 0.0
+    private coeff: number = NaN
     private phase: number = 0.0
     private tMin: number = 0.00
     private tMax: number = 1.00

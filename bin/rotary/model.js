@@ -1,8 +1,8 @@
 import { BoundNumericValue, ObservableCollection, ObservableValueImpl, Terminator } from "../lib/common.js";
-import { Color } from "../dom/common.js";
 import { Function } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { CShapeMotion, LinearMotion, Motion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
+import { Colors } from "../lib/colors.js";
 export class RotaryModel {
     constructor() {
         this.terminator = new Terminator();
@@ -13,15 +13,22 @@ export class RotaryModel {
     randomize(random) {
         this.radiusMin.set(20);
         this.tracks.clear();
+        const palette = Colors.getRandomPalette(random);
         let radius = this.radiusMin.get();
         while (radius < 256) {
             const track = this.createTrack().randomize(random);
+            track.rgb.set(palette[Math.floor(random.nextDouble(0.0, palette.length))]);
             radius += track.width.get() + track.widthPadding.get();
         }
         return this;
     }
     randomizeTracks(random) {
         this.tracks.forEach(track => track.randomize(random));
+        return this;
+    }
+    randomizePalette(random) {
+        const palette = Colors.getRandomPalette(random);
+        this.tracks.forEach(track => track.rgb.set(palette[Math.floor(random.nextDouble(0.0, palette.length))]));
         return this;
     }
     test() {
@@ -212,10 +219,6 @@ export class RotaryTrackModel {
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)));
         this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5);
         return this;
-    }
-    randomizeRGB(random) {
-        const hue = random.nextDouble(0.0, 1.0);
-        this.rgb.set(Color.hslToRgb(hue, 0.6, 0.6));
     }
     terminate() {
         this.terminator.terminate();
