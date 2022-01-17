@@ -50,33 +50,34 @@ export class RotarySineNode extends AudioWorkletNode {
     }
 }
 
-export class RotarySampleNode extends AudioWorkletNode {
-    static async build(context: AudioContext): Promise<RotarySampleNode> {
-        await context.audioWorklet.addModule("bin/worklets/rotary-sample.js")
-        return new RotarySampleNode(context)
+export class RotaryPlaybackNode extends AudioWorkletNode {
+    static async build(context: AudioContext): Promise<RotaryPlaybackNode> {
+        await context.audioWorklet.addModule("bin/worklets/rotary-playback.js")
+        return new RotaryPlaybackNode(context)
     }
 
     constructor(context: AudioContext) {
-        super(context, "rotary-sample", {
+        super(context, "rotary-playback", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
             outputChannelCount: [2],
-            channelCount: RotaryModel.MAX_TRACKS,
+            channelCount: 1,
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         })
     }
 
-    updateNumberOfTracks(numTracks: number): void {
-        this.port.postMessage({action: "numTracks", value: numTracks})
+    updateLoopDuration(seconds: number): void {
+        this.port.postMessage({
+            action: "loopInSeconds",
+            value: seconds
+        })
     }
 
-    updateSample(buffer: AudioBuffer): void {
+    updateFormat(model: RotaryModel): void {
         this.port.postMessage({
-            action: "sample", sample: [
-                buffer.getChannelData(0),
-                buffer.getChannelData(1)
-            ], numFrames: buffer.length
+            action: "format",
+            value: model.serialize()
         })
     }
 }

@@ -56,32 +56,33 @@ export class RotarySineNode extends AudioWorkletNode {
         });
     }
 }
-export class RotarySampleNode extends AudioWorkletNode {
+export class RotaryPlaybackNode extends AudioWorkletNode {
     static build(context) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield context.audioWorklet.addModule("bin/worklets/rotary-sample.js");
-            return new RotarySampleNode(context);
+            yield context.audioWorklet.addModule("bin/worklets/rotary-playback.js");
+            return new RotaryPlaybackNode(context);
         });
     }
     constructor(context) {
-        super(context, "rotary-sample", {
+        super(context, "rotary-playback", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
             outputChannelCount: [2],
-            channelCount: RotaryModel.MAX_TRACKS,
+            channelCount: 1,
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
     }
-    updateNumberOfTracks(numTracks) {
-        this.port.postMessage({ action: "numTracks", value: numTracks });
-    }
-    updateSample(buffer) {
+    updateLoopDuration(seconds) {
         this.port.postMessage({
-            action: "sample", sample: [
-                buffer.getChannelData(0),
-                buffer.getChannelData(1)
-            ], numFrames: buffer.length
+            action: "loopInSeconds",
+            value: seconds
+        });
+    }
+    updateFormat(model) {
+        this.port.postMessage({
+            action: "format",
+            value: model.serialize()
         });
     }
 }

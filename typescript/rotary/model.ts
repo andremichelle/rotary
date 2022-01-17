@@ -238,6 +238,15 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return phase
     }
 
+    index(phase: number): number {
+        const intersection: number = 0.75 // top
+        phase = intersection - this.map(phase)
+        phase = Function.tx(phase - Math.floor(phase), -this.bend.get())
+        const length = this.length.get()
+        if(phase >= length) return 0.0
+        return Math.floor(phase / length * this.segments.get())
+    }
+
     test() {
         this.phaseOffset.set(0.0)
         this.bend.set(0.0)

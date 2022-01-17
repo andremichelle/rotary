@@ -180,6 +180,15 @@ export class RotaryTrackModel {
         phase = 1.0 - phase;
         return phase;
     }
+    index(phase) {
+        const intersection = 0.75;
+        phase = intersection - this.map(phase);
+        phase = Function.tx(phase - Math.floor(phase), -this.bend.get());
+        const length = this.length.get();
+        if (phase >= length)
+            return 0.0;
+        return Math.floor(phase / length * this.segments.get());
+    }
     test() {
         this.phaseOffset.set(0.0);
         this.bend.set(0.0);

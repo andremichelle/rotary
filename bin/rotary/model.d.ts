@@ -73,6 +73,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
     map(phase: number): number;
     ratio(phase: number): number;
+    index(phase: number): number;
     test(): void;
     opaque(): string;
     transparent(): string;
