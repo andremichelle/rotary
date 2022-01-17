@@ -1,7 +1,7 @@
 import {CreatedMessage, Harmonic, Message} from "./data.js"
-import {FFT} from "../lib/fft.js"
-import {Mulberry32} from "../lib/math.js"
-import {TAU} from "../lib/common.js"
+import {FFT} from "../fft.js"
+import {TAU} from "../../lib/common.js"
+import {Mulberry32} from "../../lib/math.js"
 
 export class WavetableCreator {
     static MIN_EXP = 14.71280603 // This value is the bound at which the values get too small
@@ -110,15 +110,15 @@ declare interface Self {
 let creator = null
 const me = (self as unknown as Self)
 onmessage = event => {
-    const data = event.data as Message
-    switch (data.type) {
+    const msg = event.data as Message
+    switch (msg.type) {
         case "init": {
-            creator = new WavetableCreator(data.fftSize, data.sampleRate)
+            creator = new WavetableCreator(msg.fftSize, msg.sampleRate)
             break
         }
         case "create": {
             console.assert(null !== creator)
-            me.postMessage(new CreatedMessage(creator.update(data.harmonics)))
+            me.postMessage(new CreatedMessage(creator.update(msg.harmonics)))
             break
         }
     }

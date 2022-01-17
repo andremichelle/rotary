@@ -14,4 +14,5 @@ export declare class RotaryPlaybackNode extends AudioWorkletNode {
     constructor(context: AudioContext);
     updateLoopDuration(seconds: number): void;
     updateFormat(model: RotaryModel): void;
+    updateSample(buffer: AudioBuffer): void;
 }

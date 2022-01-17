@@ -7,13 +7,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { RotaryAutomationNode } from "./rotary/audio.js";
-import { RotaryModel } from "./rotary/model.js";
-import { ObservableCollection, readAudio } from "./lib/common.js";
-import { Generator } from "./padsynth/generator.js";
-import { DSP, pulsarDelay } from "./lib/dsp.js";
-import { Exp } from "./lib/mapping.js";
-import { Harmonic } from "./padsynth/data.js";
+import { RotaryAutomationNode } from "./worklets.js";
+import { RotaryModel } from "./model.js";
+import { ObservableCollection, readAudio } from "../lib/common.js";
+import { Generator } from "../dsp/padsynth/generator.js";
+import { pulsarDelay } from "../lib/dsp.js";
+import { Exp } from "../lib/mapping.js";
+import { Harmonic } from "../dsp/padsynth/data.js";
+import { midiToHz } from "../dsp/common.js";
 export const buildAudio = (context, model, random) => __awaiter(void 0, void 0, void 0, function* () {
     const rotaryAutomationNode = yield RotaryAutomationNode.build(context);
     model.loopDuration.addObserver(seconds => rotaryAutomationNode.updateLoopDuration(seconds));
@@ -37,7 +38,7 @@ export const buildAudio = (context, model, random) => __awaiter(void 0, void 0, 
         const pannerNode = context.createStereoPanner();
         pannerNode.pan.value = random.nextDouble(-1.0, 1.0);
         const note = random.nextElement(notes);
-        const hz = DSP.midiToHz(note);
+        const hz = midiToHz(note);
         const bandWidth = new Exp(0.0001, 0.25).y(random.nextDouble(0.0, 1.0));
         const harmonics = [
             new Harmonic(hz / context.sampleRate, 1.0, bandWidth),

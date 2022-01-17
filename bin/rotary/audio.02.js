@@ -7,8 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { RotaryPlaybackNode } from "./rotary/audio.js";
-import { ObservableCollection } from "./lib/common.js";
+import { RotaryPlaybackNode } from "./worklets.js";
+import { ObservableCollection, readAudio } from "../lib/common.js";
 export const buildAudio = (context, model, random) => __awaiter(void 0, void 0, void 0, function* () {
     const rotaryNode = yield RotaryPlaybackNode.build(context);
     model.loopDuration.addObserver(seconds => rotaryNode.updateLoopDuration(seconds));
@@ -16,6 +16,8 @@ export const buildAudio = (context, model, random) => __awaiter(void 0, void 0, 
     const updateFormat = () => rotaryNode.updateFormat(model);
     ObservableCollection.observeNested(model.tracks, updateFormat);
     updateFormat();
+    const buffer = yield readAudio(context, "samples/robotica.wav");
+    rotaryNode.updateSample(buffer);
     rotaryNode.connect(context.destination);
 });
 //# sourceMappingURL=audio.02.js.map

@@ -11,6 +11,10 @@ export abstract class Random {
         return array[Math.floor(this.uniform() * array.length)]
     }
 
+    public nextBoolean(): boolean {
+        return this.uniform() < 0.5
+    }
+
     protected abstract uniform(): number
 }
 
@@ -27,7 +31,7 @@ export class JsRandom extends Random {
 }
 
 export class Mulberry32 extends Random {
-    private seed: number
+    seed: number
 
     constructor(seed = 0x12345678) {
         super()

@@ -1,13 +1,14 @@
-import {RotaryAutomationNode} from "./rotary/audio.js"
-import {RotaryModel} from "./rotary/model.js"
-import {ObservableCollection, readAudio} from "./lib/common.js"
-import {Generator} from "./padsynth/generator.js"
-import {DSP, pulsarDelay} from "./lib/dsp.js"
-import {Exp} from "./lib/mapping.js"
-import {Harmonic} from "./padsynth/data.js"
-import {Random} from "./lib/math.js"
+import {RotaryAutomationNode} from "./worklets.js"
+import {RotaryModel} from "./model.js"
+import {ObservableCollection, readAudio} from "../lib/common.js"
+import {Generator} from "../dsp/padsynth/generator.js"
+import {pulsarDelay} from "../lib/dsp.js"
+import {Exp} from "../lib/mapping.js"
+import {Harmonic} from "../dsp/padsynth/data.js"
+import {Random} from "../lib/math.js"
+import {midiToHz} from "../dsp/common.js"
 
-export const  buildAudio  = async (context: AudioContext, model: RotaryModel, random: Random): Promise<void> => {
+export const buildAudio = async (context: AudioContext, model: RotaryModel, random: Random): Promise<void> => {
     const rotaryAutomationNode = await RotaryAutomationNode.build(context)
     model.loopDuration.addObserver(seconds => rotaryAutomationNode.updateLoopDuration(seconds))
     rotaryAutomationNode.updateLoopDuration(model.loopDuration.get())
@@ -37,7 +38,7 @@ export const  buildAudio  = async (context: AudioContext, model: RotaryModel, ra
         pannerNode.pan.value = random.nextDouble(-1.0, 1.0)
 
         const note = random.nextElement(notes)
-        const hz = DSP.midiToHz(note)
+        const hz = midiToHz(note)
         const bandWidth = new Exp(0.0001, 0.25).y(random.nextDouble(0.0, 1.0))
         const harmonics = [
             new Harmonic(hz / context.sampleRate, 1.0, bandWidth),
@@ -52,7 +53,6 @@ export const  buildAudio  = async (context: AudioContext, model: RotaryModel, ra
         bufferSource.playbackRate.value = random.nextDouble(-0.999, 1.001)
         bufferSource.loop = true
         bufferSource.start()
-
         bufferSource.connect(gainNode).connect(pannerNode).connect(tracksGain)
     }
 

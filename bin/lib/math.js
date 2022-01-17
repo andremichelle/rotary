@@ -8,6 +8,9 @@ export class Random {
     nextElement(array) {
         return array[Math.floor(this.uniform() * array.length)];
     }
+    nextBoolean() {
+        return this.uniform() < 0.5;
+    }
 }
 export class JsRandom extends Random {
     constructor() {

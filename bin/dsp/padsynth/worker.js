@@ -1,7 +1,7 @@
 import { CreatedMessage } from "./data.js";
-import { FFT } from "../lib/fft.js";
-import { Mulberry32 } from "../lib/math.js";
-import { TAU } from "../lib/common.js";
+import { FFT } from "../fft.js";
+import { TAU } from "../../lib/common.js";
+import { Mulberry32 } from "../../lib/math.js";
 export class WavetableCreator {
     constructor(fftSize, sampleRate) {
         this.fftSize = fftSize;
@@ -94,15 +94,15 @@ WavetableCreator.FALL_OFF = 18000.0;
 let creator = null;
 const me = self;
 onmessage = event => {
-    const data = event.data;
-    switch (data.type) {
+    const msg = event.data;
+    switch (msg.type) {
         case "init": {
-            creator = new WavetableCreator(data.fftSize, data.sampleRate);
+            creator = new WavetableCreator(msg.fftSize, msg.sampleRate);
             break;
         }
         case "create": {
             console.assert(null !== creator);
-            me.postMessage(new CreatedMessage(creator.update(data.harmonics)));
+            me.postMessage(new CreatedMessage(creator.update(msg.harmonics)));
             break;
         }
     }

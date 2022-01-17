@@ -2,6 +2,7 @@ export declare abstract class Random {
     nextDouble(min: number, max: number): number;
     nextInt(min: number, max: number): number;
     nextElement<T>(array: ArrayLike<T>): T;
+    nextBoolean(): boolean;
     protected abstract uniform(): number;
 }
 export declare class JsRandom extends Random {
@@ -10,7 +11,7 @@ export declare class JsRandom extends Random {
     protected uniform(): number;
 }
 export declare class Mulberry32 extends Random {
-    private seed;
+    seed: number;
     constructor(seed?: number);
     protected uniform(): number;
 }

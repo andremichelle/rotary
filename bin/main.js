@@ -11,7 +11,7 @@ import { Mulberry32 } from "./lib/math.js";
 import { RotaryModel } from "./rotary/model.js";
 import { RotaryApp } from "./rotary/app.js";
 import { installApplicationMenu } from "./rotary/env.js";
-import { buildAudio } from "./audio.01.js";
+import { buildAudio } from "./rotary/audio.01.js";
 const showError = (message) => {
     const preloader = document.getElementById("preloader");
     if (null === preloader) {

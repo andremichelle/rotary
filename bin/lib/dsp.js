@@ -1,6 +1,3 @@
-export class DSP {
-}
-DSP.midiToHz = (note = 60.0, baseFrequency = 440.0) => baseFrequency * Math.pow(2.0, (note + 3.0) / 12.0 - 6.0);
 export const pulsarDelay = (context, input, output, delayTimeL, delayTimeR, delayTime, feedback, lpf, hpf) => {
     const preSplitter = context.createChannelSplitter(2);
     const preDelayL = context.createDelay();

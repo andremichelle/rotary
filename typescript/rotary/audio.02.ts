@@ -1,7 +1,7 @@
-import {RotaryPlaybackNode} from "./rotary/audio.js"
-import {RotaryModel} from "./rotary/model.js"
-import {ObservableCollection} from "./lib/common.js"
-import {Random} from "./lib/math.js"
+import {RotaryModel} from "./model.js"
+import {Random} from "../lib/math.js"
+import {RotaryPlaybackNode} from "./worklets.js"
+import {ObservableCollection, readAudio} from "../lib/common.js"
 
 export const buildAudio = async (context: AudioContext, model: RotaryModel, random: Random): Promise<void> => {
     const rotaryNode = await RotaryPlaybackNode.build(context)
@@ -10,6 +10,9 @@ export const buildAudio = async (context: AudioContext, model: RotaryModel, rand
     const updateFormat = () => rotaryNode.updateFormat(model)
     ObservableCollection.observeNested(model.tracks, updateFormat)
     updateFormat()
+
+    const buffer = await readAudio(context, "samples/robotica.wav")
+    rotaryNode.updateSample(buffer)
 
     rotaryNode.connect(context.destination)
 }

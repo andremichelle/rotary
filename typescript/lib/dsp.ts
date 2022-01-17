@@ -1,7 +1,3 @@
-export class DSP {
-    static midiToHz = (note: number = 60.0, baseFrequency: number = 440.0) => baseFrequency * Math.pow(2.0, (note + 3.0) / 12.0 - 6.0)
-}
-
 export const pulsarDelay = (context: AudioContext, input: AudioNode, output: AudioNode,
                             delayTimeL: number, delayTimeR: number, delayTime: number,
                             feedback: number, lpf: number, hpf: number) => {

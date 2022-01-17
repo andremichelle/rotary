@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { RotaryModel } from "./model.js";
-import { UpdateFormatMessage, UpdateLoopDurationMessage } from "../worklets/messages.js";
+import { UpdateFormatMessage, UpdateLoopDurationMessage, UpdateSampleMessage } from "../worklets/messages.js";
 export class RotaryAutomationNode extends AudioWorkletNode {
     static build(context) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -74,5 +74,8 @@ export class RotaryPlaybackNode extends AudioWorkletNode {
     updateFormat(model) {
         this.port.postMessage(new UpdateFormatMessage(model.serialize()));
     }
+    updateSample(buffer) {
+        this.port.postMessage(UpdateSampleMessage.from(buffer));
+    }
 }
-//# sourceMappingURL=audio.js.map
+//# sourceMappingURL=worklets.js.map

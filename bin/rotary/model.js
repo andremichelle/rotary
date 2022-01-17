@@ -221,13 +221,13 @@ export class RotaryTrackModel {
         this.widthPadding.set(widthPadding);
         this.length.set(length);
         this.lengthRatio.set(lengthRatio);
-        this.outline.set(fill == Fill.Stroke || fill === Fill.Flat && random.nextDouble(0.0, 1.0) < 0.5 ? 1 : 0);
+        this.outline.set(fill == Fill.Stroke || fill === Fill.Flat && random.nextBoolean() ? 1 : 0);
         this.fill.set(fill);
         this.motion.set(Motion.random(random));
         this.phaseOffset.set(Math.floor(random.nextDouble(0.0, 4.0)) * 0.25);
         this.bend.set(random.nextDouble(-.5, .5));
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)));
-        this.reverse.set(random.nextDouble(0.0, 1.0) < 0.5);
+        this.reverse.set(random.nextBoolean());
         return this;
     }
     terminate() {

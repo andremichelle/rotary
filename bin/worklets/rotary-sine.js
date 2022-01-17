@@ -1,5 +1,5 @@
-import { DSP } from "../lib/dsp.js";
 import { RotaryModel } from "../rotary/model.js";
+import { midiToHz } from "../dsp/common.js";
 registerProcessor("rotary-sine", class extends AudioWorkletProcessor {
     constructor() {
         super();
@@ -9,7 +9,7 @@ registerProcessor("rotary-sine", class extends AudioWorkletProcessor {
         for (let i = 0; i < RotaryModel.MAX_TRACKS; i++) {
             const o = Math.floor(i / notes.length) - 1;
             const n = i % notes.length;
-            this.phaseIncrements[i] = DSP.midiToHz(notes[n] + o * 12) * 2.0 * Math.PI;
+            this.phaseIncrements[i] = midiToHz(notes[n] + o * 12) * 2.0 * Math.PI;
         }
     }
     process(inputs, outputs) {
