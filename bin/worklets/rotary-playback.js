@@ -1,4 +1,9 @@
 import { RotaryModel } from "../rotary/model.js";
+class Voice {
+    constructor() {
+        this.phase = 0.0;
+    }
+}
 registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
     constructor() {
         super();
@@ -8,11 +13,11 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         this.lastValues = new Float32Array(RotaryModel.MAX_TRACKS).fill(Number.MAX_VALUE);
         this.port.onmessage = (event) => {
             const data = event.data;
-            if (data.action === "format") {
-                this.model.deserialize(data.value);
+            if (data.type === "format") {
+                this.model.deserialize(data.format);
             }
-            else if (data.action === "loopInSeconds") {
-                this.loopInSeconds = data.value;
+            else if (data.type === "loop-duration") {
+                this.loopInSeconds = data.seconds;
             }
         };
     }

@@ -15,7 +15,9 @@ export class Generator {
         this.worker.onerror = ev => console.warn(ev);
         this.worker.onmessage = event => {
             const data = event.data;
-            this.tasks.shift()(data.wavetable);
+            if (data.type === "created") {
+                this.tasks.shift()(data.wavetable);
+            }
         };
         this.worker.postMessage(new InitMessage(fftSize, sampleRate));
     }

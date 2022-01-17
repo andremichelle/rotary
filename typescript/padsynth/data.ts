@@ -27,27 +27,23 @@ export class Harmonic {
     }
 }
 
-export type MessageType = 'init' | 'create' | 'created'
+export type Message = InitMessage | CreateMessage | CreatedMessage
 
-export interface Message {
-    type: MessageType
-}
-
-export class InitMessage implements Message {
+export class InitMessage {
     readonly type = 'init'
 
     constructor(readonly fftSize: number, readonly sampleRate: number) {
     }
 }
 
-export class CreateMessage implements Message {
+export class CreateMessage {
     readonly type = 'create'
 
     constructor(readonly harmonics: Harmonic[]) {
     }
 }
 
-export class CreatedMessage implements Message {
+export class CreatedMessage {
     readonly type = 'created'
 
     constructor(readonly wavetable: Float32Array) {

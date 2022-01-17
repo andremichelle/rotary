@@ -1,4 +1,5 @@
 import {RotaryModel} from "./model.js"
+import {UpdateFormatMessage, UpdateLoopDurationMessage} from "../worklets/messages.js"
 
 export class RotaryAutomationNode extends AudioWorkletNode {
     static async build(context: AudioContext): Promise<RotaryAutomationNode> {
@@ -18,17 +19,11 @@ export class RotaryAutomationNode extends AudioWorkletNode {
     }
 
     updateLoopDuration(seconds: number): void {
-        this.port.postMessage({
-            action: "loopInSeconds",
-            value: seconds
-        })
+        this.port.postMessage(new UpdateLoopDurationMessage(seconds))
     }
 
     updateFormat(model: RotaryModel): void {
-        this.port.postMessage({
-            action: "format",
-            value: model.serialize()
-        })
+        this.port.postMessage(new UpdateFormatMessage(model.serialize()))
     }
 }
 
@@ -68,16 +63,10 @@ export class RotaryPlaybackNode extends AudioWorkletNode {
     }
 
     updateLoopDuration(seconds: number): void {
-        this.port.postMessage({
-            action: "loopInSeconds",
-            value: seconds
-        })
+        this.port.postMessage(new UpdateLoopDurationMessage(seconds))
     }
 
     updateFormat(model: RotaryModel): void {
-        this.port.postMessage({
-            action: "format",
-            value: model.serialize()
-        })
+        this.port.postMessage(new UpdateFormatMessage(model.serialize()))
     }
 }

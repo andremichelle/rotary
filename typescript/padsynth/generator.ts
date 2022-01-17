@@ -1,4 +1,4 @@
-import {CreatedMessage, CreateMessage, Harmonic, InitMessage} from "./data.js"
+import {CreateMessage, Harmonic, InitMessage, Message} from "./data.js"
 
 export class Generator {
     private readonly worker: Worker = new Worker("bin/padsynth/worker.js", {type: "module"})
@@ -7,8 +7,10 @@ export class Generator {
     constructor(fftSize: number, sampleRate: number) {
         this.worker.onerror = ev => console.warn(ev)
         this.worker.onmessage = event => {
-            const data = event.data as CreatedMessage
-            this.tasks.shift()(data.wavetable)
+            const data = event.data as Message
+            if (data.type === "created") {
+                this.tasks.shift()(data.wavetable)
+            }
         }
         this.worker.postMessage(new InitMessage(fftSize, sampleRate))
     }

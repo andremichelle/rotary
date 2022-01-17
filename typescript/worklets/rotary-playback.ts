@@ -1,4 +1,9 @@
-import {RotaryFormat, RotaryModel} from "../rotary/model.js"
+import {RotaryModel} from "../rotary/model.js"
+import {Message} from "./messages.js"
+
+class Voice {
+    private phase: number = 0.0
+}
 
 registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         private readonly model: RotaryModel = new RotaryModel()
@@ -10,11 +15,11 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
             super()
 
             this.port.onmessage = (event: MessageEvent) => {
-                const data = event.data
-                if (data.action === "format") {
-                    this.model.deserialize(data.value as RotaryFormat)
-                } else if (data.action === "loopInSeconds") {
-                    this.loopInSeconds = data.value
+                const data = event.data as Message
+                if (data.type === "format") {
+                    this.model.deserialize(data.format)
+                } else if (data.type === "loop-duration") {
+                    this.loopInSeconds = data.seconds
                 }
             }
         }

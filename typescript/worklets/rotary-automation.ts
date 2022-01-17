@@ -1,5 +1,6 @@
 import {Function} from "../lib/math.js"
-import {RotaryFormat, RotaryModel} from "../rotary/model.js"
+import {RotaryModel} from "../rotary/model.js"
+import {Message} from "./messages.js"
 
 registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
     private readonly envelopes = new Float32Array(RotaryModel.MAX_TRACKS)
@@ -14,21 +15,17 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
         super()
 
         this.port.onmessage = (event: MessageEvent) => {
-            const data = event.data
-            if (data.action === "format") {
-                this.model.deserialize(data.value as RotaryFormat)
-            } else if (data.action === "loopInSeconds") {
-                this.loopInSeconds = data.value
-            } else if (data.action === "envelope") {
-                this.updateEnvelope(data.value)
-            } else if (data.action === "edge") {
-                this.tMin = data.value[0]
-                this.tMax = data.value[1]
+            const data = event.data as Message
+            if (data.type === "format") {
+                this.model.deserialize(data.format)
+            } else if (data.type === "loop-duration") {
+                this.loopInSeconds = data.seconds
             }
         }
         this.updateEnvelope(0.005)
     }
 
+    // noinspection JSUnusedGlobalSymbols
     process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
         const channels = outputs[0]
         const tracks = this.model.tracks

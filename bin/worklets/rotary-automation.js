@@ -12,18 +12,11 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
         this.tMax = 1.00;
         this.port.onmessage = (event) => {
             const data = event.data;
-            if (data.action === "format") {
-                this.model.deserialize(data.value);
+            if (data.type === "format") {
+                this.model.deserialize(data.format);
             }
-            else if (data.action === "loopInSeconds") {
-                this.loopInSeconds = data.value;
-            }
-            else if (data.action === "envelope") {
-                this.updateEnvelope(data.value);
-            }
-            else if (data.action === "edge") {
-                this.tMin = data.value[0];
-                this.tMax = data.value[1];
+            else if (data.type === "loop-duration") {
+                this.loopInSeconds = data.seconds;
             }
         };
         this.updateEnvelope(0.005);

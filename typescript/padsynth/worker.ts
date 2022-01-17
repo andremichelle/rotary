@@ -1,4 +1,4 @@
-import {CreatedMessage, CreateMessage, Harmonic, InitMessage} from "./data.js"
+import {CreatedMessage, Harmonic, Message} from "./data.js"
 import {FFT} from "../lib/fft.js"
 import {Mulberry32} from "../lib/math.js"
 import {TAU} from "../lib/common.js"
@@ -110,7 +110,7 @@ declare interface Self {
 let creator = null
 const me = (self as unknown as Self)
 onmessage = event => {
-    const data = event.data as (InitMessage | CreateMessage)
+    const data = event.data as Message
     switch (data.type) {
         case "init": {
             creator = new WavetableCreator(data.fftSize, data.sampleRate)
