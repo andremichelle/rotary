@@ -80,21 +80,3 @@ export class RotarySampleNode extends AudioWorkletNode {
         })
     }
 }
-
-export class MappingNode extends AudioWorkletNode {
-    static async load(context: AudioContext): Promise<void> {
-        return context.audioWorklet.addModule("bin/worklets/mapping.js")
-    }
-
-    constructor(context: AudioContext) {
-        super(context, "mapping", {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            outputChannelCount: [RotaryModel.MAX_TRACKS],
-            channelCount: RotaryModel.MAX_TRACKS,
-            channelCountMode: "explicit",
-            channelInterpretation: "speakers"
-        })
-    }
-}
-

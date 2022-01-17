@@ -50,6 +50,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
     readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
     readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75))
+    readonly loopDuration = this.terminator.with(new BoundNumericValue(new Linear(1.0, 16.0), 8.0))
 
     constructor() {
     }

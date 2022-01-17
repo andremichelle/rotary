@@ -26,6 +26,7 @@ export declare class RotaryModel implements Serializer<RotaryFormat>, Terminable
     readonly tracks: ObservableCollection<RotaryTrackModel>;
     readonly radiusMin: BoundNumericValue;
     readonly phaseOffset: BoundNumericValue;
+    readonly loopDuration: BoundNumericValue;
     constructor();
     randomize(random: Random): RotaryModel;
     randomizeTracks(random: Random): RotaryModel;

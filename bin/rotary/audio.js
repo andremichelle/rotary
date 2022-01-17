@@ -85,21 +85,4 @@ export class RotarySampleNode extends AudioWorkletNode {
         });
     }
 }
-export class MappingNode extends AudioWorkletNode {
-    static load(context) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return context.audioWorklet.addModule("bin/worklets/mapping.js");
-        });
-    }
-    constructor(context) {
-        super(context, "mapping", {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            outputChannelCount: [RotaryModel.MAX_TRACKS],
-            channelCount: RotaryModel.MAX_TRACKS,
-            channelCountMode: "explicit",
-            channelInterpretation: "speakers"
-        });
-    }
-}
 //# sourceMappingURL=audio.js.map

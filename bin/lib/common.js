@@ -111,6 +111,31 @@ export class ObservableCollection {
         this.observable = new ObservableImpl();
         this.values = [];
     }
+    static observeNested(collection, observer) {
+        const itemObserver = _ => observer(collection);
+        const observers = new Map();
+        collection.forEach((observable) => observers.set(observable, observable.addObserver(itemObserver)));
+        collection.addObserver((event) => {
+            if (event.type === CollectionEventType.Add) {
+                observers.set(event.item, event.item.addObserver(itemObserver));
+            }
+            else if (event.type === CollectionEventType.Remove) {
+                const observer = observers.get(event.item);
+                console.assert(observer !== undefined);
+                observers.delete(event.item);
+                observer.terminate();
+            }
+            else if (event.type === CollectionEventType.Order) {
+            }
+            observer(collection);
+        });
+        return {
+            terminate() {
+                observers.forEach((value, key) => value.terminate());
+                observers.clear();
+            }
+        };
+    }
     add(value, index = Number.MAX_SAFE_INTEGER) {
         console.assert(0 <= index);
         index = Math.min(index, this.values.length);

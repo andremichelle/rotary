@@ -163,6 +163,33 @@ export class CollectionEvent<T> {
 }
 
 export class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
+    static observeNested<U extends Observable<U>>(collection: ObservableCollection<U>,
+                                                  observer: (collection: ObservableCollection<U>) => void): Terminable {
+        const itemObserver = _ => observer(collection)
+        const observers: Map<U, Terminable> = new Map()
+        collection.forEach((observable: U) => observers.set(observable, observable.addObserver(itemObserver)))
+        collection.addObserver((event: CollectionEvent<U>) => {
+            if (event.type === CollectionEventType.Add) {
+                observers.set(event.item, event.item.addObserver(itemObserver))
+            } else if (event.type === CollectionEventType.Remove) {
+                const observer = observers.get(event.item)
+                console.assert(observer !== undefined)
+                observers.delete(event.item)
+                observer.terminate()
+            } else if (event.type === CollectionEventType.Order) {
+                // ... nothing
+            }
+            observer(collection)
+        })
+        return {
+            terminate() {
+                observers.forEach((value: Terminable, key) => value.terminate())
+                observers.clear()
+            }
+        }
+    }
+
+
     private readonly observable = new ObservableImpl<CollectionEvent<T>>()
 
     private readonly values: T[] = []

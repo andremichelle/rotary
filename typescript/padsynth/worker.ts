@@ -117,10 +117,8 @@ onmessage = event => {
             break
         }
         case "create": {
-            const now = performance.now()
-            const wavetable = creator.update(data.harmonics)
-            console.log(`${(performance.now() - now).toFixed(1)}ms`)
-            me.postMessage(new CreatedMessage(wavetable))
+            console.assert(null !== creator)
+            me.postMessage(new CreatedMessage(creator.update(data.harmonics)))
             break
         }
     }

@@ -85,6 +85,7 @@ export declare class CollectionEvent<T> {
     constructor(collection: ObservableCollection<T>, type: CollectionEventType, item?: T, index?: number);
 }
 export declare class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
+    static observeNested<U extends Observable<U>>(collection: ObservableCollection<U>, observer: (collection: ObservableCollection<U>) => void): Terminable;
     private readonly observable;
     private readonly values;
     add(value: T, index?: number): boolean;

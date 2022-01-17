@@ -9,6 +9,7 @@ export class RotaryModel {
         this.tracks = new ObservableCollection();
         this.radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20));
         this.phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75));
+        this.loopDuration = this.terminator.with(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
     }
     randomize(random) {
         this.radiusMin.set(20);
