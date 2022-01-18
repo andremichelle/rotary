@@ -507,3 +507,36 @@ export const readAudio = (context: AudioContext, url: string): Promise<AudioBuff
 export const decodeAudioData = (context: AudioContext, buffer: ArrayBuffer): Promise<AudioBuffer> => {
     return context.decodeAudioData(buffer)
 }
+
+const plural = (count: number, name: string): string => {
+    return `${count} ${1 < count ? `${name}s` : name}`
+}
+
+export const timeToString = (seconds: number): string => {
+    let interval = Math.floor(seconds / 31536000)
+    if (interval >= 1) return plural(interval, "year")
+    interval = Math.floor(seconds / 2592000)
+    if (interval >= 1) return plural(interval, "month")
+    interval = Math.floor(seconds / 86400)
+    if (interval >= 1) return plural(interval, "day")
+    interval = Math.floor(seconds / 3600)
+    if (interval >= 1) return plural(interval, "hour")
+    interval = Math.floor(seconds / 60)
+    if (interval >= 1) return plural(interval, "minute")
+    return plural(Math.ceil(seconds), "second")
+}
+
+export class Estimation {
+    private lastPercent: number = 0.0
+    private startTime: number = performance.now()
+
+    update(progress: number): string {
+        const percent = Math.floor(progress * 10000.0)
+        if (this.lastPercent !== percent) {
+            const computationTime = (performance.now() - this.startTime) / 1000.0
+            const remaining = (computationTime / progress) - computationTime
+            this.lastPercent = percent
+            return `${(percent / 100.0).toFixed(2)}%・${timeToString(remaining | 0)} remaining`
+        }
+    }
+}

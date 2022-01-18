@@ -45,6 +45,8 @@ interface GIF {
     once(type: "finished", callback: (blob: Blob) => void): void
 
     render(): boolean
+
+    abort(): void
 }
 
 declare var GIF: {

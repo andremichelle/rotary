@@ -168,3 +168,9 @@ export declare class UniformRandomMapping implements ValueMapping<number> {
 export declare const readBinary: (url: string) => Promise<ArrayBuffer>;
 export declare const readAudio: (context: AudioContext, url: string) => Promise<AudioBuffer>;
 export declare const decodeAudioData: (context: AudioContext, buffer: ArrayBuffer) => Promise<AudioBuffer>;
+export declare const timeToString: (seconds: number) => string;
+export declare class Estimation {
+    private lastPercent;
+    private startTime;
+    update(progress: number): string;
+}

@@ -36,7 +36,7 @@ export const renderWebM = (model) => __awaiter(void 0, void 0, void 0, function*
         frameDuration: 1000.0 / 60.0,
         alphaQuality: 1.0
     });
-    const progressIndicator = new ProgressIndicator();
+    const progressIndicator = new ProgressIndicator("Export WebM");
     yield progressIndicator.completeWith(RotaryRenderer.renderFrames(model, numFrames, size, context => writer.addFrame(context.canvas), progressIndicator.onProgress));
     const blob = yield writer.complete();
     window.open(URL.createObjectURL(blob));
@@ -44,7 +44,7 @@ export const renderWebM = (model) => __awaiter(void 0, void 0, void 0, function*
 export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* () {
     const size = model.exportSize.get();
     const gif = new GIF({
-        workers: 8,
+        workers: 2,
         quality: 10,
         width: size,
         height: size,
@@ -55,7 +55,7 @@ export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* 
         delay: 1000 / 60
     };
     const numFrames = Math.floor(60 * model.loopDuration.get());
-    const progressIndicator = new ProgressIndicator();
+    const progressIndicator = new ProgressIndicator("Export GIF");
     yield RotaryRenderer.renderFrames(model, numFrames, size, context => gif.addFrame(context.canvas, option), progress => progressIndicator.onProgress(progress * 0.5));
     gif.once("finished", (blob) => {
         progressIndicator.complete();

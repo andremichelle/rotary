@@ -1,4 +1,4 @@
-import {Terminable} from "../lib/common.js"
+import {Estimation, Terminable} from "../lib/common.js"
 
 export class Dom {
     static bindEventListener(target: EventTarget,
@@ -54,35 +54,64 @@ export class Dom {
 
 export class ProgressIndicator {
     private readonly layer: HTMLDivElement = document.createElement("div")
+    private readonly title: HTMLHeadingElement = document.createElement("h3")
+    private readonly label: HTMLLabelElement = document.createElement("label")
     private readonly progress: HTMLProgressElement = document.createElement("progress")
+    private readonly cancel: HTMLSpanElement = document.createElement("span")
+    private readonly estimation: Estimation = new Estimation()
 
-    constructor() {
+    constructor(title?: string) {
         this.layer.style.width = "100%"
         this.layer.style.height = "100%"
         this.layer.style.position = "absolute"
         this.layer.style.pointerEvents = "all"
         this.layer.style.backgroundColor = "rgba(0, 0, 0, 0.8)"
         this.layer.style.display = "flex"
+        this.layer.style.flexDirection = "column"
         this.layer.style.alignItems = "center"
         this.layer.style.justifyContent = "center"
-        this.layer.appendChild(this.progress)
+        this.label.style.fontSize = "11px"
+        this.label.style.color = "rgba(255, 255, 255, 0.7)"
+        this.progress.style.width = "180px"
+        this.progress.style.height = "21px"
         this.progress.max = 1.0
+        if(undefined !== title) {
+            this.title.textContent = title
+            this.layer.appendChild(this.title)
+        }
+        this.layer.appendChild(this.label)
+        this.layer.appendChild(this.progress)
         document.body.appendChild(this.layer)
     }
 
+    onCancel(onCancel: () => void): void {
+        console.assert(null === this.cancel.parentElement, "Cannot assign twice")
+        this.layer.appendChild(this.cancel)
+        this.cancel.textContent = "cancel"
+        this.cancel.style.cursor = "pointer"
+        this.cancel.style.color = "rgba(255, 255, 255, 0.5)"
+        this.cancel.onclick = () => {
+            this.complete()
+            onCancel()
+        }
+    }
+
     onProgress = (progress: number): void => {
+        this.label.textContent = this.estimation.update(progress)
         this.progress.value = progress
     }
 
     completeWith<T>(promise: Promise<T>): Promise<T> {
         return promise.then(() => {
-            this.layer.remove()
+            this.complete()
             return promise
         })
     }
 
     complete() {
-        this.layer.remove()
+        if (null !== this.layer.parentElement) {
+            this.layer.remove()
+        }
     }
 }
 

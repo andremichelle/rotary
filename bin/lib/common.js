@@ -408,4 +408,40 @@ export const readAudio = (context, url) => {
 export const decodeAudioData = (context, buffer) => {
     return context.decodeAudioData(buffer);
 };
+const plural = (count, name) => {
+    return `${count} ${1 < count ? `${name}s` : name}`;
+};
+export const timeToString = (seconds) => {
+    let interval = Math.floor(seconds / 31536000);
+    if (interval >= 1)
+        return plural(interval, "year");
+    interval = Math.floor(seconds / 2592000);
+    if (interval >= 1)
+        return plural(interval, "month");
+    interval = Math.floor(seconds / 86400);
+    if (interval >= 1)
+        return plural(interval, "day");
+    interval = Math.floor(seconds / 3600);
+    if (interval >= 1)
+        return plural(interval, "hour");
+    interval = Math.floor(seconds / 60);
+    if (interval >= 1)
+        return plural(interval, "minute");
+    return plural(Math.ceil(seconds), "second");
+};
+export class Estimation {
+    constructor() {
+        this.lastPercent = 0.0;
+        this.startTime = performance.now();
+    }
+    update(progress) {
+        const percent = Math.floor(progress * 10000.0);
+        if (this.lastPercent !== percent) {
+            const computationTime = (performance.now() - this.startTime) / 1000.0;
+            const remaining = (computationTime / progress) - computationTime;
+            this.lastPercent = percent;
+            return `${(percent / 100.0).toFixed(2)}%・${timeToString(remaining | 0)} remaining`;
+        }
+    }
+}
 //# sourceMappingURL=common.js.map

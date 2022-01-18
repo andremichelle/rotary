@@ -33,7 +33,7 @@ export const renderWebM = async (model: RotaryModel) => {
         frameDuration: 1000.0 / 60.0,
         alphaQuality: 1.0
     })
-    const progressIndicator = new ProgressIndicator()
+    const progressIndicator = new ProgressIndicator("Export WebM")
     await progressIndicator.completeWith(RotaryRenderer.renderFrames(model, numFrames, size,
         context => writer.addFrame(context.canvas), progressIndicator.onProgress))
     const blob = await writer.complete()
@@ -43,7 +43,7 @@ export const renderWebM = async (model: RotaryModel) => {
 export const renderGIF = async (model: RotaryModel) => {
     const size = model.exportSize.get()
     const gif = new GIF({
-        workers: 8,
+        workers: 2,
         quality: 10,
         width: size,
         height: size,
@@ -54,7 +54,7 @@ export const renderGIF = async (model: RotaryModel) => {
         delay: 1000 / 60
     }
     const numFrames = Math.floor(60 * model.loopDuration.get())
-    const progressIndicator = new ProgressIndicator()
+    const progressIndicator = new ProgressIndicator("Export GIF")
     await RotaryRenderer.renderFrames(model, numFrames, size,
         context => gif.addFrame(context.canvas, option),
         progress => progressIndicator.onProgress(progress * 0.5))
