@@ -1,4 +1,5 @@
 import {dbToGain, gainToDb} from "../common.js"
+import {UpdateMeterMessage} from "./message.js"
 
 export class MeterWorklet extends AudioWorkletNode {
     static async load(context: AudioContext): Promise<void> {
@@ -58,9 +59,9 @@ export class MeterWorklet extends AudioWorkletNode {
 
         this.port.onmessage = event => {
             const now = performance.now()
-            const data = event.data
-            this.maxSquares = data[0]
-            this.maxPeaks = data[1]
+            const data: UpdateMeterMessage = event.data as UpdateMeterMessage
+            this.maxPeaks = data.maxPeaks
+            this.maxSquares = data.maxSquares
             for (let i = 0; i < 2; ++i) {
                 const maxPeak = this.maxPeaks[i]
                 if (this.maxPeakHoldValue[i] <= maxPeak) {

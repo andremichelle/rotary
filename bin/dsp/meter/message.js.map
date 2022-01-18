@@ -1,1 +1,1 @@
-{"version":3,"file":"message.js","sourceRoot":"","sources":["../../../typescript/dsp/meter/message.ts"],"names":[],"mappings":"AAAA,MAAM,OAAO,WAAW;IAGpB,YAAqB,OAAe;QAAf,YAAO,GAAP,OAAO,CAAQ;QAF3B,SAAI,GAAG,eAAe,CAAA;IAG/B,CAAC;CACJ"}
+{"version":3,"file":"message.js","sourceRoot":"","sources":["../../../typescript/dsp/meter/message.ts"],"names":[],"mappings":"AAAA,MAAM,OAAO,kBAAkB;IAC3B,YAAqB,UAAwB,EAAW,QAAsB;QAAzD,eAAU,GAAV,UAAU,CAAc;QAAW,aAAQ,GAAR,QAAQ,CAAc;IAC9E,CAAC;CACJ"}

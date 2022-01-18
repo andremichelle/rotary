@@ -1,4 +1,5 @@
 import {RenderQuantum, RMS} from "../common.js"
+import {UpdateMeterMessage} from "./message.js"
 
 registerProcessor("dsp-meter", class extends AudioWorkletProcessor {
     private readonly maxPeaks: Float32Array = new Float32Array(2)
@@ -44,8 +45,8 @@ registerProcessor("dsp-meter", class extends AudioWorkletProcessor {
         this.updateCount += RenderQuantum
         if (this.updateCount >= this.updateRate) {
             this.updateCount -= this.updateRate
-            this.port.postMessage([this.maxSquares, this.maxPeaks])
-            for (let channel: number = 0|0; channel < 2; ++channel) {
+            this.port.postMessage(new UpdateMeterMessage(this.maxSquares, this.maxPeaks))
+            for (let channel: number = 0 | 0; channel < 2; ++channel) {
                 this.maxPeaks[channel] = 0.0
                 this.maxSquares[channel] = 0.0
             }
