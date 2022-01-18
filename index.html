@@ -9,6 +9,7 @@
     <link rel="icon" href="favicon.ico" type=“image/x-icon”>
     <link rel="shortcut icon" href="favicon.ico" type=“image/x-icon”>
     <link href="./bin/main.css" rel="stylesheet"/>
+    <script src="./lib/webm-writer-0.3.0.js" type="module"></script>
     <script src="./lib/gif.js"></script>
     <script src="./bin/main.js" type="module"></script>
 </head>
@@ -35,13 +36,21 @@
                 <input type="text">
                 <button>▶</button>
             </fieldset>
+            <label class="name">export size</label>
+            <fieldset class="stepper" data-parameter="export-size">
+                <button>◀︎</button>
+                <input type="text">
+                <button>▶</button>
+            </fieldset>
         </div>
     </div>
     <form class="track-nav">
         <button id="unshift-new-track">+</button>
         <div id="track-selectors">
             <article id="template-selector-track">
-                <label class="radio big"><input type="radio" name="track"><canvas></canvas></label>
+                <label class="radio big"><input type="radio" name="track">
+                    <canvas></canvas>
+                </label>
                 <button>+</button>
             </article>
         </div>

@@ -104,18 +104,18 @@ export class RotaryRenderer {
     static async renderFrames(model: RotaryModel,
                               numFrames: number,
                               size: number,
-                              process: (canvas: HTMLCanvasElement) => void,
+                              process: (context: CanvasRenderingContext2D) => void,
                               progress?: (progress: number) => void): Promise<void> {
         let count = 0 | 0
         return new Promise((resolve) => {
-            const iterator: Generator<HTMLCanvasElement> = RotaryRenderer.renderFrame(model, numFrames, size)
+            const iterator: Generator<CanvasRenderingContext2D> = RotaryRenderer.renderFrame(model, numFrames, size)
             const next = () => {
                 const curr = iterator.next()
                 if (curr.done) {
                     if(progress !== undefined) progress(1.0)
                     resolve()
                 } else {
-                    if(progress !== undefined) progress(++count / numFrames)
+                    if(progress !== undefined) progress(count++ / numFrames)
                     process(curr.value)
                     requestAnimationFrame(next)
                 }
@@ -124,7 +124,7 @@ export class RotaryRenderer {
         })
     }
 
-    static* renderFrame(model: RotaryModel, numFrames: number, size: number): Generator<HTMLCanvasElement> {
+    static* renderFrame(model: RotaryModel, numFrames: number, size: number): Generator<CanvasRenderingContext2D> {
         const canvas = document.createElement("canvas")
         const context = canvas.getContext("2d")
         const scale: number = size / model.measureRadius() * 0.5
@@ -137,7 +137,7 @@ export class RotaryRenderer {
             context.scale(scale, scale)
             RotaryRenderer.render(context, model, i / numFrames)
             context.restore()
-            yield canvas
+            yield context
         }
         return null
     }

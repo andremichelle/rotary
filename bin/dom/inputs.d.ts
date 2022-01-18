@@ -1,5 +1,4 @@
-import { NumericStepper, PrintMapping } from "./common.js";
-import { ObservableValue, Terminable } from "../lib/common.js";
+import { NumericStepper, ObservableValue, PrintMapping, Terminable } from "../lib/common.js";
 export interface Editor<T> extends Terminable {
     with(value: T): void;
     clear(): void;

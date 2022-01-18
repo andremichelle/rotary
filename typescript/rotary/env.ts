@@ -2,7 +2,7 @@ import {ListItem, MenuBar} from "../dom/menu.js"
 import {Mulberry32} from "../lib/math.js"
 import {RotaryModel} from "./model.js"
 import {RotaryApp} from "./app.js"
-import {open, renderGIF, save} from "./file.js"
+import {open, renderGIF, renderWebM, save} from "./file.js"
 
 const zoomLevel: Map<string, number> = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
@@ -16,8 +16,10 @@ export const installApplicationMenu = (element: HTMLElement, model: RotaryModel,
                 .onTrigger(async () => open(model)))
             .addListItem(ListItem.default("Save...", "", false)
                 .onTrigger(async () => save(model)))
-            .addListItem(ListItem.default("Render GIF", "", false)
+            .addListItem(ListItem.default("Export GIF", "", false)
                 .onTrigger(() => renderGIF(model)))
+            .addListItem(ListItem.default("Export WebM", "", false)
+                .onTrigger(() => renderWebM(model)))
             .addListItem(ListItem.default("Clear", "", false)
                 .onTrigger(() => model.clear())))
         .addButton(element.querySelector("[data-menu='edit']"), ListItem.root()

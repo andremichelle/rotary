@@ -1,7 +1,7 @@
-import { ObservableValueImpl, ObservableValueVoid, Options, Terminator } from "../lib/common.js";
+import { NumericStepper, ObservableValueImpl, ObservableValueVoid, Options, PrintMapping, Terminator } from "../lib/common.js";
 import { Checkbox, NumericInput, NumericStepperInput, SelectInput } from "../dom/inputs.js";
 import { Fills, MotionTypes } from "./model.js";
-import { Dom, PrintMapping, NumericStepper } from "../dom/common.js";
+import { Dom } from "../dom/common.js";
 import { CShapeMotion, LinearMotion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
 export class PowMotionEditor {
     constructor(element) {

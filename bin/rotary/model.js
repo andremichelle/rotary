@@ -8,6 +8,7 @@ export class RotaryModel {
         this.terminator = new Terminator();
         this.tracks = new ObservableCollection();
         this.radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20));
+        this.exportSize = this.terminator.with(new BoundNumericValue(new LinearInteger(128, 1024), 256));
         this.phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75));
         this.loopDuration = this.terminator.with(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
     }

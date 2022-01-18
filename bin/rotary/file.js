@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { RotaryRenderer } from "./render.js";
+import { ProgressIndicator } from "../dom/common.js";
 const pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
 export const open = (model) => __awaiter(void 0, void 0, void 0, function* () {
     const fileHandles = yield window.showOpenFilePicker(pickerOpts);
@@ -25,8 +26,23 @@ export const save = (model) => __awaiter(void 0, void 0, void 0, function* () {
     yield fileStream.write(new Blob([JSON.stringify(model.serialize())], { type: "application/json" }));
     yield fileStream.close();
 });
+export const renderWebM = (model) => __awaiter(void 0, void 0, void 0, function* () {
+    const size = model.exportSize.get();
+    const numFrames = Math.floor(60 * model.loopDuration.get());
+    const writer = new WebMWriter({
+        quality: 0.9,
+        transparent: true,
+        frameRate: 60.0,
+        frameDuration: 1000.0 / 60.0,
+        alphaQuality: 1.0
+    });
+    const progressIndicator = new ProgressIndicator();
+    yield progressIndicator.completeWith(RotaryRenderer.renderFrames(model, numFrames, size, context => writer.addFrame(context.canvas), progressIndicator.onProgress));
+    const blob = yield writer.complete();
+    window.open(URL.createObjectURL(blob));
+});
 export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* () {
-    const size = 256;
+    const size = model.exportSize.get();
     const gif = new GIF({
         workers: 8,
         quality: 10,
@@ -39,12 +55,13 @@ export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* 
         delay: 1000 / 60
     };
     const numFrames = Math.floor(60 * model.loopDuration.get());
-    yield RotaryRenderer.renderFrames(model, numFrames, size, canvas => gif.addFrame(canvas, option), progress => console.log(progress));
+    const progressIndicator = new ProgressIndicator();
+    yield RotaryRenderer.renderFrames(model, numFrames, size, context => gif.addFrame(context.canvas, option), progress => progressIndicator.onProgress(progress * 0.5));
     gif.once("finished", (blob) => {
-        console.log("done", blob);
+        progressIndicator.complete();
         window.open(URL.createObjectURL(blob));
     });
-    gif.addListener("progress", progress => console.log(progress));
+    gif.addListener("progress", progress => progressIndicator.onProgress(0.5 + progress * 0.5));
     gif.render();
 });
 //# sourceMappingURL=file.js.map

@@ -1,8 +1,16 @@
-import {CollectionEvent, CollectionEventType, ObservableValueImpl, Terminable, Terminator} from "../lib/common.js"
+import {
+    CollectionEvent,
+    CollectionEventType,
+    NumericStepper,
+    ObservableValueImpl,
+    PrintMapping,
+    Terminable,
+    Terminator
+} from "../lib/common.js"
 import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {NumericStepperInput} from "../dom/inputs.js"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor.js"
-import {Dom, NumericStepper, PrintMapping} from "../dom/common.js"
+import {Dom} from "../dom/common.js"
 import {RotaryRenderer} from "./render.js"
 import {Mulberry32, Random} from "../lib/math.js"
 
@@ -46,6 +54,8 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin)
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='phase-offset']"),
             PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.phaseOffset)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='export-size']"),
+            PrintMapping.integer("px"), new NumericStepper(1))).with(model.exportSize)
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
             switch (event.type) {
                 case CollectionEventType.Add: {

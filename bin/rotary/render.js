@@ -110,7 +110,7 @@ export class RotaryRenderer {
                     }
                     else {
                         if (progress !== undefined)
-                            progress(++count / numFrames);
+                            progress(count++ / numFrames);
                         process(curr.value);
                         requestAnimationFrame(next);
                     }
@@ -132,7 +132,7 @@ export class RotaryRenderer {
             context.scale(scale, scale);
             RotaryRenderer.render(context, model, i / numFrames);
             context.restore();
-            yield canvas;
+            yield context;
         }
         return null;
     }

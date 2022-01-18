@@ -1,15 +1,17 @@
 import {
+    NumericStepper,
     ObservableValue,
     ObservableValueImpl,
     ObservableValueVoid,
     Option,
     Options,
+    PrintMapping,
     Terminable,
     Terminator
 } from "../lib/common.js"
 import {Checkbox, Editor, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model.js"
-import {Dom, PrintMapping, NumericStepper} from "../dom/common.js"
+import {Dom} from "../dom/common.js"
 import {CShapeMotion, LinearMotion, Motion, MotionType, PowMotion, SmoothStepMotion, TShapeMotion} from "./motion.js"
 
 export interface RotaryTrackEditorExecutor {

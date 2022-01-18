@@ -200,3 +200,27 @@ declare var VideoEncoder: {
     prototype: VideoEncoder
     new(init: VideoEncoderInit): VideoEncoder
 }
+
+declare interface WebMWriterInit {
+    quality: number    // WebM image quality from 0.0 (worst) to 0.99999 (best), 1.00 (VP8L lossless) is not supported
+    fileWriter?: any // FileWriter in order to stream to a file instead of buffering to memory (optional)
+    fd?: any         // Node.js file handle to write to instead of buffering to memory (optional)
+
+    // You must supply one of:
+    frameDuration: number // Duration of frames in milliseconds
+    frameRate: number     // Number of frames per second
+
+    transparent?: boolean      // True if an alpha channel should be included in the video
+    alphaQuality?: number // Allows you to set the quality level of the alpha channel separately.
+}
+
+declare interface WebMWriter {
+    addFrame(canvas: HTMLCanvasElement): void
+
+    complete(): Promise<Blob>
+}
+
+// https://github.com/thenickdude/webm-writer-js
+declare var WebMWriter: {
+    new(init: WebMWriterInit): WebMWriter
+}

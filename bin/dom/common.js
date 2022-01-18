@@ -44,66 +44,35 @@ export class Dom {
         return { terminate: () => button.removeEventListener("mousedown", mouseDownListener) };
     }
 }
-export class PrintMapping {
-    constructor(parser, printer, preUnit = "", postUnit = "") {
-        this.parser = parser;
-        this.printer = printer;
-        this.preUnit = preUnit;
-        this.postUnit = postUnit;
+export class ProgressIndicator {
+    constructor() {
+        this.layer = document.createElement("div");
+        this.progress = document.createElement("progress");
+        this.onProgress = (progress) => {
+            this.progress.value = progress;
+        };
+        this.layer.style.width = "100%";
+        this.layer.style.height = "100%";
+        this.layer.style.position = "absolute";
+        this.layer.style.pointerEvents = "all";
+        this.layer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+        this.layer.style.display = "flex";
+        this.layer.style.alignItems = "center";
+        this.layer.style.justifyContent = "center";
+        this.layer.appendChild(this.progress);
+        this.progress.max = 1.0;
+        document.body.appendChild(this.layer);
     }
-    static integer(postUnit) {
-        return new PrintMapping(text => {
-            const value = parseInt(text, 10);
-            if (isNaN(value))
-                return null;
-            return Math.round(value) | 0;
-        }, value => String(value), "", postUnit);
+    completeWith(promise) {
+        return promise.then(() => {
+            this.layer.remove();
+            return promise;
+        });
     }
-    static float(numPrecision, preUnit, postUnit) {
-        return new PrintMapping(text => {
-            const value = parseFloat(text);
-            if (isNaN(value))
-                return null;
-            return value;
-        }, value => value.toFixed(numPrecision), preUnit, postUnit);
-    }
-    parse(text) {
-        return this.parser(text.replace(this.preUnit, "").replace(this.postUnit, ""));
-    }
-    print(value) {
-        return undefined === value ? "" : `${this.preUnit}${this.printer(value)}${this.postUnit}`;
-    }
-}
-PrintMapping.UnipolarPercent = new PrintMapping(text => {
-    const value = parseFloat(text);
-    if (isNaN(value))
-        return null;
-    return value / 100.0;
-}, value => (value * 100.0).toFixed(1), "", "%");
-PrintMapping.RGB = new PrintMapping(text => {
-    if (3 === text.length) {
-        text = text.charAt(0) + text.charAt(0) + text.charAt(1) + text.charAt(1) + text.charAt(2) + text.charAt(2);
-    }
-    if (6 === text.length) {
-        return parseInt(text, 16);
-    }
-    else {
-        return null;
-    }
-}, value => value.toString(16).padStart(6, "0").toUpperCase(), "#", "");
-export class NumericStepper {
-    constructor(step = 1) {
-        this.step = step;
-    }
-    decrease(value) {
-        value.set(Math.round((value.get() - this.step) / this.step) * this.step);
-    }
-    increase(value) {
-        value.set(Math.round((value.get() + this.step) / this.step) * this.step);
+    complete() {
+        this.layer.remove();
     }
 }
-NumericStepper.Integer = new NumericStepper(1);
-NumericStepper.Hundredth = new NumericStepper(0.01);
 export class Color {
     static hslToRgb(h = 1.0, s = 1.0, l = 0.5) {
         let r, g, b;
