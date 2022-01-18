@@ -25,36 +25,26 @@ export const save = (model) => __awaiter(void 0, void 0, void 0, function* () {
     yield fileStream.write(new Blob([JSON.stringify(model.serialize())], { type: "application/json" }));
     yield fileStream.close();
 });
-export const render = (model) => __awaiter(void 0, void 0, void 0, function* () {
-    const canvas = document.createElement("canvas");
+export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* () {
     const size = 256;
-    const numFrames = 60 * 8;
-    canvas.width = size;
-    canvas.height = size;
-    const context = canvas.getContext("2d");
     const gif = new GIF({
-        workers: 4,
+        workers: 8,
         quality: 10,
         width: size,
         height: size,
         workerScript: "lib/gif.worker.js"
     });
-    const scale = size / model.measureRadius() * 0.5;
-    const renderer = new RotaryRenderer(context, model);
-    for (let i = 0; i < numFrames; i++) {
-        context.clearRect(0, 0, size, size);
-        context.save();
-        context.translate(size >> 1, size >> 1);
-        context.scale(scale, scale);
-        renderer.draw(i / numFrames);
-        context.restore();
-        gif.addFrame(canvas, { copy: true, delay: 1000 / 60 });
-    }
-    gif.addListener("progress", progress => console.log(progress));
+    const option = {
+        copy: true,
+        delay: 1000 / 60
+    };
+    const numFrames = Math.floor(60 * model.loopDuration.get());
+    yield RotaryRenderer.renderFrames(model, numFrames, size, canvas => gif.addFrame(canvas, option), progress => console.log(progress));
     gif.once("finished", (blob) => {
         console.log("done", blob);
         window.open(URL.createObjectURL(blob));
     });
-    console.log(gif.render());
+    gif.addListener("progress", progress => console.log(progress));
+    gif.render();
 });
 //# sourceMappingURL=file.js.map

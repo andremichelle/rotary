@@ -3,6 +3,17 @@ import {Function} from "../lib/math.js"
 import {Fill, RotaryModel, RotaryTrackModel} from "./model.js"
 
 export class RotaryRenderer {
+    static render(context: CanvasRenderingContext2D,
+                  model: RotaryModel,
+                  position: number): void {
+        let radiusMin = model.radiusMin.get()
+        for (let i = 0; i < model.tracks.size(); i++) {
+            const track = model.tracks.get(i)
+            RotaryRenderer.renderTrack(context, track, radiusMin, position)
+            radiusMin += track.width.get() + track.widthPadding.get()
+        }
+    }
+
     static renderTrack(context: CanvasRenderingContext2D,
                        model: RotaryTrackModel,
                        radiusMin: number,
@@ -90,27 +101,44 @@ export class RotaryRenderer {
         }
     }
 
-    private highlight: RotaryTrackModel = null
-
-    constructor(private readonly context: CanvasRenderingContext2D,
-                private readonly model: RotaryModel) {
+    static async renderFrames(model: RotaryModel,
+                              numFrames: number,
+                              size: number,
+                              process: (canvas: HTMLCanvasElement) => void,
+                              progress?: (progress: number) => void): Promise<void> {
+        let count = 0 | 0
+        return new Promise((resolve) => {
+            const iterator: Generator<HTMLCanvasElement> = RotaryRenderer.renderFrame(model, numFrames, size)
+            const next = () => {
+                const curr = iterator.next()
+                if (curr.done) {
+                    if(progress !== undefined) progress(1.0)
+                    resolve()
+                } else {
+                    if(progress !== undefined) progress(++count / numFrames)
+                    process(curr.value)
+                    requestAnimationFrame(next)
+                }
+            }
+            requestAnimationFrame(next)
+        })
     }
 
-    draw(position: number): void {
-        let radiusMin = this.model.radiusMin.get()
-        for (let i = 0; i < this.model.tracks.size(); i++) {
-            const model = this.model.tracks.get(i)
-            this.context.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.25
-            RotaryRenderer.renderTrack(this.context, model, radiusMin, position)
-            radiusMin += model.width.get() + model.widthPadding.get()
+    static* renderFrame(model: RotaryModel, numFrames: number, size: number): Generator<HTMLCanvasElement> {
+        const canvas = document.createElement("canvas")
+        const context = canvas.getContext("2d")
+        const scale: number = size / model.measureRadius() * 0.5
+        canvas.width = size
+        canvas.height = size
+        for (let i = 0; i < numFrames; i++) {
+            context.clearRect(0, 0, size, size)
+            context.save()
+            context.translate(size >> 1, size >> 1)
+            context.scale(scale, scale)
+            RotaryRenderer.render(context, model, i / numFrames)
+            context.restore()
+            yield canvas
         }
-    }
-
-    showHighlight(model: RotaryTrackModel) {
-        this.highlight = model
-    }
-
-    releaseHighlight() {
-        this.highlight = null
+        return null
     }
 }

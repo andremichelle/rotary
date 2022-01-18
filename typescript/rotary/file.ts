@@ -21,40 +21,31 @@ export const save = async (model: RotaryModel) => {
     await fileStream.close()
 }
 
-export const render = async (model: RotaryModel) => {
-    const canvas = document.createElement("canvas")
+// TODO https://github.com/photopea/UPNG.js
+
+export const renderGIF = async (model: RotaryModel) => {
     const size = 256
-    const numFrames = 60 * 8
-    canvas.width = size
-    canvas.height = size
-    const context = canvas.getContext("2d")
-
-    // https://github.com/photopea/UPNG.js
-
     const gif = new GIF({
-        workers: 4,
+        workers: 8,
         quality: 10,
         width: size,
         height: size,
         workerScript: "lib/gif.worker.js"
     })
-    const scale: number = size / model.measureRadius() * 0.5
-    const renderer = new RotaryRenderer(context, model)
-    for (let i = 0; i < numFrames; i++) {
-        context.clearRect(0, 0, size, size)
-        context.save()
-        context.translate(size >> 1, size >> 1)
-        context.scale(scale, scale)
-        renderer.draw(i / numFrames)
-        context.restore()
-        gif.addFrame(canvas, {copy: true, delay: 1000 / 60})
+    const option = {
+        copy: true,
+        delay: 1000 / 60
     }
-    gif.addListener("progress", progress => console.log(progress))
+    const numFrames = Math.floor(60 * model.loopDuration.get())
+    await RotaryRenderer.renderFrames(model, numFrames, size,
+        canvas => gif.addFrame(canvas, option),
+        progress => console.log(progress))
     gif.once("finished", (blob) => {
         console.log("done", blob)
         window.open(URL.createObjectURL(blob))
     })
-    console.log(gif.render())
+    gif.addListener("progress", progress => console.log(progress))
+    gif.render()
 
     /*const chunks: EncodedVideoChunk[] = []
     let bytesTotal: number = 0|0

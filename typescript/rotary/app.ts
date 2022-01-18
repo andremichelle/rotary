@@ -34,9 +34,10 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     private readonly map: Map<RotaryTrackModel, RotaryTrackSelector> = new Map()
     private readonly random: Random = new Mulberry32(0x123abc456)
     private readonly c2D: CanvasRenderingContext2D = this.elements.canvas.getContext("2d", {alpha: true})
-    private readonly renderer: RotaryRenderer = new RotaryRenderer(this.c2D, this.model)
 
     readonly zoom = new ObservableValueImpl<number>(0.75)
+
+    private highlight: RotaryTrackModel = null
 
     private constructor(private readonly model: RotaryModel,
                         private readonly elements: DomElements) {
@@ -117,11 +118,11 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     }
 
     showHighlight(track: RotaryTrackModel): void {
-        this.renderer.showHighlight(track)
+        this.highlight = track
     }
 
     releaseHighlight(): void {
-        this.renderer.releaseHighlight()
+        this.highlight = null
     }
 
     render(progress: number = 0.0): void {
@@ -138,7 +139,14 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.c2D.save()
         this.c2D.scale(ratio, ratio)
         this.c2D.translate(size >> 1, size >> 1)
-        this.renderer.draw(progress)
+
+        let radiusMin = this.model.radiusMin.get()
+        for (let i = 0; i < this.model.tracks.size(); i++) {
+            const model = this.model.tracks.get(i)
+            this.c2D.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.25
+            RotaryRenderer.renderTrack(this.c2D, model, radiusMin, progress)
+            radiusMin += model.width.get() + model.widthPadding.get()
+        }
         this.c2D.restore()
 
         const circle = this.elements.progressIndicator

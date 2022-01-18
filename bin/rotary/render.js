@@ -1,11 +1,23 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import { TAU } from "../lib/common.js";
 import { Function } from "../lib/math.js";
 import { Fill } from "./model.js";
 export class RotaryRenderer {
-    constructor(context, model) {
-        this.context = context;
-        this.model = model;
-        this.highlight = null;
+    static render(context, model, position) {
+        let radiusMin = model.radiusMin.get();
+        for (let i = 0; i < model.tracks.size(); i++) {
+            const track = model.tracks.get(i);
+            RotaryRenderer.renderTrack(context, track, radiusMin, position);
+            radiusMin += track.width.get() + track.widthPadding.get();
+        }
     }
     static renderTrack(context, model, radiusMin, position) {
         const phase = model.map(position);
@@ -84,20 +96,45 @@ export class RotaryRenderer {
             context.fill();
         }
     }
-    draw(position) {
-        let radiusMin = this.model.radiusMin.get();
-        for (let i = 0; i < this.model.tracks.size(); i++) {
-            const model = this.model.tracks.get(i);
-            this.context.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.25;
-            RotaryRenderer.renderTrack(this.context, model, radiusMin, position);
-            radiusMin += model.width.get() + model.widthPadding.get();
+    static renderFrames(model, numFrames, size, process, progress) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let count = 0 | 0;
+            return new Promise((resolve) => {
+                const iterator = RotaryRenderer.renderFrame(model, numFrames, size);
+                const next = () => {
+                    const curr = iterator.next();
+                    if (curr.done) {
+                        if (progress !== undefined)
+                            progress(1.0);
+                        resolve();
+                    }
+                    else {
+                        if (progress !== undefined)
+                            progress(++count / numFrames);
+                        process(curr.value);
+                        requestAnimationFrame(next);
+                    }
+                };
+                requestAnimationFrame(next);
+            });
+        });
+    }
+    static *renderFrame(model, numFrames, size) {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        const scale = size / model.measureRadius() * 0.5;
+        canvas.width = size;
+        canvas.height = size;
+        for (let i = 0; i < numFrames; i++) {
+            context.clearRect(0, 0, size, size);
+            context.save();
+            context.translate(size >> 1, size >> 1);
+            context.scale(scale, scale);
+            RotaryRenderer.render(context, model, i / numFrames);
+            context.restore();
+            yield canvas;
         }
-    }
-    showHighlight(model) {
-        this.highlight = model;
-    }
-    releaseHighlight() {
-        this.highlight = null;
+        return null;
     }
 }
 //# sourceMappingURL=render.js.map

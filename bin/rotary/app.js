@@ -13,8 +13,8 @@ export class RotaryApp {
         this.map = new Map();
         this.random = new Mulberry32(0x123abc456);
         this.c2D = this.elements.canvas.getContext("2d", { alpha: true });
-        this.renderer = new RotaryRenderer(this.c2D, this.model);
         this.zoom = new ObservableValueImpl(0.75);
+        this.highlight = null;
         this.elements.template.remove();
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin);
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='phase-offset']"), PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.phaseOffset);
@@ -98,10 +98,10 @@ export class RotaryApp {
         return this.editor.subject.nonEmpty();
     }
     showHighlight(track) {
-        this.renderer.showHighlight(track);
+        this.highlight = track;
     }
     releaseHighlight() {
-        this.renderer.releaseHighlight();
+        this.highlight = null;
     }
     render(progress = 0.0) {
         const zoom = this.zoom.get();
@@ -115,7 +115,13 @@ export class RotaryApp {
         this.c2D.save();
         this.c2D.scale(ratio, ratio);
         this.c2D.translate(size >> 1, size >> 1);
-        this.renderer.draw(progress);
+        let radiusMin = this.model.radiusMin.get();
+        for (let i = 0; i < this.model.tracks.size(); i++) {
+            const model = this.model.tracks.get(i);
+            this.c2D.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.25;
+            RotaryRenderer.renderTrack(this.c2D, model, radiusMin, progress);
+            radiusMin += model.width.get() + model.widthPadding.get();
+        }
         this.c2D.restore();
         const circle = this.elements.progressIndicator;
         const radiant = parseInt(circle.getAttribute("r"), 10) * 2.0 * Math.PI;

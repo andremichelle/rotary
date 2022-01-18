@@ -1,12 +1,8 @@
 import { RotaryModel, RotaryTrackModel } from "./model.js";
 export declare class RotaryRenderer {
-    private readonly context;
-    private readonly model;
+    static render(context: CanvasRenderingContext2D, model: RotaryModel, position: number): void;
     static renderTrack(context: CanvasRenderingContext2D, model: RotaryTrackModel, radiusMin: number, position: number): void;
     static renderSection(context: CanvasRenderingContext2D, model: RotaryTrackModel, radiusMin: number, radiusMax: number, angleMin: number, angleMax: number): void;
-    private highlight;
-    constructor(context: CanvasRenderingContext2D, model: RotaryModel);
-    draw(position: number): void;
-    showHighlight(model: RotaryTrackModel): void;
-    releaseHighlight(): void;
+    static renderFrames(model: RotaryModel, numFrames: number, size: number, process: (canvas: HTMLCanvasElement) => void, progress?: (progress: number) => void): Promise<void>;
+    static renderFrame(model: RotaryModel, numFrames: number, size: number): Generator<HTMLCanvasElement>;
 }

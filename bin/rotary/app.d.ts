@@ -19,8 +19,8 @@ export declare class RotaryApp implements RotaryTrackEditorExecutor {
     private readonly map;
     private readonly random;
     private readonly c2D;
-    private readonly renderer;
     readonly zoom: ObservableValueImpl<number>;
+    private highlight;
     private constructor();
     createNew(model: RotaryTrackModel | null, copy: boolean): void;
     deleteTrack(): void;
