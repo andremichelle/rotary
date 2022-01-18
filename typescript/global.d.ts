@@ -209,8 +209,8 @@ declare interface WebMWriterInit {
     fd?: any         // Node.js file handle to write to instead of buffering to memory (optional)
 
     // You must supply one of:
-    frameDuration: number // Duration of frames in milliseconds
-    frameRate: number     // Number of frames per second
+    frameDuration?: number // Duration of frames in milliseconds
+    frameRate?: number     // Number of frames per second
 
     transparent?: boolean      // True if an alpha channel should be included in the video
     alphaQuality?: number // Allows you to set the quality level of the alpha channel separately.

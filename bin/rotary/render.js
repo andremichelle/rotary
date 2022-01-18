@@ -121,7 +121,7 @@ export class RotaryRenderer {
     }
     static *renderFrame(model, numFrames, size) {
         const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
+        const context = canvas.getContext("2d", { alpha: true });
         const scale = size / model.measureRadius() * 0.5;
         canvas.width = size;
         canvas.height = size;

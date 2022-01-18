@@ -112,10 +112,10 @@ export class RotaryRenderer {
             const next = () => {
                 const curr = iterator.next()
                 if (curr.done) {
-                    if(progress !== undefined) progress(1.0)
+                    if (progress !== undefined) progress(1.0)
                     resolve()
                 } else {
-                    if(progress !== undefined) progress(count++ / numFrames)
+                    if (progress !== undefined) progress(count++ / numFrames)
                     process(curr.value)
                     requestAnimationFrame(next)
                 }
@@ -126,7 +126,7 @@ export class RotaryRenderer {
 
     static* renderFrame(model: RotaryModel, numFrames: number, size: number): Generator<CanvasRenderingContext2D> {
         const canvas = document.createElement("canvas")
-        const context = canvas.getContext("2d")
+        const context = canvas.getContext("2d", {alpha: true})
         const scale: number = size / model.measureRadius() * 0.5
         canvas.width = size
         canvas.height = size

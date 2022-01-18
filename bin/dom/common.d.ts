@@ -8,8 +8,13 @@ export declare class Dom {
 }
 export declare class ProgressIndicator {
     private readonly layer;
+    private readonly title;
+    private readonly label;
     private readonly progress;
-    constructor();
+    private readonly cancel;
+    private readonly estimation;
+    constructor(title?: string);
+    onCancel(onCancel: () => void): void;
     onProgress: (progress: number) => void;
     completeWith<T>(promise: Promise<T>): Promise<T>;
     complete(): void;
