@@ -41,7 +41,7 @@ export class MeterWorklet extends AudioWorkletNode {
         this.canvas = document.createElement("canvas")
         this.canvas.style.width = this.width + "px"
         this.canvas.style.height = this.height + "px"
-        this.canvas.style.backgroundColor = "rgba(30,30,30)"
+        this.canvas.style.backgroundColor = "rgba(0,0,0, 0.4)"
         this.canvas.style.borderRadius = "3px"
         this.graphics = this.canvas.getContext("2d")
 
@@ -59,9 +59,9 @@ export class MeterWorklet extends AudioWorkletNode {
 
         this.port.onmessage = event => {
             const now = performance.now()
-            const data: UpdateMeterMessage = event.data as UpdateMeterMessage
-            this.maxPeaks = data.maxPeaks
-            this.maxSquares = data.maxSquares
+            const message: UpdateMeterMessage = event.data as UpdateMeterMessage
+            this.maxPeaks = message.maxPeaks
+            this.maxSquares = message.maxSquares
             for (let i = 0; i < 2; ++i) {
                 const maxPeak = this.maxPeaks[i]
                 if (this.maxPeakHoldValue[i] <= maxPeak) {
@@ -112,6 +112,8 @@ export class MeterWorklet extends AudioWorkletNode {
         this.renderMeter(this.maxSquares[1], 18, 8)
         const now = performance.now()
         for (let i = 0; i < 2; ++i) {
+            this.maxPeaks[i] *= 0.9
+            this.maxSquares[i] *= 0.9
             if (0.0 <= now - this.releasePeakHoldTime[i]) {
                 this.maxPeakHoldValue[i] = 0.0
             } else {
