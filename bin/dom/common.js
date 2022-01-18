@@ -11,6 +11,9 @@ export class Dom {
             parent.insertBefore(child, parent.children[index]);
         }
     }
+    static replaceElement(newChild, oldChild) {
+        oldChild.parentNode.replaceChild(newChild, oldChild);
+    }
     static emptyNode(node) {
         while (node.hasChildNodes()) {
             node.lastChild.remove();

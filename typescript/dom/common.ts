@@ -16,6 +16,10 @@ export class Dom {
         }
     }
 
+    static replaceElement(newChild: HTMLElement, oldChild: HTMLElement): void {
+        oldChild.parentNode.replaceChild(newChild, oldChild)
+    }
+
     static emptyNode(node: Node): void {
         while (node.hasChildNodes()) {
             node.lastChild.remove()

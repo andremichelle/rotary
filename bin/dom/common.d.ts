@@ -2,6 +2,7 @@ import { ObservableValue, Terminable } from "../lib/common.js";
 export declare class Dom {
     static bindEventListener(target: EventTarget, type: string, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): Terminable;
     static insertElement(parent: Element, child: Element, index?: number): void;
+    static replaceElement(newChild: HTMLElement, oldChild: HTMLElement): void;
     static emptyNode(node: Node): void;
     static configRepeatButton(button: any, callback: any): Terminable;
 }

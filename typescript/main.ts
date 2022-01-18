@@ -3,6 +3,8 @@ import {RotaryModel} from "./rotary/model.js"
 import {RotaryApp} from "./rotary/app.js"
 import {installApplicationMenu} from "./rotary/env.js"
 import {buildAudio} from "./rotary/audio.01.js"
+import {MeterWorklet} from "./dsp/meter/worklet.js"
+import {Dom} from "./dom/common.js"
 
 const showError = (message: string) => {
     const preloader = document.getElementById("preloader")
@@ -33,7 +35,12 @@ window.onunhandledrejection = (event) => {
 
     const context = new AudioContext()
     await context.suspend()
-    await buildAudio(context, model, random)
+    await MeterWorklet.load(context)
+    const meter = new MeterWorklet(context)
+    meter.connect(context.destination)
+    await buildAudio(context, meter, model, random)
+
+    Dom.replaceElement(meter.domElement, document.getElementById("meter"))
 
     const playButton = document.querySelector("[data-parameter='transport']") as HTMLInputElement
     context.onstatechange = () => playButton.checked = context.state === "running"

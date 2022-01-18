@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { RotaryPlaybackNode } from "./worklets.js";
 import { ObservableCollection, readAudio } from "../lib/common.js";
-export const buildAudio = (context, model, random) => __awaiter(void 0, void 0, void 0, function* () {
+export const buildAudio = (context, output, model, random) => __awaiter(void 0, void 0, void 0, function* () {
     const rotaryNode = yield RotaryPlaybackNode.build(context);
     model.loopDuration.addObserver(seconds => rotaryNode.updateLoopDuration(seconds));
     rotaryNode.updateLoopDuration(model.loopDuration.get());
@@ -18,6 +18,6 @@ export const buildAudio = (context, model, random) => __awaiter(void 0, void 0, 
     updateFormat();
     const buffer = yield readAudio(context, "samples/robotica.wav");
     rotaryNode.updateSample(buffer);
-    rotaryNode.connect(context.destination);
+    rotaryNode.connect(output);
 });
 //# sourceMappingURL=audio.02.js.map

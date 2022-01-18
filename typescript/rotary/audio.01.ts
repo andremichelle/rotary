@@ -8,7 +8,7 @@ import {Harmonic} from "../dsp/padsynth/data.js"
 import {Random} from "../lib/math.js"
 import {midiToHz} from "../dsp/common.js"
 
-export const buildAudio = async (context: AudioContext, model: RotaryModel, random: Random): Promise<void> => {
+export const buildAudio = async (context: AudioContext, output: AudioNode, model: RotaryModel, random: Random): Promise<void> => {
     const rotaryAutomationNode = await RotaryAutomationNode.build(context)
     model.loopDuration.addObserver(seconds => rotaryAutomationNode.updateLoopDuration(seconds))
     rotaryAutomationNode.updateLoopDuration(model.loopDuration.get())
@@ -56,10 +56,10 @@ export const buildAudio = async (context: AudioContext, model: RotaryModel, rand
         bufferSource.connect(gainNode).connect(pannerNode).connect(tracksGain)
     }
 
-    tracksGain.connect(context.destination)
+    tracksGain.connect(output)
     const wetGain = context.createGain()
     wetGain.gain.value = 0.8
     pulsarDelay(context, tracksGain, wetGain, 0.500, 0.125, 0.750, 0.99, 720.0, 480.0)
 
-    wetGain.connect(convolverNode).connect(context.destination)
+    wetGain.connect(convolverNode).connect(output)
 }

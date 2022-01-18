@@ -456,14 +456,15 @@ body main > .editing > .v-split > .sound {
 }
 body main > .editing > .preview {
   margin: 1px 0 0 1px;
+  padding: 32px;
   flex: 1;
   display: flex;
+  gap: 32px;
   position: relative;
   background-color: #222;
 }
 body main > .editing > .preview .rotary {
-  margin: 32px;
-  padding: 64px;
+  padding: 32px;
   position: relative;
   background: linear-gradient(to bottom, #080808 0%, #121212 100%);
   box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.4);

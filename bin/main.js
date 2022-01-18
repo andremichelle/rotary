@@ -12,6 +12,8 @@ import { RotaryModel } from "./rotary/model.js";
 import { RotaryApp } from "./rotary/app.js";
 import { installApplicationMenu } from "./rotary/env.js";
 import { buildAudio } from "./rotary/audio.01.js";
+import { MeterWorklet } from "./dsp/meter/worklet.js";
+import { Dom } from "./dom/common.js";
 const showError = (message) => {
     const preloader = document.getElementById("preloader");
     if (null === preloader) {
@@ -40,7 +42,11 @@ window.onunhandledrejection = (event) => {
     installApplicationMenu(document.querySelector("nav#app-menu"), model, app);
     const context = new AudioContext();
     yield context.suspend();
-    yield buildAudio(context, model, random);
+    yield MeterWorklet.load(context);
+    const meter = new MeterWorklet(context);
+    meter.connect(context.destination);
+    yield buildAudio(context, meter, model, random);
+    Dom.replaceElement(meter.domElement, document.getElementById("meter"));
     const playButton = document.querySelector("[data-parameter='transport']");
     context.onstatechange = () => playButton.checked = context.state === "running";
     playButton.onchange = () => __awaiter(void 0, void 0, void 0, function* () {
