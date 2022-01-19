@@ -43,6 +43,9 @@ export class Func {
     static mod(x) {
         return x - Math.floor(x);
     }
+    static switchSign(x, neg) {
+        return neg ? -x : +x;
+    }
     static tx(x, t) {
         console.assert(0.0 <= x && x <= 1.0, `${x} out of bounds`);
         t *= 1.0 - 1e-3;

@@ -152,8 +152,8 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.c2D.translate(size >> 1, size >> 1)
 
 
-        const p0 = 0.9
-        const p1 = 1.1
+        const p0 = 0.0
+        const p1 = 0.8
         const pn = size >> 1
 
         this.c2D.strokeStyle = "yellow"

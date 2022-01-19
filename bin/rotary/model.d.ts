@@ -78,7 +78,8 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
     filter(p0: number, p1: number): Generator<FilterResult>;
-    private subFilter;
+    subFilter(x0: number, x1: number, phaseOffset: number): Generator<FilterResult>;
+    computePhaseOffset(): number;
     map(phase: number): number;
     ratio(phase: number): number;
     index(phase: number): number;

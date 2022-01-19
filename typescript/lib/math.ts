@@ -60,6 +60,10 @@ export class Func {
         return x - Math.floor(x)
     }
 
+    static switchSign(x: number, neg: boolean): number {
+        return neg ? -x : +x
+    }
+
     // https://www.desmos.com/calculator/p7pjn3bb6h
     static tx(x: number, t: number) {
         console.assert(0.0 <= x && x <= 1.0, `${x} out of bounds`)

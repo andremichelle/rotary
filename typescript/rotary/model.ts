@@ -220,29 +220,36 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     }
 
     * filter(p0: number, p1: number): Generator<FilterResult> {
-        const length = this.length.get()
-        const phaseOffset = this.root.phaseOffset.get() - this.phaseOffset.get()
-        const x0 = (p0 - phaseOffset) / length
-        const x1 = (p1 - phaseOffset) / length
+        const phaseOffset = this.computePhaseOffset()
+        let x0 = (p0 - phaseOffset)
+        let x1 = (p1 - phaseOffset)
+        if (x0 > 1.0 && x1 > 1.0) {
+            x0--
+            x1--
+        }
         if (x0 < 0.0) {
-            yield* this.subFilter(x0 + 1.0, Math.min(1.0, x1 + 1.0))
-            yield* this.subFilter(0.0, x1)
+            yield* this.subFilter(x0 + 1.0, Math.min(1.0, x1 + 1.0), phaseOffset)
+            yield* this.subFilter(0.0, x1, phaseOffset)
         } else if (x1 > 1.0) {
-            yield* this.subFilter(x0, 1.0)
-            yield* this.subFilter(Math.max(0.0, x0 - 1.0), x1 - 1.0)
+            yield* this.subFilter(x0, 1.0, phaseOffset)
+            yield* this.subFilter(Math.max(0.0, x0 - 1.0), x1 - 1.0, phaseOffset)
         } else {
-            yield* this.subFilter(x0, x1)
+            yield* this.subFilter(x0, x1, phaseOffset)
         }
     }
 
-    private* subFilter(x0: number, x1: number): Generator<FilterResult> {
+    * subFilter(x0: number, x1: number, phaseOffset: number): Generator<FilterResult> {
+        if (x0 >= x1) {
+            return
+        }
+        console.assert(0.0 <= x0 && x0 <= 1.0, `x0: ${x0} out of bounds`)
+        console.assert(0.0 <= x1 && x1 <= 1.0, `x1: ${x1} out of bounds`)
         const bend = this.bend.get()
         const length = this.length.get()
         const segments = this.segments.get()
-        const phaseOffset = this.root.phaseOffset.get() - this.phaseOffset.get()
         const step: number = length / segments
-        const t0 = Func.tx(Func.clamp(x0), -bend) * length
-        const t1 = Func.tx(Func.clamp(x1), -bend) * length
+        const t0 = Func.tx(Func.clamp(x0 / length), -bend) * length
+        const t1 = Func.tx(Func.clamp(x1 / length), -bend) * length
         let index = Math.floor(t0 / step)
         let position = index * step
         while (position < t1) {
@@ -253,12 +260,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         }
     }
 
+    computePhaseOffset(): number {
+        return Func.mod(Func.switchSign(this.root.phaseOffset.get() * this.frequency.get() + this.phaseOffset.get(), this.reverse.get()))
+    }
+
     map(phase: number): number {
-        phase *= this.frequency.get()
-        phase += this.phaseOffset.get()
-        phase -= Math.floor(phase)
-        if (!this.reverse.get()) phase = 1.0 - phase
-        phase += this.root.phaseOffset.get()
+        phase += this.computePhaseOffset()
         phase = this.motion.get().map(phase - Math.floor(phase))
         return phase - Math.floor(phase)
     }
@@ -292,7 +299,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.bend.set(0.5)
         this.frequency.set(1.0)
         this.reverse.set(false)
-        this.length.set(1.0)
+        this.length.set(0.5)
         this.lengthRatio.set(0.5)
         this.outline.set(1.0)
         this.segments.set(8)
