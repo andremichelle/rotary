@@ -4,10 +4,11 @@ import {
     NumericStepper,
     ObservableValueImpl,
     PrintMapping,
+    TAU,
     Terminable,
     Terminator
 } from "../lib/common.js"
-import {RotaryModel, RotaryTrackModel} from "./model.js"
+import {FilterResult, RotaryModel, RotaryTrackModel} from "./model.js"
 import {NumericStepperInput} from "../dom/inputs.js"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor.js"
 import {Dom} from "../dom/common.js"
@@ -149,6 +150,35 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.c2D.save()
         this.c2D.scale(ratio, ratio)
         this.c2D.translate(size >> 1, size >> 1)
+
+
+        const p0 = 0.9
+        const p1 = 1.1
+        const pn = size >> 1
+
+        this.c2D.strokeStyle = "yellow"
+        this.c2D.beginPath()
+        this.c2D.moveTo(0, 0)
+        this.c2D.lineTo(Math.cos(p0 * TAU) * pn, Math.sin(p0 * TAU) * pn)
+        this.c2D.arc(0.0, 0.0, pn, p0 * TAU, p1 * TAU)
+        this.c2D.lineTo(0, 0)
+        this.c2D.stroke()
+
+        this.c2D.strokeStyle = "red"
+        const trackModel = this.model.tracks.get(0)
+        const distance = this.model.radiusMin.get()
+        const iterator = trackModel.filter(p0, p1)
+        let item = iterator.next()
+        while (!item.done) {
+            const result: FilterResult = item.value
+            this.c2D.beginPath()
+            this.c2D.moveTo(0, 0)
+            this.c2D.lineTo(Math.cos(result.position * TAU) * distance, Math.sin(result.position * TAU) * distance)
+            this.c2D.stroke()
+
+            item = iterator.next()
+        }
+
 
         let radiusMin = this.model.radiusMin.get()
         for (let i = 0; i < this.model.tracks.size(); i++) {

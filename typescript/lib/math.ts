@@ -46,15 +46,24 @@ export class Mulberry32 extends Random {
     }
 }
 
-export class Function {
+export class Func {
     // https://www.desmos.com/calculator/gkpzjoxzcy
     static smoothStep(x: number) {
         return x * x * (3.0 - 2.0 * x)
     }
 
+    static clamp(x: number): number {
+        return Math.max(0.0, Math.min(1.0, x))
+    }
+
+    static mod(x): number {
+        return x - Math.floor(x)
+    }
+
     // https://www.desmos.com/calculator/p7pjn3bb6h
     static tx(x: number, t: number) {
-        t *= 1.0 - 1e-7
+        console.assert(0.0 <= x && x <= 1.0, `${x} out of bounds`)
+        t *= 1.0 - 1e-3
         return t < 0.0 ? (t * x + x) / (t * x + 1.0) : x / (t * x - t + 1.0)
     }
 

@@ -1,6 +1,6 @@
 import {BoundNumericValue, Serializer, Terminable, Terminator} from "../lib/common.js"
 import {Linear} from "../lib/mapping.js"
-import {Function, Random} from "../lib/math.js"
+import {Func, Random} from "../lib/math.js"
 
 type Data = PowData | CShapeData | TShapeData | SmoothStepData
 
@@ -183,7 +183,7 @@ export class TShapeMotion extends Motion<TShapeData> {
     }
 
     map(x: number): number {
-        return Function.tx(x, this.shape.get())
+        return Func.tx(x, this.shape.get())
     }
 
     serialize(): MotionFormat<TShapeData> {
@@ -221,7 +221,7 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
     }
 
     map(x: number): number {
-        return Function.smoothStep(Function.step(this.edge0.get(), this.edge1.get(), x))
+        return Func.smoothStep(Func.step(this.edge0.get(), this.edge1.get(), x))
     }
 
     deserialize(format: MotionFormat<SmoothStepData>): SmoothStepMotion {

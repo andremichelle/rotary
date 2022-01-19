@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { TAU } from "../lib/common.js";
-import { Function } from "../lib/math.js";
+import { Func } from "../lib/math.js";
 import { Fill } from "./model.js";
 export class RotaryRenderer {
     static render(context, model, position) {
@@ -23,16 +23,14 @@ export class RotaryRenderer {
         const phase = model.map(position);
         const segments = model.segments.get();
         const length = model.length.get();
-        const scale = length / segments;
         const width = model.width.get();
         const r0 = radiusMin;
         const r1 = radiusMin + width;
         const bend = model.bend.get();
         const lengthRatio = model.lengthRatio.get();
         for (let i = 0; i < segments; i++) {
-            const angleMin = i * scale;
-            const angleMax = angleMin + scale * lengthRatio;
-            RotaryRenderer.renderSection(context, model, r0, r1, phase + Function.tx(angleMin, bend), phase + Function.tx(angleMax, bend));
+            const a0 = i / segments, a1 = a0 + lengthRatio / segments;
+            RotaryRenderer.renderSection(context, model, r0, r1, phase + Func.tx(a0, bend) * length, phase + Func.tx(a1, bend) * length);
         }
         const outline = model.outline.get();
         if (0.0 < outline) {
@@ -41,9 +39,14 @@ export class RotaryRenderer {
             const numArcs = length < 1.0 ? segments - 1 : segments;
             for (let i = 0; i < numArcs; i++) {
                 context.beginPath();
-                const angleMin = (i + lengthRatio) * scale;
-                const angleMax = (i + 1) * scale;
-                context.arc(0, 0, r0 + width * 0.5, (phase + Function.tx(angleMin, bend)) * TAU, (phase + Function.tx(angleMax, bend)) * TAU, false);
+                const a0 = (i + lengthRatio) / segments, a1 = (i + 1) / segments;
+                const startAngle = (phase + Func.tx(a0, bend) * length) * TAU;
+                const endAngle = (phase + Func.tx(a1, bend) * length) * TAU;
+                const radius = r0 + width * 0.5;
+                if ((endAngle - startAngle) * radius < 1.0) {
+                    continue;
+                }
+                context.arc(0, 0, radius, startAngle, endAngle, false);
                 context.stroke();
             }
             context.lineWidth = 1.0;
@@ -122,7 +125,7 @@ export class RotaryRenderer {
     static *renderFrame(model, numFrames, size) {
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d", { alpha: true });
-        const scale = size / model.measureRadius() * 0.5;
+        const scale = size / (model.measureRadius() + 2.0) * 0.5;
         canvas.width = size;
         canvas.height = size;
         for (let i = 0; i < numFrames; i++) {
@@ -134,7 +137,6 @@ export class RotaryRenderer {
             context.restore();
             yield context;
         }
-        return null;
     }
 }
 //# sourceMappingURL=render.js.map

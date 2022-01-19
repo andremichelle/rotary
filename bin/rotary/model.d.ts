@@ -51,6 +51,11 @@ export declare enum Fill {
 }
 export declare const MotionTypes: Map<string, MotionType>;
 export declare const Fills: Map<string, Fill>;
+export declare class FilterResult {
+    readonly index: number;
+    readonly position: number;
+    constructor(index: number, position: number);
+}
 export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
     readonly root: RotaryModel;
     private readonly terminator;
@@ -72,6 +77,8 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     constructor(root: RotaryModel);
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
+    filter(p0: number, p1: number): Generator<FilterResult>;
+    private subFilter;
     map(phase: number): number;
     ratio(phase: number): number;
     index(phase: number): number;

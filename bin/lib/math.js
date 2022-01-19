@@ -33,12 +33,19 @@ export class Mulberry32 extends Random {
         return ((t ^ t >>> 14) >>> 0) / 4294967296.0;
     }
 }
-export class Function {
+export class Func {
     static smoothStep(x) {
         return x * x * (3.0 - 2.0 * x);
     }
+    static clamp(x) {
+        return Math.max(0.0, Math.min(1.0, x));
+    }
+    static mod(x) {
+        return x - Math.floor(x);
+    }
     static tx(x, t) {
-        t *= 1.0 - 1e-7;
+        console.assert(0.0 <= x && x <= 1.0, `${x} out of bounds`);
+        t *= 1.0 - 1e-3;
         return t < 0.0 ? (t * x + x) / (t * x + 1.0) : x / (t * x - t + 1.0);
     }
     static step(edge0, edge1, x) {

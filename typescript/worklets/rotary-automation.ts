@@ -1,4 +1,4 @@
-import {Function} from "../lib/math.js"
+import {Func} from "../lib/math.js"
 import {RotaryModel} from "../rotary/model.js"
 import {Message} from "./messages.js"
 
@@ -35,7 +35,7 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
             for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
                 const track = tracks.get(trackIndex)
                 const x = track.ratio(localPhase)
-                const y = Function.step(this.tMin, this.tMax, x)
+                const y = Func.step(this.tMin, this.tMax, x)
                 const env = this.envelopes[trackIndex]
                 this.envelopes[trackIndex] = y + this.coeff * (env - y)
                 channels[trackIndex][frameIndex] = env

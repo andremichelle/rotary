@@ -1,6 +1,6 @@
 import { BoundNumericValue, Terminator } from "../lib/common.js";
 import { Linear } from "../lib/mapping.js";
-import { Function } from "../lib/math.js";
+import { Func } from "../lib/math.js";
 const MotionTypes = [];
 export class Motion {
     constructor() {
@@ -121,7 +121,7 @@ export class TShapeMotion extends Motion {
         this.shape = this.terminator.with(new BoundNumericValue(this.range, 0.5));
     }
     map(x) {
-        return Function.tx(x, this.shape.get());
+        return Func.tx(x, this.shape.get());
     }
     serialize() {
         return super.pack({ shape: this.shape.get() });
@@ -147,7 +147,7 @@ export class SmoothStepMotion extends Motion {
         this.edge1 = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75));
     }
     map(x) {
-        return Function.smoothStep(Function.step(this.edge0.get(), this.edge1.get(), x));
+        return Func.smoothStep(Func.step(this.edge0.get(), this.edge1.get(), x));
     }
     deserialize(format) {
         const data = this.unpack(format);

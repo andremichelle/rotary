@@ -8,7 +8,7 @@ import {
     Terminable,
     Terminator
 } from "../lib/common.js"
-import {Function, Random} from "../lib/math.js"
+import {Func, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {
     CShapeMotion,
@@ -50,7 +50,7 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
     readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
     readonly exportSize = this.terminator.with(new BoundNumericValue(new LinearInteger(128, 1024), 256))
-    readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75))
+    readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.00))
     readonly loopDuration = this.terminator.with(new BoundNumericValue(new Linear(1.0, 16.0), 8.0))
 
     constructor() {
@@ -164,6 +164,11 @@ export const MotionTypes = new Map<string, MotionType>([
 export const Fills = new Map<string, Fill>(
     [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
+export class FilterResult {
+    constructor(readonly index: number, readonly position: number) {
+    }
+}
+
 export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
     readonly segments = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 8))
@@ -214,6 +219,40 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return true
     }
 
+    * filter(p0: number, p1: number): Generator<FilterResult> {
+        const length = this.length.get()
+        const phaseOffset = this.root.phaseOffset.get() - this.phaseOffset.get()
+        const x0 = (p0 - phaseOffset) / length
+        const x1 = (p1 - phaseOffset) / length
+        if (x0 < 0.0) {
+            yield* this.subFilter(x0 + 1.0, Math.min(1.0, x1 + 1.0))
+            yield* this.subFilter(0.0, x1)
+        } else if (x1 > 1.0) {
+            yield* this.subFilter(x0, 1.0)
+            yield* this.subFilter(Math.max(0.0, x0 - 1.0), x1 - 1.0)
+        } else {
+            yield* this.subFilter(x0, x1)
+        }
+    }
+
+    private* subFilter(x0: number, x1: number): Generator<FilterResult> {
+        const bend = this.bend.get()
+        const length = this.length.get()
+        const segments = this.segments.get()
+        const phaseOffset = this.root.phaseOffset.get() - this.phaseOffset.get()
+        const step: number = length / segments
+        const t0 = Func.tx(Func.clamp(x0), -bend) * length
+        const t1 = Func.tx(Func.clamp(x1), -bend) * length
+        let index = Math.floor(t0 / step)
+        let position = index * step
+        while (position < t1) {
+            if (position >= t0) {
+                yield new FilterResult(index, Func.tx(position / length, bend) * length + phaseOffset)
+            }
+            position = ++index * step
+        }
+    }
+
     map(phase: number): number {
         phase *= this.frequency.get()
         phase += this.phaseOffset.get()
@@ -228,7 +267,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const intersection: number = 0.75 // top
         phase = intersection - this.map(phase)
         phase -= Math.floor(phase)
-        phase = Function.tx(phase, -this.bend.get())
+        phase = Func.tx(phase, -this.bend.get())
         phase /= this.length.get()
         if (phase >= 1.0) return 0.0
         phase %= 1.0 / this.segments.get()
@@ -242,18 +281,18 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     index(phase: number): number {
         const intersection: number = 0.75 // top
         phase = intersection - this.map(phase)
-        phase = Function.tx(phase - Math.floor(phase), -this.bend.get())
+        phase = Func.tx(phase - Math.floor(phase), -this.bend.get())
         const length = this.length.get()
-        if(phase >= length) return 0.0
+        if (phase >= length) return 0.0
         return Math.floor(phase / length * this.segments.get())
     }
 
     test() {
         this.phaseOffset.set(0.0)
-        this.bend.set(0.0)
+        this.bend.set(0.5)
         this.frequency.set(1.0)
         this.reverse.set(false)
-        this.length.set(0.5)
+        this.length.set(1.0)
         this.lengthRatio.set(0.5)
         this.outline.set(1.0)
         this.segments.set(8)
