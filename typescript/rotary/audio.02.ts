@@ -11,7 +11,7 @@ export const buildAudio = async (context: AudioContext, output: AudioNode, model
     ObservableCollection.observeNested(model.tracks, updateFormat)
     updateFormat()
 
-    const buffer = await readAudio(context, "samples/robotica.wav")
+    const buffer = await readAudio(context, "samples/tiny.wav")
     rotaryNode.updateSample(buffer)
 
     rotaryNode.connect(output)

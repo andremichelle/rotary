@@ -174,3 +174,11 @@ export declare class Estimation {
     private startTime;
     update(progress: number): string;
 }
+export declare class Iterator<T> {
+    private readonly generator;
+    static wrap<T>(generator: Generator<T, void, T>): Iterator<T>;
+    private curr;
+    constructor(generator: Generator<T>);
+    hasNext(): boolean;
+    next(): T;
+}

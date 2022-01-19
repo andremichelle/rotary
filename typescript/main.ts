@@ -2,7 +2,7 @@ import {Mulberry32, Random} from "./lib/math.js"
 import {RotaryModel} from "./rotary/model.js"
 import {RotaryApp} from "./rotary/app.js"
 import {installApplicationMenu} from "./rotary/env.js"
-import {buildAudio} from "./rotary/audio.01.js"
+import {buildAudio} from "./rotary/audio.02.js"
 import {MeterWorklet} from "./dsp/meter/worklet.js"
 import {Dom} from "./dom/common.js"
 

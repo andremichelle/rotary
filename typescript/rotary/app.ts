@@ -8,7 +8,7 @@ import {
     Terminable,
     Terminator
 } from "../lib/common.js"
-import {FilterResult, RotaryModel, RotaryTrackModel} from "./model.js"
+import {Edge, FilterResult, RotaryModel, RotaryTrackModel} from "./model.js"
 import {NumericStepperInput} from "../dom/inputs.js"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor.js"
 import {Dom} from "../dom/common.js"
@@ -137,6 +137,8 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     }
 
     render(progress: number = 0.0): void {
+        progress = 1.0 - progress // counter-clockwise
+
         const zoom = this.zoom.get()
         const size = this.model.measureRadius() * 2
         const ratio = Math.ceil(devicePixelRatio) * zoom
@@ -151,34 +153,31 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.c2D.scale(ratio, ratio)
         this.c2D.translate(size >> 1, size >> 1)
 
-
-        const p0 = 0.0
-        const p1 = 0.8
+        const p0 = 0.98
+        const p1 = 1.02
         const pn = size >> 1
 
-        this.c2D.strokeStyle = "yellow"
+        this.c2D.fillStyle = "rgba(255, 255, 255, 0.04)"
         this.c2D.beginPath()
         this.c2D.moveTo(0, 0)
         this.c2D.lineTo(Math.cos(p0 * TAU) * pn, Math.sin(p0 * TAU) * pn)
         this.c2D.arc(0.0, 0.0, pn, p0 * TAU, p1 * TAU)
         this.c2D.lineTo(0, 0)
-        this.c2D.stroke()
+        this.c2D.fill()
 
-        this.c2D.strokeStyle = "red"
-        const trackModel = this.model.tracks.get(0)
+        const track = this.model.tracks.get(0)
         const distance = this.model.radiusMin.get()
-        const iterator = trackModel.filter(p0, p1)
-        let item = iterator.next()
-        while (!item.done) {
-            const result: FilterResult = item.value
+
+        const iterator = track.filterSections(p0, p1, progress)
+        while (iterator.hasNext()) {
+            const result: FilterResult = iterator.next()
+            this.c2D.strokeStyle = result.edge === Edge.Min ? "green" : "yellow"
             this.c2D.beginPath()
             this.c2D.moveTo(0, 0)
-            this.c2D.lineTo(Math.cos(result.position * TAU) * distance, Math.sin(result.position * TAU) * distance)
+            const position = result.position
+            this.c2D.lineTo(Math.cos(position * TAU) * distance, Math.sin(position * TAU) * distance)
             this.c2D.stroke()
-
-            item = iterator.next()
         }
-
 
         let radiusMin = this.model.radiusMin.get()
         for (let i = 0; i < this.model.tracks.size(); i++) {

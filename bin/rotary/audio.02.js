@@ -16,7 +16,7 @@ export const buildAudio = (context, output, model, random) => __awaiter(void 0, 
     const updateFormat = () => rotaryNode.updateFormat(model);
     ObservableCollection.observeNested(model.tracks, updateFormat);
     updateFormat();
-    const buffer = yield readAudio(context, "samples/robotica.wav");
+    const buffer = yield readAudio(context, "samples/tiny.wav");
     rotaryNode.updateSample(buffer);
     rotaryNode.connect(output);
 });

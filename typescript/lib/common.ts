@@ -540,3 +540,28 @@ export class Estimation {
         }
     }
 }
+
+export class Iterator<T> {
+    static wrap<T>(generator: Generator<T, void, T>): Iterator<T> {
+        return new Iterator<T>(generator)
+    }
+
+    private curr: IteratorResult<T> = null
+
+    constructor(private readonly generator: Generator<T>) {
+        this.curr = generator.next()
+    }
+
+    hasNext(): boolean {
+        return null !== this.curr && !this.curr.done
+    }
+
+    next(): T {
+        if (this.hasNext()) {
+            const value: T = this.curr.value
+            this.curr = this.generator.next()
+            return value
+        }
+        throw new Error("No such element")
+    }
+}

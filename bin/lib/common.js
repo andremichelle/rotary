@@ -444,4 +444,25 @@ export class Estimation {
         }
     }
 }
+export class Iterator {
+    constructor(generator) {
+        this.generator = generator;
+        this.curr = null;
+        this.curr = generator.next();
+    }
+    static wrap(generator) {
+        return new Iterator(generator);
+    }
+    hasNext() {
+        return null !== this.curr && !this.curr.done;
+    }
+    next() {
+        if (this.hasNext()) {
+            const value = this.curr.value;
+            this.curr = this.generator.next();
+            return value;
+        }
+        throw new Error("No such element");
+    }
+}
 //# sourceMappingURL=common.js.map

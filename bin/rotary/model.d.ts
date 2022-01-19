@@ -1,4 +1,4 @@
-import { BoundNumericValue, Observable, ObservableCollection, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
+import { BoundNumericValue, Iterator, Observable, ObservableCollection, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
 import { Motion, MotionFormat, MotionType } from "./motion.js";
 export declare interface RotaryFormat {
@@ -51,10 +51,15 @@ export declare enum Fill {
 }
 export declare const MotionTypes: Map<string, MotionType>;
 export declare const Fills: Map<string, Fill>;
+export declare enum Edge {
+    Min = 0,
+    Max = 1
+}
 export declare class FilterResult {
+    readonly edge: Edge;
     readonly index: number;
     readonly position: number;
-    constructor(index: number, position: number);
+    constructor(edge: Edge, index: number, position: number);
 }
 export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
     readonly root: RotaryModel;
@@ -77,10 +82,6 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     constructor(root: RotaryModel);
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
-    filter(p0: number, p1: number): Generator<FilterResult>;
-    subFilter(x0: number, x1: number, phaseOffset: number): Generator<FilterResult>;
-    computePhaseOffset(): number;
-    map(phase: number): number;
     ratio(phase: number): number;
     index(phase: number): number;
     test(): void;
@@ -90,5 +91,10 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     terminate(): void;
     serialize(): RotaryTrackFormat;
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;
+    translatePhase(x: number): number;
+    filterSections(p0: number, p1: number, offset: number): Iterator<FilterResult>;
+    private filter;
+    private subFilter;
+    private getPhaseDelta;
     private updateGradient;
 }

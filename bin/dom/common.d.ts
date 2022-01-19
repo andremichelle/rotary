@@ -19,6 +19,3 @@ export declare class ProgressIndicator {
     completeWith<T>(promise: Promise<T>): Promise<T>;
     complete(): void;
 }
-export declare class Color {
-    static hslToRgb(h?: number, s?: number, l?: number): number;
-}

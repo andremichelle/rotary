@@ -20,7 +20,7 @@ export class RotaryRenderer {
         }
     }
     static renderTrack(context, model, radiusMin, position) {
-        const phase = model.map(position);
+        const phase = model.translatePhase(position);
         const segments = model.segments.get();
         const length = model.length.get();
         const width = model.width.get();
