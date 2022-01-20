@@ -93,8 +93,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;
     translatePhase(x: number): number;
     filterSections(p0: number, p1: number, offset: number): Iterator<FilterResult>;
-    private filter;
-    private subFilter;
-    private getPhaseDelta;
+    private branchFilterSection;
+    private seekSection;
     private updateGradient;
 }

@@ -56,7 +56,7 @@ export class Func {
         return Math.max(0.0, Math.min(1.0, x))
     }
 
-    static mod(x): number {
+    static mod(x: number): number {
         return x - Math.floor(x)
     }
 

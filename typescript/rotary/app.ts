@@ -137,8 +137,6 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     }
 
     render(progress: number = 0.0): void {
-        progress = 1.0 - progress // counter-clockwise
-
         const zoom = this.zoom.get()
         const size = this.model.measureRadius() * 2
         const ratio = Math.ceil(devicePixelRatio) * zoom
@@ -175,6 +173,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             this.c2D.beginPath()
             this.c2D.moveTo(0, 0)
             const position = result.position
+            console.assert(p0 <= position && position <= p1, `p0: ${p0}, pos: ${position}, p1: ${p1}`)
             this.c2D.lineTo(Math.cos(position * TAU) * distance, Math.sin(position * TAU) * distance)
             this.c2D.stroke()
         }

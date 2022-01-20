@@ -117,7 +117,7 @@ export class CShapeMotion extends Motion {
 export class TShapeMotion extends Motion {
     constructor() {
         super();
-        this.range = new Linear(-0.99, 0.99);
+        this.range = Linear.Bipolar;
         this.shape = this.terminator.with(new BoundNumericValue(this.range, 0.5));
     }
     map(x) {

@@ -68,7 +68,7 @@ export class TShapeMotionEditor implements Editor<TShapeMotion> {
     constructor(element: Element) {
         this.input = new NumericStepperInput(
             element.querySelector("fieldset[data-motion='tshape'][data-parameter='shape']"),
-            PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
+            PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
     }
 
     with(value: TShapeMotion): void {

@@ -59,7 +59,7 @@ export class RotaryRenderer {
                          radiusMin: number, radiusMax: number,
                          angleMin: number, angleMax: number): void {
         console.assert(radiusMin < radiusMax, `radiusMax(${radiusMax}) must be greater then radiusMin(${radiusMin})`)
-        console.assert(angleMin < angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`)
+        console.assert(angleMin <= angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`)
         const radianMin = angleMin * TAU
         const radianMax = angleMax * TAU
         const fill = model.fill.get()

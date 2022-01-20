@@ -106,7 +106,6 @@ export class RotaryApp {
         this.highlight = null;
     }
     render(progress = 0.0) {
-        progress = 1.0 - progress;
         const zoom = this.zoom.get();
         const size = this.model.measureRadius() * 2;
         const ratio = Math.ceil(devicePixelRatio) * zoom;
@@ -137,6 +136,7 @@ export class RotaryApp {
             this.c2D.beginPath();
             this.c2D.moveTo(0, 0);
             const position = result.position;
+            console.assert(p0 <= position && position <= p1, `p0: ${p0}, pos: ${position}, p1: ${p1}`);
             this.c2D.lineTo(Math.cos(position * TAU) * distance, Math.sin(position * TAU) * distance);
             this.c2D.stroke();
         }

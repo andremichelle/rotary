@@ -253,14 +253,17 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     test() {
         this.phaseOffset.set(0.0)
-        this.bend.set(0.9)
+        this.bend.set(-0.1)
         this.frequency.set(1.0)
         this.reverse.set(false)
-        this.length.set(0.5)
+        this.length.set(1.0)
         this.lengthRatio.set(0.125)
         this.outline.set(1.0)
-        this.segments.set(256)
-        this.motion.set(new LinearMotion())
+        this.segments.set(32)
+        // this.motion.set(new LinearMotion())
+        const shapeMotion = new TShapeMotion()
+        shapeMotion.shape.set(0.1)
+        this.motion.set(shapeMotion)
         this.width.set(128)
         this.fill.set(Fill.Stroke)
     }
@@ -336,39 +339,41 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     }
 
     translatePhase(x: number): number {
-        x = this.getPhaseDelta(x)
+        x = Func.switchSign(this.phaseOffset.get() + (this.root.phaseOffset.get() - x) * this.frequency.get(), this.reverse.get())
         x = this.motion.get().map(x - Math.floor(x))
         return x - Math.floor(x)
     }
 
     filterSections(p0: number, p1: number, offset: number): Iterator<FilterResult> {
-        return Iterator.wrap(this.filter(p0, p1, offset))
-    }
-
-    private* filter(p0: number, p1: number, offset: number): Generator<FilterResult, void, FilterResult> {
         if (p0 >= p1) {
             throw new Error(`p1(${p1}) must be greater than p0(${p0})`)
         }
-        const delta = this.getPhaseDelta(offset)
-        const pd = p1 - p0
+        const delta = this.translatePhase(offset)
+        // console.log(`filterSections p0: ${p0}, p1: ${p1}, offset: ${offset}, delta: ${delta}`)
         p0 -= delta
         p1 -= delta
-        p0 -= Math.floor(p0)
-        p1 = p0 + pd
-        if (p0 < 0.0) {
-            yield* this.subFilter(0, p0 + 1.0, Math.min(1.0, p1 + 1.0), delta)
-            yield* this.subFilter(1, 0.0, p1, delta)
-        } else if (p1 > 1.0) {
-            yield* this.subFilter(2, p0, 1.0, delta)
-            yield* this.subFilter(3, Math.max(0.0, p0 - 1.0), p1 - 1.0, delta + 1.0)
+        const pi = Math.floor(p0)
+        p0 -= pi
+        p1 -= pi
+        return Iterator.wrap(this.branchFilterSection(p0, p1, delta + pi))
+    }
+
+    private* branchFilterSection(p0: number, p1: number, delta: number): Generator<FilterResult, void, FilterResult> {
+        console.assert(p0 >= 0.0 && p0 < 1.0, `p0(${p0}) must be positive and smaller than 1.0`)
+        console.assert(p1 < 2.0, `p1(${p1}) must be smaller than 2.0`)
+        // console.log(`branchFilterSection p0: ${p0}, p1: ${p1}, delta: ${delta}`)
+        if (p1 > 1.0) {
+            yield* this.seekSection(1, p0, 1.0, delta)
+            yield* this.seekSection(2, 0.0, p1 - 1.0, delta + 1.0)
         } else {
-            yield* this.subFilter(4, p0, p1, delta)
+            yield* this.seekSection(3, p0, p1, delta)
         }
     }
 
-    private* subFilter(branch: number, p0: number, p1: number, delta: number): Generator<FilterResult> {
+    private* seekSection(branch: number, p0: number, p1: number, delta: number): Generator<FilterResult> {
+        // console.log(`seekSection #${branch} p0: ${p0}, p1: ${p1}, delta: ${delta}`)
         if (p0 >= p1) {
-            return
+            // return
         }
         console.assert(0.0 <= p0 && p0 <= 1.0, `x0: ${p0} out of bounds in branch ${branch}`)
         console.assert(0.0 <= p1 && p1 <= 1.0, `x1: ${p1} out of bounds in branch ${branch}`)
@@ -385,6 +390,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         while (seekMin < t1) {
             if (seekMin >= t0) {
                 const position = Func.tx(seekMin / length, bend) * length + delta
+                //console.log(`found <${branch}> p0: ${p0}, p1: ${p1}, delta: ${delta} > ${position} #${index}`)
                 yield new FilterResult(Edge.Min, index, position)
             }
             if (seekMax >= t0 && seekMax < t1) {
@@ -395,11 +401,6 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             seekMax = (index + lengthRatio) * step
         }
     }
-
-    private getPhaseDelta(delta: number = 0.0) {
-        return Func.switchSign(this.phaseOffset.get() + (delta + this.root.phaseOffset.get()) * this.frequency.get(), this.reverse.get())
-    }
-
     private updateGradient(): void {
         const rgb = this.rgb.get()
         const r = (rgb >> 16) & 0xFF

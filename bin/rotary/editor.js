@@ -33,7 +33,7 @@ export class CShapeMotionEditor {
 }
 export class TShapeMotionEditor {
     constructor(element) {
-        this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='tshape'][data-parameter='shape']"), PrintMapping.float(2, "", ""), NumericStepper.Hundredth);
+        this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='tshape'][data-parameter='shape']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
     }
     with(value) {
         this.input.with(value.shape);

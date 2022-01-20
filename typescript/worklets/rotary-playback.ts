@@ -36,16 +36,16 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
             const outR = output[1]
             const tracks = this.model.tracks
             const loopInFrames = sampleRate * this.loopInSeconds
-            const blockRate = RenderQuantum / loopInFrames
             for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
                 const track = tracks.get(trackIndex)
-                const iterator = track.filterSections(0.0, blockRate, -this.phase)
+                const iterator = track.filterSections(0.0, RenderQuantum / loopInFrames, this.phase)
                 while (iterator.hasNext()) {
                     const result: FilterResult = iterator.next()
                     if (result.edge === Edge.Max) {
                         continue
                     }
                     const frameIndex = Math.floor(result.position * loopInFrames)
+                    console.log(`#${result.index}, frameIndex: ${frameIndex}`)
                     console.assert(0 <= frameIndex && frameIndex < RenderQuantum, "out of bounds")
                     this.voices.push(new Voice(-frameIndex))
                 }
@@ -66,7 +66,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 outL[frameIndex] = l * 0.3
                 outR[frameIndex] = r * 0.3
             }
-            this.phase += blockRate
+            this.phase += RenderQuantum / loopInFrames
             this.phase -= Math.floor(this.phase)
             return true
         }

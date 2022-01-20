@@ -174,7 +174,7 @@ declare interface TShapeData {
 }
 
 export class TShapeMotion extends Motion<TShapeData> {
-    private readonly range = new Linear(-0.99, 0.99)
+    private readonly range = Linear.Bipolar
 
     readonly shape = this.terminator.with(new BoundNumericValue(this.range, 0.5))
 
