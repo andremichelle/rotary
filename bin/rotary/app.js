@@ -105,7 +105,7 @@ export class RotaryApp {
     releaseHighlight() {
         this.highlight = null;
     }
-    render(progress = 0.0) {
+    render(phase = 0.0) {
         const zoom = this.zoom.get();
         const size = this.model.measureRadius() * 2;
         const ratio = Math.ceil(devicePixelRatio) * zoom;
@@ -120,19 +120,21 @@ export class RotaryApp {
         const p0 = 0.98;
         const p1 = 1.02;
         const pn = size >> 1;
-        this.c2D.fillStyle = "rgba(255, 255, 255, 0.04)";
+        this.c2D.strokeStyle = "rgba(30, 240, 255, 1.0)";
+        this.c2D.fillStyle = "rgba(30, 240, 255, 0.04)";
         this.c2D.beginPath();
         this.c2D.moveTo(0, 0);
         this.c2D.lineTo(Math.cos(p0 * TAU) * pn, Math.sin(p0 * TAU) * pn);
         this.c2D.arc(0.0, 0.0, pn, p0 * TAU, p1 * TAU);
         this.c2D.lineTo(0, 0);
+        this.c2D.stroke();
         this.c2D.fill();
         const track = this.model.tracks.get(0);
         const distance = this.model.radiusMin.get();
-        const iterator = track.filterSections(p0, p1, progress);
+        const iterator = track.filterSections(p0, p1, phase);
         while (iterator.hasNext()) {
             const result = iterator.next();
-            this.c2D.strokeStyle = result.edge === Edge.Min ? "green" : "yellow";
+            this.c2D.strokeStyle = result.edge === Edge.Min ? "white" : "#888";
             this.c2D.beginPath();
             this.c2D.moveTo(0, 0);
             const position = result.position;
@@ -144,14 +146,14 @@ export class RotaryApp {
         for (let i = 0; i < this.model.tracks.size(); i++) {
             const model = this.model.tracks.get(i);
             this.c2D.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.25;
-            RotaryRenderer.renderTrack(this.c2D, model, radiusMin, progress);
+            RotaryRenderer.renderTrack(this.c2D, model, radiusMin, phase);
             radiusMin += model.width.get() + model.widthPadding.get();
         }
         this.c2D.restore();
         const circle = this.elements.progressIndicator;
         const radiant = parseInt(circle.getAttribute("r"), 10) * 2.0 * Math.PI;
         circle.setAttribute("stroke-dasharray", radiant.toFixed(2));
-        circle.setAttribute("stroke-dashoffset", ((1.0 - progress) * radiant).toFixed(2));
+        circle.setAttribute("stroke-dashoffset", ((1.0 - phase) * radiant).toFixed(2));
     }
     createSelector(track) {
         const element = this.elements.template.cloneNode(true);

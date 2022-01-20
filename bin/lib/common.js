@@ -462,7 +462,7 @@ export class Iterator {
             this.curr = this.generator.next();
             return value;
         }
-        throw new Error("No such element");
+        return null;
     }
 }
 //# sourceMappingURL=common.js.map

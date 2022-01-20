@@ -67,6 +67,7 @@ export class Func {
     // https://www.desmos.com/calculator/p7pjn3bb6h
     static tx(x: number, t: number) {
         console.assert(0.0 <= x && x <= 1.0, `${x} out of bounds`)
+        if (t === 0.0) return x
         t *= 1.0 - 1e-3
         return t < 0.0 ? (t * x + x) / (t * x + 1.0) : x / (t * x - t + 1.0)
     }

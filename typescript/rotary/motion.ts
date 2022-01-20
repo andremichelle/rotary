@@ -1,4 +1,13 @@
-import {BoundNumericValue, Serializer, Terminable, Terminator} from "../lib/common.js"
+import {
+    BoundNumericValue,
+    Observable,
+    ObservableImpl,
+    ObservableValue,
+    Observer,
+    Serializer,
+    Terminable,
+    Terminator
+} from "../lib/common.js"
 import {Linear} from "../lib/mapping.js"
 import {Func, Random} from "../lib/math.js"
 
@@ -13,7 +22,7 @@ export declare interface MotionFormat<DATA extends Data> {
 
 const MotionTypes: MotionType[] = []
 
-export abstract class Motion<DATA extends Data> implements Serializer<MotionFormat<DATA>>, Terminable {
+export abstract class Motion<DATA extends Data> implements Observable<Motion<DATA>>, Serializer<MotionFormat<DATA>>, Terminable {
     static from(format: MotionFormat<any>): Motion<any> {
         switch (format.class) {
             case LinearMotion.name:
@@ -35,6 +44,7 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
     }
 
     protected readonly terminator: Terminator = new Terminator()
+    protected readonly observable: ObservableImpl<Motion<DATA>> = new ObservableImpl<Motion<DATA>>()
 
     abstract map(x: number): number
 
@@ -46,6 +56,14 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
 
     abstract randomize(random: Random): Motion<DATA>
 
+    addObserver(observer: Observer<Motion<DATA>>): Terminable {
+        return this.observable.addObserver(observer)
+    }
+
+    removeObserver(observer: Observer<Motion<DATA>>): boolean {
+        return this.observable.removeObserver(observer)
+    }
+
     pack(data: DATA): MotionFormat<DATA> {
         return {
             class: this.constructor.name,
@@ -56,6 +74,11 @@ export abstract class Motion<DATA extends Data> implements Serializer<MotionForm
     unpack(format: MotionFormat<DATA>): DATA {
         console.assert(this.constructor.name === format.class)
         return format.data
+    }
+
+    bindValue(property: ObservableValue<any>): ObservableValue<any> {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this)))
+        return this.terminator.with(property)
     }
 
     terminate(): void {
@@ -93,7 +116,7 @@ declare interface PowData {
 export class PowMotion extends Motion<PowData> {
     private readonly range = new Linear(1.0, 16.0)
 
-    readonly exponent = this.terminator.with(new BoundNumericValue(this.range, 2.0))
+    readonly exponent = this.bindValue(new BoundNumericValue(this.range, 2.0))
 
     map(x: number): number {
         return Math.pow(x, this.exponent.get())
@@ -127,7 +150,7 @@ declare interface CShapeData {
 export class CShapeMotion extends Motion<CShapeData> {
     private readonly range = new Linear(0.0, 8.0)
 
-    readonly slope = this.terminator.with(new BoundNumericValue(this.range, 1.0))
+    readonly slope = this.bindValue(new BoundNumericValue(this.range, 1.0))
 
     private o: number
     private c: number
@@ -176,7 +199,7 @@ declare interface TShapeData {
 export class TShapeMotion extends Motion<TShapeData> {
     private readonly range = Linear.Bipolar
 
-    readonly shape = this.terminator.with(new BoundNumericValue(this.range, 0.5))
+    readonly shape = this.bindValue(new BoundNumericValue(this.range, 0.5))
 
     constructor() {
         super()
@@ -213,8 +236,8 @@ declare interface SmoothStepData {
 }
 
 export class SmoothStepMotion extends Motion<SmoothStepData> {
-    readonly edge0 = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.25))
-    readonly edge1 = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75))
+    readonly edge0 = this.bindValue(new BoundNumericValue(Linear.Identity, 0.25))
+    readonly edge1 = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75))
 
     constructor() {
         super()

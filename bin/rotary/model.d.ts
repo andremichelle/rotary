@@ -1,6 +1,6 @@
-import { BoundNumericValue, Iterator, Observable, ObservableCollection, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
+import { BoundNumericValue, Iterator, Observable, ObservableCollection, ObservableValue, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
-import { Motion, MotionFormat, MotionType } from "./motion.js";
+import { MotionFormat, MotionType } from "./motion.js";
 export declare interface RotaryFormat {
     radiusMin: number;
     tracks: RotaryTrackFormat[];
@@ -64,22 +64,24 @@ export declare class FilterResult {
 export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
     readonly root: RotaryModel;
     private readonly terminator;
-    readonly segments: BoundNumericValue;
-    readonly width: BoundNumericValue;
-    readonly widthPadding: BoundNumericValue;
-    readonly length: BoundNumericValue;
-    readonly lengthRatio: BoundNumericValue;
-    readonly outline: BoundNumericValue;
-    readonly fill: ObservableValueImpl<Fill>;
-    readonly rgb: ObservableValueImpl<number>;
-    readonly motion: ObservableValueImpl<Motion<any>>;
-    readonly phaseOffset: BoundNumericValue;
-    readonly bend: BoundNumericValue;
-    readonly frequency: BoundNumericValue;
-    readonly reverse: ObservableValueImpl<boolean>;
+    private readonly observable;
+    readonly segments: ObservableValue<any>;
+    readonly width: ObservableValue<any>;
+    readonly widthPadding: ObservableValue<any>;
+    readonly length: ObservableValue<any>;
+    readonly lengthRatio: ObservableValue<any>;
+    readonly outline: ObservableValue<any>;
+    readonly fill: ObservableValue<any>;
+    readonly rgb: ObservableValue<any>;
+    readonly motion: ObservableValue<any>;
+    readonly phaseOffset: ObservableValue<any>;
+    readonly bend: ObservableValue<any>;
+    readonly frequency: ObservableValue<any>;
+    readonly reverse: ObservableValue<any>;
     private readonly gradient;
-    private readonly observers;
+    private readonly motionTerminator;
     constructor(root: RotaryModel);
+    bindValue(property: ObservableValue<any>): ObservableValue<any>;
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
     ratio(phase: number): number;

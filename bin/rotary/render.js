@@ -19,8 +19,8 @@ export class RotaryRenderer {
             radiusMin += track.width.get() + track.widthPadding.get();
         }
     }
-    static renderTrack(context, model, radiusMin, position) {
-        const phase = model.translatePhase(position);
+    static renderTrack(context, model, radiusMin, phase) {
+        phase = model.translatePhase(phase);
         const segments = model.segments.get();
         const length = model.length.get();
         const width = model.width.get();

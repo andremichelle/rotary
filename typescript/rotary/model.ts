@@ -3,6 +3,8 @@ import {
     Iterator,
     Observable,
     ObservableCollection,
+    ObservableImpl,
+    ObservableValue,
     ObservableValueImpl,
     Observer,
     Serializer,
@@ -177,52 +179,43 @@ export class FilterResult {
 
 export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
-    readonly segments = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 8))
-    readonly width = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 12))
-    readonly widthPadding = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 0))
-    readonly length = this.terminator.with(new BoundNumericValue(Linear.Identity, 1.0))
-    readonly lengthRatio = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.5))
-    readonly outline = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 16), 0))
-    readonly fill = this.terminator.with(new ObservableValueImpl<Fill>(Fill.Flat))
-    readonly rgb = this.terminator.with(new ObservableValueImpl(<number>(0xFFFFFF)))
-    readonly motion = this.terminator.with(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
-    readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0))
-    readonly bend = this.terminator.with(new BoundNumericValue(Linear.Bipolar, 0.0))
-    readonly frequency = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
-    readonly reverse = this.terminator.with(new ObservableValueImpl<boolean>(false))
+    private readonly observable: ObservableImpl<RotaryTrackModel> = new ObservableImpl<RotaryTrackModel>()
+    readonly segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 8))
+    readonly width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12))
+    readonly widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0))
+    readonly length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0))
+    readonly lengthRatio = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5))
+    readonly outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0))
+    readonly fill = this.bindValue(new ObservableValueImpl<Fill>(Fill.Flat))
+    readonly rgb = this.bindValue(new ObservableValueImpl(<number>(0xFFFFFF)))
+    readonly motion = this.bindValue(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
+    readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
+    readonly bend = this.bindValue(new BoundNumericValue(Linear.Bipolar, 0.0))
+    readonly frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
+    readonly reverse = this.bindValue(new ObservableValueImpl<boolean>(false))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
-    private readonly observers: Map<Observer<RotaryTrackModel>, Terminable> = new Map()
+    private readonly motionTerminator: Terminator = new Terminator()
 
     constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
+        this.terminator.with(this.motion.addObserver((motion: Motion<any>) => {
+            this.motionTerminator.terminate()
+            this.motionTerminator.with(motion.addObserver(() => this.observable.notify(this)))
+        }))
         this.updateGradient()
     }
 
+    bindValue(property: ObservableValue<any>): ObservableValue<any> {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this)))
+        return this.terminator.with(property)
+    }
+
     addObserver(observer: Observer<RotaryTrackModel>): Terminable {
-        const mappedObserver: () => void = () => observer(this)
-        const terminator = new Terminator()
-        terminator.with(this.segments.addObserver(mappedObserver))
-        terminator.with(this.phaseOffset.addObserver(mappedObserver))
-        terminator.with(this.bend.addObserver(mappedObserver))
-        terminator.with(this.frequency.addObserver(mappedObserver))
-        terminator.with(this.reverse.addObserver(mappedObserver))
-        terminator.with(this.length.addObserver(mappedObserver))
-        terminator.with(this.lengthRatio.addObserver(mappedObserver))
-        terminator.with(this.outline.addObserver(mappedObserver))
-        terminator.with(this.motion.addObserver(mappedObserver))
-        terminator.with(this.width.addObserver(mappedObserver))
-        terminator.with(this.widthPadding.addObserver(mappedObserver))
-        terminator.with(this.rgb.addObserver(mappedObserver))
-        this.observers.set(observer, terminator)
-        return {terminate: () => this.removeObserver(observer)}
+        return this.observable.addObserver(observer)
     }
 
     removeObserver(observer: Observer<RotaryTrackModel>): boolean {
-        const terminable = this.observers.get(observer)
-        this.observers.delete(observer)
-        if (undefined === terminable) return false
-        terminable.terminate()
-        return true
+        return this.observable.removeObserver(observer)
     }
 
     // TODO deprecated
@@ -253,16 +246,16 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     test() {
         this.phaseOffset.set(0.0)
-        this.bend.set(-0.1)
+        this.bend.set(-0.5)
         this.frequency.set(1.0)
         this.reverse.set(false)
         this.length.set(1.0)
         this.lengthRatio.set(0.125)
         this.outline.set(1.0)
-        this.segments.set(32)
+        this.segments.set(8)
         // this.motion.set(new LinearMotion())
         const shapeMotion = new TShapeMotion()
-        shapeMotion.shape.set(0.1)
+        shapeMotion.shape.set(0.5)
         this.motion.set(shapeMotion)
         this.width.set(128)
         this.fill.set(Fill.Stroke)
@@ -390,7 +383,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         while (seekMin < t1) {
             if (seekMin >= t0) {
                 const position = Func.tx(seekMin / length, bend) * length + delta
-                //console.log(`found <${branch}> p0: ${p0}, p1: ${p1}, delta: ${delta} > ${position} #${index}`)
+                // console.log(`found <${branch}> p0: ${p0}, p1: ${p1}, delta: ${delta} > ${position} #${index}`)
                 yield new FilterResult(Edge.Min, index, position)
             }
             if (seekMax >= t0 && seekMax < t1) {
@@ -401,6 +394,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             seekMax = (index + lengthRatio) * step
         }
     }
+
     private updateGradient(): void {
         const rgb = this.rgb.get()
         const r = (rgb >> 16) & 0xFF

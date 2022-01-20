@@ -1,10 +1,11 @@
-import { BoundNumericValue, Terminator } from "../lib/common.js";
+import { BoundNumericValue, ObservableImpl, Terminator } from "../lib/common.js";
 import { Linear } from "../lib/mapping.js";
 import { Func } from "../lib/math.js";
 const MotionTypes = [];
 export class Motion {
     constructor() {
         this.terminator = new Terminator();
+        this.observable = new ObservableImpl();
     }
     static from(format) {
         switch (format.class) {
@@ -24,6 +25,12 @@ export class Motion {
     static random(random) {
         return new MotionTypes[Math.floor(random.nextDouble(0.0, MotionTypes.length))]().randomize(random);
     }
+    addObserver(observer) {
+        return this.observable.addObserver(observer);
+    }
+    removeObserver(observer) {
+        return this.observable.removeObserver(observer);
+    }
     pack(data) {
         return {
             class: this.constructor.name,
@@ -33,6 +40,10 @@ export class Motion {
     unpack(format) {
         console.assert(this.constructor.name === format.class);
         return format.data;
+    }
+    bindValue(property) {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this)));
+        return this.terminator.with(property);
     }
     terminate() {
         this.terminator.terminate();
@@ -60,7 +71,7 @@ export class PowMotion extends Motion {
     constructor() {
         super(...arguments);
         this.range = new Linear(1.0, 16.0);
-        this.exponent = this.terminator.with(new BoundNumericValue(this.range, 2.0));
+        this.exponent = this.bindValue(new BoundNumericValue(this.range, 2.0));
     }
     map(x) {
         return Math.pow(x, this.exponent.get());
@@ -86,7 +97,7 @@ export class CShapeMotion extends Motion {
     constructor() {
         super();
         this.range = new Linear(0.0, 8.0);
-        this.slope = this.terminator.with(new BoundNumericValue(this.range, 1.0));
+        this.slope = this.bindValue(new BoundNumericValue(this.range, 1.0));
         this.terminator.with(this.slope.addObserver(() => this.update()));
         this.update();
     }
@@ -118,7 +129,7 @@ export class TShapeMotion extends Motion {
     constructor() {
         super();
         this.range = Linear.Bipolar;
-        this.shape = this.terminator.with(new BoundNumericValue(this.range, 0.5));
+        this.shape = this.bindValue(new BoundNumericValue(this.range, 0.5));
     }
     map(x) {
         return Func.tx(x, this.shape.get());
@@ -143,8 +154,8 @@ export class TShapeMotion extends Motion {
 export class SmoothStepMotion extends Motion {
     constructor() {
         super();
-        this.edge0 = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.25));
-        this.edge1 = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.75));
+        this.edge0 = this.bindValue(new BoundNumericValue(Linear.Identity, 0.25));
+        this.edge1 = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
     }
     map(x) {
         return Func.smoothStep(Func.step(this.edge0.get(), this.edge1.get(), x));

@@ -1,4 +1,4 @@
-import { BoundNumericValue, Iterator, ObservableCollection, ObservableValueImpl, Terminator } from "../lib/common.js";
+import { BoundNumericValue, Iterator, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { CShapeMotion, LinearMotion, Motion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
@@ -123,49 +123,38 @@ export class RotaryTrackModel {
     constructor(root) {
         this.root = root;
         this.terminator = new Terminator();
-        this.segments = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 8));
-        this.width = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 1024), 12));
-        this.widthPadding = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 0));
-        this.length = this.terminator.with(new BoundNumericValue(Linear.Identity, 1.0));
-        this.lengthRatio = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.5));
-        this.outline = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 16), 0));
-        this.fill = this.terminator.with(new ObservableValueImpl(Fill.Flat));
-        this.rgb = this.terminator.with(new ObservableValueImpl((0xFFFFFF)));
-        this.motion = this.terminator.with(new ObservableValueImpl(new LinearMotion()));
-        this.phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.0));
-        this.bend = this.terminator.with(new BoundNumericValue(Linear.Bipolar, 0.0));
-        this.frequency = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
-        this.reverse = this.terminator.with(new ObservableValueImpl(false));
+        this.observable = new ObservableImpl();
+        this.segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 8));
+        this.width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12));
+        this.widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0));
+        this.length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0));
+        this.lengthRatio = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5));
+        this.outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0));
+        this.fill = this.bindValue(new ObservableValueImpl(Fill.Flat));
+        this.rgb = this.bindValue(new ObservableValueImpl((0xFFFFFF)));
+        this.motion = this.bindValue(new ObservableValueImpl(new LinearMotion()));
+        this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0));
+        this.bend = this.bindValue(new BoundNumericValue(Linear.Bipolar, 0.0));
+        this.frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
+        this.reverse = this.bindValue(new ObservableValueImpl(false));
         this.gradient = [];
-        this.observers = new Map();
+        this.motionTerminator = new Terminator();
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()));
+        this.terminator.with(this.motion.addObserver((motion) => {
+            this.motionTerminator.terminate();
+            this.motionTerminator.with(motion.addObserver(() => this.observable.notify(this)));
+        }));
         this.updateGradient();
     }
+    bindValue(property) {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this)));
+        return this.terminator.with(property);
+    }
     addObserver(observer) {
-        const mappedObserver = () => observer(this);
-        const terminator = new Terminator();
-        terminator.with(this.segments.addObserver(mappedObserver));
-        terminator.with(this.phaseOffset.addObserver(mappedObserver));
-        terminator.with(this.bend.addObserver(mappedObserver));
-        terminator.with(this.frequency.addObserver(mappedObserver));
-        terminator.with(this.reverse.addObserver(mappedObserver));
-        terminator.with(this.length.addObserver(mappedObserver));
-        terminator.with(this.lengthRatio.addObserver(mappedObserver));
-        terminator.with(this.outline.addObserver(mappedObserver));
-        terminator.with(this.motion.addObserver(mappedObserver));
-        terminator.with(this.width.addObserver(mappedObserver));
-        terminator.with(this.widthPadding.addObserver(mappedObserver));
-        terminator.with(this.rgb.addObserver(mappedObserver));
-        this.observers.set(observer, terminator);
-        return { terminate: () => this.removeObserver(observer) };
+        return this.observable.addObserver(observer);
     }
     removeObserver(observer) {
-        const terminable = this.observers.get(observer);
-        this.observers.delete(observer);
-        if (undefined === terminable)
-            return false;
-        terminable.terminate();
-        return true;
+        return this.observable.removeObserver(observer);
     }
     ratio(phase) {
         const intersection = 0.75;
@@ -194,15 +183,15 @@ export class RotaryTrackModel {
     }
     test() {
         this.phaseOffset.set(0.0);
-        this.bend.set(-0.1);
+        this.bend.set(-0.5);
         this.frequency.set(1.0);
         this.reverse.set(false);
         this.length.set(1.0);
         this.lengthRatio.set(0.125);
         this.outline.set(1.0);
-        this.segments.set(32);
+        this.segments.set(8);
         const shapeMotion = new TShapeMotion();
-        shapeMotion.shape.set(0.1);
+        shapeMotion.shape.set(0.5);
         this.motion.set(shapeMotion);
         this.width.set(128);
         this.fill.set(Fill.Stroke);

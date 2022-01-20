@@ -562,6 +562,6 @@ export class Iterator<T> {
             this.curr = this.generator.next()
             return value
         }
-        throw new Error("No such element")
+        return null
     }
 }
