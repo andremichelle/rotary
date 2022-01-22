@@ -22,4 +22,6 @@ export declare class Func {
     static switchSign(x: number, neg: boolean): number;
     static tx(x: number, t: number): number;
     static step(edge0: number, edge1: number, x: number): number;
+    static stairsMap(fx: (x: number) => number, x: number, fragment?: number, frequency?: number): number;
+    static stairsInverse(fx: (x: number) => number, x: number, fragment?: number, frequency?: number): number;
 }

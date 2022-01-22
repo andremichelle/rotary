@@ -28,7 +28,7 @@ export declare class RotaryApp implements RotaryTrackEditorExecutor {
     hasSelected(): boolean;
     showHighlight(track: RotaryTrackModel): void;
     releaseHighlight(): void;
-    render(phase?: number): void;
+    render(phase: number): void;
     private createSelector;
     private removeSelector;
     private reorderSelectors;

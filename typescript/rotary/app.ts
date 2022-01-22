@@ -153,40 +153,45 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
 
         const track = this.model.tracks.get(0)
         const distance = this.model.radiusMin.get()
+        const radius = size >> 1
 
-        const p0 = track.translatePhase(phase)
-        const p1 = track.translatePhase(phase + 0.1)
-        const pn = size >> 1
+        if(false) {
+            const p0 = 0.0
+            const p1 = 0.1
 
-        // console.log(`translate p0: ${p0}, p1: ${p1}`)
+            const t0 = track.translatePhase(phase + p0)
+            const t1 = track.translatePhase(phase + p1)
 
-        this.c2D.strokeStyle = "rgba(30, 240, 255, 1.0)"
-        this.c2D.fillStyle = "rgba(30, 240, 255, 0.04)"
-        this.c2D.beginPath()
-        this.c2D.moveTo(0, 0)
-        this.c2D.lineTo(Math.cos(p0 * TAU) * pn, Math.sin(p0 * TAU) * pn)
-        this.c2D.arc(0.0, 0.0, pn, p0 * TAU, p1 * TAU)
-        this.c2D.lineTo(0, 0)
-        this.c2D.stroke()
-        this.c2D.fill()
+            // console.log(`translate t0: ${t0}, t1: ${t1}`)
 
-        const iterator = track.filterSections(p0, p1)
-        while (iterator.hasNext()) {
-            const result: FilterResult = iterator.next()
-            this.c2D.strokeStyle = result.edge === Edge.Min ? "white" : "#888"
+            this.c2D.strokeStyle = "rgba(30, 240, 255, 1.0)"
+            this.c2D.fillStyle = "rgba(30, 240, 255, 0.04)"
             this.c2D.beginPath()
             this.c2D.moveTo(0, 0)
-            console.assert(p0 <= result.position && result.position <= p1, `p0: ${p0}, pos: ${result.position}, p1: ${p1}`)
-            const position = result.position
-            this.c2D.lineTo(Math.cos(position * TAU) * distance, Math.sin(position * TAU) * distance)
+            this.c2D.lineTo(Math.cos(t0 * TAU) * radius, Math.sin(t0 * TAU) * radius)
+            this.c2D.arc(0.0, 0.0, radius, t0 * TAU, t1 * TAU)
+            this.c2D.lineTo(0, 0)
             this.c2D.stroke()
+            this.c2D.fill()
+
+            const iterator = track.filterSections(t0, t1)
+            while (iterator.hasNext()) {
+                const result: FilterResult = iterator.next()
+                this.c2D.strokeStyle = result.edge === Edge.Min ? "white" : "#888"
+                this.c2D.beginPath()
+                this.c2D.moveTo(0, 0)
+                console.assert(t0 <= result.position && result.position <= t1, `p0: ${t0}, pos: ${result.position}, p1: ${t1}`)
+                const position = result.position
+                this.c2D.lineTo(Math.cos(position * TAU) * distance, Math.sin(position * TAU) * distance)
+                this.c2D.stroke()
+            }
         }
 
         let radiusMin = this.model.radiusMin.get()
         for (let i = 0; i < this.model.tracks.size(); i++) {
             const model = this.model.tracks.get(i)
             this.c2D.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.25
-            RotaryRenderer.renderTrack(this.c2D, model, radiusMin, phase * 0.0)
+            RotaryRenderer.renderTrack(this.c2D, model, radiusMin, phase)
             radiusMin += model.width.get() + model.widthPadding.get()
         }
         this.c2D.restore()

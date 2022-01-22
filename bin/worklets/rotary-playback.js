@@ -1,4 +1,4 @@
-import { RotaryModel } from "../rotary/model.js";
+import { Edge, RotaryModel } from "../rotary/model.js";
 import { RenderQuantum } from "../dsp/common.js";
 class Voice {
     constructor(position = 0 | 0) {
@@ -34,6 +34,18 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         const loopInFrames = sampleRate * this.loopInSeconds;
         for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
             const track = tracks.get(trackIndex);
+            const t0 = track.translatePhase(this.phase);
+            const t1 = track.translatePhase(this.phase + RenderQuantum / loopInFrames);
+            const iterator = track.filterSections(t0, t1);
+            while (iterator.hasNext()) {
+                const result = iterator.next();
+                if (result.edge === Edge.Max) {
+                    continue;
+                }
+                const frameIndex = Math.floor((track.inversePhase(result.position - t0)) * loopInFrames);
+                console.assert(0 <= frameIndex && frameIndex < RenderQuantum, "out of bounds");
+                this.voices.push(new Voice(-frameIndex));
+            }
         }
         for (let frameIndex = 0; frameIndex < RenderQuantum; frameIndex++) {
             let l = 0.0;

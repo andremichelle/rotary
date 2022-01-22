@@ -17,6 +17,7 @@ export declare interface RotaryTrackFormat {
     motion: MotionFormat<any>;
     phaseOffset: number;
     bend: number;
+    fragments: number;
     frequency: number;
     reverse: boolean;
 }
@@ -77,7 +78,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly phaseOffset: ObservableValue<any>;
     readonly bend: ObservableValue<any>;
     readonly frequency: ObservableValue<any>;
-    readonly fragment: ObservableValue<any>;
+    readonly fragments: ObservableValue<any>;
     readonly reverse: ObservableValue<any>;
     private readonly gradient;
     private readonly motionTerminator;
@@ -86,7 +87,6 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
     ratio(phase: number): number;
-    index(phase: number): number;
     test(): void;
     opaque(): string;
     transparent(): string;
@@ -94,7 +94,6 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     terminate(): void;
     serialize(): RotaryTrackFormat;
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;
-    modFunc(fx: (x: number) => number, x: number): number;
     translatePhase(x: number): number;
     inversePhase(x: number): number;
     filterSections(p0: number, p1: number): Iterator<FilterResult>;

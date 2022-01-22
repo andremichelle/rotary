@@ -42,6 +42,7 @@ export declare interface RotaryTrackFormat {
     motion: MotionFormat<any>
     phaseOffset: number
     bend: number
+    fragments: number
     frequency: number
     reverse: boolean
 }
@@ -192,7 +193,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
     readonly bend = this.bindValue(new BoundNumericValue(Linear.Bipolar, 0.0))
     readonly frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
-    readonly fragment = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
+    readonly fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.bindValue(new ObservableValueImpl<boolean>(false))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
     private readonly motionTerminator: Terminator = new Terminator()
@@ -219,47 +220,27 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return this.observable.removeObserver(observer)
     }
 
-    // TODO deprecated
+    // FIXME create new working version
     ratio(phase: number): number {
-        const intersection: number = 0.75 // top
-        phase = intersection - this.translatePhase(phase)
-        phase -= Math.floor(phase)
-        phase = Func.tx(phase, -this.bend.get())
-        phase /= this.length.get()
-        if (phase >= 1.0) return 0.0
-        phase %= 1.0 / this.segments.get()
-        phase *= this.segments.get()
-        phase /= this.lengthRatio.get()
-        if (phase > 1.0) return 0.0
-        phase = 1.0 - phase
-        return phase
-    }
-
-    // TODO deprecated
-    index(phase: number): number {
-        const intersection: number = 0.75 // top
-        phase = intersection - this.translatePhase(phase)
-        phase = Func.tx(phase - Math.floor(phase), -this.bend.get())
-        const length = this.length.get()
-        if (phase >= length) return 0.0
-        return Math.floor(phase / length * this.segments.get())
+        throw new Error()
     }
 
     test() {
         this.phaseOffset.set(0.0)
-        this.bend.set(0.0)
+        this.bend.set(0.75)
         this.frequency.set(1.0)
+        this.fragments.set(1.0)
         this.reverse.set(false)
         this.length.set(1.0)
         this.lengthRatio.set(0.125)
-        this.outline.set(1.0)
-        this.segments.set(8)
+        this.outline.set(0.0)
+        this.segments.set(16)
         // this.motion.set(new LinearMotion())
         const shapeMotion = new TShapeMotion()
-        shapeMotion.shape.set(0.5)
+        shapeMotion.shape.set(0.75)
         this.motion.set(shapeMotion)
         this.width.set(128)
-        this.fill.set(Fill.Stroke)
+        this.fill.set(Fill.Flat)
     }
 
     opaque(): string {
@@ -311,6 +292,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             phaseOffset: this.phaseOffset.get(),
             bend: this.bend.get(),
             frequency: this.frequency.get(),
+            fragments: this.fragments.get(),
             reverse: this.reverse.get()
         }
     }
@@ -328,29 +310,23 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.phaseOffset.set(format.phaseOffset)
         this.bend.set(format.bend)
         this.frequency.set(format.frequency)
+        this.fragments.set(format.fragments)
         this.reverse.set(format.reverse)
         return this
     }
 
-    modFunc(fx: (x: number) => number, x: number): number {
-        const xInt = Math.floor(x)
-        return fx(x - xInt) + xInt
-    }
-
     translatePhase(x: number): number {
-        return Func.stairsMap(x => this.motion.get().map(x), x, this.fragment.get(), this.frequency.get())
+        return Func.stairsMap(x => this.motion.get().map(x), x, this.fragments.get(), this.frequency.get())
     }
 
     inversePhase(x: number): number {
-        return Func.stairsInverse(x => this.motion.get().inverse(x), x, this.fragment.get(), this.frequency.get())
+        return Func.stairsInverse(x => this.motion.get().inverse(x), x, this.fragments.get(), this.frequency.get())
     }
 
     filterSections(p0: number, p1: number): Iterator<FilterResult> {
         if (p0 >= p1) {
             throw new Error(`p1(${p1}) must be greater than p0(${p0})`)
         }
-        // console.log(`filterSections p0: ${p0}, p1: ${p1}`)
-
         const index = Math.floor(p0)
         return Iterator.wrap(this.branchFilterSection(p0 - index, p1 - index, index))
     }
@@ -358,7 +334,6 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     private* branchFilterSection(p0: number, p1: number, index: number): Generator<FilterResult, void, FilterResult> {
         console.assert(p0 >= 0.0 && p0 < 1.0, `p0(${p0}) must be positive and smaller than 1.0`)
         console.assert(p1 < 2.0, `p1(${p1}) must be smaller than 2.0`)
-        // console.log(`branchFilterSection p0: ${p0}, p1: ${p1}`)
         if (p1 > 1.0) {
             yield* this.seekSection(1, p0, 1.0, index)
             yield* this.seekSection(2, 0.0, p1 - 1.0, index + 1)
@@ -368,9 +343,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     }
 
     private* seekSection(branch: number, p0: number, p1: number, offset: number): Generator<FilterResult> {
-        // console.log(`seekSection #${branch} p0: ${p0}, p1: ${p1}, offset: ${offset}`)
         if (p0 >= p1) {
-            // return
+            return
         }
         console.assert(0.0 <= p0 && p0 <= 1.0, `x0: ${p0} out of bounds in branch ${branch}`)
         console.assert(0.0 <= p1 && p1 <= 1.0, `x1: ${p1} out of bounds in branch ${branch}`)
@@ -385,14 +359,11 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         let seekMin = index * step
         while (seekMin < t1) {
             if (seekMin >= t0) {
-                const position = Func.tx(seekMin / length, bend) * length
-                // console.log(`found <${branch}> p0: ${p0}, p1: ${p1}, position: ${position}, offset: ${offset}, index: ${index}`)
-                yield new FilterResult(Edge.Min, index, position + offset)
+                yield new FilterResult(Edge.Min, index, Func.tx(seekMin / length, bend) * length + offset)
             }
             const seekMax = (index + lengthRatio) * step
             if (seekMax >= t0 && seekMax < t1) {
-                const position = Func.tx(seekMax / length, bend) * length
-                yield new FilterResult(Edge.Max, index, position + offset)
+                yield new FilterResult(Edge.Max, index, Func.tx(seekMax / length, bend) * length + offset)
             }
             seekMin = ++index * step
         }
