@@ -1,4 +1,4 @@
-import {Mulberry32, Random} from "./lib/math.js"
+import {Func, Mulberry32, Random} from "./lib/math.js"
 import {RotaryModel} from "./rotary/model.js"
 import {RotaryApp} from "./rotary/app.js"
 import {installApplicationMenu} from "./rotary/env.js"
@@ -51,7 +51,7 @@ window.onunhandledrejection = (event) => {
 
     const exec = () => {
         const progress = context.currentTime / model.loopDuration.get()
-        app.render(progress - Math.floor(progress))
+        app.render(progress/* - Math.floor(progress)*/) // TODO back to modular
         requestAnimationFrame(exec)
     }
     requestAnimationFrame(exec)
@@ -59,3 +59,13 @@ window.onunhandledrejection = (event) => {
     document.getElementById("preloader").remove()
     console.log("ready...")
 })()
+
+
+/*
+const fwd = x => Math.pow(x, 6.0)
+const inv = x => Math.pow(x, 1.0 / 6.0)
+const input = 1134520.512314
+const trans = Func.stairsInverse(inv, input, 3.0, 7.0)
+const output = Func.stairsMap(fwd, trans, 3.0, 7.0)
+console.log(`input: ${input}, trans: ${trans}, output: ${output}, io: ${Math.abs(output - input) < 1e-7}`)
+*/

@@ -188,10 +188,11 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0))
     readonly fill = this.bindValue(new ObservableValueImpl<Fill>(Fill.Flat))
     readonly rgb = this.bindValue(new ObservableValueImpl(<number>(0xFFFFFF)))
-    readonly motion = this.bindValue(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
+    readonly motion: ObservableValue<Motion<any>> = this.bindValue(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
     readonly bend = this.bindValue(new BoundNumericValue(Linear.Bipolar, 0.0))
     readonly frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
+    readonly fragment = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.bindValue(new ObservableValueImpl<boolean>(false))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
     private readonly motionTerminator: Terminator = new Terminator()
@@ -246,7 +247,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     test() {
         this.phaseOffset.set(0.0)
-        this.bend.set(-0.5)
+        this.bend.set(0.0)
         this.frequency.set(1.0)
         this.reverse.set(false)
         this.length.set(1.0)
@@ -331,40 +332,43 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return this
     }
 
-    translatePhase(x: number): number {
-        x = Func.switchSign(this.phaseOffset.get() + (this.root.phaseOffset.get() - x) * this.frequency.get(), this.reverse.get())
-        x = this.motion.get().map(x - Math.floor(x))
-        return x - Math.floor(x)
+    modFunc(fx: (x: number) => number, x: number): number {
+        const xInt = Math.floor(x)
+        return fx(x - xInt) + xInt
     }
 
-    filterSections(p0: number, p1: number, offset: number): Iterator<FilterResult> {
+    translatePhase(x: number): number {
+        return Func.stairsMap(x => this.motion.get().map(x), x, this.fragment.get(), this.frequency.get())
+    }
+
+    inversePhase(x: number): number {
+        return Func.stairsInverse(x => this.motion.get().inverse(x), x, this.fragment.get(), this.frequency.get())
+    }
+
+    filterSections(p0: number, p1: number): Iterator<FilterResult> {
         if (p0 >= p1) {
             throw new Error(`p1(${p1}) must be greater than p0(${p0})`)
         }
-        const delta = this.translatePhase(offset)
-        // console.log(`filterSections p0: ${p0}, p1: ${p1}, offset: ${offset}, delta: ${delta}`)
-        p0 -= delta
-        p1 -= delta
-        const pi = Math.floor(p0)
-        p0 -= pi
-        p1 -= pi
-        return Iterator.wrap(this.branchFilterSection(p0, p1, delta + pi))
+        // console.log(`filterSections p0: ${p0}, p1: ${p1}`)
+
+        const index = Math.floor(p0)
+        return Iterator.wrap(this.branchFilterSection(p0 - index, p1 - index, index))
     }
 
-    private* branchFilterSection(p0: number, p1: number, delta: number): Generator<FilterResult, void, FilterResult> {
+    private* branchFilterSection(p0: number, p1: number, index: number): Generator<FilterResult, void, FilterResult> {
         console.assert(p0 >= 0.0 && p0 < 1.0, `p0(${p0}) must be positive and smaller than 1.0`)
         console.assert(p1 < 2.0, `p1(${p1}) must be smaller than 2.0`)
-        // console.log(`branchFilterSection p0: ${p0}, p1: ${p1}, delta: ${delta}`)
+        // console.log(`branchFilterSection p0: ${p0}, p1: ${p1}`)
         if (p1 > 1.0) {
-            yield* this.seekSection(1, p0, 1.0, delta)
-            yield* this.seekSection(2, 0.0, p1 - 1.0, delta + 1.0)
+            yield* this.seekSection(1, p0, 1.0, index)
+            yield* this.seekSection(2, 0.0, p1 - 1.0, index + 1)
         } else {
-            yield* this.seekSection(3, p0, p1, delta)
+            yield* this.seekSection(3, p0, p1, index)
         }
     }
 
-    private* seekSection(branch: number, p0: number, p1: number, delta: number): Generator<FilterResult> {
-        // console.log(`seekSection #${branch} p0: ${p0}, p1: ${p1}, delta: ${delta}`)
+    private* seekSection(branch: number, p0: number, p1: number, offset: number): Generator<FilterResult> {
+        // console.log(`seekSection #${branch} p0: ${p0}, p1: ${p1}, offset: ${offset}`)
         if (p0 >= p1) {
             // return
         }
@@ -374,24 +378,23 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const length = this.length.get()
         const lengthRatio = this.lengthRatio.get()
         const segments = this.segments.get()
-        const step: number = length / segments
+        const step = length / segments
         const t0 = Func.tx(Func.clamp(p0 / length), -bend) * length
         const t1 = Func.tx(Func.clamp(p1 / length), -bend) * length
         let index = Math.floor(t0 / step)
         let seekMin = index * step
-        let seekMax = (index + lengthRatio) * step
         while (seekMin < t1) {
             if (seekMin >= t0) {
-                const position = Func.tx(seekMin / length, bend) * length + delta
-                // console.log(`found <${branch}> p0: ${p0}, p1: ${p1}, delta: ${delta} > ${position} #${index}`)
-                yield new FilterResult(Edge.Min, index, position)
+                const position = Func.tx(seekMin / length, bend) * length
+                // console.log(`found <${branch}> p0: ${p0}, p1: ${p1}, position: ${position}, offset: ${offset}, index: ${index}`)
+                yield new FilterResult(Edge.Min, index, position + offset)
             }
+            const seekMax = (index + lengthRatio) * step
             if (seekMax >= t0 && seekMax < t1) {
-                const position = Func.tx(seekMax / length, bend) * length + delta
-                yield new FilterResult(Edge.Max, index, position)
+                const position = Func.tx(seekMax / length, bend) * length
+                yield new FilterResult(Edge.Max, index, position + offset)
             }
             seekMin = ++index * step
-            seekMax = (index + lengthRatio) * step
         }
     }
 

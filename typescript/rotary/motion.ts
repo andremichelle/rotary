@@ -48,6 +48,8 @@ export abstract class Motion<DATA extends Data> implements Observable<Motion<DAT
 
     abstract map(x: number): number
 
+    abstract inverse(x: number): number
+
     abstract deserialize(format: MotionFormat<DATA>): Motion<DATA>
 
     abstract serialize(): MotionFormat<DATA>
@@ -91,6 +93,10 @@ export class LinearMotion extends Motion<never> {
         return x
     }
 
+    inverse(x: number): number {
+        return x
+    }
+
     serialize(): MotionFormat<never> {
         return super.pack.call(this) // this might break in future version of typescript
     }
@@ -120,6 +126,10 @@ export class PowMotion extends Motion<PowData> {
 
     map(x: number): number {
         return Math.pow(x, this.exponent.get())
+    }
+
+    inverse(x: number): number {
+        throw new Error()
     }
 
     serialize(): MotionFormat<PowData> {
@@ -166,6 +176,10 @@ export class CShapeMotion extends Motion<CShapeData> {
         return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5
     }
 
+    inverse(x: number): number {
+        throw new Error()
+    }
+
     serialize(): MotionFormat<CShapeData> {
         return super.pack({slope: this.slope.get()})
     }
@@ -209,6 +223,10 @@ export class TShapeMotion extends Motion<TShapeData> {
         return Func.tx(x, this.shape.get())
     }
 
+    inverse(x: number): number {
+        return Func.tx(x, -this.shape.get())
+    }
+
     serialize(): MotionFormat<TShapeData> {
         return super.pack({shape: this.shape.get()})
     }
@@ -245,6 +263,10 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
 
     map(x: number): number {
         return Func.smoothStep(Func.step(this.edge0.get(), this.edge1.get(), x))
+    }
+
+    inverse(x: number): number {
+        throw new Error()
     }
 
     deserialize(format: MotionFormat<SmoothStepData>): SmoothStepMotion {

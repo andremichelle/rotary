@@ -18,7 +18,7 @@ export class RotaryRenderer {
                        model: RotaryTrackModel,
                        radiusMin: number,
                        phase: number): void {
-        phase = model.translatePhase(phase)
+        // phase = model.translatePhase(phase)
 
         const segments = model.segments.get()
         const length = model.length.get()

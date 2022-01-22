@@ -136,7 +136,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.highlight = null
     }
 
-    render(phase: number = 0.0): void {
+    render(phase: number): void {
         const zoom = this.zoom.get()
         const size = this.model.measureRadius() * 2
         const ratio = Math.ceil(devicePixelRatio) * zoom
@@ -151,9 +151,14 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.c2D.scale(ratio, ratio)
         this.c2D.translate(size >> 1, size >> 1)
 
-        const p0 = 0.98
-        const p1 = 1.02
+        const track = this.model.tracks.get(0)
+        const distance = this.model.radiusMin.get()
+
+        const p0 = track.translatePhase(phase)
+        const p1 = track.translatePhase(phase + 0.1)
         const pn = size >> 1
+
+        // console.log(`translate p0: ${p0}, p1: ${p1}`)
 
         this.c2D.strokeStyle = "rgba(30, 240, 255, 1.0)"
         this.c2D.fillStyle = "rgba(30, 240, 255, 0.04)"
@@ -165,17 +170,14 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.c2D.stroke()
         this.c2D.fill()
 
-        const track = this.model.tracks.get(0)
-        const distance = this.model.radiusMin.get()
-
-        const iterator = track.filterSections(p0, p1, phase)
+        const iterator = track.filterSections(p0, p1)
         while (iterator.hasNext()) {
             const result: FilterResult = iterator.next()
             this.c2D.strokeStyle = result.edge === Edge.Min ? "white" : "#888"
             this.c2D.beginPath()
             this.c2D.moveTo(0, 0)
+            console.assert(p0 <= result.position && result.position <= p1, `p0: ${p0}, pos: ${result.position}, p1: ${p1}`)
             const position = result.position
-            console.assert(p0 <= position && position <= p1, `p0: ${p0}, pos: ${position}, p1: ${p1}`)
             this.c2D.lineTo(Math.cos(position * TAU) * distance, Math.sin(position * TAU) * distance)
             this.c2D.stroke()
         }
@@ -184,7 +186,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         for (let i = 0; i < this.model.tracks.size(); i++) {
             const model = this.model.tracks.get(i)
             this.c2D.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.25
-            RotaryRenderer.renderTrack(this.c2D, model, radiusMin, phase)
+            RotaryRenderer.renderTrack(this.c2D, model, radiusMin, phase * 0.0)
             radiusMin += model.width.get() + model.widthPadding.get()
         }
         this.c2D.restore()

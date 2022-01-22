@@ -57,7 +57,7 @@ window.onunhandledrejection = (event) => {
     });
     const exec = () => {
         const progress = context.currentTime / model.loopDuration.get();
-        app.render(progress - Math.floor(progress));
+        app.render(progress);
         requestAnimationFrame(exec);
     };
     requestAnimationFrame(exec);

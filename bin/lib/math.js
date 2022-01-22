@@ -56,5 +56,15 @@ export class Func {
     static step(edge0, edge1, x) {
         return Math.min(1.0, Math.max(0.0, (x - edge0) / (edge1 - edge0)));
     }
+    static stairsMap(fx, x, fragment = 1.0, frequency = 1.0) {
+        const mx = fragment * x;
+        const nx = Math.floor(mx);
+        return frequency * (fx(mx - nx) + nx) / fragment;
+    }
+    static stairsInverse(fx, x, fragment = 1.0, frequency = 1.0) {
+        const mx = fragment * x / frequency;
+        const nx = Math.floor(mx);
+        return (fx(mx - nx) + nx) / fragment;
+    }
 }
 //# sourceMappingURL=math.js.map

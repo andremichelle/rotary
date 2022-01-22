@@ -1,6 +1,6 @@
 import { BoundNumericValue, Iterator, Observable, ObservableCollection, ObservableValue, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
-import { MotionFormat, MotionType } from "./motion.js";
+import { Motion, MotionFormat, MotionType } from "./motion.js";
 export declare interface RotaryFormat {
     radiusMin: number;
     tracks: RotaryTrackFormat[];
@@ -73,10 +73,11 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly outline: ObservableValue<any>;
     readonly fill: ObservableValue<any>;
     readonly rgb: ObservableValue<any>;
-    readonly motion: ObservableValue<any>;
+    readonly motion: ObservableValue<Motion<any>>;
     readonly phaseOffset: ObservableValue<any>;
     readonly bend: ObservableValue<any>;
     readonly frequency: ObservableValue<any>;
+    readonly fragment: ObservableValue<any>;
     readonly reverse: ObservableValue<any>;
     private readonly gradient;
     private readonly motionTerminator;
@@ -93,8 +94,10 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     terminate(): void;
     serialize(): RotaryTrackFormat;
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;
+    modFunc(fx: (x: number) => number, x: number): number;
     translatePhase(x: number): number;
-    filterSections(p0: number, p1: number, offset: number): Iterator<FilterResult>;
+    inversePhase(x: number): number;
+    filterSections(p0: number, p1: number): Iterator<FilterResult>;
     private branchFilterSection;
     private seekSection;
     private updateGradient;

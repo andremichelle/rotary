@@ -136,6 +136,7 @@ export class RotaryTrackModel {
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0));
         this.bend = this.bindValue(new BoundNumericValue(Linear.Bipolar, 0.0));
         this.frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
+        this.fragment = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
         this.reverse = this.bindValue(new ObservableValueImpl(false));
         this.gradient = [];
         this.motionTerminator = new Terminator();
@@ -183,7 +184,7 @@ export class RotaryTrackModel {
     }
     test() {
         this.phaseOffset.set(0.0);
-        this.bend.set(-0.5);
+        this.bend.set(0.0);
         this.frequency.set(1.0);
         this.reverse.set(false);
         this.length.set(1.0);
@@ -260,35 +261,35 @@ export class RotaryTrackModel {
         this.reverse.set(format.reverse);
         return this;
     }
-    translatePhase(x) {
-        x = Func.switchSign(this.phaseOffset.get() + (this.root.phaseOffset.get() - x) * this.frequency.get(), this.reverse.get());
-        x = this.motion.get().map(x - Math.floor(x));
-        return x - Math.floor(x);
+    modFunc(fx, x) {
+        const xInt = Math.floor(x);
+        return fx(x - xInt) + xInt;
     }
-    filterSections(p0, p1, offset) {
+    translatePhase(x) {
+        return Func.stairsMap(x => this.motion.get().map(x), x, this.fragment.get(), this.frequency.get());
+    }
+    inversePhase(x) {
+        return Func.stairsInverse(x => this.motion.get().inverse(x), x, this.fragment.get(), this.frequency.get());
+    }
+    filterSections(p0, p1) {
         if (p0 >= p1) {
             throw new Error(`p1(${p1}) must be greater than p0(${p0})`);
         }
-        const delta = this.translatePhase(offset);
-        p0 -= delta;
-        p1 -= delta;
-        const pi = Math.floor(p0);
-        p0 -= pi;
-        p1 -= pi;
-        return Iterator.wrap(this.branchFilterSection(p0, p1, delta + pi));
+        const index = Math.floor(p0);
+        return Iterator.wrap(this.branchFilterSection(p0 - index, p1 - index, index));
     }
-    *branchFilterSection(p0, p1, delta) {
+    *branchFilterSection(p0, p1, index) {
         console.assert(p0 >= 0.0 && p0 < 1.0, `p0(${p0}) must be positive and smaller than 1.0`);
         console.assert(p1 < 2.0, `p1(${p1}) must be smaller than 2.0`);
         if (p1 > 1.0) {
-            yield* this.seekSection(1, p0, 1.0, delta);
-            yield* this.seekSection(2, 0.0, p1 - 1.0, delta + 1.0);
+            yield* this.seekSection(1, p0, 1.0, index);
+            yield* this.seekSection(2, 0.0, p1 - 1.0, index + 1);
         }
         else {
-            yield* this.seekSection(3, p0, p1, delta);
+            yield* this.seekSection(3, p0, p1, index);
         }
     }
-    *seekSection(branch, p0, p1, delta) {
+    *seekSection(branch, p0, p1, offset) {
         if (p0 >= p1) {
         }
         console.assert(0.0 <= p0 && p0 <= 1.0, `x0: ${p0} out of bounds in branch ${branch}`);
@@ -302,18 +303,17 @@ export class RotaryTrackModel {
         const t1 = Func.tx(Func.clamp(p1 / length), -bend) * length;
         let index = Math.floor(t0 / step);
         let seekMin = index * step;
-        let seekMax = (index + lengthRatio) * step;
         while (seekMin < t1) {
             if (seekMin >= t0) {
-                const position = Func.tx(seekMin / length, bend) * length + delta;
-                yield new FilterResult(Edge.Min, index, position);
+                const position = Func.tx(seekMin / length, bend) * length;
+                yield new FilterResult(Edge.Min, index, position + offset);
             }
+            const seekMax = (index + lengthRatio) * step;
             if (seekMax >= t0 && seekMax < t1) {
-                const position = Func.tx(seekMax / length, bend) * length + delta;
-                yield new FilterResult(Edge.Max, index, position);
+                const position = Func.tx(seekMax / length, bend) * length;
+                yield new FilterResult(Edge.Max, index, position + offset);
             }
             seekMin = ++index * step;
-            seekMax = (index + lengthRatio) * step;
         }
     }
     updateGradient() {

@@ -53,6 +53,9 @@ export class LinearMotion extends Motion {
     map(x) {
         return x;
     }
+    inverse(x) {
+        return x;
+    }
     serialize() {
         return super.pack.call(this);
     }
@@ -75,6 +78,9 @@ export class PowMotion extends Motion {
     }
     map(x) {
         return Math.pow(x, this.exponent.get());
+    }
+    inverse(x) {
+        throw new Error();
     }
     serialize() {
         return super.pack({ exponent: this.exponent.get() });
@@ -103,6 +109,9 @@ export class CShapeMotion extends Motion {
     }
     map(x) {
         return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5;
+    }
+    inverse(x) {
+        throw new Error();
     }
     serialize() {
         return super.pack({ slope: this.slope.get() });
@@ -134,6 +143,9 @@ export class TShapeMotion extends Motion {
     map(x) {
         return Func.tx(x, this.shape.get());
     }
+    inverse(x) {
+        return Func.tx(x, -this.shape.get());
+    }
     serialize() {
         return super.pack({ shape: this.shape.get() });
     }
@@ -159,6 +171,9 @@ export class SmoothStepMotion extends Motion {
     }
     map(x) {
         return Func.smoothStep(Func.step(this.edge0.get(), this.edge1.get(), x));
+    }
+    inverse(x) {
+        throw new Error();
     }
     deserialize(format) {
         const data = this.unpack(format);
