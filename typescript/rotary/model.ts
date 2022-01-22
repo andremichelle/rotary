@@ -27,6 +27,9 @@ import {Colors} from "../lib/colors.js"
 
 export declare interface RotaryFormat {
     radiusMin: number
+    exportSize: number
+    phaseOffset: number
+    loopDuration: number
     tracks: RotaryTrackFormat[]
 }
 
@@ -47,17 +50,32 @@ export declare interface RotaryTrackFormat {
     reverse: boolean
 }
 
-export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
+export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS = 24
 
     private readonly terminator: Terminator = new Terminator()
+    private readonly observable: ObservableImpl<RotaryModel> = new ObservableImpl<RotaryModel>()
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
-    readonly radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20))
-    readonly exportSize = this.terminator.with(new BoundNumericValue(new LinearInteger(128, 1024), 256))
-    readonly phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.00))
-    readonly loopDuration = this.terminator.with(new BoundNumericValue(new Linear(1.0, 16.0), 8.0))
+    readonly radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20))
+    readonly exportSize = this.bindValue(new BoundNumericValue(new LinearInteger(128, 1024), 256))
+    readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
+    readonly loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0))
 
     constructor() {
+        ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this))
+    }
+
+    bindValue(property: ObservableValue<any>): ObservableValue<any> {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this)))
+        return this.terminator.with(property)
+    }
+
+    addObserver(observer: Observer<RotaryModel>): Terminable {
+        return this.observable.addObserver(observer)
+    }
+
+    removeObserver(observer: Observer<RotaryModel>): boolean {
+        return this.observable.removeObserver(observer)
     }
 
     randomize(random: Random): RotaryModel {
@@ -136,13 +154,18 @@ export class RotaryModel implements Serializer<RotaryFormat>, Terminable {
     serialize(): RotaryFormat {
         return {
             radiusMin: this.radiusMin.get(),
+            exportSize: this.exportSize.get(),
+            phaseOffset: this.phaseOffset.get(),
+            loopDuration: this.loopDuration.get(),
             tracks: this.tracks.map(track => track.serialize())
         }
     }
 
     deserialize(format: RotaryFormat): RotaryModel {
-        this.radiusMin.set(format['radiusMin'])
-
+        this.radiusMin.set(format.radiusMin)
+        this.exportSize.set(format.exportSize)
+        this.phaseOffset.set(format.phaseOffset)
+        this.loopDuration.set(format.loopDuration)
         this.tracks.clear()
         this.tracks.addAll(format.tracks.map(trackFormat => {
             const model = new RotaryTrackModel(this)
@@ -196,7 +219,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.bindValue(new ObservableValueImpl<boolean>(false))
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
-    private readonly motionTerminator: Terminator = new Terminator()
+    private readonly motionTerminator: Terminator = this.terminator.with(new Terminator())
 
     constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
@@ -316,11 +339,17 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     }
 
     translatePhase(x: number): number {
-        return Func.stairsMap(x => this.motion.get().map(x), x, this.fragments.get(), this.frequency.get())
+        const fragments = this.fragments.get()
+        const mx = fragments * x
+        const nx = Math.floor(mx)
+        return this.frequency.get() * (this.motion.get().map(mx - nx) + nx) / fragments - this.root.phaseOffset.get()
     }
 
     inversePhase(x: number): number {
-        return Func.stairsInverse(x => this.motion.get().inverse(x), x, this.fragments.get(), this.frequency.get())
+        const fragments = this.fragments.get()
+        const mx = fragments * (x + this.root.phaseOffset.get()) / this.frequency.get()
+        const nx = Math.floor(mx)
+        return (this.motion.get().inverse(mx - nx) + nx) / fragments
     }
 
     filterSections(p0: number, p1: number): Iterator<FilterResult> {

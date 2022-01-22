@@ -65,7 +65,10 @@ window.onunhandledrejection = (event) => {
 const fwd = x => Math.pow(x, 6.0)
 const inv = x => Math.pow(x, 1.0 / 6.0)
 const input = 1134520.512314
-const trans = Func.stairsInverse(inv, input, 3.0, 7.0)
-const output = Func.stairsMap(fwd, trans, 3.0, 7.0)
+const fragments = 23.0
+const frequency = 71.0
+const delta = 123.25
+const trans = Func.stairsInverse(inv, input, fragments, frequency, delta)
+const output = Func.stairsMap(fwd, trans, fragments, frequency, delta)
 console.log(`input: ${input}, trans: ${trans}, output: ${output}, io: ${Math.abs(output - input) < 1e-7}`)
 */

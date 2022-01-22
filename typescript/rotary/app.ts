@@ -155,7 +155,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         const distance = this.model.radiusMin.get()
         const radius = size >> 1
 
-        if(false) {
+        if (false) {
             const p0 = 0.0
             const p1 = 0.1
 
@@ -188,6 +188,11 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         }
 
         let radiusMin = this.model.radiusMin.get()
+        this.c2D.strokeStyle = "rgb(30, 240, 255)"
+        this.c2D.beginPath()
+        this.c2D.moveTo(0.0, 0.0)
+        this.c2D.lineTo(999.0, 0.0)
+        this.c2D.stroke()
         for (let i = 0; i < this.model.tracks.size(); i++) {
             const model = this.model.tracks.get(i)
             this.c2D.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.25

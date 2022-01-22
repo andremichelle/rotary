@@ -314,7 +314,7 @@ export class BoundNumericValue implements ObservableValue<number> {
     private readonly observable = new ObservableImpl<number>()
 
     constructor(private readonly range: Range = Linear.Identity,
-                private value: number = 0.5) {
+                private value: number = 0.0) {
     }
 
     get(): number {

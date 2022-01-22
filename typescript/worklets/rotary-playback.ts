@@ -9,7 +9,6 @@ class Voice {
 
 registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         private readonly model: RotaryModel = new RotaryModel()
-        private loopInSeconds: number = 1.0
         private phase: number = 0.0
         private sample: Float32Array[] = null
         private readonly voices: Voice[] = []
@@ -20,9 +19,8 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
             this.port.onmessage = (event: MessageEvent) => {
                 const msg = event.data as Message
                 if (msg.type === "format") {
+                    console.log("update format")
                     this.model.deserialize(msg.format)
-                } else if (msg.type === "loop-duration") {
-                    this.loopInSeconds = msg.seconds
                 } else if (msg.type === "sample") {
                     this.sample = msg.sample
                 }
@@ -35,7 +33,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
             const outL = output[0]
             const outR = output[1]
             const tracks = this.model.tracks
-            const loopInFrames = sampleRate * this.loopInSeconds
+            const loopInFrames = sampleRate * this.model.loopDuration.get()
             for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
                 const track = tracks.get(trackIndex)
                 const t0 = track.translatePhase(this.phase)

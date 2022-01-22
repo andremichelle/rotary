@@ -10,10 +10,8 @@ import {midiToHz} from "../dsp/common.js"
 
 export const buildAudio = async (context: AudioContext, output: AudioNode, model: RotaryModel, random: Random): Promise<void> => {
     const rotaryAutomationNode = await RotaryAutomationNode.build(context)
-    model.loopDuration.addObserver(seconds => rotaryAutomationNode.updateLoopDuration(seconds))
-    rotaryAutomationNode.updateLoopDuration(model.loopDuration.get())
     const updateFormat = () => rotaryAutomationNode.updateFormat(model)
-    ObservableCollection.observeNested(model.tracks, updateFormat)
+    model.addObserver(updateFormat)
     updateFormat()
 
     const convolverNode = context.createConvolver()

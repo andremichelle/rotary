@@ -1,8 +1,11 @@
-import { BoundNumericValue, Iterator, Observable, ObservableCollection, ObservableValue, Observer, Serializer, Terminable } from "../lib/common.js";
+import { Iterator, Observable, ObservableCollection, ObservableValue, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
 import { Motion, MotionFormat, MotionType } from "./motion.js";
 export declare interface RotaryFormat {
     radiusMin: number;
+    exportSize: number;
+    phaseOffset: number;
+    loopDuration: number;
     tracks: RotaryTrackFormat[];
 }
 export declare interface RotaryTrackFormat {
@@ -21,15 +24,19 @@ export declare interface RotaryTrackFormat {
     frequency: number;
     reverse: boolean;
 }
-export declare class RotaryModel implements Serializer<RotaryFormat>, Terminable {
+export declare class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS: number;
     private readonly terminator;
+    private readonly observable;
     readonly tracks: ObservableCollection<RotaryTrackModel>;
-    readonly radiusMin: BoundNumericValue;
-    readonly exportSize: BoundNumericValue;
-    readonly phaseOffset: BoundNumericValue;
-    readonly loopDuration: BoundNumericValue;
+    readonly radiusMin: ObservableValue<any>;
+    readonly exportSize: ObservableValue<any>;
+    readonly phaseOffset: ObservableValue<any>;
+    readonly loopDuration: ObservableValue<any>;
     constructor();
+    bindValue(property: ObservableValue<any>): ObservableValue<any>;
+    addObserver(observer: Observer<RotaryModel>): Terminable;
+    removeObserver(observer: Observer<RotaryModel>): boolean;
     randomize(random: Random): RotaryModel;
     randomizeTracks(random: Random): RotaryModel;
     randomizePalette(random: Random): RotaryModel;

@@ -6,11 +6,23 @@ import { Colors } from "../lib/colors.js";
 export class RotaryModel {
     constructor() {
         this.terminator = new Terminator();
+        this.observable = new ObservableImpl();
         this.tracks = new ObservableCollection();
-        this.radiusMin = this.terminator.with(new BoundNumericValue(new LinearInteger(0, 1024), 20));
-        this.exportSize = this.terminator.with(new BoundNumericValue(new LinearInteger(128, 1024), 256));
-        this.phaseOffset = this.terminator.with(new BoundNumericValue(Linear.Identity, 0.00));
-        this.loopDuration = this.terminator.with(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
+        this.radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20));
+        this.exportSize = this.bindValue(new BoundNumericValue(new LinearInteger(128, 1024), 256));
+        this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0));
+        this.loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
+        ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this));
+    }
+    bindValue(property) {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this)));
+        return this.terminator.with(property);
+    }
+    addObserver(observer) {
+        return this.observable.addObserver(observer);
+    }
+    removeObserver(observer) {
+        return this.observable.removeObserver(observer);
     }
     randomize(random) {
         this.radiusMin.set(20);
@@ -76,11 +88,17 @@ export class RotaryModel {
     serialize() {
         return {
             radiusMin: this.radiusMin.get(),
+            exportSize: this.exportSize.get(),
+            phaseOffset: this.phaseOffset.get(),
+            loopDuration: this.loopDuration.get(),
             tracks: this.tracks.map(track => track.serialize())
         };
     }
     deserialize(format) {
-        this.radiusMin.set(format['radiusMin']);
+        this.radiusMin.set(format.radiusMin);
+        this.exportSize.set(format.exportSize);
+        this.phaseOffset.set(format.phaseOffset);
+        this.loopDuration.set(format.loopDuration);
         this.tracks.clear();
         this.tracks.addAll(format.tracks.map(trackFormat => {
             const model = new RotaryTrackModel(this);
@@ -139,7 +157,7 @@ export class RotaryTrackModel {
         this.fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
         this.reverse = this.bindValue(new ObservableValueImpl(false));
         this.gradient = [];
-        this.motionTerminator = new Terminator();
+        this.motionTerminator = this.terminator.with(new Terminator());
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()));
         this.terminator.with(this.motion.addObserver((motion) => {
             this.motionTerminator.terminate();
@@ -243,10 +261,16 @@ export class RotaryTrackModel {
         return this;
     }
     translatePhase(x) {
-        return Func.stairsMap(x => this.motion.get().map(x), x, this.fragments.get(), this.frequency.get());
+        const fragments = this.fragments.get();
+        const mx = fragments * x;
+        const nx = Math.floor(mx);
+        return this.frequency.get() * (this.motion.get().map(mx - nx) + nx) / fragments - this.root.phaseOffset.get();
     }
     inversePhase(x) {
-        return Func.stairsInverse(x => this.motion.get().inverse(x), x, this.fragments.get(), this.frequency.get());
+        const fragments = this.fragments.get();
+        const mx = fragments * (x + this.root.phaseOffset.get()) / this.frequency.get();
+        const nx = Math.floor(mx);
+        return (this.motion.get().inverse(mx - nx) + nx) / fragments;
     }
     filterSections(p0, p1) {
         if (p0 >= p1) {

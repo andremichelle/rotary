@@ -235,7 +235,7 @@ export class ObservableValueImpl {
     }
 }
 export class BoundNumericValue {
-    constructor(range = Linear.Identity, value = 0.5) {
+    constructor(range = Linear.Identity, value = 0.0) {
         this.range = range;
         this.value = value;
         this.observable = new ObservableImpl();

@@ -9,17 +9,14 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
     constructor() {
         super();
         this.model = new RotaryModel();
-        this.loopInSeconds = 1.0;
         this.phase = 0.0;
         this.sample = null;
         this.voices = [];
         this.port.onmessage = (event) => {
             const msg = event.data;
             if (msg.type === "format") {
+                console.log("update format");
                 this.model.deserialize(msg.format);
-            }
-            else if (msg.type === "loop-duration") {
-                this.loopInSeconds = msg.seconds;
             }
             else if (msg.type === "sample") {
                 this.sample = msg.sample;
@@ -31,7 +28,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         const outL = output[0];
         const outR = output[1];
         const tracks = this.model.tracks;
-        const loopInFrames = sampleRate * this.loopInSeconds;
+        const loopInFrames = sampleRate * this.model.loopDuration.get();
         for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
             const track = tracks.get(trackIndex);
             const t0 = track.translatePhase(this.phase);

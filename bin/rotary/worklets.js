@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { RotaryModel } from "./model.js";
-import { UpdateFormatMessage, UpdateLoopDurationMessage, UpdateSampleMessage } from "../worklets/messages.js";
+import { UpdateFormatMessage, UpdateSampleMessage } from "../worklets/messages.js";
 export class RotaryAutomationNode extends AudioWorkletNode {
     static build(context) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25,9 +25,6 @@ export class RotaryAutomationNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
-    }
-    updateLoopDuration(seconds) {
-        this.port.postMessage(new UpdateLoopDurationMessage(seconds));
     }
     updateFormat(model) {
         this.port.postMessage(new UpdateFormatMessage(model.serialize()));
@@ -67,9 +64,6 @@ export class RotaryPlaybackNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
-    }
-    updateLoopDuration(seconds) {
-        this.port.postMessage(new UpdateLoopDurationMessage(seconds));
     }
     updateFormat(model) {
         this.port.postMessage(new UpdateFormatMessage(model.serialize()));

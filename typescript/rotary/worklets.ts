@@ -18,10 +18,6 @@ export class RotaryAutomationNode extends AudioWorkletNode {
         })
     }
 
-    updateLoopDuration(seconds: number): void {
-        this.port.postMessage(new UpdateLoopDurationMessage(seconds))
-    }
-
     updateFormat(model: RotaryModel): void {
         this.port.postMessage(new UpdateFormatMessage(model.serialize()))
     }
@@ -60,10 +56,6 @@ export class RotaryPlaybackNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         })
-    }
-
-    updateLoopDuration(seconds: number): void {
-        this.port.postMessage(new UpdateLoopDurationMessage(seconds))
     }
 
     updateFormat(model: RotaryModel): void {
