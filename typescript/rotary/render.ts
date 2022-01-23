@@ -16,11 +16,13 @@ export class RotaryRenderer {
 
     static renderTrackPreview(context: CanvasRenderingContext2D,
                               model: RotaryTrackModel,
-                              width: number,
-                              height: number): void {
+                              size: number): void {
         context.save()
-        context.translate(width >> 1, height >> 1)
-        RotaryRenderer.renderTrack(context, model, 16.0, 0.0)
+        context.translate(size >> 1, size >> 1)
+        const radius = 32.0 + model.width.get()
+        const scale: number = size / (radius + 2.0) * 0.5 // two pixel padding for strokes
+        context.scale(scale, scale)
+        RotaryRenderer.renderTrack(context, model, 32.0, 0.0)
         context.restore()
     }
 

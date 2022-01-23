@@ -444,14 +444,22 @@ export class Estimation {
         }
     }
 }
-export class Iterator {
+export const EmptyIterator = new class {
+    hasNext() {
+        return false;
+    }
+    next() {
+        return null;
+    }
+};
+export class GeneratorIterator {
     constructor(generator) {
         this.generator = generator;
         this.curr = null;
         this.curr = generator.next();
     }
     static wrap(generator) {
-        return new Iterator(generator);
+        return new GeneratorIterator(generator);
     }
     hasNext() {
         return null !== this.curr && !this.curr.done;

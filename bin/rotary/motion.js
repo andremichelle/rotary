@@ -170,10 +170,10 @@ export class SmoothStepMotion extends Motion {
         this.edge1 = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
     }
     map(x) {
-        return Func.smoothStep(Func.step(this.edge0.get(), this.edge1.get(), x));
+        return Func.step(this.edge0.get(), this.edge1.get(), x);
     }
     inverse(x) {
-        throw new Error();
+        return Math.min(1.0, Math.max(0.0, this.edge0.get() + x * (this.edge1.get() - this.edge0.get())));
     }
     deserialize(format) {
         const data = this.unpack(format);

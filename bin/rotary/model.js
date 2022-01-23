@@ -1,4 +1,4 @@
-import { BoundNumericValue, Iterator, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
+import { BoundNumericValue, EmptyIterator, GeneratorIterator, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { CShapeMotion, LinearMotion, Motion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
@@ -188,9 +188,7 @@ export class RotaryTrackModel {
         this.lengthRatio.set(0.125);
         this.outline.set(0.0);
         this.segments.set(16);
-        const shapeMotion = new TShapeMotion();
-        shapeMotion.shape.set(0.75);
-        this.motion.set(shapeMotion);
+        this.motion.set(new SmoothStepMotion());
         this.width.set(128);
         this.fill.set(Fill.Flat);
     }
@@ -274,10 +272,10 @@ export class RotaryTrackModel {
     }
     filterSections(p0, p1) {
         if (p0 >= p1) {
-            throw new Error(`p1(${p1}) must be greater than p0(${p0})`);
+            return EmptyIterator;
         }
         const index = Math.floor(p0);
-        return Iterator.wrap(this.branchFilterSection(p0 - index, p1 - index, index));
+        return GeneratorIterator.wrap(this.branchFilterSection(p0 - index, p1 - index, index));
     }
     *branchFilterSection(p0, p1, index) {
         console.assert(p0 >= 0.0 && p0 < 1.0, `p0(${p0}) must be positive and smaller than 1.0`);

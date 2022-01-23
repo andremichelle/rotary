@@ -19,10 +19,13 @@ export class RotaryRenderer {
             radiusMin += track.width.get() + track.widthPadding.get();
         }
     }
-    static renderTrackPreview(context, model, width, height) {
+    static renderTrackPreview(context, model, size) {
         context.save();
-        context.translate(width >> 1, height >> 1);
-        RotaryRenderer.renderTrack(context, model, 16.0, 0.0);
+        context.translate(size >> 1, size >> 1);
+        const radius = 32.0 + model.width.get();
+        const scale = size / (radius + 2.0) * 0.5;
+        context.scale(scale, scale);
+        RotaryRenderer.renderTrack(context, model, 32.0, 0.0);
         context.restore();
     }
     static renderTrack(context, model, radiusStart, phase) {

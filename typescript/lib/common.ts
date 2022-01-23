@@ -541,9 +541,25 @@ export class Estimation {
     }
 }
 
-export class Iterator<T> {
+export interface Iterator<T> {
+    hasNext(): boolean
+
+    next(): T
+}
+
+export const EmptyIterator = new class implements Iterator<any> {
+    hasNext(): boolean {
+        return false
+    }
+
+    next(): any {
+        return null
+    }
+}
+
+export class GeneratorIterator<T> {
     static wrap<T>(generator: Generator<T, void, T>): Iterator<T> {
-        return new Iterator<T>(generator)
+        return new GeneratorIterator<T>(generator)
     }
 
     private curr: IteratorResult<T> = null

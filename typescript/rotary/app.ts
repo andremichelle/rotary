@@ -253,7 +253,7 @@ export class RotaryTrackSelector implements Terminable {
         const w = this.canvas.width = this.canvas.clientWidth * ratio
         const h = this.canvas.height = this.canvas.clientHeight * ratio
         if (w === 0 || h === 0) return
-        RotaryRenderer.renderTrackPreview(this.context, this.model, w, h)
+        RotaryRenderer.renderTrackPreview(this.context, this.model, Math.max(w, h))
     }
 
     terminate(): void {

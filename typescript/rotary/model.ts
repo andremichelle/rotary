@@ -1,5 +1,7 @@
 import {
     BoundNumericValue,
+    EmptyIterator,
+    GeneratorIterator,
     Iterator,
     Observable,
     ObservableCollection,
@@ -259,10 +261,11 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.outline.set(0.0)
         this.segments.set(16)
         // this.motion.set(new LinearMotion())
-        const shapeMotion = new TShapeMotion()
-        shapeMotion.shape.set(0.75)
-        this.motion.set(shapeMotion)
+        // const shapeMotion = new TShapeMotion()
+        // shapeMotion.shape.set(0.75)
+        // this.motion.set(shapeMotion)
         // this.motion.set(new PowMotion())
+        this.motion.set(new SmoothStepMotion())
         this.width.set(128)
         this.fill.set(Fill.Flat)
     }
@@ -355,10 +358,10 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     filterSections(p0: number, p1: number): Iterator<FilterResult> {
         if (p0 >= p1) {
-            throw new Error(`p1(${p1}) must be greater than p0(${p0})`)
+            return EmptyIterator
         }
         const index = Math.floor(p0)
-        return Iterator.wrap(this.branchFilterSection(p0 - index, p1 - index, index))
+        return GeneratorIterator.wrap(this.branchFilterSection(p0 - index, p1 - index, index))
     }
 
     private* branchFilterSection(p0: number, p1: number, index: number): Generator<FilterResult, void, FilterResult> {
