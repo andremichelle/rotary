@@ -41,7 +41,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 }
                 const frameIndex = Math.floor((track.inversePhase(result.position) - this.phase) * loopInFrames);
                 console.assert(0 <= frameIndex && frameIndex < RenderQuantum, "out of bounds");
-                const key = result.index % 9;
+                const key = trackIndex % 9;
                 this.voices.push(new Voice(key, -frameIndex));
             }
         }
@@ -62,8 +62,8 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                     r += sample[1][position];
                 }
             }
-            outL[frameIndex] = l * 0.7;
-            outR[frameIndex] = r * 0.7;
+            outL[frameIndex] = l;
+            outR[frameIndex] = r;
         }
         this.phase += RenderQuantum / loopInFrames;
         this.phase -= Math.floor(this.phase);

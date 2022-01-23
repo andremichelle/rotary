@@ -296,6 +296,6 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
 
 MotionTypes.push(LinearMotion)
 MotionTypes.push(PowMotion)
-MotionTypes.push(CShapeMotion)
+// MotionTypes.push(CShapeMotion)
 MotionTypes.push(TShapeMotion)
-MotionTypes.push(SmoothStepMotion)
+// MotionTypes.push(SmoothStepMotion)

@@ -198,7 +198,5 @@ export class SmoothStepMotion extends Motion {
 }
 MotionTypes.push(LinearMotion);
 MotionTypes.push(PowMotion);
-MotionTypes.push(CShapeMotion);
 MotionTypes.push(TShapeMotion);
-MotionTypes.push(SmoothStepMotion);
 //# sourceMappingURL=motion.js.map

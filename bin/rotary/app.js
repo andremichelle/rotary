@@ -151,8 +151,8 @@ export class RotaryApp {
         const angle = this.model.phaseOffset.get() * TAU;
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
-        this.c2D.lineWidth = 1.0;
-        this.c2D.strokeStyle = "rgb(30, 240, 255)";
+        this.c2D.lineWidth = 0.0;
+        this.c2D.strokeStyle = "rgba(30, 240, 255, 0.5)";
         this.c2D.beginPath();
         this.c2D.moveTo(cos * radiusMin, sin * radiusMin);
         this.c2D.lineTo(cos * 9999.9, sin * 9999.9);
@@ -206,10 +206,7 @@ export class RotaryTrackSelector {
         const h = this.canvas.height = this.canvas.clientHeight * ratio;
         if (w === 0 || h === 0)
             return;
-        this.context.save();
-        this.context.translate(w >> 1, h >> 1);
-        RotaryRenderer.renderTrackPreview(this.context, this.model, 16.0, 0.0);
-        this.context.restore();
+        RotaryRenderer.renderTrackPreview(this.context, this.model, w, h);
     }
     terminate() {
         this.element.remove();
