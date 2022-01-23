@@ -4,23 +4,19 @@ export class UpdateFormatMessage {
         this.type = 'format';
     }
 }
-export class UpdateLoopDurationMessage {
-    constructor(seconds) {
-        this.seconds = seconds;
-        this.type = 'loop-duration';
-    }
-}
 export class UpdateSampleMessage {
-    constructor(sample) {
+    constructor(key, sample) {
+        this.key = key;
         this.sample = sample;
         this.type = 'sample';
     }
-    static from(buffer) {
+    static from(key, buffer) {
         const raw = [];
-        for (let channelIndex = 0; channelIndex < buffer.numberOfChannels; channelIndex++) {
-            buffer.copyFromChannel(raw[channelIndex] = new Float32Array(buffer.length), channelIndex);
+        for (let channelIndex = 0; channelIndex < 2; channelIndex++) {
+            buffer.copyFromChannel(raw[channelIndex] =
+                new Float32Array(buffer.length), Math.min(channelIndex, buffer.numberOfChannels - 1));
         }
-        return new UpdateSampleMessage(raw);
+        return new UpdateSampleMessage(key, raw);
     }
 }
 //# sourceMappingURL=messages.js.map

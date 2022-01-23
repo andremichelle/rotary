@@ -57,7 +57,7 @@ export class LinearMotion extends Motion {
         return x;
     }
     serialize() {
-        return super.pack.call(this);
+        return super.pack();
     }
     deserialize(format) {
         super.unpack(format);
@@ -80,7 +80,7 @@ export class PowMotion extends Motion {
         return Math.pow(x, this.exponent.get());
     }
     inverse(x) {
-        throw new Error();
+        return Math.pow(x, 1.0 / this.exponent.get());
     }
     serialize() {
         return super.pack({ exponent: this.exponent.get() });

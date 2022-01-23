@@ -58,7 +58,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
     readonly radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20))
     readonly exportSize = this.bindValue(new BoundNumericValue(new LinearInteger(128, 1024), 256))
-    readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
+    readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75))
     readonly loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0))
 
     constructor() {
@@ -262,6 +262,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const shapeMotion = new TShapeMotion()
         shapeMotion.shape.set(0.75)
         this.motion.set(shapeMotion)
+        // this.motion.set(new PowMotion())
         this.width.set(128)
         this.fill.set(Fill.Flat)
     }
@@ -342,12 +343,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const fragments = this.fragments.get()
         const mx = fragments * x
         const nx = Math.floor(mx)
-        return this.frequency.get() * (this.motion.get().map(mx - nx) + nx) / fragments - this.root.phaseOffset.get()
+        return this.frequency.get() * (this.motion.get().map(mx - nx) + nx) / fragments
     }
 
     inversePhase(x: number): number {
         const fragments = this.fragments.get()
-        const mx = fragments * (x + this.root.phaseOffset.get()) / this.frequency.get()
+        const mx = fragments * x / this.frequency.get()
         const nx = Math.floor(mx)
         return (this.motion.get().inverse(mx - nx) + nx) / fragments
     }

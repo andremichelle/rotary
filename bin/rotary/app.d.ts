@@ -20,15 +20,13 @@ export declare class RotaryApp implements RotaryTrackEditorExecutor {
     private readonly random;
     private readonly c2D;
     readonly zoom: ObservableValueImpl<number>;
-    private highlight;
     private constructor();
     createNew(model: RotaryTrackModel | null, copy: boolean): void;
     deleteTrack(): void;
     select(track: RotaryTrackModel): void;
     hasSelected(): boolean;
-    showHighlight(track: RotaryTrackModel): void;
-    releaseHighlight(): void;
     render(phase: number): void;
+    private drawCrossing;
     private createSelector;
     private removeSelector;
     private reorderSelectors;

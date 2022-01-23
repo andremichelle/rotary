@@ -1,6 +1,6 @@
 import {RotaryFormat} from "../rotary/model.js"
 
-export type Message = UpdateFormatMessage | UpdateLoopDurationMessage | UpdateSampleMessage
+export type Message = UpdateFormatMessage | UpdateSampleMessage
 
 export class UpdateFormatMessage {
     readonly type = 'format'
@@ -9,24 +9,18 @@ export class UpdateFormatMessage {
     }
 }
 
-export class UpdateLoopDurationMessage {
-    readonly type = 'loop-duration'
-
-    constructor(readonly seconds: number) {
-    }
-}
-
 export class UpdateSampleMessage {
-    static from(buffer: AudioBuffer): UpdateSampleMessage {
+    static from(key: number, buffer: AudioBuffer): UpdateSampleMessage {
         const raw = []
-        for (let channelIndex = 0; channelIndex < buffer.numberOfChannels; channelIndex++) {
-            buffer.copyFromChannel(raw[channelIndex] = new Float32Array(buffer.length), channelIndex)
+        for (let channelIndex = 0; channelIndex < 2; channelIndex++) {
+            buffer.copyFromChannel(raw[channelIndex] =
+                new Float32Array(buffer.length), Math.min(channelIndex, buffer.numberOfChannels - 1))
         }
-        return new UpdateSampleMessage(raw)
+        return new UpdateSampleMessage(key, raw)
     }
 
     readonly type = 'sample'
 
-    constructor(readonly sample: Float32Array[]) {
+    constructor(readonly key: number, readonly sample: Float32Array[]) {
     }
 }

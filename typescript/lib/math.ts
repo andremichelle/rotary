@@ -46,6 +46,7 @@ export class Mulberry32 extends Random {
     }
 }
 
+// noinspection JSUnusedGlobalSymbols
 export class Func {
     // https://www.desmos.com/calculator/gkpzjoxzcy
     static smoothStep(x: number) {

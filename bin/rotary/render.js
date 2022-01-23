@@ -11,21 +11,26 @@ import { TAU } from "../lib/common.js";
 import { Func } from "../lib/math.js";
 import { Fill } from "./model.js";
 export class RotaryRenderer {
-    static render(context, model, position) {
+    static render(context, model, phase) {
         let radiusMin = model.radiusMin.get();
         for (let i = 0; i < model.tracks.size(); i++) {
             const track = model.tracks.get(i);
-            RotaryRenderer.renderTrack(context, track, radiusMin, position);
+            RotaryRenderer.renderTrack(context, track, radiusMin, model.phaseOffset.get() - track.translatePhase(phase));
             radiusMin += track.width.get() + track.widthPadding.get();
         }
     }
-    static renderTrack(context, model, radiusMin, phase) {
-        phase = -model.translatePhase(phase);
+    static renderTrackPreview(context, model, width, height) {
+        context.save();
+        context.translate(width >> 1, height >> 1);
+        RotaryRenderer.renderTrack(context, model, 16.0, 0.0);
+        context.restore();
+    }
+    static renderTrack(context, model, radiusStart, phase) {
         const segments = model.segments.get();
         const length = model.length.get();
         const width = model.width.get();
-        const r0 = radiusMin;
-        const r1 = radiusMin + width;
+        const r0 = radiusStart;
+        const r1 = radiusStart + width;
         const bend = model.bend.get();
         const lengthRatio = model.lengthRatio.get();
         for (let i = 0; i < segments; i++) {

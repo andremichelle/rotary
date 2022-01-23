@@ -21,7 +21,7 @@ export declare abstract class Motion<DATA extends Data> implements Observable<Mo
     abstract randomize(random: Random): Motion<DATA>;
     addObserver(observer: Observer<Motion<DATA>>): Terminable;
     removeObserver(observer: Observer<Motion<DATA>>): boolean;
-    pack(data: DATA): MotionFormat<DATA>;
+    pack(data?: DATA): MotionFormat<DATA>;
     unpack(format: MotionFormat<DATA>): DATA;
     bindValue(property: ObservableValue<any>): ObservableValue<any>;
     terminate(): void;

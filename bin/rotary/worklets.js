@@ -68,8 +68,8 @@ export class RotaryPlaybackNode extends AudioWorkletNode {
     updateFormat(model) {
         this.port.postMessage(new UpdateFormatMessage(model.serialize()));
     }
-    updateSample(buffer) {
-        this.port.postMessage(UpdateSampleMessage.from(buffer));
+    updateSample(key, buffer) {
+        this.port.postMessage(UpdateSampleMessage.from(key, buffer));
     }
 }
 //# sourceMappingURL=worklets.js.map

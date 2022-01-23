@@ -3,14 +3,14 @@ import {Message} from "./messages.js"
 import {RenderQuantum} from "../dsp/common.js"
 
 class Voice {
-    constructor(public position: number = 0 | 0) {
+    constructor(readonly sampleKey: number, public position: number = 0 | 0) {
     }
 }
 
 registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         private readonly model: RotaryModel = new RotaryModel()
         private phase: number = 0.0
-        private sample: Float32Array[] = null
+        private samples: Map<number, Float32Array[]> = new Map()
         private readonly voices: Voice[] = []
 
         constructor() {
@@ -19,10 +19,9 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
             this.port.onmessage = (event: MessageEvent) => {
                 const msg = event.data as Message
                 if (msg.type === "format") {
-                    console.log("update format")
                     this.model.deserialize(msg.format)
                 } else if (msg.type === "sample") {
-                    this.sample = msg.sample
+                    this.samples.set(msg.key, msg.sample)
                 }
             }
         }
@@ -44,9 +43,10 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                     if (result.edge === Edge.Max) {
                         continue
                     }
-                    const frameIndex = Math.floor((track.inversePhase(result.position - t0)) * loopInFrames)
+                    const frameIndex = Math.floor((track.inversePhase(result.position) - this.phase) * loopInFrames)
                     console.assert(0 <= frameIndex && frameIndex < RenderQuantum, "out of bounds")
-                    this.voices.push(new Voice(-frameIndex))
+                    const key: number = result.index % 9
+                    this.voices.push(new Voice(key, -frameIndex))
                 }
             }
             for (let frameIndex = 0; frameIndex < RenderQuantum; frameIndex++) {
@@ -55,15 +55,17 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 for (let i = this.voices.length - 1; i >= 0; i--) {
                     const voice = this.voices[i]
                     const position = voice.position++
-                    if (position >= this.sample[0].length) {
+                    const sample: Float32Array[] = this.samples.get(voice.sampleKey)
+                    if (sample === undefined) continue
+                    if (position >= sample[0].length) {
                         this.voices.splice(i, 1)
                     } else if (position >= 0) {
-                        l += this.sample[0][position]
-                        r += this.sample[1][position]
+                        l += sample[0][position]
+                        r += sample[1][position]
                     }
                 }
-                outL[frameIndex] = l * 0.3
-                outR[frameIndex] = r * 0.3
+                outL[frameIndex] = l * 0.7
+                outR[frameIndex] = r * 0.7
             }
             this.phase += RenderQuantum / loopInFrames
             this.phase -= Math.floor(this.phase)

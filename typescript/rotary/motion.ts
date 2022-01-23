@@ -66,7 +66,7 @@ export abstract class Motion<DATA extends Data> implements Observable<Motion<DAT
         return this.observable.removeObserver(observer)
     }
 
-    pack(data: DATA): MotionFormat<DATA> {
+    pack(data?: DATA): MotionFormat<DATA> {
         return {
             class: this.constructor.name,
             data: data
@@ -98,7 +98,7 @@ export class LinearMotion extends Motion<never> {
     }
 
     serialize(): MotionFormat<never> {
-        return super.pack.call(this) // this might break in future version of typescript
+        return super.pack()
     }
 
     deserialize(format: MotionFormat<never>): LinearMotion {
@@ -129,7 +129,7 @@ export class PowMotion extends Motion<PowData> {
     }
 
     inverse(x: number): number {
-        throw new Error()
+        return Math.pow(x, 1.0 / this.exponent.get())
     }
 
     serialize(): MotionFormat<PowData> {

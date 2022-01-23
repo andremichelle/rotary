@@ -5,26 +5,34 @@ import {Fill, RotaryModel, RotaryTrackModel} from "./model.js"
 export class RotaryRenderer {
     static render(context: CanvasRenderingContext2D,
                   model: RotaryModel,
-                  position: number): void {
+                  phase: number): void {
         let radiusMin = model.radiusMin.get()
         for (let i = 0; i < model.tracks.size(); i++) {
             const track = model.tracks.get(i)
-            RotaryRenderer.renderTrack(context, track, radiusMin, position)
+            RotaryRenderer.renderTrack(context, track, radiusMin, model.phaseOffset.get() - track.translatePhase(phase))
             radiusMin += track.width.get() + track.widthPadding.get()
         }
     }
 
-    static renderTrack(context: CanvasRenderingContext2D,
-                       model: RotaryTrackModel,
-                       radiusMin: number,
-                       phase: number): void {
-        phase = -model.translatePhase(phase)
+    static renderTrackPreview(context: CanvasRenderingContext2D,
+                              model: RotaryTrackModel,
+                              width: number,
+                              height: number): void {
+        context.save()
+        context.translate(width >> 1, height >> 1)
+        RotaryRenderer.renderTrack(context, model, 16.0, 0.0)
+        context.restore()
+    }
 
+    private static renderTrack(context: CanvasRenderingContext2D,
+                               model: RotaryTrackModel,
+                               radiusStart: number,
+                               phase: number): void {
         const segments = model.segments.get()
         const length = model.length.get()
         const width = model.width.get()
-        const r0 = radiusMin
-        const r1 = radiusMin + width
+        const r0 = radiusStart
+        const r1 = radiusStart + width
         const bend = model.bend.get()
         const lengthRatio = model.lengthRatio.get()
         for (let i = 0; i < segments; i++) {
@@ -55,10 +63,10 @@ export class RotaryRenderer {
         }
     }
 
-    static renderSection(context: CanvasRenderingContext2D,
-                         model: RotaryTrackModel,
-                         radiusMin: number, radiusMax: number,
-                         angleMin: number, angleMax: number): void {
+    private static renderSection(context: CanvasRenderingContext2D,
+                                 model: RotaryTrackModel,
+                                 radiusMin: number, radiusMax: number,
+                                 angleMin: number, angleMax: number): void {
         console.assert(radiusMin < radiusMax, `radiusMax(${radiusMax}) must be greater then radiusMin(${radiusMin})`)
         console.assert(angleMin <= angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`)
         const radianMin = angleMin * TAU

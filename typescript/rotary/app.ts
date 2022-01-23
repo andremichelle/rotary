@@ -46,8 +46,6 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
 
     readonly zoom = new ObservableValueImpl<number>(0.75)
 
-    private highlight: RotaryTrackModel = null
-
     private constructor(private readonly model: RotaryModel,
                         private readonly elements: DomElements) {
         this.elements.template.remove()
@@ -128,14 +126,6 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         return this.editor.subject.nonEmpty()
     }
 
-    showHighlight(track: RotaryTrackModel): void {
-        this.highlight = track
-    }
-
-    releaseHighlight(): void {
-        this.highlight = null
-    }
-
     render(phase: number): void {
         const zoom = this.zoom.get()
         const size = this.model.measureRadius() * 2
@@ -162,8 +152,6 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             const t0 = track.translatePhase(phase + p0)
             const t1 = track.translatePhase(phase + p1)
 
-            // console.log(`translate t0: ${t0}, t1: ${t1}`)
-
             this.c2D.strokeStyle = "rgba(30, 240, 255, 1.0)"
             this.c2D.fillStyle = "rgba(30, 240, 255, 0.04)"
             this.c2D.beginPath()
@@ -187,24 +175,28 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             }
         }
 
-        let radiusMin = this.model.radiusMin.get()
-        this.c2D.strokeStyle = "rgb(30, 240, 255)"
-        this.c2D.beginPath()
-        this.c2D.moveTo(0.0, 0.0)
-        this.c2D.lineTo(999.0, 0.0)
-        this.c2D.stroke()
-        for (let i = 0; i < this.model.tracks.size(); i++) {
-            const model = this.model.tracks.get(i)
-            this.c2D.globalAlpha = model === this.highlight || null === this.highlight ? 1.0 : 0.25
-            RotaryRenderer.renderTrack(this.c2D, model, radiusMin, phase)
-            radiusMin += model.width.get() + model.widthPadding.get()
-        }
+        this.drawCrossing()
+
+        RotaryRenderer.render(this.c2D, this.model, phase)
+
         this.c2D.restore()
 
         const circle = this.elements.progressIndicator
         const radiant = parseInt(circle.getAttribute("r"), 10) * 2.0 * Math.PI
         circle.setAttribute("stroke-dasharray", radiant.toFixed(2))
         circle.setAttribute("stroke-dashoffset", ((1.0 - phase) * radiant).toFixed(2))
+    }
+
+    private drawCrossing(radiusMin: number = 0.0) {
+        const angle = this.model.phaseOffset.get() * TAU
+        const cos = Math.cos(angle)
+        const sin = Math.sin(angle)
+        this.c2D.lineWidth = 1.0
+        this.c2D.strokeStyle = "rgb(30, 240, 255)"
+        this.c2D.beginPath()
+        this.c2D.moveTo(cos * radiusMin, sin * radiusMin)
+        this.c2D.lineTo(cos * 9999.9, sin * 9999.9)
+        this.c2D.stroke()
     }
 
     private createSelector(track: RotaryTrackModel): void {
@@ -245,10 +237,6 @@ export class RotaryTrackSelector implements Terminable {
                 readonly button: HTMLButtonElement) {
         this.terminator.with(Dom.bindEventListener(this.radio, "change",
             () => this.ui.select(this.model)))
-        this.terminator.with(Dom.bindEventListener(this.element, "mouseenter",
-            () => this.ui.showHighlight(model)))
-        this.terminator.with(Dom.bindEventListener(this.element, "mouseleave",
-            () => this.ui.releaseHighlight()))
         this.terminator.with(Dom.bindEventListener(this.button, "click",
             (event: MouseEvent) => {
                 event.preventDefault()
@@ -267,7 +255,7 @@ export class RotaryTrackSelector implements Terminable {
         if (w === 0 || h === 0) return
         this.context.save()
         this.context.translate(w >> 1, h >> 1)
-        RotaryRenderer.renderTrack(this.context, this.model, 16.0, 0.0)
+        RotaryRenderer.renderTrackPreview(this.context, this.model, 16.0, 0.0)
         this.context.restore()
     }
 

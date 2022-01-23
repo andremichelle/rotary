@@ -10,7 +10,7 @@ export class RotaryModel {
         this.tracks = new ObservableCollection();
         this.radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20));
         this.exportSize = this.bindValue(new BoundNumericValue(new LinearInteger(128, 1024), 256));
-        this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0));
+        this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
         this.loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
         ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this));
     }
@@ -264,11 +264,11 @@ export class RotaryTrackModel {
         const fragments = this.fragments.get();
         const mx = fragments * x;
         const nx = Math.floor(mx);
-        return this.frequency.get() * (this.motion.get().map(mx - nx) + nx) / fragments - this.root.phaseOffset.get();
+        return this.frequency.get() * (this.motion.get().map(mx - nx) + nx) / fragments;
     }
     inversePhase(x) {
         const fragments = this.fragments.get();
-        const mx = fragments * (x + this.root.phaseOffset.get()) / this.frequency.get();
+        const mx = fragments * x / this.frequency.get();
         const nx = Math.floor(mx);
         return (this.motion.get().inverse(mx - nx) + nx) / fragments;
     }
