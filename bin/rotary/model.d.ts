@@ -60,8 +60,8 @@ export declare enum Fill {
 export declare const MotionTypes: Map<string, InjectiveType>;
 export declare const Fills: Map<string, Fill>;
 export declare enum Edge {
-    Min = 0,
-    Max = 1
+    Start = 0,
+    End = 1
 }
 export declare class FilterResult {
     readonly edge: Edge;

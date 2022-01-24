@@ -183,12 +183,12 @@ export class RotaryTrackModel {
         this.bend.set(0.75);
         this.frequency.set(1.0);
         this.fragments.set(1.0);
-        this.reverse.set(true);
+        this.reverse.set(false);
         this.length.set(1.0);
         this.lengthRatio.set(0.125);
         this.outline.set(0.0);
         this.segments.set(16);
-        this.motion.set(new CShapeInjective());
+        this.motion.set(new InjectiveIdentity());
         this.width.set(128);
         this.fill.set(Fill.Flat);
     }
@@ -260,7 +260,7 @@ export class RotaryTrackModel {
     }
     translatePhase(x) {
         const fragments = this.fragments.get();
-        const mx = fragments * (this.reverse.get() ? 1.0 - x : x);
+        const mx = fragments * (this.reverse.get() ? 1.0 - x : x) + this.phaseOffset.get();
         const nx = Math.floor(mx);
         return this.frequency.get() * (this.motion.get().fx(mx - nx) + nx) / fragments;
     }
@@ -268,7 +268,7 @@ export class RotaryTrackModel {
         const fragments = this.fragments.get();
         const my = fragments * y / this.frequency.get();
         const ny = Math.floor(my);
-        const fwd = (this.motion.get().fy(my - ny) + ny) / fragments;
+        const fwd = (this.motion.get().fy(my - ny) + ny) / fragments - this.phaseOffset.get();
         return this.reverse.get() ? 1.0 - fwd : fwd;
     }
     filterSections(p0, p1) {
