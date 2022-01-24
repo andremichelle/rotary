@@ -1,5 +1,5 @@
 import {Edge, FilterResult, RotaryModel} from "../rotary/model.js"
-import {Message} from "./messages.js"
+import {Message} from "./worklet.js"
 import {RenderQuantum} from "../dsp/common.js"
 
 class Voice {
@@ -35,18 +35,18 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
             const loopInFrames = sampleRate * this.model.loopDuration.get()
             for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
                 const track = tracks.get(trackIndex)
-                const t0 = track.translatePhase(this.phase)
-                const t1 = track.translatePhase(this.phase + RenderQuantum / loopInFrames)
+                const t0 = track.globalToLocal(this.phase)
+                const t1 = track.globalToLocal(this.phase + RenderQuantum / loopInFrames)
                 const iterator = track.filterSections(t0, t1)
                 while (iterator.hasNext()) {
                     const result: FilterResult = iterator.next()
                     if (result.edge === Edge.End) {
                         continue
                     }
-                    const frameIndex = ((track.inversePhase(result.position) - this.phase) * loopInFrames) | 0
+                    const frameIndex = ((track.localToGlobal(result.position) - this.phase) * loopInFrames) | 0
                     console.assert(0 <= frameIndex && frameIndex < RenderQuantum,
                         `frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, p: ${result.position}, 
-                        frameIndexAsNumber: ${(track.inversePhase(result.position) - this.phase) * loopInFrames}`)
+                        frameIndexAsNumber: ${(track.localToGlobal(result.position) - this.phase) * loopInFrames}`)
                     const key: number = trackIndex % 9
                     this.voices.push(new Voice(key, -frameIndex))
                 }
@@ -66,8 +66,8 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                         r += sample[1][position]
                     }
                 }
-                outL[frameIndex] = l
-                outR[frameIndex] = r
+                outL[frameIndex] = l * 2.0
+                outR[frameIndex] = r * 2.0
             }
             this.phase += RenderQuantum / loopInFrames
             return true

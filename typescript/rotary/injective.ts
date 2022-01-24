@@ -27,8 +27,8 @@ export abstract class Injective<DATA extends Data> implements Observable<Injecti
         switch (format.class) {
             case IdentityInjective.name:
                 return new IdentityInjective()
-            case InjectivePow.name:
-                return new InjectivePow().deserialize(format)
+            case PowInjective.name:
+                return new PowInjective().deserialize(format)
             case TShapeInjective.name:
                 return new TShapeInjective().deserialize(format)
             case CShapeInjective.name:
@@ -119,7 +119,7 @@ declare interface PowData {
     exponent: number
 }
 
-export class InjectivePow extends Injective<PowData> {
+export class PowInjective extends Injective<PowData> {
     private readonly range = new Linear(1.0, 16.0)
 
     readonly exponent = this.bindValue(new BoundNumericValue(this.range, 2.0))
@@ -136,18 +136,18 @@ export class InjectivePow extends Injective<PowData> {
         return super.pack({exponent: this.exponent.get()})
     }
 
-    deserialize(format: InjectiveFormat<PowData>): InjectivePow {
+    deserialize(format: InjectiveFormat<PowData>): PowInjective {
         this.exponent.set(super.unpack(format).exponent)
         return this
     }
 
-    copy(): InjectivePow {
-        const copy = new InjectivePow()
+    copy(): PowInjective {
+        const copy = new PowInjective()
         copy.exponent.set(this.exponent.get())
         return copy
     }
 
-    randomize(random: Random): InjectivePow {
+    randomize(random: Random): PowInjective {
         this.exponent.set(random.nextDouble(2.0, 4.0))
         return this
     }
@@ -297,7 +297,7 @@ export class SmoothStepInjective extends Injective<SmoothStepData> {
 }
 
 InjectiveTypes.push(IdentityInjective)
-InjectiveTypes.push(InjectivePow)
+InjectiveTypes.push(PowInjective)
 InjectiveTypes.push(CShapeInjective)
 InjectiveTypes.push(TShapeInjective)
 InjectiveTypes.push(SmoothStepInjective)

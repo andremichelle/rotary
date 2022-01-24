@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { RotaryModel } from "./model.js";
-import { UpdateFormatMessage, UpdateSampleMessage } from "../worklets/messages.js";
+import { UpdateFormatMessage, UpdateSampleMessage } from "../worklets/worklet.js";
 export const handleErrors = (worklet) => {
     worklet.onprocessorerror = (event) => {
         console.log(`error occurred. message: ${event.message}`);
@@ -18,7 +18,7 @@ export const handleErrors = (worklet) => {
 export class RotaryAutomationNode extends AudioWorkletNode {
     static build(context) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield context.audioWorklet.addModule("bin/worklets/rotary-automation.js");
+            yield context.audioWorklet.addModule("bin/worklets/automation.js");
             return new RotaryAutomationNode(context);
         });
     }
@@ -40,7 +40,7 @@ export class RotaryAutomationNode extends AudioWorkletNode {
 export class RotarySineNode extends AudioWorkletNode {
     static build(context) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield context.audioWorklet.addModule("bin/worklets/rotary-sine.js");
+            yield context.audioWorklet.addModule("bin/worklets/sine.js");
             return new RotarySineNode(context);
         });
     }
@@ -59,7 +59,7 @@ export class RotarySineNode extends AudioWorkletNode {
 export class RotaryPlaybackNode extends AudioWorkletNode {
     static build(context) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield context.audioWorklet.addModule("bin/worklets/rotary-playback.js");
+            yield context.audioWorklet.addModule("bin/worklets/playback.js");
             return new RotaryPlaybackNode(context);
         });
     }

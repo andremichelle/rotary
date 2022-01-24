@@ -1,14 +1,14 @@
 import { ObservableValue, Option, Terminable } from "../lib/common.js";
 import { Editor } from "../dom/inputs.js";
 import { RotaryTrackModel } from "./model.js";
-import { CShapeInjective, Injective, InjectivePow, SmoothStepInjective, TShapeInjective } from "./injective.js";
+import { CShapeInjective, Injective, PowInjective, SmoothStepInjective, TShapeInjective } from "./injective.js";
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void;
 }
-export declare class PowMotionEditor implements Editor<InjectivePow> {
+export declare class PowMotionEditor implements Editor<PowInjective> {
     private readonly input;
     constructor(element: Element);
-    with(value: InjectivePow): void;
+    with(value: PowInjective): void;
     clear(): void;
     terminate(): void;
 }

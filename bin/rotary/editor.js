@@ -2,7 +2,7 @@ import { NumericStepper, ObservableValueImpl, ObservableValueVoid, Options, Prin
 import { Checkbox, NumericInput, NumericStepperInput, SelectInput } from "../dom/inputs.js";
 import { Fills, MotionTypes } from "./model.js";
 import { Dom } from "../dom/common.js";
-import { CShapeInjective, IdentityInjective, InjectivePow, SmoothStepInjective, TShapeInjective } from "./injective.js";
+import { CShapeInjective, IdentityInjective, PowInjective, SmoothStepInjective, TShapeInjective } from "./injective.js";
 export class PowMotionEditor {
     constructor(element) {
         this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='pow'][data-parameter='exponent']"), PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth);
@@ -108,7 +108,7 @@ export class MotionEditor {
             this.tShapeMotionEditor.clear();
             this.smoothStepMotionEditor.clear();
         }
-        else if (motion instanceof InjectivePow) {
+        else if (motion instanceof PowInjective) {
             this.element.setAttribute("data-motion", "pow");
             this.powMotionEditor.with(motion);
             this.cShapeMotionEditor.clear();

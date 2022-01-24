@@ -1,5 +1,5 @@
 import {RotaryModel} from "./model.js"
-import {UpdateFormatMessage, UpdateSampleMessage} from "../worklets/messages.js"
+import {UpdateFormatMessage, UpdateSampleMessage} from "../worklets/worklet.js"
 
 export const handleErrors = (worklet: AudioWorkletNode) => {
     worklet.onprocessorerror = (event: ErrorEvent) => {
@@ -10,7 +10,7 @@ export const handleErrors = (worklet: AudioWorkletNode) => {
 
 export class RotaryAutomationNode extends AudioWorkletNode {
     static async build(context: AudioContext): Promise<RotaryAutomationNode> {
-        await context.audioWorklet.addModule("bin/worklets/rotary-automation.js")
+        await context.audioWorklet.addModule("bin/worklets/automation.js")
         return new RotaryAutomationNode(context)
     }
 
@@ -34,7 +34,7 @@ export class RotaryAutomationNode extends AudioWorkletNode {
 
 export class RotarySineNode extends AudioWorkletNode {
     static async build(context: AudioContext): Promise<RotarySineNode> {
-        await context.audioWorklet.addModule("bin/worklets/rotary-sine.js")
+        await context.audioWorklet.addModule("bin/worklets/sine.js")
         return new RotarySineNode(context)
     }
 
@@ -54,7 +54,7 @@ export class RotarySineNode extends AudioWorkletNode {
 
 export class RotaryPlaybackNode extends AudioWorkletNode {
     static async build(context: AudioContext): Promise<RotaryPlaybackNode> {
-        await context.audioWorklet.addModule("bin/worklets/rotary-playback.js")
+        await context.audioWorklet.addModule("bin/worklets/playback.js")
         return new RotaryPlaybackNode(context)
     }
 

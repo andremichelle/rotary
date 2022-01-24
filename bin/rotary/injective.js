@@ -11,8 +11,8 @@ export class Injective {
         switch (format.class) {
             case IdentityInjective.name:
                 return new IdentityInjective();
-            case InjectivePow.name:
-                return new InjectivePow().deserialize(format);
+            case PowInjective.name:
+                return new PowInjective().deserialize(format);
             case TShapeInjective.name:
                 return new TShapeInjective().deserialize(format);
             case CShapeInjective.name:
@@ -70,7 +70,7 @@ export class IdentityInjective extends Injective {
         return this;
     }
 }
-export class InjectivePow extends Injective {
+export class PowInjective extends Injective {
     constructor() {
         super(...arguments);
         this.range = new Linear(1.0, 16.0);
@@ -90,7 +90,7 @@ export class InjectivePow extends Injective {
         return this;
     }
     copy() {
-        const copy = new InjectivePow();
+        const copy = new PowInjective();
         copy.exponent.set(this.exponent.get());
         return copy;
     }
@@ -198,7 +198,7 @@ export class SmoothStepInjective extends Injective {
     }
 }
 InjectiveTypes.push(IdentityInjective);
-InjectiveTypes.push(InjectivePow);
+InjectiveTypes.push(PowInjective);
 InjectiveTypes.push(CShapeInjective);
 InjectiveTypes.push(TShapeInjective);
 InjectiveTypes.push(SmoothStepInjective);

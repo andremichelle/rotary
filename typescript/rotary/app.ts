@@ -149,8 +149,8 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             const p0 = 0.0
             const p1 = 0.1
 
-            const t0 = track.translatePhase(phase + p0)
-            const t1 = track.translatePhase(phase + p1)
+            const t0 = track.globalToLocal(phase + p0)
+            const t1 = track.globalToLocal(phase + p1)
 
             this.c2D.strokeStyle = "rgba(30, 240, 255, 1.0)"
             this.c2D.fillStyle = "rgba(30, 240, 255, 0.04)"
@@ -192,7 +192,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         const cos = Math.cos(angle)
         const sin = Math.sin(angle)
         this.c2D.lineWidth = 0.0
-        this.c2D.strokeStyle = "rgba(30, 240, 255, 0.5)"
+        this.c2D.strokeStyle = "rgba(30, 240, 255, 0.2)"
         this.c2D.beginPath()
         this.c2D.moveTo(cos * radiusMin, sin * radiusMin)
         this.c2D.lineTo(cos * 9999.9, sin * 9999.9)

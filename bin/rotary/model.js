@@ -1,7 +1,7 @@
 import { BoundNumericValue, EmptyIterator, GeneratorIterator, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
-import { CShapeInjective, Injective, IdentityInjective, InjectivePow, SmoothStepInjective, TShapeInjective } from "./injective.js";
+import { CShapeInjective, IdentityInjective, Injective, PowInjective, SmoothStepInjective, TShapeInjective } from "./injective.js";
 import { Colors } from "../lib/colors.js";
 export class RotaryModel {
     constructor() {
@@ -13,10 +13,6 @@ export class RotaryModel {
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
         this.loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
         ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this));
-    }
-    bindValue(property) {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this)));
-        return this.terminator.with(property);
     }
     addObserver(observer) {
         return this.observable.addObserver(observer);
@@ -100,12 +96,12 @@ export class RotaryModel {
         this.phaseOffset.set(format.phaseOffset);
         this.loopDuration.set(format.loopDuration);
         this.tracks.clear();
-        this.tracks.addAll(format.tracks.map(trackFormat => {
-            const model = new RotaryTrackModel(this);
-            model.deserialize(trackFormat);
-            return model;
-        }));
+        this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)));
         return this;
+    }
+    bindValue(property) {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this)));
+        return this.terminator.with(property);
     }
 }
 RotaryModel.MAX_TRACKS = 24;
@@ -119,7 +115,7 @@ export var Fill;
 })(Fill || (Fill = {}));
 export const MotionTypes = new Map([
     ["Linear", IdentityInjective],
-    ["Power", InjectivePow],
+    ["Power", PowInjective],
     ["CShape", CShapeInjective],
     ["TShape", TShapeInjective],
     ["SmoothStep", SmoothStepInjective]
@@ -175,11 +171,8 @@ export class RotaryTrackModel {
     removeObserver(observer) {
         return this.observable.removeObserver(observer);
     }
-    ratio(phase) {
-        throw new Error();
-    }
     test() {
-        this.phaseOffset.set(0.25);
+        this.phaseOffset.set(0.0);
         this.bend.set(0.75);
         this.frequency.set(1.0);
         this.fragments.set(2.0);
@@ -259,30 +252,44 @@ export class RotaryTrackModel {
         this.reverse.set(format.reverse);
         return this;
     }
-    translatePhase(x) {
+    globalToLocal(x) {
         const fragments = this.fragments.get();
         const mx = fragments * (this.reverse.get() ? 1.0 - x : x);
         const nx = Math.floor(mx);
         return this.frequency.get() * (this.motion.get().fx(mx - nx) + nx) / fragments + this.phaseOffset.get();
     }
-    inversePhase(y) {
+    localToGlobal(y) {
         const fragments = this.fragments.get();
         const my = fragments * (y - this.phaseOffset.get()) / this.frequency.get();
         const ny = Math.floor(my);
         const fwd = (this.motion.get().fy(my - ny) + ny) / fragments;
         return this.reverse.get() ? 1.0 - fwd : fwd;
     }
+    localToSegment(phase) {
+        const phaseIndex = Math.floor(phase);
+        const bend = this.bend.get();
+        const length = this.length.get();
+        const lengthRatio = this.lengthRatio.get();
+        const segments = this.segments.get();
+        const full = Func.tx(Func.clamp((phase - phaseIndex) / length), -bend) * segments;
+        const index = Math.floor(full);
+        const local = full - index;
+        return local < lengthRatio ? index + local / lengthRatio : -1.0;
+    }
     filterSections(p0, p1) {
+        if (p0 == p1) {
+            return EmptyIterator;
+        }
         if (this.reverse.get()) {
             const tmp = p0;
             p0 = p1;
             p1 = tmp;
         }
-        if (p0 >= p1) {
+        if (p0 > p1) {
             return EmptyIterator;
         }
-        const index = Math.floor(p0);
-        return GeneratorIterator.wrap(this.branchFilterSection(p0 - index, p1 - index, index));
+        const cycleIndex = Math.floor(p0);
+        return GeneratorIterator.wrap(this.branchFilterSection(p0 - cycleIndex, p1 - cycleIndex, cycleIndex));
     }
     *branchFilterSection(p0, p1, index) {
         console.assert(p0 >= 0.0 && p0 < 1.0, `p0(${p0}) must be positive and smaller than 1.0`);

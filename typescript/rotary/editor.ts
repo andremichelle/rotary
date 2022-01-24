@@ -12,13 +12,13 @@ import {
 import {Checkbox, Editor, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model.js"
 import {Dom} from "../dom/common.js"
-import {CShapeInjective, IdentityInjective, Injective, InjectiveType, InjectivePow, SmoothStepInjective, TShapeInjective} from "./injective.js"
+import {CShapeInjective, IdentityInjective, Injective, InjectiveType, PowInjective, SmoothStepInjective, TShapeInjective} from "./injective.js"
 
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void
 }
 
-export class PowMotionEditor implements Editor<InjectivePow> {
+export class PowMotionEditor implements Editor<PowInjective> {
     private readonly input: NumericStepperInput
 
     constructor(element: Element) {
@@ -27,7 +27,7 @@ export class PowMotionEditor implements Editor<InjectivePow> {
             PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth)
     }
 
-    with(value: InjectivePow): void {
+    with(value: PowInjective): void {
         this.input.with(value.exponent)
     }
 
@@ -170,7 +170,7 @@ export class MotionEditor implements Editor<ObservableValue<Injective<any>>> {
             this.cShapeMotionEditor.clear()
             this.tShapeMotionEditor.clear()
             this.smoothStepMotionEditor.clear()
-        } else if (motion instanceof InjectivePow) {
+        } else if (motion instanceof PowInjective) {
             this.element.setAttribute("data-motion", "pow")
             this.powMotionEditor.with(motion)
             this.cShapeMotionEditor.clear()

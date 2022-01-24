@@ -17,11 +17,11 @@ import {Func, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {
     CShapeInjective,
+    IdentityInjective,
     Injective,
     InjectiveFormat,
-    IdentityInjective,
-    InjectivePow,
     InjectiveType,
+    PowInjective,
     SmoothStepInjective,
     TShapeInjective
 } from "./injective.js"
@@ -65,11 +65,6 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
 
     constructor() {
         ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this))
-    }
-
-    bindValue(property: ObservableValue<any>): ObservableValue<any> {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this)))
-        return this.terminator.with(property)
     }
 
     addObserver(observer: Observer<RotaryModel>): Terminable {
@@ -169,12 +164,13 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         this.phaseOffset.set(format.phaseOffset)
         this.loopDuration.set(format.loopDuration)
         this.tracks.clear()
-        this.tracks.addAll(format.tracks.map(trackFormat => {
-            const model = new RotaryTrackModel(this)
-            model.deserialize(trackFormat)
-            return model
-        }))
+        this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)))
         return this
+    }
+
+    private bindValue(property: ObservableValue<any>): ObservableValue<any> {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this)))
+        return this.terminator.with(property)
     }
 }
 
@@ -184,7 +180,7 @@ export enum Fill {
 
 export const MotionTypes = new Map<string, InjectiveType>([
     ["Linear", IdentityInjective],
-    ["Power", InjectivePow],
+    ["Power", PowInjective],
     ["CShape", CShapeInjective],
     ["TShape", TShapeInjective],
     ["SmoothStep", SmoothStepInjective]
@@ -245,12 +241,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return this.observable.removeObserver(observer)
     }
 
-    ratio(phase: number): number {
-        throw new Error()
-    }
-
     test() {
-        this.phaseOffset.set(0.25)
+        this.phaseOffset.set(0.0)
         this.bend.set(0.75)
         this.frequency.set(1.0)
         this.fragments.set(2.0)
@@ -337,14 +329,14 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return this
     }
 
-    translatePhase(x: number): number {
+    globalToLocal(x: number): number {
         const fragments = this.fragments.get()
         const mx = fragments * (this.reverse.get() ? 1.0 - x : x)
         const nx = Math.floor(mx)
         return this.frequency.get() * (this.motion.get().fx(mx - nx) + nx) / fragments + this.phaseOffset.get()
     }
 
-    inversePhase(y: number): number {
+    localToGlobal(y: number): number {
         const fragments = this.fragments.get()
         const my = fragments * (y - this.phaseOffset.get()) / this.frequency.get()
         const ny = Math.floor(my)
@@ -352,17 +344,32 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return this.reverse.get() ? 1.0 - fwd : fwd
     }
 
+    localToSegment(phase: number): number {
+        const phaseIndex = Math.floor(phase)
+        const bend = this.bend.get()
+        const length = this.length.get()
+        const lengthRatio = this.lengthRatio.get()
+        const segments = this.segments.get()
+        const full = Func.tx(Func.clamp((phase - phaseIndex) / length), -bend) * segments
+        const index = Math.floor(full)
+        const local = full - index
+        return local < lengthRatio ? index + local / lengthRatio : -1.0
+    }
+
     filterSections(p0: number, p1: number): Iterator<FilterResult> {
+        if (p0 == p1) {
+            return EmptyIterator
+        }
         if (this.reverse.get()) {
             const tmp = p0
             p0 = p1
             p1 = tmp
         }
-        if (p0 >= p1) {
+        if (p0 > p1) {
             return EmptyIterator
         }
-        const index = Math.floor(p0)
-        return GeneratorIterator.wrap(this.branchFilterSection(p0 - index, p1 - index, index))
+        const cycleIndex = Math.floor(p0)
+        return GeneratorIterator.wrap(this.branchFilterSection(p0 - cycleIndex, p1 - cycleIndex, cycleIndex))
     }
 
     private* branchFilterSection(p0: number, p1: number, index: number): Generator<FilterResult, void, FilterResult> {

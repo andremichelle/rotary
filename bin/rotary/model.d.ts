@@ -34,7 +34,6 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     readonly phaseOffset: ObservableValue<any>;
     readonly loopDuration: ObservableValue<any>;
     constructor();
-    bindValue(property: ObservableValue<any>): ObservableValue<any>;
     addObserver(observer: Observer<RotaryModel>): Terminable;
     removeObserver(observer: Observer<RotaryModel>): boolean;
     randomize(random: Random): RotaryModel;
@@ -49,6 +48,7 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     terminate(): void;
     serialize(): RotaryFormat;
     deserialize(format: RotaryFormat): RotaryModel;
+    private bindValue;
 }
 export declare enum Fill {
     Flat = 0,
@@ -93,7 +93,6 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     bindValue(property: ObservableValue<any>): ObservableValue<any>;
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
-    ratio(phase: number): number;
     test(): void;
     opaque(): string;
     transparent(): string;
@@ -101,8 +100,9 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     terminate(): void;
     serialize(): RotaryTrackFormat;
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;
-    translatePhase(x: number): number;
-    inversePhase(y: number): number;
+    globalToLocal(x: number): number;
+    localToGlobal(y: number): number;
+    localToSegment(phase: number): number;
     filterSections(p0: number, p1: number): Iterator<FilterResult>;
     private branchFilterSection;
     private seekSection;

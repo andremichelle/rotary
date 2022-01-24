@@ -15,34 +15,36 @@ export class RotaryRenderer {
         let radiusMin = model.radiusMin.get();
         for (let i = 0; i < model.tracks.size(); i++) {
             const track = model.tracks.get(i);
-            RotaryRenderer.renderTrack(context, track, radiusMin, model.phaseOffset.get() - track.translatePhase(phase));
+            RotaryRenderer.renderTrack(context, track, radiusMin, model.phaseOffset.get() - track.globalToLocal(phase), true);
             radiusMin += track.width.get() + track.widthPadding.get();
         }
     }
-    static renderTrackPreview(context, model, size) {
+    static renderTrackPreview(context, trackModel, size) {
         context.save();
         context.translate(size >> 1, size >> 1);
-        const radius = 32.0 + model.width.get();
+        const radius = 32.0 + trackModel.width.get();
         const scale = size / (radius + 2.0) * 0.5;
         context.scale(scale, scale);
-        RotaryRenderer.renderTrack(context, model, 32.0, 0.0);
+        RotaryRenderer.renderTrack(context, trackModel, 32.0, 0.0);
         context.restore();
     }
-    static renderTrack(context, model, radiusStart, phase) {
-        const segments = model.segments.get();
-        const length = model.length.get();
-        const width = model.width.get();
+    static renderTrack(context, trackModel, radiusStart, phase, highlightCrossing = false) {
+        const crossingIndex = Math.floor(trackModel.localToSegment(trackModel.root.phaseOffset.get() - phase));
+        const segments = trackModel.segments.get();
+        const length = trackModel.length.get();
+        const width = trackModel.width.get();
         const r0 = radiusStart;
         const r1 = radiusStart + width;
-        const bend = model.bend.get();
-        const lengthRatio = model.lengthRatio.get();
-        for (let i = 0; i < segments; i++) {
-            const a0 = i / segments, a1 = a0 + lengthRatio / segments;
-            RotaryRenderer.renderSection(context, model, r0, r1, phase + Func.tx(a0, bend) * length, phase + Func.tx(a1, bend) * length);
+        const bend = trackModel.bend.get();
+        const lengthRatio = trackModel.lengthRatio.get();
+        for (let index = 0; index < segments; index++) {
+            context.globalAlpha = !highlightCrossing || index === crossingIndex ? 1.0 : 0.4;
+            const a0 = index / segments, a1 = a0 + lengthRatio / segments;
+            RotaryRenderer.renderSection(context, trackModel, r0, r1, phase + Func.tx(a0, bend) * length, phase + Func.tx(a1, bend) * length);
         }
-        const outline = model.outline.get();
+        const outline = trackModel.outline.get();
         if (0.0 < outline) {
-            context.strokeStyle = model.opaque();
+            context.strokeStyle = trackModel.opaque();
             context.lineWidth = outline;
             const numArcs = length < 1.0 ? segments - 1 : segments;
             for (let i = 0; i < numArcs; i++) {

@@ -37,15 +37,15 @@ export declare class IdentityInjective extends Injective<never> {
 declare interface PowData {
     exponent: number;
 }
-export declare class InjectivePow extends Injective<PowData> {
+export declare class PowInjective extends Injective<PowData> {
     private readonly range;
     readonly exponent: ObservableValue<any>;
     fx(x: number): number;
     fy(y: number): number;
     serialize(): InjectiveFormat<PowData>;
-    deserialize(format: InjectiveFormat<PowData>): InjectivePow;
-    copy(): InjectivePow;
-    randomize(random: Random): InjectivePow;
+    deserialize(format: InjectiveFormat<PowData>): PowInjective;
+    copy(): PowInjective;
+    randomize(random: Random): PowInjective;
 }
 declare interface CShapeData {
     slope: number;

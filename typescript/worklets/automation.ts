@@ -1,6 +1,6 @@
 import {Func} from "../lib/math.js"
 import {RotaryModel} from "../rotary/model.js"
-import {Message} from "./messages.js"
+import {Message} from "./worklet.js"
 
 registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
     private readonly envelopes = new Float32Array(RotaryModel.MAX_TRACKS)
@@ -31,7 +31,7 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
             const localPhase = this.phase / this.model.loopDuration.get()
             for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
                 const track = tracks.get(trackIndex)
-                const x = track.ratio(localPhase)
+                const x = track.localToSegment(localPhase)
                 const y = Func.step(this.tMin, this.tMax, x)
                 const env = this.envelopes[trackIndex]
                 this.envelopes[trackIndex] = y + this.coeff * (env - y)
