@@ -130,7 +130,7 @@ export class RotaryApp {
             const iterator = track.filterSections(t0, t1);
             while (iterator.hasNext()) {
                 const result = iterator.next();
-                this.c2D.strokeStyle = result.edge === Edge.Min ? "white" : "#888";
+                this.c2D.strokeStyle = result.edge === Edge.Start ? "white" : "#888";
                 this.c2D.beginPath();
                 this.c2D.moveTo(0, 0);
                 console.assert(t0 <= result.position && result.position <= t1, `p0: ${t0}, pos: ${result.position}, p1: ${t1}`);

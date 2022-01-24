@@ -127,8 +127,8 @@ export const MotionTypes = new Map([
 export const Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
 export var Edge;
 (function (Edge) {
-    Edge[Edge["Min"] = 0] = "Min";
-    Edge[Edge["Max"] = 1] = "Max";
+    Edge[Edge["Start"] = 0] = "Start";
+    Edge[Edge["End"] = 1] = "End";
 })(Edge || (Edge = {}));
 export class FilterResult {
     constructor(edge, index, position) {
@@ -311,11 +311,11 @@ export class RotaryTrackModel {
         let seekMin = index * step;
         while (seekMin < t1) {
             if (seekMin >= t0) {
-                yield new FilterResult(this.reverse.get() ? Edge.Max : Edge.Min, index, Func.tx(seekMin / length, bend) * length + offset);
+                yield new FilterResult(this.reverse.get() ? Edge.End : Edge.Start, index, Func.tx(seekMin / length, bend) * length + offset);
             }
             const seekMax = (index + lengthRatio) * step;
             if (seekMax >= t0 && seekMax < t1) {
-                yield new FilterResult(this.reverse.get() ? Edge.Min : Edge.Max, index, Func.tx(seekMax / length, bend) * length + offset);
+                yield new FilterResult(this.reverse.get() ? Edge.Start : Edge.End, index, Func.tx(seekMax / length, bend) * length + offset);
             }
             seekMin = ++index * step;
         }

@@ -194,7 +194,7 @@ export const Fills = new Map<string, Fill>(
     [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
 
 export enum Edge {
-    Min, Max
+    Start, End
 }
 
 export class FilterResult {
@@ -393,12 +393,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         let seekMin = index * step
         while (seekMin < t1) {
             if (seekMin >= t0) {
-                yield new FilterResult(this.reverse.get() ? Edge.Max : Edge.Min, index,
+                yield new FilterResult(this.reverse.get() ? Edge.End : Edge.Start, index,
                     Func.tx(seekMin / length, bend) * length + offset)
             }
             const seekMax = (index + lengthRatio) * step
             if (seekMax >= t0 && seekMax < t1) {
-                yield new FilterResult(this.reverse.get() ? Edge.Min : Edge.Max, index,
+                yield new FilterResult(this.reverse.get() ? Edge.Start : Edge.End, index,
                     Func.tx(seekMax / length, bend) * length + offset)
             }
             seekMin = ++index * step

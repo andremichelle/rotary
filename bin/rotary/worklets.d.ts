@@ -1,4 +1,5 @@
 import { RotaryModel } from "./model.js";
+export declare const handleErrors: (worklet: AudioWorkletNode) => void;
 export declare class RotaryAutomationNode extends AudioWorkletNode {
     static build(context: AudioContext): Promise<RotaryAutomationNode>;
     constructor(context: AudioContext);

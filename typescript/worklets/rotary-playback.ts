@@ -40,7 +40,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 const iterator = track.filterSections(t0, t1)
                 while (iterator.hasNext()) {
                     const result: FilterResult = iterator.next()
-                    if (result.edge === Edge.Max) {
+                    if (result.edge === Edge.End) {
                         continue
                     }
                     const frameIndex = ((track.inversePhase(result.position) - this.phase) * loopInFrames) | 0
