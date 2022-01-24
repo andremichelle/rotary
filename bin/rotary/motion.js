@@ -111,7 +111,7 @@ export class CShapeMotion extends Motion {
         return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5;
     }
     inverse(x) {
-        throw new Error();
+        return Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5) / this.c, 1.0 / this.o) + 0.5;
     }
     serialize() {
         return super.pack({ slope: this.slope.get() });
@@ -170,10 +170,10 @@ export class SmoothStepMotion extends Motion {
         this.edge1 = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
     }
     map(x) {
-        return Func.step(this.edge0.get(), this.edge1.get(), x);
+        return Func.smoothStep(Func.step(this.edge0.get(), this.edge1.get(), x));
     }
-    inverse(x) {
-        return Math.min(1.0, Math.max(0.0, this.edge0.get() + x * (this.edge1.get() - this.edge0.get())));
+    inverse(y) {
+        return Math.min(1.0, Math.max(0.0, this.edge0.get() + Func.smoothStepInverse(y) * (this.edge1.get() - this.edge0.get())));
     }
     deserialize(format) {
         const data = this.unpack(format);
@@ -198,5 +198,7 @@ export class SmoothStepMotion extends Motion {
 }
 MotionTypes.push(LinearMotion);
 MotionTypes.push(PowMotion);
+MotionTypes.push(CShapeMotion);
 MotionTypes.push(TShapeMotion);
+MotionTypes.push(SmoothStepMotion);
 //# sourceMappingURL=motion.js.map

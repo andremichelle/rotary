@@ -87,7 +87,7 @@ export declare class SmoothStepMotion extends Motion<SmoothStepData> {
     readonly edge1: ObservableValue<any>;
     constructor();
     map(x: number): number;
-    inverse(x: number): number;
+    inverse(y: number): number;
     deserialize(format: MotionFormat<SmoothStepData>): SmoothStepMotion;
     serialize(): MotionFormat<SmoothStepData>;
     copy(): SmoothStepMotion;

@@ -53,6 +53,11 @@ export class Func {
         return x * x * (3.0 - 2.0 * x)
     }
 
+    // https://www.shadertoy.com/view/MsSBRh
+    static smoothStepInverse(y: number) {
+        return 0.5 - Math.sin(Math.asin(1.0 - 2.0 * y) / 3.0)
+    }
+
     static clamp(x: number): number {
         return Math.max(0.0, Math.min(1.0, x))
     }

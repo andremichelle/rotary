@@ -174,11 +174,10 @@ export class CShapeMotion extends Motion<CShapeData> {
     map(x: number): number {
         // https://www.desmos.com/calculator/bpbuua3l0j
         return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5
-        // y = c * sign(x - 0.5) * pow(abs(x - 0.5), o) + 0.5
     }
 
     inverse(x: number): number {
-        throw new Error()
+        return Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5) / this.c, 1.0 / this.o) + 0.5
     }
 
     serialize(): MotionFormat<CShapeData> {
@@ -263,11 +262,11 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
     }
 
     map(x: number): number {
-        return Func.step(this.edge0.get(), this.edge1.get(), x)
+        return Func.smoothStep(Func.step(this.edge0.get(), this.edge1.get(), x))
     }
 
-    inverse(x: number): number {
-        return Math.min(1.0, Math.max(0.0, this.edge0.get() + x * (this.edge1.get() - this.edge0.get())))
+    inverse(y: number): number {
+        return Math.min(1.0, Math.max(0.0, this.edge0.get() + Func.smoothStepInverse(y) * (this.edge1.get() - this.edge0.get())))
     }
 
     deserialize(format: MotionFormat<SmoothStepData>): SmoothStepMotion {
@@ -297,6 +296,6 @@ export class SmoothStepMotion extends Motion<SmoothStepData> {
 
 MotionTypes.push(LinearMotion)
 MotionTypes.push(PowMotion)
-// MotionTypes.push(CShapeMotion)
+MotionTypes.push(CShapeMotion)
 MotionTypes.push(TShapeMotion)
-// MotionTypes.push(SmoothStepMotion)
+MotionTypes.push(SmoothStepMotion)

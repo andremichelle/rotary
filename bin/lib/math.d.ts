@@ -17,6 +17,7 @@ export declare class Mulberry32 extends Random {
 }
 export declare class Func {
     static smoothStep(x: number): number;
+    static smoothStepInverse(y: number): number;
     static clamp(x: number): number;
     static mod(x: number): number;
     static switchSign(x: number, neg: boolean): number;

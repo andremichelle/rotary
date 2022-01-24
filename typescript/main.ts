@@ -1,4 +1,4 @@
-import {Func, Mulberry32, Random} from "./lib/math.js"
+import {Mulberry32, Random} from "./lib/math.js"
 import {RotaryModel} from "./rotary/model.js"
 import {RotaryApp} from "./rotary/app.js"
 import {installApplicationMenu} from "./rotary/env.js"
@@ -28,7 +28,7 @@ window.onunhandledrejection = (event) => {
 
 (async () => {
     const random: Random = new Mulberry32(0xFFFFFFFF * Math.random())
-    const model = new RotaryModel().randomize(random)
+    const model = new RotaryModel().test()//randomize(random)
     const app = RotaryApp.create(model)
 
     installApplicationMenu(document.querySelector("nav#app-menu"), model, app)
@@ -62,13 +62,13 @@ window.onunhandledrejection = (event) => {
 
 
 /*
-const fwd = x => Math.pow(x, 6.0)
-const inv = x => Math.pow(x, 1.0 / 6.0)
+const m = new CShapeMotion()
+const fwd = x => m.map(x)
+const inv = x => m.inverse(x)
 const input = 1134520.512314
 const fragments = 23.0
 const frequency = 71.0
 const delta = 123.25
 const trans = Func.stairsInverse(inv, input, fragments, frequency, delta)
 const output = Func.stairsMap(fwd, trans, fragments, frequency, delta)
-console.log(`input: ${input}, trans: ${trans}, output: ${output}, io: ${Math.abs(output - input) < 1e-7}`)
-*/
+console.log(`input: ${input}, trans: ${trans}, output: ${output}, io: ${Math.abs(output - input) < 1e-7}`)*/
