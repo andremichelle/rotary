@@ -9,8 +9,8 @@ export class Injective {
     }
     static from(format) {
         switch (format.class) {
-            case IdentityInjective.name:
-                return new IdentityInjective();
+            case InjectiveIdentity.name:
+                return new InjectiveIdentity();
             case InjectivePow.name:
                 return new InjectivePow().deserialize(format);
             case TShapeInjective.name:
@@ -49,7 +49,7 @@ export class Injective {
         this.terminator.terminate();
     }
 }
-export class IdentityInjective extends Injective {
+export class InjectiveIdentity extends Injective {
     fx(x) {
         return x;
     }
@@ -64,7 +64,7 @@ export class IdentityInjective extends Injective {
         return this;
     }
     copy() {
-        return new IdentityInjective();
+        return new InjectiveIdentity();
     }
     randomize(random) {
         return this;
@@ -197,9 +197,9 @@ export class SmoothStepInjective extends Injective {
         return this;
     }
 }
-InjectiveTypes.push(IdentityInjective);
+InjectiveTypes.push(InjectiveIdentity);
 InjectiveTypes.push(InjectivePow);
 InjectiveTypes.push(CShapeInjective);
 InjectiveTypes.push(TShapeInjective);
 InjectiveTypes.push(SmoothStepInjective);
-//# sourceMappingURL=injective.js.map
+//# sourceMappingURL=identityInjective.js.map

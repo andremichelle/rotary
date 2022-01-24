@@ -26,13 +26,13 @@ export declare abstract class Injective<DATA extends Data> implements Observable
     bindValue(property: ObservableValue<any>): ObservableValue<any>;
     terminate(): void;
 }
-export declare class IdentityInjective extends Injective<never> {
+export declare class InjectiveIdentity extends Injective<never> {
     fx(x: number): number;
     fy(y: number): number;
     serialize(): InjectiveFormat<never>;
-    deserialize(format: InjectiveFormat<never>): IdentityInjective;
-    copy(): IdentityInjective;
-    randomize(random: Random): IdentityInjective;
+    deserialize(format: InjectiveFormat<never>): InjectiveIdentity;
+    copy(): InjectiveIdentity;
+    randomize(random: Random): InjectiveIdentity;
 }
 declare interface PowData {
     exponent: number;

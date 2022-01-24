@@ -12,7 +12,7 @@ import {
 import {Checkbox, Editor, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model.js"
 import {Dom} from "../dom/common.js"
-import {CShapeInjective, InjectiveIdentity, Injective, InjectiveType, InjectivePow, SmoothStepInjective, TShapeInjective} from "./injective.js"
+import {CShapeInjective, IdentityInjective, Injective, InjectiveType, InjectivePow, SmoothStepInjective, TShapeInjective} from "./injective.js"
 
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void
@@ -164,7 +164,7 @@ export class MotionEditor implements Editor<ObservableValue<Injective<any>>> {
     private updateMotionType(motion: Injective<any>): void {
         const motionType: InjectiveType = motion.constructor as InjectiveType
         this.motionTypeValue.set(motionType)
-        if (motion instanceof InjectiveIdentity) {
+        if (motion instanceof IdentityInjective) {
             this.element.setAttribute("data-motion", "linear")
             this.powMotionEditor.clear()
             this.cShapeMotionEditor.clear()
@@ -212,6 +212,7 @@ export class RotaryTrackEditor implements Terminable {
     private readonly phaseOffset: NumericStepperInput
     private readonly bend: NumericStepperInput
     private readonly frequency: NumericStepperInput
+    private readonly fragments: NumericStepperInput
     private readonly reverse: Checkbox
 
     subject: Option<RotaryTrackModel> = Options.None
@@ -238,6 +239,8 @@ export class RotaryTrackEditor implements Terminable {
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
         this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"),
             PrintMapping.integer("x"), NumericStepper.Integer))
+        this.fragments = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='fragments']"),
+            PrintMapping.integer("x"), NumericStepper.Integer))
         this.reverse = this.terminator.with(new Checkbox(parentNode.querySelector("input[data-parameter='reverse']")))
 
         this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
@@ -259,6 +262,7 @@ export class RotaryTrackEditor implements Terminable {
         this.phaseOffset.with(model.phaseOffset)
         this.bend.with(model.bend)
         this.frequency.with(model.frequency)
+        this.fragments.with(model.fragments)
         this.reverse.with(model.reverse)
         this.subject = Options.valueOf(model)
     }
@@ -277,6 +281,7 @@ export class RotaryTrackEditor implements Terminable {
         this.phaseOffset.clear()
         this.bend.clear()
         this.frequency.clear()
+        this.fragments.clear()
         this.reverse.clear()
     }
 

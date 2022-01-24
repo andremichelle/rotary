@@ -25,8 +25,8 @@ const InjectiveTypes: InjectiveType[] = []
 export abstract class Injective<DATA extends Data> implements Observable<Injective<DATA>>, Serializer<InjectiveFormat<DATA>>, Terminable {
     static from(format: InjectiveFormat<any>): Injective<any> {
         switch (format.class) {
-            case InjectiveIdentity.name:
-                return new InjectiveIdentity()
+            case IdentityInjective.name:
+                return new IdentityInjective()
             case InjectivePow.name:
                 return new InjectivePow().deserialize(format)
             case TShapeInjective.name:
@@ -88,7 +88,7 @@ export abstract class Injective<DATA extends Data> implements Observable<Injecti
     }
 }
 
-export class InjectiveIdentity extends Injective<never> {
+export class IdentityInjective extends Injective<never> {
     fx(x: number): number {
         return x
     }
@@ -101,16 +101,16 @@ export class InjectiveIdentity extends Injective<never> {
         return super.pack()
     }
 
-    deserialize(format: InjectiveFormat<never>): InjectiveIdentity {
+    deserialize(format: InjectiveFormat<never>): IdentityInjective {
         super.unpack(format)
         return this
     }
 
-    copy(): InjectiveIdentity {
-        return new InjectiveIdentity()
+    copy(): IdentityInjective {
+        return new IdentityInjective()
     }
 
-    randomize(random: Random): InjectiveIdentity {
+    randomize(random: Random): IdentityInjective {
         return this
     }
 }
@@ -296,7 +296,7 @@ export class SmoothStepInjective extends Injective<SmoothStepData> {
     }
 }
 
-InjectiveTypes.push(InjectiveIdentity)
+InjectiveTypes.push(IdentityInjective)
 InjectiveTypes.push(InjectivePow)
 InjectiveTypes.push(CShapeInjective)
 InjectiveTypes.push(TShapeInjective)

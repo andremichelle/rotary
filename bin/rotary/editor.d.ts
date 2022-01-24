@@ -67,6 +67,7 @@ export declare class RotaryTrackEditor implements Terminable {
     private readonly phaseOffset;
     private readonly bend;
     private readonly frequency;
+    private readonly fragments;
     private readonly reverse;
     subject: Option<RotaryTrackModel>;
     constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);

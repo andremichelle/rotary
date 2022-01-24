@@ -2,7 +2,7 @@ import { NumericStepper, ObservableValueImpl, ObservableValueVoid, Options, Prin
 import { Checkbox, NumericInput, NumericStepperInput, SelectInput } from "../dom/inputs.js";
 import { Fills, MotionTypes } from "./model.js";
 import { Dom } from "../dom/common.js";
-import { CShapeInjective, InjectiveIdentity, InjectivePow, SmoothStepInjective, TShapeInjective } from "./injective.js";
+import { CShapeInjective, IdentityInjective, InjectivePow, SmoothStepInjective, TShapeInjective } from "./injective.js";
 export class PowMotionEditor {
     constructor(element) {
         this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='pow'][data-parameter='exponent']"), PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth);
@@ -101,7 +101,7 @@ export class MotionEditor {
     updateMotionType(motion) {
         const motionType = motion.constructor;
         this.motionTypeValue.set(motionType);
-        if (motion instanceof InjectiveIdentity) {
+        if (motion instanceof IdentityInjective) {
             this.element.setAttribute("data-motion", "linear");
             this.powMotionEditor.clear();
             this.cShapeMotionEditor.clear();
@@ -155,6 +155,7 @@ export class RotaryTrackEditor {
         this.phaseOffset = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='phase-offset']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
         this.bend = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='bend']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
         this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"), PrintMapping.integer("x"), NumericStepper.Integer));
+        this.fragments = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='fragments']"), PrintMapping.integer("x"), NumericStepper.Integer));
         this.reverse = this.terminator.with(new Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
         this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault();
@@ -174,6 +175,7 @@ export class RotaryTrackEditor {
         this.phaseOffset.with(model.phaseOffset);
         this.bend.with(model.bend);
         this.frequency.with(model.frequency);
+        this.fragments.with(model.fragments);
         this.reverse.with(model.reverse);
         this.subject = Options.valueOf(model);
     }
@@ -191,6 +193,7 @@ export class RotaryTrackEditor {
         this.phaseOffset.clear();
         this.bend.clear();
         this.frequency.clear();
+        this.fragments.clear();
         this.reverse.clear();
     }
     terminate() {

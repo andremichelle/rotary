@@ -19,7 +19,7 @@ import {
     CShapeInjective,
     Injective,
     InjectiveFormat,
-    InjectiveIdentity,
+    IdentityInjective,
     InjectivePow,
     InjectiveType,
     SmoothStepInjective,
@@ -183,7 +183,7 @@ export enum Fill {
 }
 
 export const MotionTypes = new Map<string, InjectiveType>([
-    ["Linear", InjectiveIdentity],
+    ["Linear", IdentityInjective],
     ["Power", InjectivePow],
     ["CShape", CShapeInjective],
     ["TShape", TShapeInjective],
@@ -214,7 +214,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0))
     readonly fill = this.bindValue(new ObservableValueImpl<Fill>(Fill.Flat))
     readonly rgb = this.bindValue(new ObservableValueImpl(<number>(0xFFFFFF)))
-    readonly motion: ObservableValue<Injective<any>> = this.bindValue(new ObservableValueImpl<Injective<any>>(new InjectiveIdentity()))
+    readonly motion: ObservableValue<Injective<any>> = this.bindValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
     readonly bend = this.bindValue(new BoundNumericValue(Linear.Bipolar, 0.0))
     readonly frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
@@ -250,16 +250,16 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     }
 
     test() {
-        this.phaseOffset.set(0.0)
+        this.phaseOffset.set(0.25)
         this.bend.set(0.75)
         this.frequency.set(1.0)
-        this.fragments.set(1.0)
+        this.fragments.set(2.0)
         this.reverse.set(false)
         this.length.set(1.0)
         this.lengthRatio.set(0.125)
         this.outline.set(0.0)
         this.segments.set(16)
-        this.motion.set(new InjectiveIdentity())
+        this.motion.set(new SmoothStepInjective())
         this.width.set(128)
         this.fill.set(Fill.Flat)
     }
@@ -291,6 +291,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.phaseOffset.set(Math.floor(random.nextDouble(0.0, 4.0)) * 0.25)
         this.bend.set(random.nextDouble(-.5, .5))
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)))
+        this.fragments.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.reverse.set(random.nextBoolean())
         return this
     }
@@ -338,16 +339,16 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     translatePhase(x: number): number {
         const fragments = this.fragments.get()
-        const mx = fragments * (this.reverse.get() ? 1.0 - x : x) + this.phaseOffset.get()
+        const mx = fragments * (this.reverse.get() ? 1.0 - x : x)
         const nx = Math.floor(mx)
-        return this.frequency.get() * (this.motion.get().fx(mx - nx) + nx) / fragments
+        return this.frequency.get() * (this.motion.get().fx(mx - nx) + nx) / fragments + this.phaseOffset.get()
     }
 
     inversePhase(y: number): number {
         const fragments = this.fragments.get()
-        const my = fragments * y / this.frequency.get()
+        const my = fragments * (y - this.phaseOffset.get()) / this.frequency.get()
         const ny = Math.floor(my)
-        const fwd = (this.motion.get().fy(my - ny) + ny) / fragments - this.phaseOffset.get()
+        const fwd = (this.motion.get().fy(my - ny) + ny) / fragments
         return this.reverse.get() ? 1.0 - fwd : fwd
     }
 
