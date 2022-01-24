@@ -69,7 +69,6 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 outR[frameIndex] = r
             }
             this.phase += RenderQuantum / loopInFrames
-            this.phase -= Math.floor(this.phase)
             return true
         }
     }

@@ -1,7 +1,7 @@
 import { BoundNumericValue, EmptyIterator, GeneratorIterator, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
-import { CShapeMotion, LinearMotion, Motion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
+import { CShapeInjective, Injective, InjectiveIdentity, InjectivePow, SmoothStepInjective, TShapeInjective } from "./injective.js";
 import { Colors } from "../lib/colors.js";
 export class RotaryModel {
     constructor() {
@@ -118,11 +118,11 @@ export var Fill;
     Fill[Fill["Negative"] = 4] = "Negative";
 })(Fill || (Fill = {}));
 export const MotionTypes = new Map([
-    ["Linear", LinearMotion],
-    ["Power", PowMotion],
-    ["CShape", CShapeMotion],
-    ["TShape", TShapeMotion],
-    ["SmoothStep", SmoothStepMotion]
+    ["Linear", InjectiveIdentity],
+    ["Power", InjectivePow],
+    ["CShape", CShapeInjective],
+    ["TShape", TShapeInjective],
+    ["SmoothStep", SmoothStepInjective]
 ]);
 export const Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
 export var Edge;
@@ -150,7 +150,7 @@ export class RotaryTrackModel {
         this.outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0));
         this.fill = this.bindValue(new ObservableValueImpl(Fill.Flat));
         this.rgb = this.bindValue(new ObservableValueImpl((0xFFFFFF)));
-        this.motion = this.bindValue(new ObservableValueImpl(new LinearMotion()));
+        this.motion = this.bindValue(new ObservableValueImpl(new InjectiveIdentity()));
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0));
         this.bend = this.bindValue(new BoundNumericValue(Linear.Bipolar, 0.0));
         this.frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
@@ -183,12 +183,12 @@ export class RotaryTrackModel {
         this.bend.set(0.75);
         this.frequency.set(1.0);
         this.fragments.set(1.0);
-        this.reverse.set(false);
+        this.reverse.set(true);
         this.length.set(1.0);
         this.lengthRatio.set(0.125);
         this.outline.set(0.0);
         this.segments.set(16);
-        this.motion.set(new SmoothStepMotion());
+        this.motion.set(new CShapeInjective());
         this.width.set(128);
         this.fill.set(Fill.Flat);
     }
@@ -213,7 +213,7 @@ export class RotaryTrackModel {
         this.lengthRatio.set(lengthRatio);
         this.outline.set(fill == Fill.Stroke || fill === Fill.Flat && random.nextBoolean() ? 1 : 0);
         this.fill.set(fill);
-        this.motion.set(Motion.random(random));
+        this.motion.set(Injective.random(random));
         this.phaseOffset.set(Math.floor(random.nextDouble(0.0, 4.0)) * 0.25);
         this.bend.set(random.nextDouble(-.5, .5));
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)));
@@ -250,7 +250,7 @@ export class RotaryTrackModel {
         this.outline.set(format.outline);
         this.fill.set(format.fill);
         this.rgb.set(format.rgb);
-        this.motion.set(Motion.from(format.motion));
+        this.motion.set(Injective.from(format.motion));
         this.phaseOffset.set(format.phaseOffset);
         this.bend.set(format.bend);
         this.frequency.set(format.frequency);
@@ -260,17 +260,23 @@ export class RotaryTrackModel {
     }
     translatePhase(x) {
         const fragments = this.fragments.get();
-        const mx = fragments * x;
+        const mx = fragments * (this.reverse.get() ? 1.0 - x : x);
         const nx = Math.floor(mx);
-        return this.frequency.get() * (this.motion.get().map(mx - nx) + nx) / fragments;
+        return this.frequency.get() * (this.motion.get().fx(mx - nx) + nx) / fragments;
     }
-    inversePhase(x) {
+    inversePhase(y) {
         const fragments = this.fragments.get();
-        const mx = fragments * x / this.frequency.get();
-        const nx = Math.floor(mx);
-        return (this.motion.get().inverse(mx - nx) + nx) / fragments;
+        const my = fragments * y / this.frequency.get();
+        const ny = Math.floor(my);
+        const fwd = (this.motion.get().fy(my - ny) + ny) / fragments;
+        return this.reverse.get() ? 1.0 - fwd : fwd;
     }
     filterSections(p0, p1) {
+        if (this.reverse.get()) {
+            const tmp = p0;
+            p0 = p1;
+            p1 = tmp;
+        }
         if (p0 >= p1) {
             return EmptyIterator;
         }
@@ -305,11 +311,11 @@ export class RotaryTrackModel {
         let seekMin = index * step;
         while (seekMin < t1) {
             if (seekMin >= t0) {
-                yield new FilterResult(Edge.Min, index, Func.tx(seekMin / length, bend) * length + offset);
+                yield new FilterResult(this.reverse.get() ? Edge.Max : Edge.Min, index, Func.tx(seekMin / length, bend) * length + offset);
             }
             const seekMax = (index + lengthRatio) * step;
             if (seekMax >= t0 && seekMax < t1) {
-                yield new FilterResult(Edge.Max, index, Func.tx(seekMax / length, bend) * length + offset);
+                yield new FilterResult(this.reverse.get() ? Edge.Min : Edge.Max, index, Func.tx(seekMax / length, bend) * length + offset);
             }
             seekMin = ++index * step;
         }

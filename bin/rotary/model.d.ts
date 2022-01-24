@@ -1,6 +1,6 @@
 import { Iterator, Observable, ObservableCollection, ObservableValue, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
-import { Motion, MotionFormat, MotionType } from "./motion.js";
+import { Injective, InjectiveFormat, InjectiveType } from "./injective.js";
 export declare interface RotaryFormat {
     radiusMin: number;
     exportSize: number;
@@ -17,7 +17,7 @@ export declare interface RotaryTrackFormat {
     outline: number;
     fill: number;
     rgb: number;
-    motion: MotionFormat<any>;
+    motion: InjectiveFormat<any>;
     phaseOffset: number;
     bend: number;
     fragments: number;
@@ -57,7 +57,7 @@ export declare enum Fill {
     Positive = 3,
     Negative = 4
 }
-export declare const MotionTypes: Map<string, MotionType>;
+export declare const MotionTypes: Map<string, InjectiveType>;
 export declare const Fills: Map<string, Fill>;
 export declare enum Edge {
     Min = 0,
@@ -81,7 +81,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly outline: ObservableValue<any>;
     readonly fill: ObservableValue<any>;
     readonly rgb: ObservableValue<any>;
-    readonly motion: ObservableValue<Motion<any>>;
+    readonly motion: ObservableValue<Injective<any>>;
     readonly phaseOffset: ObservableValue<any>;
     readonly bend: ObservableValue<any>;
     readonly frequency: ObservableValue<any>;
@@ -102,7 +102,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     serialize(): RotaryTrackFormat;
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;
     translatePhase(x: number): number;
-    inversePhase(x: number): number;
+    inversePhase(y: number): number;
     filterSections(p0: number, p1: number): Iterator<FilterResult>;
     private branchFilterSection;
     private seekSection;

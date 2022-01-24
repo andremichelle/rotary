@@ -56,18 +56,22 @@ export class Func {
         t *= 1.0 - 1e-3;
         return t < 0.0 ? (t * x + x) / (t * x + 1.0) : x / (t * x - t + 1.0);
     }
+    static ty(y, t) {
+        return Func.tx(y, -t);
+    }
     static step(edge0, edge1, x) {
         return Math.min(1.0, Math.max(0.0, (x - edge0) / (edge1 - edge0)));
     }
-    static stairsMap(fx, x, fragments = 1.0, frequency = 1.0, delta = 0.0) {
-        const mx = fragments * x;
+    static stairsMap(fx, x, fragments = 1.0, frequency = 1.0, delta = 0.0, reverse = false) {
+        const mx = fragments * (reverse ? 1.0 - x : x);
         const nx = Math.floor(mx);
         return frequency * (fx(mx - nx) + nx) / fragments + delta;
     }
-    static stairsInverse(fx, x, fragments = 1.0, frequency = 1.0, delta = 0.0) {
-        const mx = fragments * (x - delta) / frequency;
-        const nx = Math.floor(mx);
-        return (fx(mx - nx) + nx) / fragments;
+    static stairsInverse(fy, y, fragments = 1.0, frequency = 1.0, delta = 0.0, reverse = false) {
+        const my = fragments * (y - delta) / frequency;
+        const ny = Math.floor(my);
+        const result = (fy(my - ny) + ny) / fragments;
+        return reverse ? 1.0 - result : result;
     }
 }
 //# sourceMappingURL=math.js.map

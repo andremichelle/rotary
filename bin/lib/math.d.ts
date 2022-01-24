@@ -22,7 +22,8 @@ export declare class Func {
     static mod(x: number): number;
     static switchSign(x: number, neg: boolean): number;
     static tx(x: number, t: number): number;
+    static ty(y: number, t: number): number;
     static step(edge0: number, edge1: number, x: number): number;
-    static stairsMap(fx: (x: number) => number, x: number, fragments?: number, frequency?: number, delta?: number): number;
-    static stairsInverse(fx: (x: number) => number, x: number, fragments?: number, frequency?: number, delta?: number): number;
+    static stairsMap(fx: (x: number) => number, x: number, fragments?: number, frequency?: number, delta?: number, reverse?: boolean): number;
+    static stairsInverse(fy: (y: number) => number, y: number, fragments?: number, frequency?: number, delta?: number, reverse?: boolean): number;
 }

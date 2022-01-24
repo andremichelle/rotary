@@ -78,20 +78,26 @@ export class Func {
         return t < 0.0 ? (t * x + x) / (t * x + 1.0) : x / (t * x - t + 1.0)
     }
 
+    static ty(y: number, t: number) {
+        // noinspection JSSuspiciousNameCombination
+        return Func.tx(y, -t)
+    }
+
     static step(edge0: number, edge1: number, x: number) {
         return Math.min(1.0, Math.max(0.0, (x - edge0) / (edge1 - edge0)))
     }
 
     // https://www.desmos.com/calculator/dp5eq7gkbu
-    static stairsMap(fx: (x: number) => number, x: number, fragments: number = 1.0, frequency: number = 1.0, delta: number = 0.0): number {
-        const mx = fragments * x
+    static stairsMap(fx: (x: number) => number, x: number, fragments: number = 1.0, frequency: number = 1.0, delta: number = 0.0, reverse: boolean = false): number {
+        const mx = fragments * (reverse ? 1.0 - x : x)
         const nx = Math.floor(mx)
         return frequency * (fx(mx - nx) + nx) / fragments + delta
     }
 
-    static stairsInverse(fx: (x: number) => number, x: number, fragments: number = 1.0, frequency: number = 1.0, delta: number = 0.0): number {
-        const mx = fragments * (x - delta) / frequency
-        const nx = Math.floor(mx)
-        return (fx(mx - nx) + nx) / fragments
+    static stairsInverse(fy: (y: number) => number, y: number, fragments: number = 1.0, frequency: number = 1.0, delta: number = 0.0, reverse: boolean = false): number {
+        const my = fragments * (y - delta) / frequency
+        const ny = Math.floor(my)
+        const result = (fy(my - ny) + ny) / fragments
+        return reverse ? 1.0 - result : result
     }
 }

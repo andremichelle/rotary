@@ -5,7 +5,6 @@ import {Message} from "./messages.js"
 registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
     private readonly envelopes = new Float32Array(RotaryModel.MAX_TRACKS)
     private readonly model: RotaryModel = new RotaryModel()
-    private loopInSeconds: number = 1.0
     private coeff: number = NaN
     private phase: number = 0.0
     private tMin: number = 0.00
@@ -18,8 +17,6 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
             const data = event.data as Message
             if (data.type === "format") {
                 this.model.deserialize(data.format)
-            } else if (data.type === "loop-duration") {
-                this.loopInSeconds = data.seconds
             }
         }
         this.updateEnvelope(0.005)
@@ -31,7 +28,7 @@ registerProcessor("rotary-automation", class extends AudioWorkletProcessor {
         const tracks = this.model.tracks
         const phaseIncr = 1.0 / sampleRate
         for (let frameIndex = 0; frameIndex < 128; frameIndex++) {
-            const localPhase = this.phase / this.loopInSeconds
+            const localPhase = this.phase / this.model.loopDuration.get()
             for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
                 const track = tracks.get(trackIndex)
                 const x = track.ratio(localPhase)

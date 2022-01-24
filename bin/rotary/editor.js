@@ -2,7 +2,7 @@ import { NumericStepper, ObservableValueImpl, ObservableValueVoid, Options, Prin
 import { Checkbox, NumericInput, NumericStepperInput, SelectInput } from "../dom/inputs.js";
 import { Fills, MotionTypes } from "./model.js";
 import { Dom } from "../dom/common.js";
-import { CShapeMotion, LinearMotion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
+import { CShapeInjective, InjectiveIdentity, InjectivePow, SmoothStepInjective, TShapeInjective } from "./injective.js";
 export class PowMotionEditor {
     constructor(element) {
         this.input = new NumericStepperInput(element.querySelector("fieldset[data-motion='pow'][data-parameter='exponent']"), PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth);
@@ -101,35 +101,35 @@ export class MotionEditor {
     updateMotionType(motion) {
         const motionType = motion.constructor;
         this.motionTypeValue.set(motionType);
-        if (motion instanceof LinearMotion) {
+        if (motion instanceof InjectiveIdentity) {
             this.element.setAttribute("data-motion", "linear");
             this.powMotionEditor.clear();
             this.cShapeMotionEditor.clear();
             this.tShapeMotionEditor.clear();
             this.smoothStepMotionEditor.clear();
         }
-        else if (motion instanceof PowMotion) {
+        else if (motion instanceof InjectivePow) {
             this.element.setAttribute("data-motion", "pow");
             this.powMotionEditor.with(motion);
             this.cShapeMotionEditor.clear();
             this.tShapeMotionEditor.clear();
             this.smoothStepMotionEditor.clear();
         }
-        else if (motion instanceof CShapeMotion) {
+        else if (motion instanceof CShapeInjective) {
             this.element.setAttribute("data-motion", "cshape");
             this.powMotionEditor.clear();
             this.cShapeMotionEditor.with(motion);
             this.tShapeMotionEditor.clear();
             this.smoothStepMotionEditor.clear();
         }
-        else if (motion instanceof TShapeMotion) {
+        else if (motion instanceof TShapeInjective) {
             this.element.setAttribute("data-motion", "tshape");
             this.powMotionEditor.clear();
             this.tShapeMotionEditor.with(motion);
             this.cShapeMotionEditor.clear();
             this.smoothStepMotionEditor.clear();
         }
-        else if (motion instanceof SmoothStepMotion) {
+        else if (motion instanceof SmoothStepInjective) {
             this.element.setAttribute("data-motion", "smoothstep");
             this.powMotionEditor.clear();
             this.tShapeMotionEditor.clear();

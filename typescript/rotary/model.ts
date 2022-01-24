@@ -16,15 +16,15 @@ import {
 import {Func, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {
-    CShapeMotion,
-    LinearMotion,
-    Motion,
-    MotionFormat,
-    MotionType,
-    PowMotion,
-    SmoothStepMotion,
-    TShapeMotion
-} from "./motion.js"
+    CShapeInjective,
+    Injective,
+    InjectiveFormat,
+    InjectiveIdentity,
+    InjectivePow,
+    InjectiveType,
+    SmoothStepInjective,
+    TShapeInjective
+} from "./injective.js"
 import {Colors} from "../lib/colors.js"
 
 export declare interface RotaryFormat {
@@ -44,7 +44,7 @@ export declare interface RotaryTrackFormat {
     outline: number
     fill: number
     rgb: number
-    motion: MotionFormat<any>
+    motion: InjectiveFormat<any>
     phaseOffset: number
     bend: number
     fragments: number
@@ -182,12 +182,12 @@ export enum Fill {
     Flat, Stroke, Line, Positive, Negative
 }
 
-export const MotionTypes = new Map<string, MotionType>([
-    ["Linear", LinearMotion],
-    ["Power", PowMotion],
-    ["CShape", CShapeMotion],
-    ["TShape", TShapeMotion],
-    ["SmoothStep", SmoothStepMotion]
+export const MotionTypes = new Map<string, InjectiveType>([
+    ["Linear", InjectiveIdentity],
+    ["Power", InjectivePow],
+    ["CShape", CShapeInjective],
+    ["TShape", TShapeInjective],
+    ["SmoothStep", SmoothStepInjective]
 ])
 
 export const Fills = new Map<string, Fill>(
@@ -214,7 +214,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0))
     readonly fill = this.bindValue(new ObservableValueImpl<Fill>(Fill.Flat))
     readonly rgb = this.bindValue(new ObservableValueImpl(<number>(0xFFFFFF)))
-    readonly motion: ObservableValue<Motion<any>> = this.bindValue(new ObservableValueImpl<Motion<any>>(new LinearMotion()))
+    readonly motion: ObservableValue<Injective<any>> = this.bindValue(new ObservableValueImpl<Injective<any>>(new InjectiveIdentity()))
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
     readonly bend = this.bindValue(new BoundNumericValue(Linear.Bipolar, 0.0))
     readonly frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
@@ -225,7 +225,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
-        this.terminator.with(this.motion.addObserver((motion: Motion<any>) => {
+        this.terminator.with(this.motion.addObserver((motion: Injective<any>) => {
             this.motionTerminator.terminate()
             this.motionTerminator.with(motion.addObserver(() => this.observable.notify(this)))
         }))
@@ -255,17 +255,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.bend.set(0.75)
         this.frequency.set(1.0)
         this.fragments.set(1.0)
-        this.reverse.set(false)
+        this.reverse.set(true)
         this.length.set(1.0)
         this.lengthRatio.set(0.125)
         this.outline.set(0.0)
         this.segments.set(16)
-        // this.motion.set(new LinearMotion())
-        // const shapeMotion = new TShapeMotion()
-        // shapeMotion.shape.set(0.75)
-        // this.motion.set(shapeMotion)
-        // this.motion.set(new PowMotion())
-        this.motion.set(new SmoothStepMotion())
+        this.motion.set(new CShapeInjective())
         this.width.set(128)
         this.fill.set(Fill.Flat)
     }
@@ -293,7 +288,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.lengthRatio.set(lengthRatio)
         this.outline.set(fill == Fill.Stroke || fill === Fill.Flat && random.nextBoolean() ? 1 : 0)
         this.fill.set(fill)
-        this.motion.set(Motion.random(random))
+        this.motion.set(Injective.random(random))
         this.phaseOffset.set(Math.floor(random.nextDouble(0.0, 4.0)) * 0.25)
         this.bend.set(random.nextDouble(-.5, .5))
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)))
@@ -333,7 +328,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.outline.set(format.outline)
         this.fill.set(format.fill)
         this.rgb.set(format.rgb)
-        this.motion.set(Motion.from(format.motion))
+        this.motion.set(Injective.from(format.motion))
         this.phaseOffset.set(format.phaseOffset)
         this.bend.set(format.bend)
         this.frequency.set(format.frequency)
@@ -344,19 +339,25 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     translatePhase(x: number): number {
         const fragments = this.fragments.get()
-        const mx = fragments * x
+        const mx = fragments * (this.reverse.get() ? 1.0 - x : x)
         const nx = Math.floor(mx)
-        return this.frequency.get() * (this.motion.get().map(mx - nx) + nx) / fragments
+        return this.frequency.get() * (this.motion.get().fx(mx - nx) + nx) / fragments
     }
 
-    inversePhase(x: number): number {
+    inversePhase(y: number): number {
         const fragments = this.fragments.get()
-        const mx = fragments * x / this.frequency.get()
-        const nx = Math.floor(mx)
-        return (this.motion.get().inverse(mx - nx) + nx) / fragments
+        const my = fragments * y / this.frequency.get()
+        const ny = Math.floor(my)
+        const fwd = (this.motion.get().fy(my - ny) + ny) / fragments
+        return this.reverse.get() ? 1.0 - fwd : fwd
     }
 
     filterSections(p0: number, p1: number): Iterator<FilterResult> {
+        if (this.reverse.get()) {
+            const tmp = p0
+            p0 = p1
+            p1 = tmp
+        }
         if (p0 >= p1) {
             return EmptyIterator
         }
@@ -392,11 +393,13 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         let seekMin = index * step
         while (seekMin < t1) {
             if (seekMin >= t0) {
-                yield new FilterResult(Edge.Min, index, Func.tx(seekMin / length, bend) * length + offset)
+                yield new FilterResult(this.reverse.get() ? Edge.Max : Edge.Min, index,
+                    Func.tx(seekMin / length, bend) * length + offset)
             }
             const seekMax = (index + lengthRatio) * step
             if (seekMax >= t0 && seekMax < t1) {
-                yield new FilterResult(Edge.Max, index, Func.tx(seekMax / length, bend) * length + offset)
+                yield new FilterResult(this.reverse.get() ? Edge.Min : Edge.Max, index,
+                    Func.tx(seekMax / length, bend) * length + offset)
             }
             seekMin = ++index * step
         }

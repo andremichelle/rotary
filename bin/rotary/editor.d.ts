@@ -1,40 +1,40 @@
 import { ObservableValue, Option, Terminable } from "../lib/common.js";
 import { Editor } from "../dom/inputs.js";
 import { RotaryTrackModel } from "./model.js";
-import { CShapeMotion, Motion, PowMotion, SmoothStepMotion, TShapeMotion } from "./motion.js";
+import { CShapeInjective, Injective, InjectivePow, SmoothStepInjective, TShapeInjective } from "./injective.js";
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void;
 }
-export declare class PowMotionEditor implements Editor<PowMotion> {
+export declare class PowMotionEditor implements Editor<InjectivePow> {
     private readonly input;
     constructor(element: Element);
-    with(value: PowMotion): void;
+    with(value: InjectivePow): void;
     clear(): void;
     terminate(): void;
 }
-export declare class CShapeMotionEditor implements Editor<CShapeMotion> {
+export declare class CShapeMotionEditor implements Editor<CShapeInjective> {
     private readonly input;
     constructor(element: Element);
-    with(value: CShapeMotion): void;
+    with(value: CShapeInjective): void;
     clear(): void;
     terminate(): void;
 }
-export declare class TShapeMotionEditor implements Editor<TShapeMotion> {
+export declare class TShapeMotionEditor implements Editor<TShapeInjective> {
     private readonly input;
     constructor(element: Element);
-    with(value: TShapeMotion): void;
+    with(value: TShapeInjective): void;
     clear(): void;
     terminate(): void;
 }
-export declare class SmoothStepMotionEditor implements Editor<SmoothStepMotion> {
+export declare class SmoothStepMotionEditor implements Editor<SmoothStepInjective> {
     private readonly input0;
     private readonly input1;
     constructor(element: Element);
-    with(value: SmoothStepMotion): void;
+    with(value: SmoothStepInjective): void;
     clear(): void;
     terminate(): void;
 }
-export declare class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
+export declare class MotionEditor implements Editor<ObservableValue<Injective<any>>> {
     private readonly editor;
     private readonly element;
     private readonly terminator;
@@ -47,7 +47,7 @@ export declare class MotionEditor implements Editor<ObservableValue<Motion<any>>
     private editable;
     private subscription;
     constructor(editor: RotaryTrackEditor, element: Element);
-    with(value: ObservableValue<Motion<any>>): void;
+    with(value: ObservableValue<Injective<any>>): void;
     clear(): void;
     terminate(): void;
     private updateMotionType;

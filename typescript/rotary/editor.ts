@@ -12,13 +12,13 @@ import {
 import {Checkbox, Editor, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model.js"
 import {Dom} from "../dom/common.js"
-import {CShapeMotion, LinearMotion, Motion, MotionType, PowMotion, SmoothStepMotion, TShapeMotion} from "./motion.js"
+import {CShapeInjective, InjectiveIdentity, Injective, InjectiveType, InjectivePow, SmoothStepInjective, TShapeInjective} from "./injective.js"
 
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void
 }
 
-export class PowMotionEditor implements Editor<PowMotion> {
+export class PowMotionEditor implements Editor<InjectivePow> {
     private readonly input: NumericStepperInput
 
     constructor(element: Element) {
@@ -27,7 +27,7 @@ export class PowMotionEditor implements Editor<PowMotion> {
             PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth)
     }
 
-    with(value: PowMotion): void {
+    with(value: InjectivePow): void {
         this.input.with(value.exponent)
     }
 
@@ -40,7 +40,7 @@ export class PowMotionEditor implements Editor<PowMotion> {
     }
 }
 
-export class CShapeMotionEditor implements Editor<CShapeMotion> {
+export class CShapeMotionEditor implements Editor<CShapeInjective> {
     private readonly input: NumericStepperInput
 
     constructor(element: Element) {
@@ -49,7 +49,7 @@ export class CShapeMotionEditor implements Editor<CShapeMotion> {
             PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
     }
 
-    with(value: CShapeMotion): void {
+    with(value: CShapeInjective): void {
         this.input.with(value.slope)
     }
 
@@ -62,7 +62,7 @@ export class CShapeMotionEditor implements Editor<CShapeMotion> {
     }
 }
 
-export class TShapeMotionEditor implements Editor<TShapeMotion> {
+export class TShapeMotionEditor implements Editor<TShapeInjective> {
     private readonly input: NumericStepperInput
 
     constructor(element: Element) {
@@ -71,7 +71,7 @@ export class TShapeMotionEditor implements Editor<TShapeMotion> {
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
     }
 
-    with(value: TShapeMotion): void {
+    with(value: TShapeInjective): void {
         this.input.with(value.shape)
     }
 
@@ -84,7 +84,7 @@ export class TShapeMotionEditor implements Editor<TShapeMotion> {
     }
 }
 
-export class SmoothStepMotionEditor implements Editor<SmoothStepMotion> {
+export class SmoothStepMotionEditor implements Editor<SmoothStepInjective> {
     private readonly input0: NumericStepperInput
     private readonly input1: NumericStepperInput
 
@@ -97,7 +97,7 @@ export class SmoothStepMotionEditor implements Editor<SmoothStepMotion> {
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
     }
 
-    with(value: SmoothStepMotion): void {
+    with(value: SmoothStepInjective): void {
         this.input0.with(value.edge0)
         this.input1.with(value.edge1)
     }
@@ -113,21 +113,21 @@ export class SmoothStepMotionEditor implements Editor<SmoothStepMotion> {
     }
 }
 
-export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
+export class MotionEditor implements Editor<ObservableValue<Injective<any>>> {
     private readonly terminator: Terminator = new Terminator()
-    private readonly motionTypeValue: ObservableValue<MotionType> = this.terminator.with(new ObservableValueImpl(MotionTypes[0]))
-    private readonly typeSelectInput: SelectInput<MotionType>
+    private readonly motionTypeValue: ObservableValue<InjectiveType> = this.terminator.with(new ObservableValueImpl(MotionTypes[0]))
+    private readonly typeSelectInput: SelectInput<InjectiveType>
 
     private readonly powMotionEditor: PowMotionEditor
     private readonly cShapeMotionEditor: CShapeMotionEditor
     private readonly tShapeMotionEditor: TShapeMotionEditor
     private readonly smoothStepMotionEditor: SmoothStepMotionEditor
 
-    private editable: Option<ObservableValue<Motion<any>>> = Options.None
+    private editable: Option<ObservableValue<Injective<any>>> = Options.None
     private subscription: Option<Terminable> = Options.None
 
     constructor(private readonly editor: RotaryTrackEditor, private readonly element: Element) {
-        this.typeSelectInput = this.terminator.with(new SelectInput<MotionType>(element.querySelector("select[data-parameter='motion']"), MotionTypes))
+        this.typeSelectInput = this.terminator.with(new SelectInput<InjectiveType>(element.querySelector("select[data-parameter='motion']"), MotionTypes))
         this.typeSelectInput.with(this.motionTypeValue)
 
         this.powMotionEditor = this.terminator.with(new PowMotionEditor(element))
@@ -138,7 +138,7 @@ export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
         this.terminator.with(this.motionTypeValue.addObserver(motionType => this.editable.ifPresent(value => value.set(new motionType()))))
     }
 
-    with(value: ObservableValue<Motion<any>>): void {
+    with(value: ObservableValue<Injective<any>>): void {
         this.subscription.ifPresent(_ => _.terminate())
         this.editable = Options.None
         this.subscription = Options.valueOf(value.addObserver(value => this.updateMotionType(value)))
@@ -161,34 +161,34 @@ export class MotionEditor implements Editor<ObservableValue<Motion<any>>> {
         this.terminator.terminate()
     }
 
-    private updateMotionType(motion: Motion<any>): void {
-        const motionType: MotionType = motion.constructor as MotionType
+    private updateMotionType(motion: Injective<any>): void {
+        const motionType: InjectiveType = motion.constructor as InjectiveType
         this.motionTypeValue.set(motionType)
-        if (motion instanceof LinearMotion) {
+        if (motion instanceof InjectiveIdentity) {
             this.element.setAttribute("data-motion", "linear")
             this.powMotionEditor.clear()
             this.cShapeMotionEditor.clear()
             this.tShapeMotionEditor.clear()
             this.smoothStepMotionEditor.clear()
-        } else if (motion instanceof PowMotion) {
+        } else if (motion instanceof InjectivePow) {
             this.element.setAttribute("data-motion", "pow")
             this.powMotionEditor.with(motion)
             this.cShapeMotionEditor.clear()
             this.tShapeMotionEditor.clear()
             this.smoothStepMotionEditor.clear()
-        } else if (motion instanceof CShapeMotion) {
+        } else if (motion instanceof CShapeInjective) {
             this.element.setAttribute("data-motion", "cshape")
             this.powMotionEditor.clear()
             this.cShapeMotionEditor.with(motion)
             this.tShapeMotionEditor.clear()
             this.smoothStepMotionEditor.clear()
-        } else if (motion instanceof TShapeMotion) {
+        } else if (motion instanceof TShapeInjective) {
             this.element.setAttribute("data-motion", "tshape")
             this.powMotionEditor.clear()
             this.tShapeMotionEditor.with(motion)
             this.cShapeMotionEditor.clear()
             this.smoothStepMotionEditor.clear()
-        } else if (motion instanceof SmoothStepMotion) {
+        } else if (motion instanceof SmoothStepInjective) {
             this.element.setAttribute("data-motion", "smoothstep")
             this.powMotionEditor.clear()
             this.tShapeMotionEditor.clear()
