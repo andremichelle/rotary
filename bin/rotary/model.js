@@ -273,8 +273,8 @@ export class RotaryTrackModel {
         const segments = this.segments.get();
         const full = Func.tx(Func.clamp((phase - phaseIndex) / length), -bend) * segments;
         const index = Math.floor(full);
-        const local = full - index;
-        return local < lengthRatio ? index + local / lengthRatio : -1.0;
+        const local = (full - index) / lengthRatio;
+        return local <= 1.0 ? index + (this.reverse.get() ? local : 1.0 - local) : -1.0;
     }
     filterSections(p0, p1) {
         if (p0 == p1) {

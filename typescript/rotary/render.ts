@@ -31,7 +31,7 @@ export class RotaryRenderer {
                                radiusStart: number,
                                phase: number,
                                highlightCrossing: boolean = false): void {
-        const crossingIndex = Math.floor(trackModel.localToSegment(trackModel.root.phaseOffset.get() - phase))
+        const crossingIndex = trackModel.localToSegment(trackModel.root.phaseOffset.get() - phase)
         const segments = trackModel.segments.get()
         const length = trackModel.length.get()
         const width = trackModel.width.get()
@@ -40,7 +40,7 @@ export class RotaryRenderer {
         const bend = trackModel.bend.get()
         const lengthRatio = trackModel.lengthRatio.get()
         for (let index = 0; index < segments; index++) {
-            context.globalAlpha = !highlightCrossing || index === crossingIndex ? 1.0 : 0.4
+            context.globalAlpha = !highlightCrossing || index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4
             const a0 = index / segments, a1 = a0 + lengthRatio / segments
             RotaryRenderer.renderSection(context, trackModel, r0, r1,
                 phase + Func.tx(a0, bend) * length,
