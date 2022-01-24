@@ -9,6 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { RotaryModel } from "./model.js";
 import { UpdateFormatMessage, UpdateSampleMessage } from "../worklets/messages.js";
+export const handleErrors = (worklet) => {
+    worklet.onprocessorerror = (event) => {
+        console.log(`error occurred. message: ${event.message}`);
+        throw new Error(event.message);
+    };
+};
 export class RotaryAutomationNode extends AudioWorkletNode {
     static build(context) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25,6 +31,7 @@ export class RotaryAutomationNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
+        handleErrors(this);
     }
     updateFormat(model) {
         this.port.postMessage(new UpdateFormatMessage(model.serialize()));
@@ -46,6 +53,7 @@ export class RotarySineNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
+        handleErrors(this);
     }
 }
 export class RotaryPlaybackNode extends AudioWorkletNode {
@@ -64,6 +72,7 @@ export class RotaryPlaybackNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
+        handleErrors(this);
     }
     updateFormat(model) {
         this.port.postMessage(new UpdateFormatMessage(model.serialize()));

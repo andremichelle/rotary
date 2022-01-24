@@ -1,6 +1,13 @@
 import {RotaryModel} from "./model.js"
 import {UpdateFormatMessage, UpdateSampleMessage} from "../worklets/messages.js"
 
+export const handleErrors = (worklet: AudioWorkletNode) => {
+    worklet.onprocessorerror = (event: ErrorEvent) => {
+        console.log(`error occurred. message: ${event.message}`)
+        throw new Error(event.message)
+    }
+}
+
 export class RotaryAutomationNode extends AudioWorkletNode {
     static async build(context: AudioContext): Promise<RotaryAutomationNode> {
         await context.audioWorklet.addModule("bin/worklets/rotary-automation.js")
@@ -16,6 +23,8 @@ export class RotaryAutomationNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         })
+
+        handleErrors(this)
     }
 
     updateFormat(model: RotaryModel): void {
@@ -38,6 +47,8 @@ export class RotarySineNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         })
+
+        handleErrors(this)
     }
 }
 
@@ -56,6 +67,8 @@ export class RotaryPlaybackNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         })
+
+        handleErrors(this)
     }
 
     updateFormat(model: RotaryModel): void {

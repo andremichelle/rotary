@@ -43,9 +43,10 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                     if (result.edge === Edge.Max) {
                         continue
                     }
-                    const frameIndex = Math.floor((track.inversePhase(result.position) - this.phase) * loopInFrames)
-                    console.assert(0 <= frameIndex && frameIndex < RenderQuantum, "out of bounds")
-                    // const key: number = result.index % 9
+                    const frameIndex = ((track.inversePhase(result.position) - this.phase) * loopInFrames) | 0
+                    console.assert(0 <= frameIndex && frameIndex < RenderQuantum,
+                        `frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, p: ${result.position}, 
+                        frameIndexAsNumber: ${(track.inversePhase(result.position) - this.phase) * loopInFrames}`)
                     const key: number = trackIndex % 9
                     this.voices.push(new Voice(key, -frameIndex))
                 }
