@@ -1,5 +1,5 @@
-import { Observable, ObservableImpl, ObservableValue, Observer, Serializer, Terminable, Terminator } from "../lib/common.js";
-import { Random } from "../lib/math.js";
+import { Observable, ObservableImpl, ObservableValue, Observer, Serializer, Terminable, Terminator } from "./common.js";
+import { Random } from "./math.js";
 declare type Data = PowData | CShapeData | TShapeData | SmoothStepData;
 export declare type InjectiveType = {
     new (): Injective<any>;

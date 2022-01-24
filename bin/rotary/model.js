@@ -1,7 +1,7 @@
 import { BoundNumericValue, EmptyIterator, GeneratorIterator, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
-import { CShapeInjective, IdentityInjective, Injective, PowInjective, SmoothStepInjective, TShapeInjective } from "./injective.js";
+import { CShapeInjective, IdentityInjective, Injective, PowInjective, SmoothStepInjective, TShapeInjective } from "../lib/injective.js";
 import { Colors } from "../lib/colors.js";
 export class RotaryModel {
     constructor() {

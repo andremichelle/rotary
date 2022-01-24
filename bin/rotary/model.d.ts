@@ -1,6 +1,6 @@
 import { Iterator, Observable, ObservableCollection, ObservableValue, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
-import { Injective, InjectiveFormat, InjectiveType } from "./injective.js";
+import { Injective, InjectiveFormat, InjectiveType } from "../lib/injective.js";
 export declare interface RotaryFormat {
     radiusMin: number;
     exportSize: number;

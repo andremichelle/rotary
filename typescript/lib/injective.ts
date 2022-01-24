@@ -7,9 +7,9 @@ import {
     Serializer,
     Terminable,
     Terminator
-} from "../lib/common.js"
-import {Linear} from "../lib/mapping.js"
-import {Func, Random} from "../lib/math.js"
+} from "./common.js"
+import {Linear} from "./mapping.js"
+import {Func, Random} from "./math.js"
 
 type Data = PowData | CShapeData | TShapeData | SmoothStepData
 
@@ -22,6 +22,7 @@ export declare interface InjectiveFormat<DATA extends Data> {
 
 const InjectiveTypes: InjectiveType[] = []
 
+// noinspection JSUnusedGlobalSymbols
 export abstract class Injective<DATA extends Data> implements Observable<Injective<DATA>>, Serializer<InjectiveFormat<DATA>>, Terminable {
     static from(format: InjectiveFormat<any>): Injective<any> {
         switch (format.class) {

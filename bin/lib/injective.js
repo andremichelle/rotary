@@ -1,6 +1,6 @@
-import { BoundNumericValue, ObservableImpl, Terminator } from "../lib/common.js";
-import { Linear } from "../lib/mapping.js";
-import { Func } from "../lib/math.js";
+import { BoundNumericValue, ObservableImpl, Terminator } from "./common.js";
+import { Linear } from "./mapping.js";
+import { Func } from "./math.js";
 const InjectiveTypes = [];
 export class Injective {
     constructor() {

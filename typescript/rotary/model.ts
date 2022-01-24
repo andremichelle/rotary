@@ -24,7 +24,7 @@ import {
     PowInjective,
     SmoothStepInjective,
     TShapeInjective
-} from "./injective.js"
+} from "../lib/injective.js"
 import {Colors} from "../lib/colors.js"
 
 export declare interface RotaryFormat {

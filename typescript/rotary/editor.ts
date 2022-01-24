@@ -12,7 +12,7 @@ import {
 import {Checkbox, Editor, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, MotionTypes, RotaryTrackModel} from "./model.js"
 import {Dom} from "../dom/common.js"
-import {CShapeInjective, IdentityInjective, Injective, InjectiveType, PowInjective, SmoothStepInjective, TShapeInjective} from "./injective.js"
+import {CShapeInjective, IdentityInjective, Injective, InjectiveType, PowInjective, SmoothStepInjective, TShapeInjective} from "../lib/injective.js"
 
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void

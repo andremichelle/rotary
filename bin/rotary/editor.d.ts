@@ -1,7 +1,7 @@
 import { ObservableValue, Option, Terminable } from "../lib/common.js";
 import { Editor } from "../dom/inputs.js";
 import { RotaryTrackModel } from "./model.js";
-import { CShapeInjective, Injective, PowInjective, SmoothStepInjective, TShapeInjective } from "./injective.js";
+import { CShapeInjective, Injective, PowInjective, SmoothStepInjective, TShapeInjective } from "../lib/injective.js";
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void;
 }
