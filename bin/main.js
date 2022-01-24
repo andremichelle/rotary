@@ -45,7 +45,13 @@ window.onunhandledrejection = (event) => {
     yield MeterWorklet.load(context);
     const meter = new MeterWorklet(context);
     meter.connect(context.destination);
-    yield buildAudio(context, meter, model, random);
+    yield buildAudio({
+        context: context,
+        output: meter,
+        model: model,
+        random: random,
+        loadInfo: text => document.getElementById("preloader-message").textContent = text
+    });
     Dom.replaceElement(meter.domElement, document.getElementById("meter"));
     const playButton = document.querySelector("[data-parameter='transport']");
     context.onstatechange = () => playButton.checked = context.state === "running";

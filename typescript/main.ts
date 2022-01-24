@@ -1,11 +1,10 @@
-import {Func, Mulberry32, Random} from "./lib/math.js"
+import {Mulberry32, Random} from "./lib/math.js"
 import {RotaryModel} from "./rotary/model.js"
 import {RotaryApp} from "./rotary/app.js"
 import {installApplicationMenu} from "./rotary/env.js"
 import {buildAudio} from "./rotary/audio.02.js"
 import {MeterWorklet} from "./dsp/meter/worklet.js"
 import {Dom} from "./dom/common.js"
-import {CShapeInjective} from "./rotary/injective.js"
 
 const showError = (message: string) => {
     const preloader = document.getElementById("preloader")
@@ -39,7 +38,13 @@ window.onunhandledrejection = (event) => {
     await MeterWorklet.load(context)
     const meter = new MeterWorklet(context)
     meter.connect(context.destination)
-    await buildAudio(context, meter, model, random)
+    await buildAudio({
+        context: context,
+        output: meter,
+        model: model,
+        random: random,
+        loadInfo: text => document.getElementById("preloader-message").textContent = text
+    })
 
     Dom.replaceElement(meter.domElement, document.getElementById("meter"))
 

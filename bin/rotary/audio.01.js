@@ -15,10 +15,12 @@ import { pulsarDelay } from "../lib/dsp.js";
 import { Exp } from "../lib/mapping.js";
 import { Harmonic } from "../dsp/padsynth/data.js";
 import { midiToHz } from "../dsp/common.js";
-export const buildAudio = (context, output, model, random) => __awaiter(void 0, void 0, void 0, function* () {
+export const buildAudio = (setup) => __awaiter(void 0, void 0, void 0, function* () {
+    const context = setup.context;
+    const random = setup.random;
     const rotaryAutomationNode = yield RotaryAutomationNode.build(context);
-    const updateFormat = () => rotaryAutomationNode.updateFormat(model);
-    model.addObserver(updateFormat);
+    const updateFormat = () => rotaryAutomationNode.updateFormat(setup.model);
+    setup.model.addObserver(updateFormat);
     updateFormat();
     const convolverNode = context.createConvolver();
     convolverNode.normalize = false;
@@ -53,10 +55,10 @@ export const buildAudio = (context, output, model, random) => __awaiter(void 0, 
         bufferSource.start();
         bufferSource.connect(gainNode).connect(pannerNode).connect(tracksGain);
     }
-    tracksGain.connect(output);
+    tracksGain.connect(setup.output);
     const wetGain = context.createGain();
     wetGain.gain.value = 0.8;
     pulsarDelay(context, tracksGain, wetGain, 0.500, 0.125, 0.750, 0.99, 720.0, 480.0);
-    wetGain.connect(convolverNode).connect(output);
+    wetGain.connect(convolverNode).connect(setup.output);
 });
 //# sourceMappingURL=audio.01.js.map

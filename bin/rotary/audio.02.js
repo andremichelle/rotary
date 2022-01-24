@@ -10,26 +10,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { RotaryPlaybackNode } from "./worklets.js";
 import { readAudio } from "../lib/common.js";
 import { pulsarDelay } from "../lib/dsp.js";
-export const buildAudio = (context, output, model, random) => __awaiter(void 0, void 0, void 0, function* () {
+export const buildAudio = (setup) => __awaiter(void 0, void 0, void 0, function* () {
+    const context = setup.context;
     const rotaryNode = yield RotaryPlaybackNode.build(context);
-    const updateFormat = () => rotaryNode.updateFormat(model);
-    model.addObserver(updateFormat);
+    const updateFormat = () => rotaryNode.updateFormat(setup.model);
+    setup.model.addObserver(updateFormat);
     updateFormat();
-    rotaryNode.updateSample(0, yield readAudio(context, "samples/hang/0.wav"));
-    rotaryNode.updateSample(1, yield readAudio(context, "samples/hang/1.wav"));
-    rotaryNode.updateSample(2, yield readAudio(context, "samples/hang/2.wav"));
-    rotaryNode.updateSample(3, yield readAudio(context, "samples/hang/3.wav"));
-    rotaryNode.updateSample(4, yield readAudio(context, "samples/hang/4.wav"));
-    rotaryNode.updateSample(5, yield readAudio(context, "samples/hang/5.wav"));
-    rotaryNode.updateSample(6, yield readAudio(context, "samples/hang/6.wav"));
-    rotaryNode.updateSample(7, yield readAudio(context, "samples/hang/7.wav"));
-    rotaryNode.updateSample(8, yield readAudio(context, "samples/hang/8.wav"));
+    const loadSample = (url) => __awaiter(void 0, void 0, void 0, function* () {
+        setup.loadInfo(`loading ${url}`);
+        return yield readAudio(context, url);
+    });
+    rotaryNode.updateSample(0, yield loadSample("samples/hang/0.wav"));
+    rotaryNode.updateSample(1, yield loadSample("samples/hang/1.wav"));
+    rotaryNode.updateSample(2, yield loadSample("samples/hang/2.wav"));
+    rotaryNode.updateSample(3, yield loadSample("samples/hang/3.wav"));
+    rotaryNode.updateSample(4, yield loadSample("samples/hang/4.wav"));
+    rotaryNode.updateSample(5, yield loadSample("samples/hang/5.wav"));
+    rotaryNode.updateSample(6, yield loadSample("samples/hang/6.wav"));
+    rotaryNode.updateSample(7, yield loadSample("samples/hang/7.wav"));
+    rotaryNode.updateSample(8, yield loadSample("samples/hang/8.wav"));
     const wetNode = context.createGain();
     wetNode.gain.value = 0.4;
     pulsarDelay(context, rotaryNode, wetNode, 0.125, 0.250, .250, 0.9, 12000, 200);
     const convolverNode = context.createConvolver();
-    convolverNode.buffer = yield readAudio(context, "impulse/PlateLarge.ogg");
-    wetNode.connect(convolverNode).connect(output);
-    rotaryNode.connect(output);
+    convolverNode.buffer = yield loadSample("impulse/PlateLarge.ogg");
+    wetNode.connect(convolverNode).connect(setup.output);
+    rotaryNode.connect(setup.output);
 });
 //# sourceMappingURL=audio.02.js.map
