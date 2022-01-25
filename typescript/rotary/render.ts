@@ -8,9 +8,9 @@ export class RotaryRenderer {
                   phase: number): void {
         let radiusMin = model.radiusMin.get()
         for (let i = 0; i < model.tracks.size(); i++) {
-            const track = model.tracks.get(i)
-            RotaryRenderer.renderTrack(context, track, radiusMin, model.phaseOffset.get() - track.globalToLocal(phase), true)
-            radiusMin += track.width.get() + track.widthPadding.get()
+            const trackModel = model.tracks.get(i)
+            RotaryRenderer.renderTrack(context, trackModel, radiusMin, trackModel.globalToLocal(phase), true)
+            radiusMin += trackModel.width.get() + trackModel.widthPadding.get()
         }
     }
 
@@ -31,7 +31,7 @@ export class RotaryRenderer {
                                radiusStart: number,
                                phase: number,
                                highlightCrossing: boolean = false): void {
-        const crossingIndex = trackModel.localToSegment(trackModel.root.phaseOffset.get() - phase)
+        const crossingIndex = trackModel.localToSegment(phase)
         const segments = trackModel.segments.get()
         const length = trackModel.length.get()
         const width = trackModel.width.get()
@@ -39,8 +39,11 @@ export class RotaryRenderer {
         const r1 = radiusStart + width
         const bend = trackModel.bend.get()
         const lengthRatio = trackModel.lengthRatio.get()
+        phase = trackModel.root.phaseOffset.get() - phase
         for (let index = 0; index < segments; index++) {
-            context.globalAlpha = !highlightCrossing || index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4
+            if (highlightCrossing) {
+                context.globalAlpha = index === Math.floor(crossingIndex) ? 0.4 + 0.6 /** (crossingIndex - Math.floor(crossingIndex))*/ : 0.4
+            }
             const a0 = index / segments, a1 = a0 + lengthRatio / segments
             RotaryRenderer.renderSection(context, trackModel, r0, r1,
                 phase + Func.tx(a0, bend) * length,

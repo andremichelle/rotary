@@ -37,7 +37,7 @@ window.onunhandledrejection = (event) => {
 };
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const random = new Mulberry32(0xFFFFFFFF * Math.random());
-    const model = new RotaryModel().randomize(random);
+    const model = new RotaryModel().test();
     const app = RotaryApp.create(model);
     installApplicationMenu(document.querySelector("nav#app-menu"), model, app);
     const context = new AudioContext();
