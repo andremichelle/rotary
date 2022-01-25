@@ -40,7 +40,7 @@ export class RotaryRenderer {
         phase = trackModel.root.phaseOffset.get() - phase;
         for (let index = 0; index < segments; index++) {
             if (highlightCrossing) {
-                context.globalAlpha = index === Math.floor(crossingIndex) ? 0.4 + 0.6 : 0.4;
+                context.globalAlpha = index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4;
             }
             const a0 = index / segments, a1 = a0 + lengthRatio / segments;
             RotaryRenderer.renderSection(context, trackModel, r0, r1, phase + Func.tx(a0, bend) * length, phase + Func.tx(a1, bend) * length);
