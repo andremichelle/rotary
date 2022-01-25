@@ -75,7 +75,10 @@ export class RotaryPlaybackNode extends AudioWorkletNode {
         this.port.postMessage(new UpdateFormatMessage(model.serialize()))
     }
 
-    updateSample(key: number, buffer: AudioBuffer) {
-        this.port.postMessage(UpdateSampleMessage.from(key, buffer))
+    updateSample(key: number, sample: AudioBuffer | Float32Array | Float32Array[], loop: boolean = false) {
+        this.port.postMessage(
+            sample instanceof AudioBuffer
+                ? UpdateSampleMessage.from(key, sample, loop)
+                : new UpdateSampleMessage(key, sample instanceof Float32Array ? [sample, sample] : sample, loop))
     }
 }

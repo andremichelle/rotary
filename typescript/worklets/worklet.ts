@@ -10,17 +10,17 @@ export class UpdateFormatMessage {
 }
 
 export class UpdateSampleMessage {
-    static from(key: number, buffer: AudioBuffer): UpdateSampleMessage {
+    static from(key: number, buffer: AudioBuffer, loop: boolean): UpdateSampleMessage {
         const raw = []
         for (let channelIndex = 0; channelIndex < 2; channelIndex++) {
             buffer.copyFromChannel(raw[channelIndex] =
                 new Float32Array(buffer.length), Math.min(channelIndex, buffer.numberOfChannels - 1))
         }
-        return new UpdateSampleMessage(key, raw)
+        return new UpdateSampleMessage(key, raw, loop)
     }
 
     readonly type = 'sample'
 
-    constructor(readonly key: number, readonly sample: Float32Array[]) {
+    constructor(readonly key: number, readonly sample: Float32Array[], readonly loop: boolean) {
     }
 }

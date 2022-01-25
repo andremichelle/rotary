@@ -13,5 +13,5 @@ export declare class RotaryPlaybackNode extends AudioWorkletNode {
     static build(context: AudioContext): Promise<RotaryPlaybackNode>;
     constructor(context: AudioContext);
     updateFormat(model: RotaryModel): void;
-    updateSample(key: number, buffer: AudioBuffer): void;
+    updateSample(key: number, sample: AudioBuffer | Float32Array | Float32Array[], loop?: boolean): void;
 }

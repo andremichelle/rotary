@@ -8,7 +8,8 @@ export declare class UpdateFormatMessage {
 export declare class UpdateSampleMessage {
     readonly key: number;
     readonly sample: Float32Array[];
-    static from(key: number, buffer: AudioBuffer): UpdateSampleMessage;
+    readonly loop: boolean;
+    static from(key: number, buffer: AudioBuffer, loop: boolean): UpdateSampleMessage;
     readonly type = "sample";
-    constructor(key: number, sample: Float32Array[]);
+    constructor(key: number, sample: Float32Array[], loop: boolean);
 }

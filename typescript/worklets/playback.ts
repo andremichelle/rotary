@@ -3,7 +3,8 @@ import {Message} from "./worklet.js"
 import {RenderQuantum} from "../dsp/common.js"
 
 class Voice {
-    static RELEASE = (0.005 * sampleRate) | 0
+    static ATTACK = (0.005 * sampleRate) | 0
+    static RELEASE = (1.5 * sampleRate) | 0
 
     duration: number = Number.MAX_SAFE_INTEGER
 
@@ -17,11 +18,16 @@ class Voice {
     }
 }
 
+class Sample {
+    constructor(readonly frames: Float32Array[], readonly loop: boolean) {
+    }
+}
+
 registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         private readonly model: RotaryModel = new RotaryModel()
         private phase: number = 0 | 0
-        private samples: Map<number, Float32Array[]> = new Map()
-        private readonly voiceMap: Map<number, Voice[]> = new Map()
+        private samples: Map<number, Sample> = new Map()
+        private readonly activeVoices: Map<number, Voice[]> = new Map()
 
         constructor() {
             super()
@@ -31,12 +37,12 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 if (msg.type === "format") {
                     this.model.deserialize(msg.format)
                 } else if (msg.type === "sample") {
-                    this.samples.set(msg.key, msg.sample)
+                    this.samples.set(msg.key, new Sample(msg.sample, msg.loop))
                 }
             }
 
             for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
-                this.voiceMap.set(index, [])
+                this.activeVoices.set(index, [])
             }
         }
 
@@ -56,7 +62,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 const iterator = track.filterSections(t0, t1)
                 while (iterator.hasNext()) {
                     const result: FilterResult = iterator.next()
-                    const running = this.voiceMap.get(trackIndex)
+                    const running = this.activeVoices.get(trackIndex)
                     running.forEach(v => v.stop())
                     if (result.edge === Edge.Start) {
                         const frameIndex = ((track.localToGlobal(result.position) * loopLength - this.phase)) | 0
@@ -64,25 +70,31 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                             throw new Error(`frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, p: ${result.position}, 
                                 frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopLength - this.phase)}`)
                         }
-                        const num = 5
-                        const key: number = this.phase < loopLength / 2 ? trackIndex % num : num + (trackIndex % num)
-                        this.voiceMap.get(trackIndex).push(new Voice(key, -frameIndex))
+                        const num = 24
+                        const key: number = trackIndex % num//this.phase < loopLength / 2 ? trackIndex % num : num + (trackIndex % num)
+                        this.activeVoices.get(trackIndex).push(new Voice(key, -frameIndex))
                     }
                 }
             }
-            for (let voices of this.voiceMap.values()) {
+            for (let voices of this.activeVoices.values()) {
                 for (let i = 0; i < voices.length; i++) {
                     const voice = voices[i]
-                    const sample: Float32Array[] = this.samples.get(voice.sampleKey)
+                    const sample: Sample = this.samples.get(voice.sampleKey)
                     if (sample === undefined) continue
+                    const frames = sample.frames
                     for (let frameIndex = 0; frameIndex < RenderQuantum; frameIndex++) {
-                        const position = voice.position++
-                        if (position >= sample[0].length || 0 === voice.duration) {
+                        const numFrames = frames[0].length
+                        let position = voice.position++
+                        if ((!sample.loop && position >= numFrames) || 0 === voice.duration) {
                             voices.splice(i, 1)
                         } else if (position >= 0) {
-                            const envelope = Math.min(1.0, voice.duration-- / Voice.RELEASE) * Math.min(1.0, position / Voice.RELEASE)
-                            outL[frameIndex] += sample[0][position] * envelope * 0.02
-                            outR[frameIndex] += sample[1][position] * envelope * 0.02
+                            let envelope = Math.min(1.0, voice.duration-- / Voice.RELEASE) * Math.min(1.0, position / Voice.ATTACK)
+                            envelope *= envelope
+                            if(sample.loop) {
+                                position %= numFrames
+                            }
+                            outL[frameIndex] += frames[0][position] * envelope
+                            outR[frameIndex] += frames[1][position] * envelope
                         }
                     }
                 }
