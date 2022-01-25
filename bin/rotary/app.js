@@ -12,7 +12,9 @@ export class RotaryApp {
         this.editor = new RotaryTrackEditor(this, document.querySelector(".editing"));
         this.map = new Map();
         this.random = new Mulberry32(0x123abc456);
-        this.c2D = this.elements.canvas.getContext("2d", { alpha: true });
+        this.liveContext = this.elements.canvas.getContext("2d", { alpha: true });
+        this.rawCanvas = document.createElement("canvas");
+        this.rawContext = this.rawCanvas.getContext("2d", { alpha: true });
         this.zoom = new ObservableValueImpl(0.75);
         this.elements.template.remove();
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin);
@@ -99,34 +101,38 @@ export class RotaryApp {
     }
     render(phase) {
         const zoom = this.zoom.get();
-        const size = this.model.measureRadius() * 2;
+        const radius = this.model.measureRadius();
+        const radiusMin = this.model.radiusMin.get();
+        const size = (radius + 64) * 2;
         const ratio = Math.ceil(devicePixelRatio) * zoom;
-        this.elements.canvas.width = size * ratio;
-        this.elements.canvas.height = size * ratio;
+        this.rawCanvas.width = this.elements.canvas.width = size * ratio;
+        this.rawCanvas.height = this.elements.canvas.height = size * ratio;
         this.elements.canvas.style.width = `${size * zoom}px`;
         this.elements.canvas.style.height = `${size * zoom}px`;
         this.elements.labelSize.textContent = `${size}`;
-        this.c2D.save();
-        this.c2D.scale(ratio, ratio);
-        this.c2D.translate(size >> 1, size >> 1);
-        this.drawCrossing();
-        RotaryRenderer.render(this.c2D, this.model, phase);
-        this.c2D.restore();
+        this.rawContext.save();
+        this.rawContext.scale(ratio, ratio);
+        this.rawContext.translate(size >> 1, size >> 1);
+        const angle = this.model.phaseOffset.get() * TAU;
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        this.rawContext.lineWidth = 0.0;
+        this.rawContext.strokeStyle = "rgba(255, 255, 255, 0.04)";
+        this.rawContext.beginPath();
+        this.rawContext.moveTo(cos * radiusMin, sin * radiusMin);
+        this.rawContext.lineTo(cos * radius, sin * radius);
+        this.rawContext.stroke();
+        RotaryRenderer.render(this.rawContext, this.model, phase);
+        this.rawContext.restore();
+        this.liveContext.save();
+        this.liveContext.filter = "blur(32px) brightness(25%)";
+        this.liveContext.drawImage(this.rawCanvas, 0, 0);
+        this.liveContext.restore();
+        this.liveContext.drawImage(this.rawCanvas, 0, 0);
         const circle = this.elements.progressIndicator;
         const radiant = parseInt(circle.getAttribute("r"), 10) * 2.0 * Math.PI;
         circle.setAttribute("stroke-dasharray", radiant.toFixed(2));
         circle.setAttribute("stroke-dashoffset", ((1.0 - phase) * radiant).toFixed(2));
-    }
-    drawCrossing(radiusMin = 0.0) {
-        const angle = this.model.phaseOffset.get() * TAU;
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-        this.c2D.lineWidth = 0.0;
-        this.c2D.strokeStyle = "rgba(30, 240, 255, 0.2)";
-        this.c2D.beginPath();
-        this.c2D.moveTo(cos * radiusMin, sin * radiusMin);
-        this.c2D.lineTo(cos * 9999.9, sin * 9999.9);
-        this.c2D.stroke();
     }
     createSelector(track) {
         const element = this.elements.template.cloneNode(true);

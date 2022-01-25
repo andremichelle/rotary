@@ -18,7 +18,9 @@ export declare class RotaryApp implements RotaryTrackEditorExecutor {
     private readonly editor;
     private readonly map;
     private readonly random;
-    private readonly c2D;
+    private readonly liveContext;
+    private readonly rawCanvas;
+    private readonly rawContext;
     readonly zoom: ObservableValueImpl<number>;
     private constructor();
     createNew(model: RotaryTrackModel | null, copy: boolean): void;
@@ -26,7 +28,6 @@ export declare class RotaryApp implements RotaryTrackEditorExecutor {
     select(track: RotaryTrackModel): void;
     hasSelected(): boolean;
     render(phase: number): void;
-    private drawCrossing;
     private createSelector;
     private removeSelector;
     private reorderSelectors;

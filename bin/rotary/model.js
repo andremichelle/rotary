@@ -76,7 +76,8 @@ export class RotaryModel {
         this.tracks.clear();
     }
     measureRadius() {
-        return this.tracks.reduce((radius, track) => radius + track.width.get() + track.widthPadding.get(), this.radiusMin.get());
+        return this.tracks.reduce((radius, track, index) => radius + track.width.get() + track.widthPadding.get()
+            * Math.min(1.0, (this.tracks.size() - index - 1)), this.radiusMin.get());
     }
     terminate() {
         this.terminator.terminate();

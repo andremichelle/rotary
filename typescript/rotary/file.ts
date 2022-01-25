@@ -28,11 +28,10 @@ export const renderWebM = async (model: RotaryModel) => {
     const numFrames = Math.floor(fps * model.loopDuration.get())
     console.log(`numFrames: ${numFrames}`)
     const writer = new WebMWriter({
-        quality: 0.99999,
+        quality: 0.99,
         transparent: true,
         frameRate: fps,
-        // frameDuration: 1000.0 / 60.0,
-        // alphaQuality: 1.0
+        alphaQuality: 1.0
     })
     const progressIndicator = new ProgressIndicator("Export WebM")
     await progressIndicator.completeWith(RotaryRenderer.renderFrames(model, numFrames, size,

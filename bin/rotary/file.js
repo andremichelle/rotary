@@ -32,9 +32,10 @@ export const renderWebM = (model) => __awaiter(void 0, void 0, void 0, function*
     const numFrames = Math.floor(fps * model.loopDuration.get());
     console.log(`numFrames: ${numFrames}`);
     const writer = new WebMWriter({
-        quality: 0.99999,
+        quality: 0.99,
         transparent: true,
         frameRate: fps,
+        alphaQuality: 1.0
     });
     const progressIndicator = new ProgressIndicator("Export WebM");
     yield progressIndicator.completeWith(RotaryRenderer.renderFrames(model, numFrames, size, context => writer.addFrame(context.canvas), progressIndicator.onProgress));
