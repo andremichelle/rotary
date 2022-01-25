@@ -141,40 +141,6 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.c2D.scale(ratio, ratio)
         this.c2D.translate(size >> 1, size >> 1)
 
-        const track = this.model.tracks.get(0)
-        const distance = this.model.radiusMin.get()
-        const radius = size >> 1
-
-        if (false) {
-            const p0 = 0.0
-            const p1 = 0.1
-
-            const t0 = track.globalToLocal(phase + p0)
-            const t1 = track.globalToLocal(phase + p1)
-
-            this.c2D.strokeStyle = "rgba(30, 240, 255, 1.0)"
-            this.c2D.fillStyle = "rgba(30, 240, 255, 0.04)"
-            this.c2D.beginPath()
-            this.c2D.moveTo(0, 0)
-            this.c2D.lineTo(Math.cos(t0 * TAU) * radius, Math.sin(t0 * TAU) * radius)
-            this.c2D.arc(0.0, 0.0, radius, t0 * TAU, t1 * TAU)
-            this.c2D.lineTo(0, 0)
-            this.c2D.stroke()
-            this.c2D.fill()
-
-            const iterator = track.filterSections(t0, t1)
-            while (iterator.hasNext()) {
-                const result: FilterResult = iterator.next()
-                this.c2D.strokeStyle = result.edge === Edge.Start ? "white" : "#888"
-                this.c2D.beginPath()
-                this.c2D.moveTo(0, 0)
-                console.assert(t0 <= result.position && result.position <= t1, `p0: ${t0}, pos: ${result.position}, p1: ${t1}`)
-                const position = result.position
-                this.c2D.lineTo(Math.cos(position * TAU) * distance, Math.sin(position * TAU) * distance)
-                this.c2D.stroke()
-            }
-        }
-
         this.drawCrossing()
 
         RotaryRenderer.render(this.c2D, this.model, phase)

@@ -345,12 +345,9 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     }
 
     localToSegment(phase: number): number {
-        const phaseIndex = Math.floor(phase)
         const bend = this.bend.get()
-        const length = this.length.get()
         const lengthRatio = this.lengthRatio.get()
-        const segments = this.segments.get()
-        const full = Func.tx(Func.clamp((phase - phaseIndex) / length), -bend) * segments
+        const full = Func.tx(Func.clamp((phase - Math.floor(phase)) / this.length.get()), -bend) * this.segments.get()
         const index = Math.floor(full)
         const local = (full - index) / lengthRatio
         return local <= 1.0 ? index + (this.reverse.get() ? local : 1.0 - local) : -1.0
