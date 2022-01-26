@@ -10,10 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { ListItem, MenuBar } from "../dom/menu.js";
 import { Mulberry32 } from "../lib/math.js";
 import { open, renderGIF, renderWebM, save } from "./file.js";
+import { encodeWavFloat } from "../dsp/common.js";
 const zoomLevel = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
 ]);
-export const installApplicationMenu = (element, model, app) => {
+export const installApplicationMenu = (element, model, audio, app) => {
     MenuBar.install()
         .offset(0, 0)
         .addButton(element.querySelector("[data-menu='file']"), ListItem.root()
@@ -25,6 +26,30 @@ export const installApplicationMenu = (element, model, app) => {
         .onTrigger(() => renderGIF(model)))
         .addListItem(ListItem.default("Export WebM", "", false)
         .onTrigger(() => renderWebM(model)))
+        .addListItem(ListItem.default("Export Wav", "", false)
+        .onTrigger(() => __awaiter(void 0, void 0, void 0, function* () {
+        const source = yield audio.render();
+        const totalFrames = audio.totalFrames;
+        const target = [];
+        for (let i = 0; i < source.numberOfChannels; i++) {
+            target[i] = new Float32Array(totalFrames);
+            source.copyFromChannel(target[i], i, source.length - totalFrames);
+        }
+        const wav = encodeWavFloat({
+            channels: target,
+            numFrames: totalFrames,
+            sampleRate: source.sampleRate
+        });
+        try {
+            const saveFilePicker = yield window.showSaveFilePicker({ suggestedName: "loop.wav" });
+            const writableFileStream = yield saveFilePicker.createWritable();
+            writableFileStream.write(wav);
+            writableFileStream.close();
+        }
+        catch (e) {
+            console.log(`abort with ${e}`);
+        }
+    })))
         .addListItem(ListItem.default("Clear", "", false)
         .onTrigger(() => model.clear())))
         .addButton(element.querySelector("[data-menu='edit']"), ListItem.root()

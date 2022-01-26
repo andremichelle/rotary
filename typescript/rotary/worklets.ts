@@ -9,12 +9,12 @@ export const handleErrors = (worklet: AudioWorkletNode) => {
 }
 
 export class RotaryAutomationNode extends AudioWorkletNode {
-    static async build(context: AudioContext): Promise<RotaryAutomationNode> {
+    static async build(context: BaseAudioContext): Promise<RotaryAutomationNode> {
         await context.audioWorklet.addModule("bin/worklets/automation.js")
         return new RotaryAutomationNode(context)
     }
 
-    constructor(context: AudioContext) {
+    constructor(context: BaseAudioContext) {
         super(context, "rotary-automation", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
@@ -33,12 +33,12 @@ export class RotaryAutomationNode extends AudioWorkletNode {
 }
 
 export class RotarySineNode extends AudioWorkletNode {
-    static async build(context: AudioContext): Promise<RotarySineNode> {
+    static async build(context: BaseAudioContext): Promise<RotarySineNode> {
         await context.audioWorklet.addModule("bin/worklets/sine.js")
         return new RotarySineNode(context)
     }
 
-    constructor(context: AudioContext) {
+    constructor(context: BaseAudioContext) {
         super(context, "rotary-sine", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
@@ -53,12 +53,12 @@ export class RotarySineNode extends AudioWorkletNode {
 }
 
 export class RotaryPlaybackNode extends AudioWorkletNode {
-    static async build(context: AudioContext): Promise<RotaryPlaybackNode> {
+    static async build(context: BaseAudioContext): Promise<RotaryPlaybackNode> {
         await context.audioWorklet.addModule("bin/worklets/playback.js")
         return new RotaryPlaybackNode(context)
     }
 
-    constructor(context: AudioContext) {
+    constructor(context: BaseAudioContext) {
         super(context, "rotary-playback", {
             numberOfInputs: 1,
             numberOfOutputs: 1,

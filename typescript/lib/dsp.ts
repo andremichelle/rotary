@@ -1,4 +1,4 @@
-export const pulsarDelay = (context: AudioContext, input: AudioNode, output: AudioNode,
+export const pulsarDelay = (context: BaseAudioContext, input: AudioNode, output: AudioNode,
                             delayTimeL: number, delayTimeR: number, delayTime: number,
                             feedback: number, lpf: number, hpf: number) => {
     const preSplitter = context.createChannelSplitter(2)
@@ -37,7 +37,7 @@ export const pulsarDelay = (context: AudioContext, input: AudioNode, output: Aud
 }
 
 export const cycle = async (sampleRate: number, frequency: number): Promise<AudioBuffer> => {
-    const context = new OfflineAudioContext(1, Math.floor(sampleRate / frequency * 2.0), sampleRate)
+    const context = new OfflineAudioContext(1, Math.floor(sampleRate / frequency), sampleRate)
     const oscillator = context.createOscillator()
     oscillator.frequency.value = frequency
     oscillator.start(0.0)

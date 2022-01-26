@@ -43,7 +43,7 @@ export const pulsarDelay = (context, input, output, delayTimeL, delayTimeR, dela
     feedbackGain.connect(output);
 };
 export const cycle = (sampleRate, frequency) => __awaiter(void 0, void 0, void 0, function* () {
-    const context = new OfflineAudioContext(1, Math.floor(sampleRate / frequency * 2.0), sampleRate);
+    const context = new OfflineAudioContext(1, Math.floor(sampleRate / frequency), sampleRate);
     const oscillator = context.createOscillator();
     oscillator.frequency.value = frequency;
     oscillator.start(0.0);

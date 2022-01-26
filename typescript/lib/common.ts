@@ -501,10 +501,10 @@ export const readBinary = (url: string): Promise<ArrayBuffer> => {
         r.send(null)
     })
 }
-export const readAudio = (context: AudioContext, url: string): Promise<AudioBuffer> => {
+export const readAudio = (context: BaseAudioContext, url: string): Promise<AudioBuffer> => {
     return readBinary(url).then(buffer => decodeAudioData(context, buffer))
 }
-export const decodeAudioData = (context: AudioContext, buffer: ArrayBuffer): Promise<AudioBuffer> => {
+export const decodeAudioData = (context: BaseAudioContext, buffer: ArrayBuffer): Promise<AudioBuffer> => {
     return context.decodeAudioData(buffer)
 }
 

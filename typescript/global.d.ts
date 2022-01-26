@@ -86,6 +86,7 @@ declare interface PickerOptionType {
 
 declare interface PickerOptions {
     excludeAcceptAllOption?: boolean
+    suggestedName?: string
     multiple?: boolean
     types?: PickerOptionType[]
 }

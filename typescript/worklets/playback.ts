@@ -4,10 +4,10 @@ import {RenderQuantum} from "../dsp/common.js"
 
 class Voice {
     static ATTACK = (0.005 * sampleRate) | 0
-    static RELEASE = (0.150 * sampleRate) | 0
+    static RELEASE = (0.050 * sampleRate) | 0
 
     position: number = 0 | 0
-    duration: number = (sampleRate * 10000) | 0
+    duration: number = Number.MAX_SAFE_INTEGER
 
     constructor(readonly sampleKey: number, public delayFrames: number) {
     }
@@ -26,9 +26,10 @@ class Sample {
 
 registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         private readonly model: RotaryModel = new RotaryModel()
-        private phase: number = 0 | 0
-        private samples: Map<number, Sample> = new Map()
+        private readonly samples: Map<number, Sample> = new Map()
         private readonly activeVoices: Map<number, Voice[]> = new Map()
+
+        private phase: number = 0 | 0
 
         constructor() {
             super()
