@@ -70,8 +70,8 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                             throw new Error(`frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, p: ${result.position}, 
                                 frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopLength - this.phase)}`)
                         }
-                        const num = 24
-                        const key: number = trackIndex % num//this.phase < loopLength / 2 ? trackIndex % num : num + (trackIndex % num)
+                        const num = 5
+                        const key: number = this.phase < loopLength / 2 ? trackIndex % num : num + (trackIndex % num)
                         this.activeVoices.get(trackIndex).push(new Voice(key, -frameIndex))
                     }
                 }

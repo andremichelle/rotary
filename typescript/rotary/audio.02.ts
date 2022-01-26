@@ -1,6 +1,6 @@
 import {RotaryPlaybackNode} from "./worklets.js"
 import {readAudio} from "../lib/common.js"
-import {pulsarDelay} from "../lib/dsp.js"
+import {beep, pulsarDelay} from "../lib/dsp.js"
 import {BuildAudio, Setup} from "./audio.js"
 import {midiToHz} from "../dsp/common.js"
 import {Chords} from "../lib/chords.js"
@@ -39,7 +39,7 @@ export const buildAudio: BuildAudio = async (setup: Setup) => {
         return [source, target]
     }
 
-    {
+    /*{
         const gen = new Generator(1 << 16, context.sampleRate)
         const offset = Math.floor(context.sampleRate * 0.010)
         const compose = Chords.compose(Chords.Minor, 48, 0, 5)
@@ -49,9 +49,10 @@ export const buildAudio: BuildAudio = async (setup: Setup) => {
             const hz = midiToHz(compose[n] + o, 440.0)
             rotaryNode.updateSample(i, phaseShift(await gen.render(Harmonic.make(hz / context.sampleRate, 0.1, 2.2)), offset), true)
         }
-    }
+    }*/
 
-    /*let index = 0
+
+    let index = 0
     {
         const compose = Chords.compose(Chords.Minor, 60, 0, 5)
         for (let i = 0; i < compose.length; i++) {
@@ -63,7 +64,7 @@ export const buildAudio: BuildAudio = async (setup: Setup) => {
         for (let i = 0; i < compose.length; i++) {
             rotaryNode.updateSample(index++, await beep(context.sampleRate, midiToHz(compose[i], 440.0)))
         }
-    }*/
+    }
 
     const wetNode = context.createGain()
     wetNode.gain.value = 0.4

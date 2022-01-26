@@ -175,10 +175,6 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     }
 }
 
-export enum Fill {
-    Flat, Stroke, Line, Positive, Negative
-}
-
 export const MotionTypes = new Map<string, InjectiveType>([
     ["Linear", IdentityInjective],
     ["Power", PowInjective],
@@ -187,8 +183,12 @@ export const MotionTypes = new Map<string, InjectiveType>([
     ["SmoothStep", SmoothStepInjective]
 ])
 
+export enum Fill {
+    Flat, Stroke, Line, Gradient
+}
+
 export const Fills = new Map<string, Fill>(
-    [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]])
+    [["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient", Fill.Gradient]])
 
 export enum Edge {
     Start, End
@@ -272,7 +272,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const width = random.nextDouble(0.0, 1.0) < 0.2 ? random.nextDouble(0.0, 1.0) < 0.2 ? 32.0 : 24.0 : 12.0
         const widthPadding = random.nextDouble(0.0, 1.0) < 0.25 ? random.nextDouble(0.0, 1.0) < 0.25 ? 0.0 : 6.0 : 12.0
         const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0
-        const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
+        const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Gradient : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
         this.segments.set(0 === lengthRatioExp ? 1 : segments)
         this.width.set(width)
         this.widthPadding.set(widthPadding)

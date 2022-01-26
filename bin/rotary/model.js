@@ -106,14 +106,6 @@ export class RotaryModel {
     }
 }
 RotaryModel.MAX_TRACKS = 24;
-export var Fill;
-(function (Fill) {
-    Fill[Fill["Flat"] = 0] = "Flat";
-    Fill[Fill["Stroke"] = 1] = "Stroke";
-    Fill[Fill["Line"] = 2] = "Line";
-    Fill[Fill["Positive"] = 3] = "Positive";
-    Fill[Fill["Negative"] = 4] = "Negative";
-})(Fill || (Fill = {}));
 export const MotionTypes = new Map([
     ["Linear", IdentityInjective],
     ["Power", PowInjective],
@@ -121,7 +113,14 @@ export const MotionTypes = new Map([
     ["TShape", TShapeInjective],
     ["SmoothStep", SmoothStepInjective]
 ]);
-export const Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient+", Fill.Positive], ["Gradient-", Fill.Negative]]);
+export var Fill;
+(function (Fill) {
+    Fill[Fill["Flat"] = 0] = "Flat";
+    Fill[Fill["Stroke"] = 1] = "Stroke";
+    Fill[Fill["Line"] = 2] = "Line";
+    Fill[Fill["Gradient"] = 3] = "Gradient";
+})(Fill || (Fill = {}));
+export const Fills = new Map([["Flat", Fill.Flat], ["Stroke", Fill.Stroke], ["Line", Fill.Line], ["Gradient", Fill.Gradient]]);
 export var Edge;
 (function (Edge) {
     Edge[Edge["Start"] = 0] = "Start";
@@ -199,7 +198,7 @@ export class RotaryTrackModel {
         const width = random.nextDouble(0.0, 1.0) < 0.2 ? random.nextDouble(0.0, 1.0) < 0.2 ? 32.0 : 24.0 : 12.0;
         const widthPadding = random.nextDouble(0.0, 1.0) < 0.25 ? random.nextDouble(0.0, 1.0) < 0.25 ? 0.0 : 6.0 : 12.0;
         const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0;
-        const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Positive : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat;
+        const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Gradient : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat;
         this.segments.set(0 === lengthRatioExp ? 1 : segments);
         this.width.set(width);
         this.widthPadding.set(widthPadding);

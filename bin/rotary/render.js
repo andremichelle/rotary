@@ -80,14 +80,16 @@ export class RotaryRenderer {
         else {
             const gradient = context.createConicGradient(radianMin, 0.0, 0.0);
             const offset = Math.min(angleMax - angleMin, 1.0);
-            if (fill === Fill.Positive) {
-                gradient.addColorStop(0.0, model.transparent());
-                gradient.addColorStop(offset, model.opaque());
-                gradient.addColorStop(offset, model.transparent());
-            }
-            else if (fill === Fill.Negative) {
-                gradient.addColorStop(0.0, model.opaque());
-                gradient.addColorStop(offset, model.transparent());
+            if (fill === Fill.Gradient) {
+                if (model.reverse.get()) {
+                    gradient.addColorStop(0.0, model.transparent());
+                    gradient.addColorStop(offset, model.opaque());
+                    gradient.addColorStop(offset, model.transparent());
+                }
+                else {
+                    gradient.addColorStop(0.0, model.opaque());
+                    gradient.addColorStop(offset, model.transparent());
+                }
             }
             context.fillStyle = gradient;
         }
