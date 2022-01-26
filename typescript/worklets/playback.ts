@@ -1,6 +1,7 @@
 import {Edge, FilterResult, RotaryModel} from "../rotary/model.js"
 import {Message} from "./worklet.js"
 import {RenderQuantum} from "../dsp/common.js"
+import {TAU} from "../lib/common.js"
 
 class Voice {
     static ATTACK = (0.005 * sampleRate) | 0
@@ -96,12 +97,14 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                                 break
                             } else {
                                 const envelope = Math.min(1.0, duration / Voice.RELEASE) * Math.min(1.0, position / Voice.ATTACK)
+                                const panL = 0.5 + Math.sin(position / sampleRate * 8.0 * TAU) * 0.5
+                                const panR = 0.5 + Math.cos(position / sampleRate * 8.0 * TAU) * 0.5
                                 if (sample.loop) {
-                                    outL[frameIndex] += frames[0][position % numFrames] * envelope
-                                    outR[frameIndex] += frames[1][position % numFrames] * envelope
+                                    outL[frameIndex] += frames[0][position % numFrames] * envelope * panL
+                                    outR[frameIndex] += frames[1][position % numFrames] * envelope * panR
                                 } else {
-                                    outL[frameIndex] += frames[0][position] * envelope
-                                    outR[frameIndex] += frames[1][position] * envelope
+                                    outL[frameIndex] += frames[0][position] * envelope * panL
+                                    outR[frameIndex] += frames[1][position] * envelope * panR
                                 }
                             }
                         } else {

@@ -8,7 +8,7 @@ export declare class Audio {
     readonly builder: AudioBuilder;
     readonly model: RotaryModel;
     static create(builder: AudioBuilder, model: RotaryModel): Promise<Audio>;
-    static SAMPLE_RATE: number;
+    static RENDER_SAMPLE_RATE: number;
     private constructor();
     readonly currentTime: number;
     readonly totalTime: number;

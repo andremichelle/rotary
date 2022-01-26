@@ -30,7 +30,7 @@ export class Audio {
         return new Audio(context, builder, model)
     }
 
-    static SAMPLE_RATE = 48000 | 0
+    static RENDER_SAMPLE_RATE = 48000 | 0
 
     private constructor(readonly context: AudioContext,
                         readonly builder: AudioBuilder,
@@ -46,13 +46,14 @@ export class Audio {
     }
 
     get totalFrames(): number {
-        return Math.floor(this.model.loopDuration.get() * Audio.SAMPLE_RATE)
+        return Math.floor(this.model.loopDuration.get() * Audio.RENDER_SAMPLE_RATE) | 0
     }
 
     async render(passes: number = 2 | 0): Promise<AudioBuffer> {
         await this.context.suspend()
         const duration = this.model.loopDuration.get() * passes
-        const offlineAudioContext = new OfflineAudioContext(2, Math.floor(Audio.SAMPLE_RATE * duration) | 0, Audio.SAMPLE_RATE)
+        const offlineAudioContext = new OfflineAudioContext(2,
+            Math.floor(Audio.RENDER_SAMPLE_RATE * duration) | 0, Audio.RENDER_SAMPLE_RATE)
         const loadingIndicator = new ProgressIndicator("Export Audio...")
         const terminable = await loadingIndicator.completeWith(
             this.builder.build(offlineAudioContext, offlineAudioContext.destination, this.model, info => {

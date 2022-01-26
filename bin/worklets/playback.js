@@ -1,5 +1,6 @@
 import { Edge, RotaryModel } from "../rotary/model.js";
 import { RenderQuantum } from "../dsp/common.js";
+import { TAU } from "../lib/common.js";
 class Voice {
     constructor(sampleKey, delayFrames) {
         this.sampleKey = sampleKey;
@@ -90,13 +91,15 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                         }
                         else {
                             const envelope = Math.min(1.0, duration / Voice.RELEASE) * Math.min(1.0, position / Voice.ATTACK);
+                            const panL = 0.5 + Math.sin(position / sampleRate * 8.0 * TAU) * 0.5;
+                            const panR = 0.5 + Math.cos(position / sampleRate * 8.0 * TAU) * 0.5;
                             if (sample.loop) {
-                                outL[frameIndex] += frames[0][position % numFrames] * envelope;
-                                outR[frameIndex] += frames[1][position % numFrames] * envelope;
+                                outL[frameIndex] += frames[0][position % numFrames] * envelope * panL;
+                                outR[frameIndex] += frames[1][position % numFrames] * envelope * panR;
                             }
                             else {
-                                outL[frameIndex] += frames[0][position] * envelope;
-                                outR[frameIndex] += frames[1][position] * envelope;
+                                outL[frameIndex] += frames[0][position] * envelope * panL;
+                                outR[frameIndex] += frames[1][position] * envelope * panR;
                             }
                         }
                     }

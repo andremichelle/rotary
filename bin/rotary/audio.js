@@ -47,13 +47,13 @@ export class Audio {
         return this.model.loopDuration.get();
     }
     get totalFrames() {
-        return Math.floor(this.model.loopDuration.get() * Audio.SAMPLE_RATE);
+        return Math.floor(this.model.loopDuration.get() * Audio.RENDER_SAMPLE_RATE) | 0;
     }
     render(passes = 2 | 0) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.context.suspend();
             const duration = this.model.loopDuration.get() * passes;
-            const offlineAudioContext = new OfflineAudioContext(2, Math.floor(Audio.SAMPLE_RATE * duration) | 0, Audio.SAMPLE_RATE);
+            const offlineAudioContext = new OfflineAudioContext(2, Math.floor(Audio.RENDER_SAMPLE_RATE * duration) | 0, Audio.RENDER_SAMPLE_RATE);
             const loadingIndicator = new ProgressIndicator("Export Audio...");
             const terminable = yield loadingIndicator.completeWith(this.builder.build(offlineAudioContext, offlineAudioContext.destination, this.model, info => {
                 console.debug(info);
@@ -72,5 +72,5 @@ export class Audio {
         });
     }
 }
-Audio.SAMPLE_RATE = 48000 | 0;
+Audio.RENDER_SAMPLE_RATE = 48000 | 0;
 //# sourceMappingURL=audio.js.map

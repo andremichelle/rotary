@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { RotaryRenderer } from "./render.js";
 import { ProgressIndicator } from "../dom/common.js";
+import { encodeWavFloat } from "../dsp/common.js";
 const pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
 export const open = (model) => __awaiter(void 0, void 0, void 0, function* () {
     const fileHandles = yield window.showOpenFilePicker(pickerOpts);
@@ -64,5 +65,68 @@ export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* 
     });
     gif.addListener("progress", progress => progressIndicator.onProgress(0.5 + progress * 0.5));
     gif.render();
+});
+export const renderWav = (audio) => __awaiter(void 0, void 0, void 0, function* () {
+    const source = yield audio.render();
+    const totalFrames = audio.totalFrames;
+    const target = [];
+    for (let i = 0; i < source.numberOfChannels; i++) {
+        target[i] = new Float32Array(totalFrames);
+        source.copyFromChannel(target[i], i, source.length - totalFrames);
+    }
+    const wav = encodeWavFloat({
+        channels: target,
+        numFrames: totalFrames,
+        sampleRate: source.sampleRate
+    });
+    try {
+        const saveFilePicker = yield window.showSaveFilePicker({ suggestedName: "loop.wav" });
+        const writableFileStream = yield saveFilePicker.createWritable();
+        writableFileStream.write(wav);
+        writableFileStream.close();
+    }
+    catch (e) {
+        console.log(`abort with ${e}`);
+    }
+});
+export const renderVideo = (model) => __awaiter(void 0, void 0, void 0, function* () {
+    let totalBytes = 0 | 0;
+    const buffers = [];
+    const encoder = new VideoEncoder({
+        output: (chunk, metadata) => {
+            totalBytes += chunk.byteLength;
+            const arrayBuffer = new Uint8Array(new ArrayBuffer(chunk.byteLength));
+            chunk.copyTo(arrayBuffer);
+            buffers.push(arrayBuffer);
+        },
+        error: error => {
+            console.log(`error: ${error}`);
+        }
+    });
+    const size = model.exportSize.get();
+    const numFrames = Math.floor(60 * 1);
+    const progressIndicator = new ProgressIndicator("Export GIF");
+    encoder.configure({
+        codec: "vp8",
+        width: size,
+        height: size,
+        alpha: "discard",
+        latencyMode: "quality",
+        framerate: 60
+    });
+    yield RotaryRenderer.renderFrames(model, numFrames, size, context => {
+        const frame = new VideoFrame(context.canvas);
+        encoder.encode(frame);
+        frame.close();
+    }, progress => progressIndicator.onProgress(progress * 0.5));
+    yield progressIndicator.completeWith(encoder.flush());
+    const video = new Uint8Array(new ArrayBuffer(totalBytes));
+    let write = 0 | 0;
+    for (let i = 0; i < buffers.length; i++) {
+        const buffer = buffers[i];
+        for (let j = 0; j < buffer.byteLength; j++) {
+            video[write++] = buffer[j];
+        }
+    }
 });
 //# sourceMappingURL=file.js.map

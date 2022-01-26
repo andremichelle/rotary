@@ -126,7 +126,23 @@ declare interface EncodedVideoChunk {
     copyTo(destination: BufferSource): void
 }
 
+declare interface ColorSpace {
+    fullRange: boolean
+    matrix: string
+    primaries: string
+    transfer: string
+}
+
+declare interface DecoderConfig {
+    codec: string
+    codedWidth: number
+    codedHeight: number
+    colorSpace: ColorSpace
+    hardwareAcceleration: 'no-preference'
+}
+
 declare interface EncodedVideoChunkMetadata {
+    decoderConfig?: DecoderConfig
 }
 
 declare type EncodedVideoChunkOutputCallback = (chunk: EncodedVideoChunk, metadata?: EncodedVideoChunkMetadata) => void
@@ -202,6 +218,34 @@ declare interface VideoEncoder {
 declare var VideoEncoder: {
     prototype: VideoEncoder
     new(init: VideoEncoderInit): VideoEncoder
+}
+
+declare interface VideoEncoderConfig {
+    codec: string
+    description?: BufferSource
+    codedWidth?: number
+    codedHeight?: number
+    displayAspectWidth?: number
+    displayAspectHeight?: number
+    colorSpace?: ColorSpace
+    hardwareAcceleration?: "no-preference" | "prefer-hardware" | "prefer-software"
+    optimizeForLatency?: boolean
+}
+
+declare interface VideoDecoderInit {
+    output: (frame: VideoFrame) => void
+    error: WebCodecsErrorCallback
+}
+
+declare interface VideoDecoder {
+    configure(config: VideoEncoderConfig): void
+
+    decode(chunk: EncodedVideoChunk): void
+}
+
+declare var VideoDecoder: {
+    prototype: VideoDecoder
+    new(init: VideoDecoderInit): VideoDecoder
 }
 
 declare interface WebMWriterInit {

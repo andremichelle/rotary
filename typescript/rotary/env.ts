@@ -2,9 +2,8 @@ import {ListItem, MenuBar} from "../dom/menu.js"
 import {Mulberry32} from "../lib/math.js"
 import {RotaryModel} from "./model.js"
 import {RotaryApp} from "./app.js"
-import {open, renderGIF, renderWebM, save} from "./file.js"
+import {open, renderGIF, renderVideo, renderWav, renderWebM, save} from "./file.js"
 import {Audio} from "./audio.js"
-import {encodeWavFloat} from "../dsp/common.js"
 
 const zoomLevel: Map<string, number> = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
@@ -18,34 +17,14 @@ export const installApplicationMenu = (element: HTMLElement, model: RotaryModel,
                 .onTrigger(async () => open(model)))
             .addListItem(ListItem.default("Save...", "", false)
                 .onTrigger(async () => save(model)))
+            .addListItem(ListItem.default("Export Video (experimental)", "", false)
+                .onTrigger(() => renderVideo(model)))
             .addListItem(ListItem.default("Export GIF", "", false)
                 .onTrigger(() => renderGIF(model)))
             .addListItem(ListItem.default("Export WebM", "", false)
                 .onTrigger(() => renderWebM(model)))
             .addListItem(ListItem.default("Export Wav", "", false)
-                .onTrigger(async () => {
-                        const source: AudioBuffer = await audio.render()
-                        const totalFrames = audio.totalFrames
-                        const target: Float32Array[] = []
-                        for (let i = 0; i < source.numberOfChannels; i++) {
-                            target[i] = new Float32Array(totalFrames)
-                            source.copyFromChannel(target[i], i, source.length - totalFrames)
-                        }
-                        const wav: ArrayBuffer = encodeWavFloat({
-                            channels: target,
-                            numFrames: totalFrames,
-                            sampleRate: source.sampleRate
-                        })
-                        try {
-                            const saveFilePicker = await window.showSaveFilePicker({suggestedName: "loop.wav"})
-                            const writableFileStream = await saveFilePicker.createWritable()
-                            writableFileStream.write(wav)
-                            writableFileStream.close()
-                        } catch (e: any) {
-                            console.log(`abort with ${e}`)
-                        }
-                    }
-                ))
+                .onTrigger(async () => renderWav(audio)))
             .addListItem(ListItem.default("Clear", "", false)
                 .onTrigger(() => model.clear())))
         .addButton(element.querySelector("[data-menu='edit']"), ListItem.root()
