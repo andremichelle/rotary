@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { TAU } from "../lib/common.js";
-import { Func } from "../lib/math.js";
 import { Fill } from "./model.js";
 export class RotaryRenderer {
     static render(context, model, phase) {
@@ -43,7 +42,7 @@ export class RotaryRenderer {
                 context.globalAlpha = index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4;
             }
             const a0 = index / segments, a1 = a0 + lengthRatio / segments;
-            RotaryRenderer.renderSection(context, trackModel, r0, r1, phase + Func.tx(a0, bend) * length, phase + Func.tx(a1, bend) * length);
+            RotaryRenderer.renderSection(context, trackModel, r0, r1, phase + bend.fx(a0) * length, phase + bend.fx(a1) * length);
         }
         const outline = trackModel.outline.get();
         if (0.0 < outline) {
@@ -53,8 +52,8 @@ export class RotaryRenderer {
             for (let i = 0; i < numArcs; i++) {
                 context.beginPath();
                 const a0 = (i + lengthRatio) / segments, a1 = (i + 1) / segments;
-                const startAngle = (phase + Func.tx(a0, bend) * length) * TAU;
-                const endAngle = (phase + Func.tx(a1, bend) * length) * TAU;
+                const startAngle = (phase + bend.fx(a0) * length) * TAU;
+                const endAngle = (phase + bend.fx(a1) * length) * TAU;
                 const radius = r0 + width * 0.5;
                 if ((endAngle - startAngle) * radius < 1.0) {
                     continue;
@@ -68,6 +67,9 @@ export class RotaryRenderer {
     static renderSection(context, model, radiusMin, radiusMax, angleMin, angleMax) {
         console.assert(radiusMin < radiusMax, `radiusMax(${radiusMax}) must be greater then radiusMin(${radiusMin})`);
         console.assert(angleMin <= angleMax, `angleMax(${angleMax}) must be greater then angleMin(${angleMin})`);
+        if ((angleMax - angleMin) * radiusMin * TAU < 1.0) {
+            angleMax = (angleMin + 1.0 / (radiusMin * TAU));
+        }
         const radianMin = angleMin * TAU;
         const radianMax = angleMax * TAU;
         const fill = model.fill.get();

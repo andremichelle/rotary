@@ -121,7 +121,7 @@ declare interface PowData {
 }
 
 export class PowInjective extends Injective<PowData> {
-    private readonly range = new Linear(1.0, 16.0)
+    private readonly range = new Linear(1.0, 4.0)
 
     readonly exponent = this.bindValue(new BoundNumericValue(this.range, 2.0))
 

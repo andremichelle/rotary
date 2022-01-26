@@ -113,11 +113,18 @@ body
             column-gap: 32px
             border-radius: 2px
 
-            &[data-motion="linear"] [data-exclude="motion"]:not([data-motion="linear"]),
-            &[data-motion="pow"] [data-exclude="motion"]:not([data-motion="pow"]),
-            &[data-motion="cshape"] [data-exclude="motion"]:not([data-motion="cshape"]),
-            &[data-motion="tshape"] [data-exclude="motion"]:not([data-motion="tshape"]),
-            &[data-motion="smoothstep"] [data-exclude="motion"]:not([data-motion="smoothstep"])
+            &[data-motion="linear"] [data-group="motion"]:not([data-injective="linear"]),
+            &[data-motion="pow"] [data-group="motion"]:not([data-injective="pow"]),
+            &[data-motion="cshape"] [data-group="motion"]:not([data-injective="cshape"]),
+            &[data-motion="tshape"] [data-group="motion"]:not([data-injective="tshape"]),
+            &[data-motion="smoothstep"] [data-group="motion"]:not([data-injective="smoothstep"])
+              display: none
+              
+            &[data-bend="linear"] [data-group="bend"]:not([data-injective="linear"]),
+            &[data-bend="pow"] [data-group="bend"]:not([data-injective="pow"]),
+            &[data-bend="cshape"] [data-group="bend"]:not([data-injective="cshape"]),
+            &[data-bend="tshape"] [data-group="bend"]:not([data-injective="tshape"]),
+            &[data-bend="smoothstep"] [data-group="bend"]:not([data-injective="smoothstep"])
               display: none
 
           > .actions

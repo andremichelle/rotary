@@ -73,7 +73,7 @@ export class IdentityInjective extends Injective {
 export class PowInjective extends Injective {
     constructor() {
         super(...arguments);
-        this.range = new Linear(1.0, 16.0);
+        this.range = new Linear(1.0, 4.0);
         this.exponent = this.bindValue(new BoundNumericValue(this.range, 2.0));
     }
     fx(x) {

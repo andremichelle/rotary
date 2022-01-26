@@ -42,6 +42,14 @@ export const pulsarDelay = (context, input, output, delayTimeL, delayTimeR, dela
     feedbackSplitter.connect(feedbackMerger, 1, 0);
     feedbackGain.connect(output);
 };
+export const cycle = (sampleRate, frequency) => __awaiter(void 0, void 0, void 0, function* () {
+    const context = new OfflineAudioContext(1, Math.floor(sampleRate / frequency * 2.0), sampleRate);
+    const oscillator = context.createOscillator();
+    oscillator.frequency.value = frequency;
+    oscillator.start(0.0);
+    oscillator.connect(context.destination);
+    return context.startRendering();
+});
 export const beep = (sampleRate, frequency, duration = 20.0) => __awaiter(void 0, void 0, void 0, function* () {
     const context = new OfflineAudioContext(1, Math.ceil(sampleRate * duration), sampleRate);
     const fadeTime = 0.010;

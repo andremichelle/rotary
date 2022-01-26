@@ -1,6 +1,6 @@
 import { Iterator, Observable, ObservableCollection, ObservableValue, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
-import { Injective, InjectiveFormat, InjectiveType } from "../lib/injective.js";
+import { Injective, InjectiveFormat } from "../lib/injective.js";
 export declare interface RotaryFormat {
     radiusMin: number;
     exportSize: number;
@@ -19,7 +19,7 @@ export declare interface RotaryTrackFormat {
     rgb: number;
     motion: InjectiveFormat<any>;
     phaseOffset: number;
-    bend: number;
+    bend: InjectiveFormat<any>;
     fragments: number;
     frequency: number;
     reverse: boolean;
@@ -50,7 +50,6 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     deserialize(format: RotaryFormat): RotaryModel;
     private bindValue;
 }
-export declare const MotionTypes: Map<string, InjectiveType>;
 export declare enum Fill {
     Flat = 0,
     Stroke = 1,
@@ -72,6 +71,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly root: RotaryModel;
     private readonly terminator;
     private readonly observable;
+    private readonly gradient;
     readonly segments: ObservableValue<any>;
     readonly width: ObservableValue<any>;
     readonly widthPadding: ObservableValue<any>;
@@ -81,13 +81,11 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly fill: ObservableValue<any>;
     readonly rgb: ObservableValue<any>;
     readonly motion: ObservableValue<Injective<any>>;
+    readonly bend: ObservableValue<Injective<any>>;
     readonly phaseOffset: ObservableValue<any>;
-    readonly bend: ObservableValue<any>;
     readonly frequency: ObservableValue<any>;
     readonly fragments: ObservableValue<any>;
     readonly reverse: ObservableValue<any>;
-    private readonly gradient;
-    private readonly motionTerminator;
     constructor(root: RotaryModel);
     bindValue(property: ObservableValue<any>): ObservableValue<any>;
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;

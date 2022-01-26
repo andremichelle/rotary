@@ -4,11 +4,12 @@ import {RenderQuantum} from "../dsp/common.js"
 
 class Voice {
     static ATTACK = (0.005 * sampleRate) | 0
-    static RELEASE = (1.5 * sampleRate) | 0
+    static RELEASE = (0.150 * sampleRate) | 0
 
-    duration: number = Number.MAX_SAFE_INTEGER
+    position: number = 0 | 0
+    duration: number = (sampleRate * 10000) | 0
 
-    constructor(readonly sampleKey: number, public position: number = 0 | 0) {
+    constructor(readonly sampleKey: number, public delayFrames: number) {
     }
 
     stop() {
@@ -55,7 +56,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
             const loopLength = (sampleRate * this.model.loopDuration.get()) | 0
             const x0 = this.phase / loopLength
             const x1 = (this.phase + RenderQuantum) / loopLength
-            for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
+            for (let trackIndex = 0; trackIndex < tracks.size() ; trackIndex++) {
                 const track = tracks.get(trackIndex)
                 const t0 = track.globalToLocal(x0)
                 const t1 = track.globalToLocal(x1)
@@ -76,25 +77,34 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                     }
                 }
             }
-            for (let voices of this.activeVoices.values()) {
-                for (let i = 0; i < voices.length; i++) {
-                    const voice = voices[i]
+            for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
+                const voices = this.activeVoices.get(index)
+                for (let voiceIndex = voices.length - 1; 0 <= voiceIndex; voiceIndex--) {
+                    const voice: Voice = voices[voiceIndex]
                     const sample: Sample = this.samples.get(voice.sampleKey)
                     if (sample === undefined) continue
-                    const frames = sample.frames
+                    const frames: Float32Array[] = sample.frames
                     for (let frameIndex = 0; frameIndex < RenderQuantum; frameIndex++) {
-                        const numFrames = frames[0].length
-                        let position = voice.position++
-                        if ((!sample.loop && position >= numFrames) || 0 === voice.duration) {
-                            voices.splice(i, 1)
-                        } else if (position >= 0) {
-                            let envelope = Math.min(1.0, voice.duration-- / Voice.RELEASE) * Math.min(1.0, position / Voice.ATTACK)
-                            envelope *= envelope
-                            if(sample.loop) {
-                                position %= numFrames
+                        if (0 <= voice.delayFrames) {
+                            const position = voice.position++
+                            const duration = voice.duration--
+                            const numFrames = frames[0].length
+                            const complete = 0 === duration || (!sample.loop && position >= numFrames)
+                            if (complete) {
+                                voices.splice(voiceIndex, 1)
+                                break
+                            } else {
+                                const envelope = Math.min(1.0, duration / Voice.RELEASE) * Math.min(1.0, position / Voice.ATTACK)
+                                if (sample.loop) {
+                                    outL[frameIndex] += frames[0][position % numFrames] * envelope
+                                    outR[frameIndex] += frames[1][position % numFrames] * envelope
+                                } else {
+                                    outL[frameIndex] += frames[0][position] * envelope
+                                    outR[frameIndex] += frames[1][position] * envelope
+                                }
                             }
-                            outL[frameIndex] += frames[0][position] * envelope
-                            outR[frameIndex] += frames[1][position] * envelope
+                        } else {
+                            voice.delayFrames++
                         }
                     }
                 }

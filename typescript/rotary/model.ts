@@ -15,17 +15,8 @@ import {
 } from "../lib/common.js"
 import {Func, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
-import {
-    CShapeInjective,
-    IdentityInjective,
-    Injective,
-    InjectiveFormat,
-    InjectiveType,
-    PowInjective,
-    SmoothStepInjective,
-    TShapeInjective
-} from "../lib/injective.js"
 import {Colors} from "../lib/colors.js"
+import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
 
 export declare interface RotaryFormat {
     radiusMin: number
@@ -46,7 +37,7 @@ export declare interface RotaryTrackFormat {
     rgb: number
     motion: InjectiveFormat<any>
     phaseOffset: number
-    bend: number
+    bend: InjectiveFormat<any>
     fragments: number
     frequency: number
     reverse: boolean
@@ -175,14 +166,6 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     }
 }
 
-export const MotionTypes = new Map<string, InjectiveType>([
-    ["Linear", IdentityInjective],
-    ["Power", PowInjective],
-    ["CShape", CShapeInjective],
-    ["TShape", TShapeInjective],
-    ["SmoothStep", SmoothStepInjective]
-])
-
 export enum Fill {
     Flat, Stroke, Line, Gradient
 }
@@ -203,6 +186,7 @@ export class FilterResult {
 export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
     private readonly terminator: Terminator = new Terminator()
     private readonly observable: ObservableImpl<RotaryTrackModel> = new ObservableImpl<RotaryTrackModel>()
+    private readonly gradient: string[] = [] // opaque[0], transparent[1]
     readonly segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 8))
     readonly width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12))
     readonly widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0))
@@ -212,19 +196,24 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly fill = this.bindValue(new ObservableValueImpl<Fill>(Fill.Flat))
     readonly rgb = this.bindValue(new ObservableValueImpl(<number>(0xFFFFFF)))
     readonly motion: ObservableValue<Injective<any>> = this.bindValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
+    readonly bend: ObservableValue<Injective<any>> = this.bindValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
-    readonly bend = this.bindValue(new BoundNumericValue(Linear.Bipolar, 0.0))
     readonly frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.bindValue(new ObservableValueImpl<boolean>(false))
-    private readonly gradient: string[] = [] // opaque[0], transparent[1]
-    private readonly motionTerminator: Terminator = this.terminator.with(new Terminator())
 
     constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
+
+        const motionTerminator: Terminator = this.terminator.with(new Terminator())
         this.terminator.with(this.motion.addObserver((motion: Injective<any>) => {
-            this.motionTerminator.terminate()
-            this.motionTerminator.with(motion.addObserver(() => this.observable.notify(this)))
+            motionTerminator.terminate()
+            motionTerminator.with(motion.addObserver(() => this.observable.notify(this)))
+        }))
+        const bendTerminator: Terminator = this.terminator.with(new Terminator())
+        this.terminator.with(this.bend.addObserver((bend: Injective<any>) => {
+            bendTerminator.terminate()
+            bendTerminator.with(bend.addObserver(() => this.observable.notify(this)))
         }))
         this.updateGradient()
     }
@@ -244,15 +233,15 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     test() {
         this.phaseOffset.set(0.0)
-        this.bend.set(0.75)
+        this.bend.set(new CShapeInjective())
         this.frequency.set(1.0)
-        this.fragments.set(2.0)
+        this.fragments.set(1.0)
         this.reverse.set(false)
         this.length.set(1.0)
         this.lengthRatio.set(0.125)
         this.outline.set(0.0)
         this.segments.set(16)
-        this.motion.set(new SmoothStepInjective())
+        this.motion.set(new CShapeInjective())
         this.width.set(128)
         this.fill.set(Fill.Flat)
     }
@@ -282,7 +271,9 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.fill.set(fill)
         this.motion.set(Injective.random(random))
         this.phaseOffset.set(Math.floor(random.nextDouble(0.0, 4.0)) * 0.25)
-        this.bend.set(random.nextDouble(-.5, .5))
+        const injective = new TShapeInjective()
+        injective.shape.set(random.nextDouble(-1.0, 1.0))
+        this.bend.set(injective)
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.fragments.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.reverse.set(random.nextBoolean())
@@ -305,7 +296,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             rgb: this.rgb.get(),
             motion: this.motion.get().serialize(),
             phaseOffset: this.phaseOffset.get(),
-            bend: this.bend.get(),
+            bend: this.bend.get().serialize(),
             frequency: this.frequency.get(),
             fragments: this.fragments.get(),
             reverse: this.reverse.get()
@@ -323,7 +314,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.rgb.set(format.rgb)
         this.motion.set(Injective.from(format.motion))
         this.phaseOffset.set(format.phaseOffset)
-        this.bend.set(format.bend)
+        this.bend.set(Injective.from(format.bend))
         this.frequency.set(format.frequency)
         this.fragments.set(format.fragments)
         this.reverse.set(format.reverse)
@@ -346,11 +337,9 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     }
 
     localToSegment(phase: number): number {
-        const bend = this.bend.get()
-        const lengthRatio = this.lengthRatio.get()
-        const full = Func.tx(Func.clamp((phase - Math.floor(phase)) / this.length.get()), -bend) * this.segments.get()
+        const full = this.bend.get().fy(Func.clamp((phase - Math.floor(phase)) / this.length.get())) * this.segments.get()
         const index = Math.floor(full)
-        const local = (full - index) / lengthRatio
+        const local = (full - index) / this.lengthRatio.get()
         return 0.0 === local ? index : local <= 1.0 ? index + (this.reverse.get() ? local : 1.0 - local) : -1.0
     }
 
@@ -392,19 +381,19 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const lengthRatio = this.lengthRatio.get()
         const segments = this.segments.get()
         const step = length / segments
-        const t0 = Func.tx(Func.clamp(p0 / length), -bend) * length
-        const t1 = Func.tx(Func.clamp(p1 / length), -bend) * length
+        const t0 = bend.fy(Func.clamp(p0 / length)) * length
+        const t1 = bend.fy(Func.clamp(p1 / length)) * length
         let index = Math.floor(t0 / step)
         let seekMin = index * step
         while (seekMin < t1) {
             if (seekMin >= t0) {
                 yield new FilterResult(this.reverse.get() ? Edge.End : Edge.Start, index,
-                    Func.tx(seekMin / length, bend) * length + offset)
+                    bend.fx(Func.clamp(seekMin / length)) * length + offset)
             }
             const seekMax = (index + lengthRatio) * step
             if (seekMax >= t0 && seekMax < t1) {
                 yield new FilterResult(this.reverse.get() ? Edge.Start : Edge.End, index,
-                    Func.tx(seekMax / length, bend) * length + offset)
+                    bend.fx(Func.clamp(seekMax / length)) * length + offset)
             }
             seekMin = ++index * step
         }

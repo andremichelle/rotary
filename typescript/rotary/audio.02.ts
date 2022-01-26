@@ -1,6 +1,6 @@
 import {RotaryPlaybackNode} from "./worklets.js"
 import {readAudio} from "../lib/common.js"
-import {beep, pulsarDelay} from "../lib/dsp.js"
+import {beep, cycle, pulsarDelay} from "../lib/dsp.js"
 import {BuildAudio, Setup} from "./audio.js"
 import {midiToHz} from "../dsp/common.js"
 import {Chords} from "../lib/chords.js"
@@ -56,13 +56,13 @@ export const buildAudio: BuildAudio = async (setup: Setup) => {
     {
         const compose = Chords.compose(Chords.Minor, 60, 0, 5)
         for (let i = 0; i < compose.length; i++) {
-            rotaryNode.updateSample(index++, await beep(context.sampleRate, midiToHz(compose[i], 440.0)))
+            rotaryNode.updateSample(index++, await cycle(context.sampleRate, midiToHz(compose[i], 440.0)), true)
         }
     }
     {
         const compose = Chords.compose(Chords.Minor, 60, 3, 5)
         for (let i = 0; i < compose.length; i++) {
-            rotaryNode.updateSample(index++, await beep(context.sampleRate, midiToHz(compose[i], 440.0)))
+            rotaryNode.updateSample(index++, await cycle(context.sampleRate, midiToHz(compose[i], 440.0)), true)
         }
     }
 
@@ -73,7 +73,7 @@ export const buildAudio: BuildAudio = async (setup: Setup) => {
     convolverNode.buffer = await loadSample("impulse/PlateLarge.ogg")
 
     const masterGain = context.createGain()
-    masterGain.gain.value = 0.1
+    masterGain.gain.value = 0.08
 
     wetNode.connect(convolverNode).connect(masterGain)
     rotaryNode.connect(masterGain)

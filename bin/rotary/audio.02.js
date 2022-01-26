@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { RotaryPlaybackNode } from "./worklets.js";
 import { readAudio } from "../lib/common.js";
-import { beep, pulsarDelay } from "../lib/dsp.js";
+import { cycle, pulsarDelay } from "../lib/dsp.js";
 import { midiToHz } from "../dsp/common.js";
 import { Chords } from "../lib/chords.js";
 export const buildAudio = (setup) => __awaiter(void 0, void 0, void 0, function* () {
@@ -34,13 +34,13 @@ export const buildAudio = (setup) => __awaiter(void 0, void 0, void 0, function*
     {
         const compose = Chords.compose(Chords.Minor, 60, 0, 5);
         for (let i = 0; i < compose.length; i++) {
-            rotaryNode.updateSample(index++, yield beep(context.sampleRate, midiToHz(compose[i], 440.0)));
+            rotaryNode.updateSample(index++, yield cycle(context.sampleRate, midiToHz(compose[i], 440.0)), true);
         }
     }
     {
         const compose = Chords.compose(Chords.Minor, 60, 3, 5);
         for (let i = 0; i < compose.length; i++) {
-            rotaryNode.updateSample(index++, yield beep(context.sampleRate, midiToHz(compose[i], 440.0)));
+            rotaryNode.updateSample(index++, yield cycle(context.sampleRate, midiToHz(compose[i], 440.0)), true);
         }
     }
     const wetNode = context.createGain();
@@ -49,7 +49,7 @@ export const buildAudio = (setup) => __awaiter(void 0, void 0, void 0, function*
     const convolverNode = context.createConvolver();
     convolverNode.buffer = yield loadSample("impulse/PlateLarge.ogg");
     const masterGain = context.createGain();
-    masterGain.gain.value = 0.1;
+    masterGain.gain.value = 0.08;
     wetNode.connect(convolverNode).connect(masterGain);
     rotaryNode.connect(masterGain);
     masterGain.connect(setup.output);

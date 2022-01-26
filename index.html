@@ -59,7 +59,7 @@
     <div class="editing">
         <div class="v-split">
             <div class="columns">
-                <div class="track-editor" data-motion="linear">
+                <div class="track-editor" data-motion="linear" data-bend="linear">
                     <div class="two-columns">
                         <label class="name">segments</label>
                         <fieldset class="stepper" data-parameter="segments">
@@ -73,8 +73,20 @@
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
+                        <label class="name">padding</label>
+                        <fieldset class="stepper" data-parameter="width-padding">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
                         <label class="name">length</label>
                         <fieldset class="stepper" data-parameter="length">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name">thickness</label>
+                        <fieldset class="stepper" data-parameter="length-ratio">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
@@ -85,9 +97,12 @@
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
+                        <label class="name">color</label>
+                        <input type="text" value="#FFFFFF" data-parameter="rgb">
                         <label class="name">fill</label>
                         <select data-parameter="fill"></select>
-                        <div class="empty"></div>
+                    </div>
+                    <div class="two-columns">
                         <label class="name">phase</label>
                         <fieldset class="stepper" data-parameter="phase-offset">
                             <button>◀︎</button>
@@ -111,58 +126,66 @@
                             <input type="checkbox" data-parameter="reverse"/>
                             <span></span>
                         </label>
-                    </div>
-                    <div class="two-columns">
-                        <div class="empty"></div>
-                        <label class="name">padding</label>
-                        <fieldset class="stepper" data-parameter="width-padding">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">ratio</label>
-                        <fieldset class="stepper" data-parameter="length-ratio">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">bend</label>
-                        <fieldset class="stepper" data-parameter="bend">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">color</label>
-                        <input type="text" value="#FFFFFF" data-parameter="rgb">
-                        <div class="empty"></div>
                         <label class="name bold">motion</label>
                         <select data-parameter="motion"></select>
-                        <label class="name" data-exclude="motion" data-motion="pow">exponent</label>
-                        <fieldset class="stepper" data-exclude="motion" data-motion="pow" data-parameter="exponent">
+                        <label class="name" data-group="motion" data-injective="pow">exponent</label>
+                        <fieldset class="stepper" data-group="motion" data-injective="pow" data-parameter="exponent">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
-                        <label class="name" data-exclude="motion" data-motion="cshape">shape</label>
-                        <fieldset class="stepper" data-exclude="motion" data-motion="cshape" data-parameter="shape">
+                        <label class="name" data-group="motion" data-injective="cshape">shape</label>
+                        <fieldset class="stepper" data-group="motion" data-injective="cshape" data-parameter="shape">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
-                        <label class="name" data-exclude="motion" data-motion="tshape">shape</label>
-                        <fieldset class="stepper" data-exclude="motion" data-motion="tshape" data-parameter="shape">
+                        <label class="name" data-group="motion" data-injective="tshape">shape</label>
+                        <fieldset class="stepper" data-group="motion" data-injective="tshape" data-parameter="shape">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
-                        <label class="name" data-exclude="motion" data-motion="smoothstep">edge0</label>
-                        <fieldset class="stepper" data-exclude="motion" data-motion="smoothstep" data-parameter="edge0">
+                        <label class="name" data-group="motion" data-injective="smoothstep">edge0</label>
+                        <fieldset class="stepper" data-group="motion" data-injective="smoothstep" data-parameter="edge0">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
-                        <label class="name" data-exclude="motion" data-motion="smoothstep">edge1</label>
-                        <fieldset class="stepper" data-exclude="motion" data-motion="smoothstep" data-parameter="edge1">
+                        <label class="name" data-group="motion" data-injective="smoothstep">edge1</label>
+                        <fieldset class="stepper" data-group="motion" data-injective="smoothstep" data-parameter="edge1">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name bold">bend</label>
+                        <select data-parameter="bend"></select>
+                        <label class="name" data-group="bend" data-injective="pow">exponent</label>
+                        <fieldset class="stepper" data-group="bend" data-injective="pow" data-parameter="exponent">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name" data-group="bend" data-injective="cshape">shape</label>
+                        <fieldset class="stepper" data-group="bend" data-injective="cshape" data-parameter="shape">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name" data-group="bend" data-injective="tshape">shape</label>
+                        <fieldset class="stepper" data-group="bend" data-injective="tshape" data-parameter="shape">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name" data-group="bend" data-injective="smoothstep">edge0</label>
+                        <fieldset class="stepper" data-group="bend" data-injective="smoothstep" data-parameter="edge0">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name" data-group="bend" data-injective="smoothstep">edge1</label>
+                        <fieldset class="stepper" data-group="bend" data-injective="smoothstep" data-parameter="edge1">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>

@@ -1,10 +1,11 @@
 import { Edge, RotaryModel } from "../rotary/model.js";
 import { RenderQuantum } from "../dsp/common.js";
 class Voice {
-    constructor(sampleKey, position = 0 | 0) {
+    constructor(sampleKey, delayFrames) {
         this.sampleKey = sampleKey;
-        this.position = position;
-        this.duration = Number.MAX_SAFE_INTEGER;
+        this.delayFrames = delayFrames;
+        this.position = 0 | 0;
+        this.duration = (sampleRate * 10000) | 0;
     }
     stop() {
         if (this.duration > Voice.RELEASE) {
@@ -13,7 +14,7 @@ class Voice {
     }
 }
 Voice.ATTACK = (0.005 * sampleRate) | 0;
-Voice.RELEASE = (1.5 * sampleRate) | 0;
+Voice.RELEASE = (0.150 * sampleRate) | 0;
 class Sample {
     constructor(frames, loop) {
         this.frames = frames;
@@ -69,27 +70,38 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 }
             }
         }
-        for (let voices of this.activeVoices.values()) {
-            for (let i = 0; i < voices.length; i++) {
-                const voice = voices[i];
+        for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
+            const voices = this.activeVoices.get(index);
+            for (let voiceIndex = voices.length - 1; 0 <= voiceIndex; voiceIndex--) {
+                const voice = voices[voiceIndex];
                 const sample = this.samples.get(voice.sampleKey);
                 if (sample === undefined)
                     continue;
                 const frames = sample.frames;
                 for (let frameIndex = 0; frameIndex < RenderQuantum; frameIndex++) {
-                    const numFrames = frames[0].length;
-                    let position = voice.position++;
-                    if ((!sample.loop && position >= numFrames) || 0 === voice.duration) {
-                        voices.splice(i, 1);
-                    }
-                    else if (position >= 0) {
-                        let envelope = Math.min(1.0, voice.duration-- / Voice.RELEASE) * Math.min(1.0, position / Voice.ATTACK);
-                        envelope *= envelope;
-                        if (sample.loop) {
-                            position %= numFrames;
+                    if (0 <= voice.delayFrames) {
+                        const position = voice.position++;
+                        const duration = voice.duration--;
+                        const numFrames = frames[0].length;
+                        const complete = 0 === duration || (!sample.loop && position >= numFrames);
+                        if (complete) {
+                            voices.splice(voiceIndex, 1);
+                            break;
                         }
-                        outL[frameIndex] += frames[0][position] * envelope;
-                        outR[frameIndex] += frames[1][position] * envelope;
+                        else {
+                            const envelope = Math.min(1.0, duration / Voice.RELEASE) * Math.min(1.0, position / Voice.ATTACK);
+                            if (sample.loop) {
+                                outL[frameIndex] += frames[0][position % numFrames] * envelope;
+                                outR[frameIndex] += frames[1][position % numFrames] * envelope;
+                            }
+                            else {
+                                outL[frameIndex] += frames[0][position] * envelope;
+                                outR[frameIndex] += frames[1][position] * envelope;
+                            }
+                        }
+                    }
+                    else {
+                        voice.delayFrames++;
                     }
                 }
             }

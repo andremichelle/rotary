@@ -36,6 +36,15 @@ export const pulsarDelay = (context: AudioContext, input: AudioNode, output: Aud
     feedbackGain.connect(output)
 }
 
+export const cycle = async (sampleRate: number, frequency: number): Promise<AudioBuffer> => {
+    const context = new OfflineAudioContext(1, Math.floor(sampleRate / frequency * 2.0), sampleRate)
+    const oscillator = context.createOscillator()
+    oscillator.frequency.value = frequency
+    oscillator.start(0.0)
+    oscillator.connect(context.destination)
+    return context.startRendering()
+}
+
 export const beep = async (sampleRate: number, frequency: number, duration: number = 20.0): Promise<AudioBuffer> => {
     const context = new OfflineAudioContext(1, Math.ceil(sampleRate * duration), sampleRate)
     const fadeTime = 0.010
