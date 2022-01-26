@@ -50,14 +50,13 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     deserialize(format: RotaryFormat): RotaryModel;
     private bindValue;
 }
+export declare const MotionTypes: Map<string, InjectiveType>;
 export declare enum Fill {
     Flat = 0,
     Stroke = 1,
     Line = 2,
-    Positive = 3,
-    Negative = 4
+    Gradient = 3
 }
-export declare const MotionTypes: Map<string, InjectiveType>;
 export declare const Fills: Map<string, Fill>;
 export declare enum Edge {
     Start = 0,
