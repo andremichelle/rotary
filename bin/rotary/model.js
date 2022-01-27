@@ -132,8 +132,8 @@ export class RotaryTrackModel {
         this.terminator = new Terminator();
         this.observable = new ObservableImpl();
         this.gradient = [];
-        this.segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 8));
-        this.exclude = this.bindValue(new ObservableBits(1024));
+        this.segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 128), 8));
+        this.exclude = this.bindValue(new ObservableBits(128));
         this.width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12));
         this.widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0));
         this.length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0));
@@ -201,7 +201,6 @@ export class RotaryTrackModel {
         const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Gradient : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat;
         this.segments.set(0 === lengthRatioExp ? 1 : segments);
         this.exclude.clear();
-        this.exclude.setBit(3, true);
         this.width.set(width);
         this.widthPadding.set(widthPadding);
         this.length.set(length);

@@ -1,3 +1,4 @@
+import { Serializer } from "./common";
 export declare abstract class Random {
     nextDouble(min: number, max: number): number;
     nextInt(min: number, max: number): number;
@@ -26,4 +27,21 @@ export declare class Func {
     static step(edge0: number, edge1: number, x: number): number;
     static stairsMap(fx: (x: number) => number, x: number, fragments?: number, frequency?: number, delta?: number, reverse?: boolean): number;
     static stairsInverse(fy: (y: number) => number, y: number, fragments?: number, frequency?: number, delta?: number, reverse?: boolean): number;
+}
+export interface Bits {
+    setBit(index: number, value: boolean): boolean;
+    getBit(index: number): boolean;
+    clear(): void;
+}
+export interface BitArrayFormat {
+    array: number[];
+}
+export declare class BitArray implements Bits, Serializer<BitArrayFormat> {
+    private array;
+    constructor(numBits?: number);
+    getBit(index: number): boolean;
+    setBit(index: number, value: boolean): boolean;
+    clear(): void;
+    deserialize(format: BitArrayFormat): BitArray;
+    serialize(): BitArrayFormat;
 }

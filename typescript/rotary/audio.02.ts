@@ -1,10 +1,9 @@
 import {RotaryPlaybackNode} from "./worklets.js"
 import {readAudio, Terminable, Terminator} from "../lib/common.js"
-import {cycle, pulsarDelay} from "../lib/dsp.js"
+import {pulsarDelay} from "../lib/dsp.js"
 import {AudioBuilder} from "./audio.js"
-import {midiToHz} from "../dsp/common.js"
-import {Chords} from "../lib/chords.js"
 import {RotaryModel} from "./model.js"
+import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 
 const phaseShift = (source: Float32Array, offset: number): Float32Array[] => {
     const length = source.length
@@ -24,6 +23,7 @@ export const initAudio = (): AudioBuilder => {
                 return await readAudio(context, url)
             }
 
+            const limiterWorklet = await LimiterWorklet.build(context)
             const rotaryNode = await RotaryPlaybackNode.build(context)
             const masterGain = context.createGain()
             const updateFormat = () => rotaryNode.updateFormat(model)
@@ -38,7 +38,10 @@ export const initAudio = (): AudioBuilder => {
                 rotaryNode.updateSample(index++, await cycle(context.sampleRate, midiToHz(compose[i], 440.0)), true)
             }*/
 
-            for (let i = 0; i <= 70; i++) {
+            for (let i = 0; i <= 19; i++) {
+                rotaryNode.updateSample(index++, await loadSample(`samples/kicks/${i}.wav`))
+            }
+            for (let i = 0; i <= 74; i++) {
                 rotaryNode.updateSample(index++, await loadSample(`samples/glitch/${i}.wav`))
             }
             for (let i = 0; i <= 19; i++) {
@@ -50,10 +53,10 @@ export const initAudio = (): AudioBuilder => {
             for (let i = 0; i <= 9; i++) {
                 rotaryNode.updateSample(index++, await loadSample(`samples/snares/${i}.wav`))
             }
-            for (let i = 0; i <= 8; i++) {
-                rotaryNode.updateSample(index++, await loadSample(`samples/hang/${i}.wav`))
+            for (let i = 0; i <= 21; i++) {
+                rotaryNode.updateSample(index++, await loadSample(`samples/foley/${i}.wav`))
             }
-            masterGain.gain.value = 0.5
+            masterGain.gain.value = 1.0
 
 
             /*let index = 0
@@ -75,12 +78,16 @@ export const initAudio = (): AudioBuilder => {
             */
 
             const wetNode = context.createGain()
-            wetNode.gain.value = 0.5
+            wetNode.gain.value = 0.2
             pulsarDelay(context, rotaryNode, wetNode, 0.125, 0.250, .250, 0.9, 2000, 200)
             const convolverNode = context.createConvolver()
             convolverNode.buffer = await loadSample("impulse/DeepSpace.ogg")
             wetNode.connect(convolverNode).connect(masterGain)
-            rotaryNode.connect(masterGain).connect(output)
+
+            rotaryNode.connect(masterGain).connect(limiterWorklet)
+
+            limiterWorklet.connect(output)
+
             return Promise.resolve(terminator)
         }
     }

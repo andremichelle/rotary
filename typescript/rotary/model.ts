@@ -189,8 +189,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     private readonly terminator: Terminator = new Terminator()
     private readonly observable: ObservableImpl<RotaryTrackModel> = new ObservableImpl<RotaryTrackModel>()
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
-    readonly segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 8))
-    readonly exclude = this.bindValue(new ObservableBits(1024))
+    readonly segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 128), 8))
+    readonly exclude = this.bindValue(new ObservableBits(128))
     readonly width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12))
     readonly widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0))
     readonly length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0))
@@ -268,7 +268,6 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Gradient : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
         this.segments.set(0 === lengthRatioExp ? 1 : segments)
         this.exclude.clear()
-        this.exclude.setBit(3, true)
         this.width.set(width)
         this.widthPadding.set(widthPadding)
         this.length.set(length)

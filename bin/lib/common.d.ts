@@ -1,4 +1,4 @@
-import { Random } from "./math.js";
+import { BitArrayFormat, Bits, Random } from "./math.js";
 import { Range, ValueMapping } from "./mapping.js";
 export declare const TAU: number;
 export interface Terminable {
@@ -52,6 +52,19 @@ export declare class ObservableImpl<T> implements Observable<T> {
     notify(value: T): void;
     addObserver(observer: Observer<T>): Terminable;
     removeObserver(observer: Observer<T>): boolean;
+    terminate(): void;
+}
+export declare class ObservableBits implements Bits, Observable<ObservableBits>, Serializer<BitArrayFormat> {
+    private readonly bits;
+    private readonly observable;
+    constructor(numBits: number);
+    addObserver(observer: Observer<ObservableBits>): Terminable;
+    removeObserver(observer: Observer<ObservableBits>): boolean;
+    setBit(index: number, value: boolean): boolean;
+    getBit(index: number): boolean;
+    clear(): void;
+    deserialize(format: BitArrayFormat): Serializer<BitArrayFormat>;
+    serialize(): BitArrayFormat;
     terminate(): void;
 }
 export interface Serializer<T> {

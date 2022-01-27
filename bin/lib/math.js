@@ -76,16 +76,16 @@ export class Func {
 }
 export class BitArray {
     constructor(numBits = 32 | 0) {
-        this.array = new Uint8Array((numBits >>> 3) + 1);
+        this.array = new Uint32Array((numBits >>> 5) + 1);
     }
     getBit(index) {
-        const aIndex = index >>> 3;
+        const aIndex = index >>> 5;
         const byte = 1 << (index - (aIndex << 3));
         return 0 !== (this.array[aIndex] & byte);
     }
     setBit(index, value) {
-        const aIndex = index >>> 3;
-        const byte = 1 << (index - (aIndex << 3));
+        const aIndex = index >>> 5;
+        const byte = 1 << (index - (aIndex << 5));
         const was = this.getBit(index);
         if (value) {
             this.array[aIndex] |= byte;
@@ -99,7 +99,7 @@ export class BitArray {
         this.array.fill(0);
     }
     deserialize(format) {
-        this.array = new Uint8Array(format.array);
+        this.array = new Uint32Array(format.array);
         return this;
     }
     serialize() {

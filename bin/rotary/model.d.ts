@@ -1,5 +1,5 @@
-import { Iterator, Observable, ObservableCollection, ObservableValue, Observer, Serializer, Terminable } from "../lib/common.js";
-import { Random } from "../lib/math.js";
+import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableCollection, ObservableValue, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
+import { BitArrayFormat, Random } from "../lib/math.js";
 import { Injective, InjectiveFormat } from "../lib/injective.js";
 export declare interface RotaryFormat {
     radiusMin: number;
@@ -10,6 +10,7 @@ export declare interface RotaryFormat {
 }
 export declare interface RotaryTrackFormat {
     segments: number;
+    exclude: BitArrayFormat;
     width: number;
     widthPadding: number;
     length: number;
@@ -72,22 +73,23 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     private readonly terminator;
     private readonly observable;
     private readonly gradient;
-    readonly segments: ObservableValue<any>;
-    readonly width: ObservableValue<any>;
-    readonly widthPadding: ObservableValue<any>;
-    readonly length: ObservableValue<any>;
-    readonly lengthRatio: ObservableValue<any>;
-    readonly outline: ObservableValue<any>;
-    readonly fill: ObservableValue<any>;
-    readonly rgb: ObservableValue<any>;
+    readonly segments: BoundNumericValue;
+    readonly exclude: ObservableBits;
+    readonly width: BoundNumericValue;
+    readonly widthPadding: BoundNumericValue;
+    readonly length: BoundNumericValue;
+    readonly lengthRatio: BoundNumericValue;
+    readonly outline: BoundNumericValue;
+    readonly fill: ObservableValueImpl<Fill>;
+    readonly rgb: ObservableValueImpl<number>;
     readonly motion: ObservableValue<Injective<any>>;
     readonly bend: ObservableValue<Injective<any>>;
-    readonly phaseOffset: ObservableValue<any>;
-    readonly frequency: ObservableValue<any>;
-    readonly fragments: ObservableValue<any>;
-    readonly reverse: ObservableValue<any>;
+    readonly phaseOffset: BoundNumericValue;
+    readonly frequency: BoundNumericValue;
+    readonly fragments: BoundNumericValue;
+    readonly reverse: ObservableValueImpl<boolean>;
     constructor(root: RotaryModel);
-    bindValue(property: ObservableValue<any>): ObservableValue<any>;
+    bindValue<T extends Observable<any>>(property: T): T;
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
     test(): void;

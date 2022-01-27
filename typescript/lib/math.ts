@@ -117,21 +117,21 @@ export interface BitArrayFormat {
 }
 
 export class BitArray implements Bits, Serializer<BitArrayFormat> {
-    private array: Uint8Array
+    private array: Uint32Array
 
     constructor(numBits: number = 32 | 0) {
-        this.array = new Uint8Array((numBits >>> 3) + 1)
+        this.array = new Uint32Array((numBits >>> 5) + 1)
     }
 
     getBit(index: number): boolean {
-        const aIndex = index >>> 3
+        const aIndex = index >>> 5
         const byte = 1 << (index - (aIndex << 3))
         return 0 !== (this.array[aIndex] & byte)
     }
 
     setBit(index: number, value: boolean): boolean {
-        const aIndex = index >>> 3
-        const byte = 1 << (index - (aIndex << 3))
+        const aIndex = index >>> 5
+        const byte = 1 << (index - (aIndex << 5))
         const was = this.getBit(index)
         if (value) {
             this.array[aIndex] |= byte
@@ -146,7 +146,7 @@ export class BitArray implements Bits, Serializer<BitArrayFormat> {
     }
 
     deserialize(format: BitArrayFormat): BitArray {
-        this.array = new Uint8Array(format.array)
+        this.array = new Uint32Array(format.array)
         return this
     }
 

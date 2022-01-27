@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { RotaryPlaybackNode } from "./worklets.js";
 import { readAudio, Terminator } from "../lib/common.js";
 import { pulsarDelay } from "../lib/dsp.js";
+import { LimiterWorklet } from "../dsp/limiter/worklet.js";
 const phaseShift = (source, offset) => {
     const length = source.length;
     const target = new Float32Array(length);
@@ -27,13 +28,17 @@ export const initAudio = () => {
                     onProgressInfo(`loading ${url}`);
                     return yield readAudio(context, url);
                 });
+                const limiterWorklet = yield LimiterWorklet.build(context);
                 const rotaryNode = yield RotaryPlaybackNode.build(context);
                 const masterGain = context.createGain();
                 const updateFormat = () => rotaryNode.updateFormat(model);
                 terminator.with(model.addObserver(updateFormat));
                 updateFormat();
                 let index = 0;
-                for (let i = 0; i <= 70; i++) {
+                for (let i = 0; i <= 19; i++) {
+                    rotaryNode.updateSample(index++, yield loadSample(`samples/kicks/${i}.wav`));
+                }
+                for (let i = 0; i <= 74; i++) {
                     rotaryNode.updateSample(index++, yield loadSample(`samples/glitch/${i}.wav`));
                 }
                 for (let i = 0; i <= 19; i++) {
@@ -45,17 +50,18 @@ export const initAudio = () => {
                 for (let i = 0; i <= 9; i++) {
                     rotaryNode.updateSample(index++, yield loadSample(`samples/snares/${i}.wav`));
                 }
-                for (let i = 0; i <= 8; i++) {
-                    rotaryNode.updateSample(index++, yield loadSample(`samples/hang/${i}.wav`));
+                for (let i = 0; i <= 21; i++) {
+                    rotaryNode.updateSample(index++, yield loadSample(`samples/foley/${i}.wav`));
                 }
-                masterGain.gain.value = 0.5;
+                masterGain.gain.value = 1.0;
                 const wetNode = context.createGain();
-                wetNode.gain.value = 0.5;
+                wetNode.gain.value = 0.2;
                 pulsarDelay(context, rotaryNode, wetNode, 0.125, 0.250, .250, 0.9, 2000, 200);
                 const convolverNode = context.createConvolver();
                 convolverNode.buffer = yield loadSample("impulse/DeepSpace.ogg");
                 wetNode.connect(convolverNode).connect(masterGain);
-                rotaryNode.connect(masterGain).connect(output);
+                rotaryNode.connect(masterGain).connect(limiterWorklet);
+                limiterWorklet.connect(output);
                 return Promise.resolve(terminator);
             });
         }
