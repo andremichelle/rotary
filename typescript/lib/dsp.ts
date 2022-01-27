@@ -1,3 +1,5 @@
+// TODO Advance or give up
+
 export const pulsarDelay = (context: BaseAudioContext, input: AudioNode, output: AudioNode,
                             delayTimeL: number, delayTimeR: number, delayTime: number,
                             feedback: number, lpf: number, hpf: number) => {

@@ -4,13 +4,12 @@ import {RenderQuantum} from "../dsp/common.js"
 import {TAU} from "../lib/common.js"
 
 class Voice {
-    static ATTACK = (0.005 * sampleRate) | 0
-    static RELEASE = (0.050 * sampleRate) | 0
+    static ATTACK = (0.010 * sampleRate) | 0
+    static RELEASE = (0.200 * sampleRate) | 0
 
-    position: number = 0 | 0
     duration: number = Number.MAX_SAFE_INTEGER
 
-    constructor(readonly sampleKey: number, public delayFrames: number) {
+    constructor(readonly sampleKey: number, public delayFrames: number, public position: number = 0 | 0) {
     }
 
     stop() {
@@ -30,6 +29,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         private readonly samples: Map<number, Sample> = new Map()
         private readonly activeVoices: Map<number, Voice[]> = new Map()
 
+        private maxKey: number = 0 | 0
         private phase: number = 0 | 0
 
         constructor() {
@@ -41,6 +41,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                     this.model.deserialize(msg.format)
                 } else if (msg.type === "sample") {
                     this.samples.set(msg.key, new Sample(msg.sample, msg.loop))
+                    this.maxKey = Math.max(msg.key, this.maxKey)
                 }
             }
 
@@ -58,7 +59,7 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
             const loopLength = (sampleRate * this.model.loopDuration.get()) | 0
             const x0 = this.phase / loopLength
             const x1 = (this.phase + RenderQuantum) / loopLength
-            for (let trackIndex = 0; trackIndex < tracks.size() ; trackIndex++) {
+            for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
                 const track = tracks.get(trackIndex)
                 const t0 = track.globalToLocal(x0)
                 const t1 = track.globalToLocal(x1)
@@ -73,9 +74,9 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                             throw new Error(`frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, p: ${result.position}, 
                                 frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopLength - this.phase)}`)
                         }
-                        const num = 5
-                        const key: number = this.phase < loopLength / 2 ? trackIndex % num : num + (trackIndex % num)
-                        this.activeVoices.get(trackIndex).push(new Voice(key, -frameIndex))
+                        const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1)
+                        const voice = new Voice(sampleKey, -frameIndex, 0)
+                        this.activeVoices.get(trackIndex).push(voice)
                     }
                 }
             }
@@ -97,14 +98,12 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                                 break
                             } else {
                                 const envelope = Math.min(1.0, duration / Voice.RELEASE) * Math.min(1.0, position / Voice.ATTACK)
-                                const panL = 0.5 + Math.sin(position / sampleRate * 8.0 * TAU) * 0.5
-                                const panR = 0.5 + Math.cos(position / sampleRate * 8.0 * TAU) * 0.5
                                 if (sample.loop) {
-                                    outL[frameIndex] += frames[0][position % numFrames] * envelope * panL
-                                    outR[frameIndex] += frames[1][position % numFrames] * envelope * panR
+                                    outL[frameIndex] += frames[0][position % numFrames] * envelope
+                                    outR[frameIndex] += frames[1][position % numFrames] * envelope
                                 } else {
-                                    outL[frameIndex] += frames[0][position] * envelope * panL
-                                    outR[frameIndex] += frames[1][position] * envelope * panR
+                                    outL[frameIndex] += frames[0][position] * envelope
+                                    outR[frameIndex] += frames[1][position] * envelope
                                 }
                             }
                         } else {

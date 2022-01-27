@@ -25,33 +25,53 @@ export const initAudio = (): AudioBuilder => {
             }
 
             const rotaryNode = await RotaryPlaybackNode.build(context)
+            const masterGain = context.createGain()
             const updateFormat = () => rotaryNode.updateFormat(model)
             terminator.with(model.addObserver(updateFormat))
             updateFormat()
 
             let index = 0
+            for (let i = 0; i <= 50; i++) {
+                rotaryNode.updateSample(index++, await loadSample(`samples/glitch/${i}.wav`))
+            }
+            for (let i = 0; i <= 19; i++) {
+                rotaryNode.updateSample(index++, await loadSample(`samples/clicks/${i}.wav`))
+            }
+            for (let i = 0; i <= 12; i++) {
+                rotaryNode.updateSample(index++, await loadSample(`samples/vinyl/${i}.wav`))
+            }
+            for (let i = 0; i <= 9; i++) {
+                rotaryNode.updateSample(index++, await loadSample(`samples/snares/${i}.wav`))
+            }
+            for (let i = 0; i <= 8; i++) {
+                rotaryNode.updateSample(index++, await loadSample(`samples/hang/${i}.wav`))
+            }
+            masterGain.gain.value = 0.5
+
+
+            /*let index = 0
             {
-                const compose = Chords.compose(Chords.Minor, 60, 0, 5)
+                const compose = Chords.compose(Chords.Major, 60, 0, 5)
                 for (let i = 0; i < compose.length; i++) {
                     onProgressInfo(`creating sound ${index + 1}`)
                     rotaryNode.updateSample(index++, await cycle(context.sampleRate, midiToHz(compose[i], 440.0)), true)
                 }
             }
             {
-                const compose = Chords.compose(Chords.Minor, 60, 3, 5)
+                const compose = Chords.compose(Chords.Major, 60, 3, 5)
                 for (let i = 0; i < compose.length; i++) {
                     onProgressInfo(`creating sound ${index + 1}`)
                     rotaryNode.updateSample(index++, await cycle(context.sampleRate, midiToHz(compose[i], 440.0)), true)
                 }
             }
+            masterGain.gain.value = 0.08
+            */
 
             const wetNode = context.createGain()
-            wetNode.gain.value = 0.4
-            pulsarDelay(context, rotaryNode, wetNode, 0.125, 0.250, .250, 0.9, 12000, 200)
+            wetNode.gain.value = 0.5
+            pulsarDelay(context, rotaryNode, wetNode, 0.125, 0.250, .250, 0.9, 2000, 200)
             const convolverNode = context.createConvolver()
-            convolverNode.buffer = await loadSample("impulse/PlateLarge.ogg")
-            const masterGain = context.createGain()
-            masterGain.gain.value = 0.08
+            convolverNode.buffer = await loadSample("impulse/DeepSpace.ogg")
             wetNode.connect(convolverNode).connect(masterGain)
             rotaryNode.connect(masterGain).connect(output)
             return Promise.resolve(terminator)
