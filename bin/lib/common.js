@@ -1,3 +1,4 @@
+import { BitArray } from "./math.js";
 import { Linear } from "./mapping.js";
 export const TAU = Math.PI * 2.0;
 export class TerminableVoid {
@@ -74,6 +75,40 @@ export class ObservableImpl {
     }
     terminate() {
         this.observers.splice(0, this.observers.length);
+    }
+}
+export class ObservableBits {
+    constructor(numBits) {
+        this.observable = new ObservableImpl();
+        this.bits = new BitArray(numBits);
+    }
+    addObserver(observer) {
+        return this.observable.addObserver(observer);
+    }
+    removeObserver(observer) {
+        return this.observable.removeObserver(observer);
+    }
+    setBit(index, value) {
+        const changed = this.bits.setBit(index, value);
+        if (changed) {
+            this.observable.notify(this);
+        }
+        return changed;
+    }
+    getBit(index) {
+        return this.bits.getBit(index);
+    }
+    clear() {
+        this.bits.clear();
+    }
+    deserialize(format) {
+        return this.bits.deserialize(format);
+    }
+    serialize() {
+        return this.bits.serialize();
+    }
+    terminate() {
+        this.observable.terminate();
     }
 }
 export class ObservableValueVoid {

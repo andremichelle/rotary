@@ -1,4 +1,4 @@
-import { BoundNumericValue, EmptyIterator, GeneratorIterator, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
+import { BoundNumericValue, EmptyIterator, GeneratorIterator, ObservableBits, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { Colors } from "../lib/colors.js";
@@ -133,6 +133,7 @@ export class RotaryTrackModel {
         this.observable = new ObservableImpl();
         this.gradient = [];
         this.segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 8));
+        this.exclude = this.bindValue(new ObservableBits(1024));
         this.width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12));
         this.widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0));
         this.length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0));
@@ -179,6 +180,7 @@ export class RotaryTrackModel {
         this.lengthRatio.set(0.125);
         this.outline.set(0.0);
         this.segments.set(16);
+        this.exclude.setBit(0, true);
         this.motion.set(new CShapeInjective());
         this.width.set(128);
         this.fill.set(Fill.Flat);
@@ -198,6 +200,8 @@ export class RotaryTrackModel {
         const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0;
         const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Gradient : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat;
         this.segments.set(0 === lengthRatioExp ? 1 : segments);
+        this.exclude.clear();
+        this.exclude.setBit(3, true);
         this.width.set(width);
         this.widthPadding.set(widthPadding);
         this.length.set(length);
@@ -220,6 +224,7 @@ export class RotaryTrackModel {
     serialize() {
         return {
             segments: this.segments.get(),
+            exclude: this.exclude.serialize(),
             width: this.width.get(),
             widthPadding: this.widthPadding.get(),
             length: this.length.get(),
@@ -237,6 +242,7 @@ export class RotaryTrackModel {
     }
     deserialize(format) {
         this.segments.set(format.segments);
+        this.exclude.deserialize(format.exclude);
         this.width.set(format.width);
         this.widthPadding.set(format.widthPadding);
         this.length.set(format.length);
@@ -268,6 +274,9 @@ export class RotaryTrackModel {
     localToSegment(phase) {
         const full = this.bend.get().fy(Func.clamp((phase - Math.floor(phase)) / this.length.get())) * this.segments.get();
         const index = Math.floor(full);
+        if (this.exclude.getBit(index)) {
+            return -1;
+        }
         const local = (full - index) / this.lengthRatio.get();
         return 0.0 === local ? index : local <= 1.0 ? index + (this.reverse.get() ? local : 1.0 - local) : -1.0;
     }
@@ -313,12 +322,14 @@ export class RotaryTrackModel {
         let index = Math.floor(t0 / step);
         let seekMin = index * step;
         while (seekMin < t1) {
-            if (seekMin >= t0) {
-                yield new FilterResult(this.reverse.get() ? Edge.End : Edge.Start, index, bend.fx(Func.clamp(seekMin / length)) * length + offset);
-            }
-            const seekMax = (index + lengthRatio) * step;
-            if (seekMax >= t0 && seekMax < t1) {
-                yield new FilterResult(this.reverse.get() ? Edge.Start : Edge.End, index, bend.fx(Func.clamp(seekMax / length)) * length + offset);
+            if (!this.exclude.getBit(index)) {
+                if (seekMin >= t0) {
+                    yield new FilterResult(this.reverse.get() ? Edge.End : Edge.Start, index, bend.fx(Func.clamp(seekMin / length)) * length + offset);
+                }
+                const seekMax = (index + lengthRatio) * step;
+                if (seekMax >= t0 && seekMax < t1) {
+                    yield new FilterResult(this.reverse.get() ? Edge.Start : Edge.End, index, bend.fx(Func.clamp(seekMax / length)) * length + offset);
+                }
             }
             seekMin = ++index * step;
         }

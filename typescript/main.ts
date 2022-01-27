@@ -1,4 +1,4 @@
-import {Mulberry32, Random} from "./lib/math.js"
+import {BitArray, Mulberry32, Random} from "./lib/math.js"
 import {RotaryModel} from "./rotary/model.js"
 import {RotaryApp} from "./rotary/app.js"
 import {installApplicationMenu} from "./rotary/env.js"

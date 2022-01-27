@@ -74,4 +74,36 @@ export class Func {
         return reverse ? 1.0 - result : result;
     }
 }
+export class BitArray {
+    constructor(numBits = 32 | 0) {
+        this.array = new Uint8Array((numBits >>> 3) + 1);
+    }
+    getBit(index) {
+        const aIndex = index >>> 3;
+        const byte = 1 << (index - (aIndex << 3));
+        return 0 !== (this.array[aIndex] & byte);
+    }
+    setBit(index, value) {
+        const aIndex = index >>> 3;
+        const byte = 1 << (index - (aIndex << 3));
+        const was = this.getBit(index);
+        if (value) {
+            this.array[aIndex] |= byte;
+        }
+        else {
+            this.array[aIndex] &= ~byte;
+        }
+        return value !== was;
+    }
+    clear() {
+        this.array.fill(0);
+    }
+    deserialize(format) {
+        this.array = new Uint8Array(format.array);
+        return this;
+    }
+    serialize() {
+        return { array: Array.from(this.array) };
+    }
+}
 //# sourceMappingURL=math.js.map

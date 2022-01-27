@@ -33,7 +33,7 @@ export const initAudio = () => {
                 terminator.with(model.addObserver(updateFormat));
                 updateFormat();
                 let index = 0;
-                for (let i = 0; i <= 50; i++) {
+                for (let i = 0; i <= 70; i++) {
                     rotaryNode.updateSample(index++, yield loadSample(`samples/glitch/${i}.wav`));
                 }
                 for (let i = 0; i <= 19; i++) {

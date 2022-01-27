@@ -40,6 +40,9 @@ export class RotaryRenderer {
         const lengthRatio = trackModel.lengthRatio.get()
         phase = trackModel.root.phaseOffset.get() - phase
         for (let index = 0; index < segments; index++) {
+            if (trackModel.exclude.getBit(index)) {
+                continue
+            }
             if (highlightCrossing) {
                 context.globalAlpha = index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4
             }

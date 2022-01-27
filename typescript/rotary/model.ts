@@ -4,6 +4,7 @@ import {
     GeneratorIterator,
     Iterator,
     Observable,
+    ObservableBits,
     ObservableCollection,
     ObservableImpl,
     ObservableValue,
@@ -13,7 +14,7 @@ import {
     Terminable,
     Terminator
 } from "../lib/common.js"
-import {Func, Random} from "../lib/math.js"
+import {BitArrayFormat, Func, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {Colors} from "../lib/colors.js"
 import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
@@ -28,6 +29,7 @@ export declare interface RotaryFormat {
 
 export declare interface RotaryTrackFormat {
     segments: number
+    exclude: BitArrayFormat
     width: number
     widthPadding: number
     length: number
@@ -188,6 +190,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     private readonly observable: ObservableImpl<RotaryTrackModel> = new ObservableImpl<RotaryTrackModel>()
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
     readonly segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 8))
+    readonly exclude = this.bindValue(new ObservableBits(1024))
     readonly width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12))
     readonly widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0))
     readonly length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0))
@@ -218,7 +221,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.updateGradient()
     }
 
-    bindValue(property: ObservableValue<any>): ObservableValue<any> {
+    bindValue<T extends Observable<any>>(property: T): T {
         this.terminator.with(property.addObserver(() => this.observable.notify(this)))
         return this.terminator.with(property)
     }
@@ -241,6 +244,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.lengthRatio.set(0.125)
         this.outline.set(0.0)
         this.segments.set(16)
+        this.exclude.setBit(0, true)
         this.motion.set(new CShapeInjective())
         this.width.set(128)
         this.fill.set(Fill.Flat)
@@ -263,6 +267,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         const length = random.nextDouble(0.0, 1.0) < 0.1 ? 0.75 : 1.0
         const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Gradient : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat
         this.segments.set(0 === lengthRatioExp ? 1 : segments)
+        this.exclude.clear()
+        this.exclude.setBit(3, true)
         this.width.set(width)
         this.widthPadding.set(widthPadding)
         this.length.set(length)
@@ -287,6 +293,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     serialize(): RotaryTrackFormat {
         return {
             segments: this.segments.get(),
+            exclude: this.exclude.serialize(),
             width: this.width.get(),
             widthPadding: this.widthPadding.get(),
             length: this.length.get(),
@@ -305,6 +312,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     deserialize(format: RotaryTrackFormat): RotaryTrackModel {
         this.segments.set(format.segments)
+        this.exclude.deserialize(format.exclude)
         this.width.set(format.width)
         this.widthPadding.set(format.widthPadding)
         this.length.set(format.length)
@@ -339,6 +347,9 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     localToSegment(phase: number): number {
         const full = this.bend.get().fy(Func.clamp((phase - Math.floor(phase)) / this.length.get())) * this.segments.get()
         const index = Math.floor(full)
+        if (this.exclude.getBit(index)) {
+            return -1
+        }
         const local = (full - index) / this.lengthRatio.get()
         return 0.0 === local ? index : local <= 1.0 ? index + (this.reverse.get() ? local : 1.0 - local) : -1.0
     }
@@ -386,14 +397,16 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         let index = Math.floor(t0 / step)
         let seekMin = index * step
         while (seekMin < t1) {
-            if (seekMin >= t0) {
-                yield new FilterResult(this.reverse.get() ? Edge.End : Edge.Start, index,
-                    bend.fx(Func.clamp(seekMin / length)) * length + offset)
-            }
-            const seekMax = (index + lengthRatio) * step
-            if (seekMax >= t0 && seekMax < t1) {
-                yield new FilterResult(this.reverse.get() ? Edge.Start : Edge.End, index,
-                    bend.fx(Func.clamp(seekMax / length)) * length + offset)
+            if (!this.exclude.getBit(index)) {
+                if (seekMin >= t0) {
+                    yield new FilterResult(this.reverse.get() ? Edge.End : Edge.Start, index,
+                        bend.fx(Func.clamp(seekMin / length)) * length + offset)
+                }
+                const seekMax = (index + lengthRatio) * step
+                if (seekMax >= t0 && seekMax < t1) {
+                    yield new FilterResult(this.reverse.get() ? Edge.Start : Edge.End, index,
+                        bend.fx(Func.clamp(seekMax / length)) * length + offset)
+                }
             }
             seekMin = ++index * step
         }

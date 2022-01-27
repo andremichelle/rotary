@@ -31,7 +31,14 @@ export const initAudio = (): AudioBuilder => {
             updateFormat()
 
             let index = 0
-            for (let i = 0; i <= 50; i++) {
+
+            /*const compose = Chords.compose(Chords.Minor, 60, 0, 5)
+            for (let i = 0; i < compose.length; i++) {
+                onProgressInfo(`creating sound ${index + 1}`)
+                rotaryNode.updateSample(index++, await cycle(context.sampleRate, midiToHz(compose[i], 440.0)), true)
+            }*/
+
+            for (let i = 0; i <= 70; i++) {
                 rotaryNode.updateSample(index++, await loadSample(`samples/glitch/${i}.wav`))
             }
             for (let i = 0; i <= 19; i++) {

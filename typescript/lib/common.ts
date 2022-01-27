@@ -1,4 +1,4 @@
-import {Random} from "./math.js"
+import {BitArray, BitArrayFormat, Bits, Random} from "./math.js"
 import {Linear, Range, ValueMapping} from "./mapping.js"
 
 export const TAU = Math.PI * 2.0
@@ -109,6 +109,51 @@ export class ObservableImpl<T> implements Observable<T> {
 
     terminate(): void {
         this.observers.splice(0, this.observers.length)
+    }
+}
+
+export class ObservableBits implements Bits, Observable<ObservableBits>, Serializer<BitArrayFormat> {
+    private readonly bits: BitArray
+    private readonly observable = new ObservableImpl<ObservableBits>()
+
+    constructor(numBits: number) {
+        this.bits = new BitArray(numBits)
+    }
+
+    addObserver(observer: Observer<ObservableBits>): Terminable {
+        return this.observable.addObserver(observer)
+    }
+
+    removeObserver(observer: Observer<ObservableBits>): boolean {
+        return this.observable.removeObserver(observer)
+    }
+
+    setBit(index: number, value: boolean): boolean {
+        const changed = this.bits.setBit(index, value)
+        if (changed) {
+            this.observable.notify(this)
+        }
+        return changed
+    }
+
+    getBit(index: number): boolean {
+        return this.bits.getBit(index)
+    }
+
+    clear(): void {
+        this.bits.clear()
+    }
+
+    deserialize(format: BitArrayFormat): Serializer<BitArrayFormat> {
+        return this.bits.deserialize(format)
+    }
+
+    serialize(): BitArrayFormat {
+        return this.bits.serialize()
+    }
+
+    terminate(): void {
+        this.observable.terminate()
     }
 }
 

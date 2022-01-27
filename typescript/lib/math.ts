@@ -1,3 +1,5 @@
+import {Serializer} from "./common"
+
 export abstract class Random {
     public nextDouble(min: number, max: number): number {
         return min + this.uniform() * (max - min)
@@ -99,5 +101,56 @@ export class Func {
         const ny = Math.floor(my)
         const result = (fy(my - ny) + ny) / fragments
         return reverse ? 1.0 - result : result
+    }
+}
+
+export interface Bits {
+    setBit(index: number, value: boolean): boolean
+
+    getBit(index: number): boolean
+
+    clear(): void
+}
+
+export interface BitArrayFormat {
+    array: number[]
+}
+
+export class BitArray implements Bits, Serializer<BitArrayFormat> {
+    private array: Uint8Array
+
+    constructor(numBits: number = 32 | 0) {
+        this.array = new Uint8Array((numBits >>> 3) + 1)
+    }
+
+    getBit(index: number): boolean {
+        const aIndex = index >>> 3
+        const byte = 1 << (index - (aIndex << 3))
+        return 0 !== (this.array[aIndex] & byte)
+    }
+
+    setBit(index: number, value: boolean): boolean {
+        const aIndex = index >>> 3
+        const byte = 1 << (index - (aIndex << 3))
+        const was = this.getBit(index)
+        if (value) {
+            this.array[aIndex] |= byte
+        } else {
+            this.array[aIndex] &= ~byte
+        }
+        return value !== was
+    }
+
+    clear(): void {
+        this.array.fill(0)
+    }
+
+    deserialize(format: BitArrayFormat): BitArray {
+        this.array = new Uint8Array(format.array)
+        return this
+    }
+
+    serialize(): BitArrayFormat {
+        return {array: Array.from(this.array)}
     }
 }
