@@ -30,6 +30,21 @@ export const initAudioScene = () => {
                 for (let i = 0; i <= 19; i++) {
                     rotaryNode.uploadSample(index++, yield loadSample(`samples/kicks/${i}.wav`));
                 }
+                for (let i = 0; i <= 74; i++) {
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/glitch/${i}.wav`));
+                }
+                for (let i = 0; i <= 19; i++) {
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/clicks/${i}.wav`));
+                }
+                for (let i = 0; i <= 12; i++) {
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/vinyl/${i}.wav`));
+                }
+                for (let i = 0; i <= 9; i++) {
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/snares/${i}.wav`));
+                }
+                for (let i = 0; i <= 21; i++) {
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/foley/${i}.wav`));
+                }
                 masterGain.gain.value = 1.0;
                 const wetNode = context.createGain();
                 wetNode.gain.value = 0.2;

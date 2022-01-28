@@ -418,7 +418,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
     private* branchFilterSection(p0: number, p1: number, index: number): Generator<FilterResult, void, FilterResult> {
         console.assert(p0 >= 0.0 && p0 < 1.0, `p0(${p0}) must be positive and smaller than 1.0`)
-        console.assert(p1 < 2.0, `p1(${p1}) must be smaller than 2.0`)
+        console.assert(p1 < 2.0, `p1(${p1}) must be smaller than 2.0`) // TODO so fast it makes more than one revolution!
         if (p1 > 1.0) {
             yield* this.seekSection(1, p0, 1.0, index)
             yield* this.seekSection(2, 0.0, p1 - 1.0, index + 1)
