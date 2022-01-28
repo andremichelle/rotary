@@ -2,8 +2,9 @@ import { RotaryModel } from "./model.js";
 import { ObservableValue, Terminable } from "../lib/common.js";
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>;
-    phase(): number;
     rewind(): void;
+    phase(): number;
+    latency(): number;
 }
 export interface AudioScene {
     build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, onProgressInfo: (info: string) => void): Promise<AudioSceneController>;
@@ -19,5 +20,6 @@ export declare class Audio {
     readonly currentTime: number;
     readonly totalTime: number;
     readonly totalFrames: number;
-    render(passes?: number): Promise<AudioBuffer>;
+    exportWav(passes?: number): Promise<void>;
+    render(passes: number): Promise<Float32Array[]>;
 }

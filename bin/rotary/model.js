@@ -8,7 +8,7 @@ export class RotaryExportSetting {
         this.terminator = new Terminator();
         this.size = this.terminator.with(new BoundNumericValue(new LinearInteger(128, 2048), 256));
         this.fps = this.terminator.with(new BoundNumericValue(new LinearInteger(12, 120), 60));
-        this.subFrames = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 64), 32));
+        this.subFrames = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 64), 16));
     }
     deserialize(format) {
         this.size.set(format.size);
@@ -35,7 +35,7 @@ export class RotaryModel {
         this.radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20));
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
         this.loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
-        this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 1));
+        this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4));
         ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this));
     }
     addObserver(observer) {

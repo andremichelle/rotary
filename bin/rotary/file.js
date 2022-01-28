@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { RotaryRenderer } from "./render.js";
 import { ProgressIndicator } from "../dom/common.js";
-import { encodeWavFloat } from "../dsp/common.js";
 const pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
 export const open = (model) => __awaiter(void 0, void 0, void 0, function* () {
     const fileHandles = yield window.showOpenFilePicker(pickerOpts);
@@ -65,29 +64,6 @@ export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* 
     });
     gif.addListener("progress", progress => progressIndicator.onProgress(0.5 + progress * 0.5));
     gif.render();
-});
-export const renderWav = (audio) => __awaiter(void 0, void 0, void 0, function* () {
-    const source = yield audio.render();
-    const totalFrames = audio.totalFrames;
-    const target = [];
-    for (let i = 0; i < source.numberOfChannels; i++) {
-        target[i] = new Float32Array(totalFrames);
-        source.copyFromChannel(target[i], i, source.length - totalFrames);
-    }
-    const wav = encodeWavFloat({
-        channels: target,
-        numFrames: totalFrames,
-        sampleRate: source.sampleRate
-    });
-    try {
-        const saveFilePicker = yield window.showSaveFilePicker({ suggestedName: "loop.wav" });
-        const writableFileStream = yield saveFilePicker.createWritable();
-        writableFileStream.write(wav);
-        writableFileStream.close();
-    }
-    catch (e) {
-        console.log(`abort with ${e}`);
-    }
 });
 export const renderVideo = (model) => __awaiter(void 0, void 0, void 0, function* () {
     let totalBytes = 0 | 0;

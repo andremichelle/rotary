@@ -55,12 +55,13 @@ export const initAudioScene = () => {
                 rotaryNode.connect(masterGain).connect(limiterWorklet);
                 limiterWorklet.connect(output);
                 return Promise.resolve({
-                    terminate: () => terminator.terminate(),
-                    phase: () => rotaryNode.phase(),
+                    transport: rotaryNode.transport,
                     rewind: () => __awaiter(this, void 0, void 0, function* () {
                         rotaryNode.rewind();
                     }),
-                    transport: rotaryNode.transport
+                    phase: () => rotaryNode.phase(),
+                    latency: () => limiterWorklet.lookahead,
+                    terminate: () => terminator.terminate()
                 });
             });
         }

@@ -14,7 +14,7 @@ import { Dom } from "../dom/common.js";
 import { RotaryRenderer } from "./render.js";
 import { Mulberry32, TAU } from "../lib/math.js";
 import { ListItem, MenuBar } from "../dom/menu.js";
-import { open, renderGIF, renderVideo, renderWav, renderWebM, save } from "./file.js";
+import { open, renderGIF, renderVideo, renderWebM, save } from "./file.js";
 const zoomLevel = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
 ]);
@@ -171,7 +171,7 @@ export class RotaryApp {
             .addListItem(ListItem.default("Export WebM", "", false)
             .onTrigger(() => renderWebM(this.model)))
             .addListItem(ListItem.default("Export Wav", "", false)
-            .onTrigger(() => __awaiter(this, void 0, void 0, function* () { return renderWav(audio); })))
+            .onTrigger(() => __awaiter(this, void 0, void 0, function* () { return audio.exportWav(); })))
             .addListItem(ListItem.default("Clear", "", false)
             .onTrigger(() => this.model.clear())))
             .addButton(element.querySelector("[data-menu='edit']"), ListItem.root()

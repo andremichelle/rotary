@@ -1,14 +1,19 @@
+// noinspection JSUnusedGlobalSymbols
+
 import {RotaryModel} from "./model.js"
 import {MeterWorklet} from "../dsp/meter/worklet.js"
 import {Dom, ProgressIndicator} from "../dom/common.js"
 import {ObservableValue, Terminable} from "../lib/common.js"
+import {encodeWavFloat} from "../dsp/common.js"
 
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>
 
+    rewind(): void
+
     phase(): number
 
-    rewind(): void
+    latency(): number
 }
 
 export interface AudioScene {
@@ -68,17 +73,36 @@ export class Audio {
         return Math.floor(this.model.loopDuration.get() * Audio.RENDER_SAMPLE_RATE) | 0
     }
 
-    async render(passes: number = 2 | 0): Promise<AudioBuffer> {
+    async exportWav(passes: number = 2 | 0): Promise<void> {
+        const channels: Float32Array[] = await this.render(passes)
+        const wav: ArrayBuffer = encodeWavFloat({
+            channels: channels,
+            numFrames: Math.min(channels[0].length, channels[1].length),
+            sampleRate: Audio.RENDER_SAMPLE_RATE
+        })
+        try {
+            const saveFilePicker = await window.showSaveFilePicker({suggestedName: "loop.wav"})
+            const writableFileStream = await saveFilePicker.createWritable()
+            writableFileStream.write(wav)
+            writableFileStream.close()
+        } catch (e) {
+            console.log(`abort with ${e}`)
+        }
+    }
+
+    async render(passes: number): Promise<Float32Array[]> {
         await this.context.suspend()
         const duration = this.model.loopDuration.get() * passes
+        const length = Math.floor(Audio.RENDER_SAMPLE_RATE * duration) | 0
         const offlineAudioContext = new OfflineAudioContext(2,
-            Math.floor(Audio.RENDER_SAMPLE_RATE * duration) | 0, Audio.RENDER_SAMPLE_RATE)
-        const loadingIndicator = new ProgressIndicator("Export Audio...")
-        const terminable = await loadingIndicator.completeWith(
+            length + Audio.RENDER_SAMPLE_RATE /* A SECOND EXTRA FOR LATENCY COMPENSATION */, Audio.RENDER_SAMPLE_RATE)
+        const loadingIndicator = new ProgressIndicator("Preparing Export...")
+        const controller: AudioSceneController = await loadingIndicator.completeWith(
             this.scene.build(offlineAudioContext, offlineAudioContext.destination, this.model, info => {
                 console.debug(info)
             }))
-        const exportIndicator = new ProgressIndicator("Exporting Audio")
+        controller.transport.set(true)
+        const exportIndicator = new ProgressIndicator("Exporting Audio...")
         const watch = () => {
             exportIndicator.onProgress(offlineAudioContext.currentTime / duration)
             if (offlineAudioContext.state === "running") {
@@ -87,7 +111,15 @@ export class Audio {
         }
         requestAnimationFrame(watch)
         const buffer = await exportIndicator.completeWith(offlineAudioContext.startRendering())
-        terminable.terminate()
-        return buffer
+        const latencyFrames = Math.ceil(controller.latency() * Audio.RENDER_SAMPLE_RATE) | 0
+        controller.terminate()
+        const totalFrames = this.totalFrames
+        const target: Float32Array[] = []
+        const bufferOffset = buffer.length - totalFrames + latencyFrames
+        for (let i = 0; i < buffer.numberOfChannels; i++) {
+            target[i] = new Float32Array(totalFrames)
+            buffer.copyFromChannel(target[i], i, bufferOffset)
+        }
+        return target
     }
 }

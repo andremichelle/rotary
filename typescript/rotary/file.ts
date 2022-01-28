@@ -70,29 +70,6 @@ export const renderGIF = async (model: RotaryModel) => {
     gif.render()
 }
 
-export const renderWav = async (audio: Audio) => {
-    const source: AudioBuffer = await audio.render()
-    const totalFrames = audio.totalFrames
-    const target: Float32Array[] = []
-    for (let i = 0; i < source.numberOfChannels; i++) {
-        target[i] = new Float32Array(totalFrames)
-        source.copyFromChannel(target[i], i, source.length - totalFrames)
-    }
-    const wav: ArrayBuffer = encodeWavFloat({
-        channels: target,
-        numFrames: totalFrames,
-        sampleRate: source.sampleRate
-    })
-    try {
-        const saveFilePicker = await window.showSaveFilePicker({suggestedName: "loop.wav"})
-        const writableFileStream = await saveFilePicker.createWritable()
-        writableFileStream.write(wav)
-        writableFileStream.close()
-    } catch (e) {
-        console.log(`abort with ${e}`)
-    }
-}
-
 export const renderVideo = async (model: RotaryModel) => {
     let totalBytes = 0 | 0
 

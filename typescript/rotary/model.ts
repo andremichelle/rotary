@@ -57,7 +57,7 @@ export class RotaryExportSetting implements Terminable, Serializer<RotaryExportF
 
     readonly size = this.terminator.with(new BoundNumericValue(new LinearInteger(128, 2048), 256))
     readonly fps = this.terminator.with(new BoundNumericValue(new LinearInteger(12, 120), 60))
-    readonly subFrames = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 64), 32))
+    readonly subFrames = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 64), 16))
 
     deserialize(format: RotaryExportFormat): RotaryExportSetting {
         this.size.set(format.size)
@@ -90,7 +90,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     readonly radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20))
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75))
     readonly loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0))
-    readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 1))
+    readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4))
 
     constructor() {
         ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this))

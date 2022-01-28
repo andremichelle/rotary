@@ -14,7 +14,7 @@ import {Dom} from "../dom/common.js"
 import {RotaryRenderer} from "./render.js"
 import {Mulberry32, Random, TAU} from "../lib/math.js"
 import {ListItem, MenuBar} from "../dom/menu.js"
-import {open, renderGIF, renderVideo, renderWav, renderWebM, save} from "./file.js"
+import {open, renderGIF, renderVideo, renderWebM, save} from "./file.js"
 import {Audio} from "./audio.js"
 
 const zoomLevel: Map<string, number> = new Map([
@@ -206,7 +206,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
                 .addListItem(ListItem.default("Export WebM", "", false)
                     .onTrigger(() => renderWebM(this.model)))
                 .addListItem(ListItem.default("Export Wav", "", false)
-                    .onTrigger(async () => renderWav(audio)))
+                    .onTrigger(async () => audio.exportWav()))
                 .addListItem(ListItem.default("Clear", "", false)
                     .onTrigger(() => this.model.clear())))
             .addButton(element.querySelector("[data-menu='edit']"), ListItem.root()

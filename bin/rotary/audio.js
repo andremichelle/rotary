@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { MeterWorklet } from "../dsp/meter/worklet.js";
 import { Dom, ProgressIndicator } from "../dom/common.js";
+import { encodeWavFloat } from "../dsp/common.js";
 export class Audio {
     constructor(context, scene, model) {
         this.context = context;
@@ -60,16 +61,37 @@ export class Audio {
     get totalFrames() {
         return Math.floor(this.model.loopDuration.get() * Audio.RENDER_SAMPLE_RATE) | 0;
     }
-    render(passes = 2 | 0) {
+    exportWav(passes = 2 | 0) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const channels = yield this.render(passes);
+            const wav = encodeWavFloat({
+                channels: channels,
+                numFrames: Math.min(channels[0].length, channels[1].length),
+                sampleRate: Audio.RENDER_SAMPLE_RATE
+            });
+            try {
+                const saveFilePicker = yield window.showSaveFilePicker({ suggestedName: "loop.wav" });
+                const writableFileStream = yield saveFilePicker.createWritable();
+                writableFileStream.write(wav);
+                writableFileStream.close();
+            }
+            catch (e) {
+                console.log(`abort with ${e}`);
+            }
+        });
+    }
+    render(passes) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.context.suspend();
             const duration = this.model.loopDuration.get() * passes;
-            const offlineAudioContext = new OfflineAudioContext(2, Math.floor(Audio.RENDER_SAMPLE_RATE * duration) | 0, Audio.RENDER_SAMPLE_RATE);
-            const loadingIndicator = new ProgressIndicator("Export Audio...");
-            const terminable = yield loadingIndicator.completeWith(this.scene.build(offlineAudioContext, offlineAudioContext.destination, this.model, info => {
+            const length = Math.floor(Audio.RENDER_SAMPLE_RATE * duration) | 0;
+            const offlineAudioContext = new OfflineAudioContext(2, length + Audio.RENDER_SAMPLE_RATE, Audio.RENDER_SAMPLE_RATE);
+            const loadingIndicator = new ProgressIndicator("Preparing Export...");
+            const controller = yield loadingIndicator.completeWith(this.scene.build(offlineAudioContext, offlineAudioContext.destination, this.model, info => {
                 console.debug(info);
             }));
-            const exportIndicator = new ProgressIndicator("Exporting Audio");
+            controller.transport.set(true);
+            const exportIndicator = new ProgressIndicator("Exporting Audio...");
             const watch = () => {
                 exportIndicator.onProgress(offlineAudioContext.currentTime / duration);
                 if (offlineAudioContext.state === "running") {
@@ -78,8 +100,16 @@ export class Audio {
             };
             requestAnimationFrame(watch);
             const buffer = yield exportIndicator.completeWith(offlineAudioContext.startRendering());
-            terminable.terminate();
-            return buffer;
+            const latencyFrames = Math.ceil(controller.latency() * Audio.RENDER_SAMPLE_RATE) | 0;
+            controller.terminate();
+            const totalFrames = this.totalFrames;
+            const target = [];
+            const bufferOffset = buffer.length - totalFrames + latencyFrames;
+            for (let i = 0; i < buffer.numberOfChannels; i++) {
+                target[i] = new Float32Array(totalFrames);
+                buffer.copyFromChannel(target[i], i, bufferOffset);
+            }
+            return target;
         });
     }
 }
