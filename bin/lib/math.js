@@ -1,3 +1,4 @@
+export const TAU = Math.PI * 2.0;
 export class Random {
     nextDouble(min, max) {
         return min + this.uniform() * (max - min);

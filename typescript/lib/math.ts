@@ -1,4 +1,8 @@
-import {Serializer} from "./common"
+// noinspection JSUnusedGlobalSymbols
+
+import {Serializer} from "./common.js"
+
+export const TAU = Math.PI * 2.0
 
 export abstract class Random {
     public nextDouble(min: number, max: number): number {

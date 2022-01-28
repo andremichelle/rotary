@@ -38,7 +38,7 @@ registerProcessor("limiter", class extends AudioWorkletProcessor {
         if (null === buffer) {
             return true;
         }
-        const MAGIC_HEADROOM = -0.41;
+        const MAGIC_HEADROOM = -0.42;
         const frames = this.lookAheadFrames;
         const input = inputs[0];
         const output = outputs[0];

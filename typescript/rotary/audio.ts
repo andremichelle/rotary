@@ -1,7 +1,7 @@
 import {RotaryModel} from "./model.js"
 import {MeterWorklet} from "../dsp/meter/worklet.js"
 import {Dom, ProgressIndicator} from "../dom/common.js"
-import {ObservableValue, Terminable} from "../lib/common"
+import {ObservableValue, Terminable} from "../lib/common.js"
 
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>
@@ -16,14 +16,25 @@ export interface AudioScene {
 }
 
 export class Audio {
-    static async config(scene: AudioScene, model: RotaryModel): Promise<[Audio, AudioSceneController]> {
+    static async config(scene: AudioScene, model: RotaryModel): Promise<Audio> {
         const context = new AudioContext()
         await context.suspend()
-        await MeterWorklet.load(context)
-        const meter = new MeterWorklet(context)
+        return new Audio(context, scene, model)
+    }
+
+    static RENDER_SAMPLE_RATE = 48000 | 0
+
+    private constructor(readonly context: AudioContext,
+                        readonly scene: AudioScene,
+                        readonly model: RotaryModel) {
+    }
+
+    async initPreview(): Promise<AudioSceneController> {
+        await MeterWorklet.load(this.context)
+        const meter = new MeterWorklet(this.context)
         Dom.replaceElement(meter.domElement, document.getElementById("meter"))
-        meter.connect(context.destination)
-        const preview: AudioSceneController = await scene.build(context, meter, model, info => {
+        meter.connect(this.context.destination)
+        const preview: AudioSceneController = await this.scene.build(this.context, meter, this.model, info => {
             const element = document.getElementById("preloader-message")
             if (null !== element) {
                 element.textContent = info
@@ -33,8 +44,8 @@ export class Audio {
         preview.transport.addObserver(moving => playButton.checked = moving)
         playButton.onchange = async () => {
             if (playButton.checked) {
-                if (context.state !== "running") {
-                    await context.resume()
+                if (this.context.state !== "running") {
+                    await this.context.resume()
                 }
                 preview.transport.set(true)
             } else {
@@ -42,14 +53,7 @@ export class Audio {
             }
         }
         (document.querySelector("button.rewind") as HTMLButtonElement).onclick = () => preview.rewind()
-        return [new Audio(context, scene, model), preview]
-    }
-
-    static RENDER_SAMPLE_RATE = 48000 | 0
-
-    private constructor(readonly context: AudioContext,
-                        readonly scene: AudioScene,
-                        readonly model: RotaryModel) {
+        return preview
     }
 
     get currentTime(): number {

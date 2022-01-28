@@ -4,7 +4,6 @@ import {
     NumericStepper,
     ObservableValueImpl,
     PrintMapping,
-    TAU,
     Terminable,
     Terminator
 } from "../lib/common.js"
@@ -13,7 +12,14 @@ import {NumericStepperInput} from "../dom/inputs.js"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor.js"
 import {Dom} from "../dom/common.js"
 import {RotaryRenderer} from "./render.js"
-import {Mulberry32, Random} from "../lib/math.js"
+import {Mulberry32, Random, TAU} from "../lib/math.js"
+import {ListItem, MenuBar} from "../dom/menu.js"
+import {open, renderGIF, renderVideo, renderWav, renderWebM, save} from "./file.js"
+import {Audio} from "./audio.js"
+
+const zoomLevel: Map<string, number> = new Map([
+    ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
+])
 
 export interface DomElements {
     form: HTMLFormElement
@@ -182,6 +188,57 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         const radiant = parseInt(circle.getAttribute("r"), 10) * 2.0 * Math.PI
         circle.setAttribute("stroke-dasharray", radiant.toFixed(2))
         circle.setAttribute("stroke-dashoffset", ((1.0 - phase) * radiant).toFixed(2))
+    }
+
+    installApplicationMenu(audio: Audio): RotaryApp {
+        const element = document.querySelector("nav#app-menu")
+        MenuBar.install()
+            .offset(0, 0)
+            .addButton(element.querySelector("[data-menu='file']"), ListItem.root()
+                .addListItem(ListItem.default("Open...", "", false)
+                    .onTrigger(async () => open(this.model)))
+                .addListItem(ListItem.default("Save...", "", false)
+                    .onTrigger(async () => save(this.model)))
+                .addListItem(ListItem.default("Export Video (experimental)", "", false)
+                    .onTrigger(() => renderVideo(this.model)))
+                .addListItem(ListItem.default("Export GIF", "", false)
+                    .onTrigger(() => renderGIF(this.model)))
+                .addListItem(ListItem.default("Export WebM", "", false)
+                    .onTrigger(() => renderWebM(this.model)))
+                .addListItem(ListItem.default("Export Wav", "", false)
+                    .onTrigger(async () => renderWav(audio)))
+                .addListItem(ListItem.default("Clear", "", false)
+                    .onTrigger(() => this.model.clear())))
+            .addButton(element.querySelector("[data-menu='edit']"), ListItem.root()
+                .addListItem(ListItem.default("Create Track", "", false)
+                    .onTrigger(() => this.createNew(null, false)))
+                .addListItem(ListItem.default("Copy Track", "", false)
+                    .onOpening(item => item.isSelectable(this.hasSelected()))
+                    .onTrigger(() => this.createNew(null, true)))
+                .addListItem(ListItem.default("Delete Track", "", false)
+                    .onOpening(item => item.isSelectable(this.hasSelected()))
+                    .onTrigger(() => this.deleteTrack()))
+            )
+            .addButton(element.querySelector("[data-menu='randomize']"), ListItem.root()
+                .addListItem(ListItem.default("All", "", false)
+                    .onTrigger(() => this.model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))))
+                .addListItem(ListItem.default("Tracks", "", false)
+                    .onTrigger(() => this.model.randomizeTracks(new Mulberry32(Math.floor(0x987123F * Math.random())))))
+                .addListItem(ListItem.default("Color", "", false)
+                    .onTrigger(async () => this.model.randomizePalette(new Mulberry32(Math.floor(0x987123F * Math.random())))))
+            )
+            .addButton(element.querySelector("[data-menu='view']"), ListItem.root()
+                .addListItem(ListItem.default("Zoom", "", false)
+                    .addRuntimeChildrenCallback(parent => {
+                        for (const level of zoomLevel) {
+                            parent.addListItem(ListItem.default(level[0], "", this.zoom.get() === level[1])
+                                .onTrigger(() => this.zoom.set(level[1])))
+                        }
+                    })))
+            .addButton(element.querySelector("[data-menu='help']"), ListItem.root()
+                .addListItem(ListItem.default("Open TODOs in Github (protected)", "", false)
+                    .onTrigger(_ => window.open("https://github.com/andremichelle/rotary/wiki/TODOs"))))
+        return this
     }
 
     private createSelector(track: RotaryTrackModel): void {

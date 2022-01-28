@@ -1,6 +1,5 @@
 import { BitArrayFormat, Bits, Random } from "./math.js";
 import { Range, ValueMapping } from "./mapping.js";
-export declare const TAU: number;
 export interface Terminable {
     terminate(): void;
 }

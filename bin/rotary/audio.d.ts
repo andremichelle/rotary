@@ -1,5 +1,5 @@
 import { RotaryModel } from "./model.js";
-import { ObservableValue, Terminable } from "../lib/common";
+import { ObservableValue, Terminable } from "../lib/common.js";
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>;
     phase(): number;
@@ -12,9 +12,10 @@ export declare class Audio {
     readonly context: AudioContext;
     readonly scene: AudioScene;
     readonly model: RotaryModel;
-    static config(scene: AudioScene, model: RotaryModel): Promise<[Audio, AudioSceneController]>;
+    static config(scene: AudioScene, model: RotaryModel): Promise<Audio>;
     static RENDER_SAMPLE_RATE: number;
     private constructor();
+    initPreview(): Promise<AudioSceneController>;
     readonly currentTime: number;
     readonly totalTime: number;
     readonly totalFrames: number;

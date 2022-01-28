@@ -47,7 +47,7 @@ registerProcessor("limiter", class extends AudioWorkletProcessor {
         }
         // This number is found by trying to make the limiter super brick-wall.
         // There is probably a way to calculate it. Only tested for 5ms look-ahead.
-        const MAGIC_HEADROOM = -0.41 // -0.40 already does not work with some input
+        const MAGIC_HEADROOM = -0.42 // -0.41 already does not work with some input
         const frames = this.lookAheadFrames
         const input = inputs[0]
         const output = outputs[0]

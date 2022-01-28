@@ -17,6 +17,15 @@ html, body
 *
   user-select: none
 
+.hidden
+  display: none
+
+button.error
+  left: 16px
+  bottom: 32px
+  background: transparent
+  position: absolute
+
 body
   display: flex
   flex-direction: column
@@ -171,6 +180,12 @@ body
           background-color: #040404
           box-shadow: 0 8px 8px 0 rgba(black, 0.4)
           height: min-content
+          min-width: 520px
+          min-height: 520px
+          display: flex
+
+          canvas
+            margin: auto
 
           div.top-overlay
             top: 4px

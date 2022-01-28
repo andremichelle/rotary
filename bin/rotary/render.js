@@ -7,8 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { TAU } from "../lib/common.js";
 import { Fill } from "./model.js";
+import { TAU } from "../lib/math.js";
 export class RotaryRenderer {
     static render(context, model, phase, alphaMultiplier = 1.0) {
         let radiusMin = model.radiusMin.get();

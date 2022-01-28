@@ -35,7 +35,8 @@ export class RotaryWorkletNode extends AudioWorkletNode {
         }
 
         this.onprocessorerror = (event: ErrorEvent) => {
-            throw new Error(event.message)
+            console.warn(event.message)
+            document.querySelector("button.error").classList.remove("hidden")
         }
     }
 

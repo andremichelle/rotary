@@ -1,8 +1,6 @@
 import {BitArray, BitArrayFormat, Bits, Random} from "./math.js"
 import {Linear, Range, ValueMapping} from "./mapping.js"
 
-export const TAU = Math.PI * 2.0
-
 export interface Terminable {
     terminate(): void
 }

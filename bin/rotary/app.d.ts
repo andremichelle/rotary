@@ -1,6 +1,7 @@
 import { ObservableValueImpl, Terminable } from "../lib/common.js";
 import { RotaryModel, RotaryTrackModel } from "./model.js";
 import { RotaryTrackEditorExecutor } from "./editor.js";
+import { Audio } from "./audio.js";
 export interface DomElements {
     form: HTMLFormElement;
     selectors: HTMLElement;
@@ -29,6 +30,7 @@ export declare class RotaryApp implements RotaryTrackEditorExecutor {
     select(track: RotaryTrackModel): void;
     hasSelected(): boolean;
     render(phase: number): void;
+    installApplicationMenu(audio: Audio): RotaryApp;
     private createSelector;
     private removeSelector;
     private reorderSelectors;

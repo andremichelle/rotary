@@ -1,6 +1,5 @@
 import { BitArray } from "./math.js";
 import { Linear } from "./mapping.js";
-export const TAU = Math.PI * 2.0;
 export class TerminableVoid {
     terminate() {
     }

@@ -1,4 +1,5 @@
-import { Serializer } from "./common";
+import { Serializer } from "./common.js";
+export declare const TAU: number;
 export declare abstract class Random {
     nextDouble(min: number, max: number): number;
     nextInt(min: number, max: number): number;

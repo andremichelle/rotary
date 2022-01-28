@@ -2,10 +2,11 @@ import {Edge, FilterResult, RotaryModel} from "../model.js"
 import {MessageToProcessor} from "./messages-to-processor.js"
 import {TransportMessage, UpdateCursorMessage} from "./messages-to-worklet.js"
 import {RenderQuantum} from "../../dsp/common.js"
+import {ObservableValueImpl} from "../../lib/common.js"
 
 class Voice {
     static ATTACK = (0.010 * sampleRate) | 0
-    static RELEASE = (0.200 * sampleRate) | 0
+    static RELEASE = (0.050 * sampleRate) | 0
 
     duration: number = Number.MAX_SAFE_INTEGER
 
@@ -28,16 +29,19 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         private readonly model: RotaryModel = new RotaryModel()
         private readonly samples: Map<number, Sample> = new Map()
         private readonly activeVoices: Map<number, Voice[]> = new Map()
+        private readonly transport: ObservableValueImpl<boolean> = new ObservableValueImpl<boolean>(false)
 
         private maxKey: number = 0 | 0
         private phase: number = 0 | 0
-        private moving: boolean = false
         private updateRate: number
         private updateCount: number = 0 | 0
 
         constructor() {
             super()
 
+            const fps: number = 60.0
+            this.updateRate = (sampleRate / fps) | 0
+            this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving)))
             this.port.onmessage = (event: MessageEvent) => {
                 const msg = event.data as MessageToProcessor
                 if (msg.type === "format") {
@@ -47,18 +51,12 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                     this.maxKey = Math.max(msg.key, this.maxKey)
                 } else if (msg.type === "rewind") {
                     this.phase = 0.0
-                    this.moving = false
-                    this.port.postMessage(new TransportMessage(false))
+                    this.transport.set(false)
                     this.activeVoices.forEach(voices => voices.forEach(voice => voice.stop()))
                 } else if (msg.type === "transport") {
-                    this.moving = msg.moving
-                    this.port.postMessage(new TransportMessage(this.moving))
+                    this.transport.set(msg.moving)
                 }
             }
-
-            const fps: number = 60.0
-            this.updateRate = (sampleRate / fps) | 0
-
             for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
                 this.activeVoices.set(index, [])
             }
@@ -70,7 +68,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
             const outL = output[0]
             const outR = output[1]
 
-            if (this.moving) {
+            if (this.transport.get()) {
                 this.schedule()
             }
             for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
@@ -130,7 +128,9 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                     if (result.edge === Edge.Start) {
                         const frameIndex = ((track.localToGlobal(result.position) * loopFrames - this.phase)) | 0
                         if (0 > frameIndex || frameIndex >= RenderQuantum) {
-                            throw new Error(`frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, p: ${result.position}, 
+                            throw new Error(`frameIndex(${frameIndex}), 
+                            t0: ${t0}, t1: ${t1}, t0*: ${t0 + 1e-7 - 1e-7}, t1*: ${t1 + 1e-7 - 1e-7}, 
+                            td: ${t1 - t0}, p: ${result.position}, 
                                 frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopFrames - this.phase)}`)
                         }
                         const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1)

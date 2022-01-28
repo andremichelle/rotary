@@ -19,11 +19,16 @@ export class Audio {
         return __awaiter(this, void 0, void 0, function* () {
             const context = new AudioContext();
             yield context.suspend();
-            yield MeterWorklet.load(context);
-            const meter = new MeterWorklet(context);
+            return new Audio(context, scene, model);
+        });
+    }
+    initPreview() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield MeterWorklet.load(this.context);
+            const meter = new MeterWorklet(this.context);
             Dom.replaceElement(meter.domElement, document.getElementById("meter"));
-            meter.connect(context.destination);
-            const preview = yield scene.build(context, meter, model, info => {
+            meter.connect(this.context.destination);
+            const preview = yield this.scene.build(this.context, meter, this.model, info => {
                 const element = document.getElementById("preloader-message");
                 if (null !== element) {
                     element.textContent = info;
@@ -33,8 +38,8 @@ export class Audio {
             preview.transport.addObserver(moving => playButton.checked = moving);
             playButton.onchange = () => __awaiter(this, void 0, void 0, function* () {
                 if (playButton.checked) {
-                    if (context.state !== "running") {
-                        yield context.resume();
+                    if (this.context.state !== "running") {
+                        yield this.context.resume();
                     }
                     preview.transport.set(true);
                 }
@@ -43,7 +48,7 @@ export class Audio {
                 }
             });
             document.querySelector("button.rewind").onclick = () => preview.rewind();
-            return [new Audio(context, scene, model), preview];
+            return preview;
         });
     }
     get currentTime() {
