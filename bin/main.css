@@ -374,7 +374,7 @@ body main > .global-editor > .columns > .column {
 }
 body main > .global-editor > .columns > .column > h5 {
   margin: 0;
-  padding: 2px 4px;
+  padding: 4px 6px;
   border-radius: 1px;
   color: #444444;
   text-transform: uppercase;
@@ -494,13 +494,24 @@ body main > .editing > .preview .rotary {
   height: min-content;
 }
 body main > .editing > .preview .rotary div.top-overlay {
-  top: 0;
+  top: 4px;
   left: 8px;
-  width: calc(100% - 8px);
+  width: calc(100% - 16px);
   display: flex;
   position: absolute;
   align-items: center;
   column-gap: 8px;
+}
+body main > .editing > .preview .rotary div.top-overlay > button.rewind {
+  padding: 2px;
+}
+body main > .editing > .preview .rotary div.top-overlay > button.rewind:hover > svg {
+  fill: rgba(255, 255, 255, 0.6);
+}
+body main > .editing > .preview .rotary div.top-overlay > button.rewind > svg {
+  width: 14px;
+  height: 14px;
+  fill: rgba(255, 255, 255, 0.2);
 }
 body main > .editing > .preview .rotary div.top-overlay > div.spacer {
   flex: 1;
@@ -511,6 +522,9 @@ body main > .editing > .preview .rotary div.top-overlay svg {
 body main > .editing > .preview .rotary div.top-overlay label {
   color: #AAA;
   white-space: nowrap;
+}
+body main > .editing > .preview .rotary div.top-overlay label.transport {
+  cursor: pointer;
 }
 body main > .editing > .preview .rotary div.top-overlay label:after {
   opacity: 0.6;

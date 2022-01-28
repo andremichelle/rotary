@@ -1,10 +1,21 @@
+export class RewindMessage {
+    constructor() {
+        this.type = 'rewind';
+    }
+}
+export class TransportMessage {
+    constructor(moving) {
+        this.moving = moving;
+        this.type = 'transport';
+    }
+}
 export class UpdateFormatMessage {
     constructor(format) {
         this.format = format;
         this.type = 'format';
     }
 }
-export class UpdateSampleMessage {
+export class UploadSampleMessage {
     constructor(key, sample, loop) {
         this.key = key;
         this.sample = sample;
@@ -17,7 +28,7 @@ export class UpdateSampleMessage {
             buffer.copyFromChannel(raw[channelIndex] =
                 new Float32Array(buffer.length), Math.min(channelIndex, buffer.numberOfChannels - 1));
         }
-        return new UpdateSampleMessage(key, raw, loop);
+        return new UploadSampleMessage(key, raw, loop);
     }
 }
-//# sourceMappingURL=worklet.js.map
+//# sourceMappingURL=messages-to-processor.js.map

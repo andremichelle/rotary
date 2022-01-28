@@ -28,7 +28,6 @@ export const save = (model) => __awaiter(void 0, void 0, void 0, function* () {
     yield fileStream.close();
 });
 export const renderWebM = (model) => __awaiter(void 0, void 0, void 0, function* () {
-    const size = model.exportSettings.size.get();
     const fps = model.exportSettings.fps.get();
     const numFrames = Math.floor(fps * model.loopDuration.get());
     console.log(`numFrames: ${numFrames}`);

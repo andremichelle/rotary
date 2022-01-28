@@ -50,19 +50,4 @@ export const cycle = (sampleRate, frequency) => __awaiter(void 0, void 0, void 0
     oscillator.connect(context.destination);
     return context.startRendering();
 });
-export const beep = (sampleRate, frequency, duration = 20.0) => __awaiter(void 0, void 0, void 0, function* () {
-    const context = new OfflineAudioContext(1, Math.ceil(sampleRate * duration), sampleRate);
-    const fadeTime = 0.010;
-    const oscillator = context.createOscillator();
-    oscillator.frequency.value = frequency;
-    oscillator.start();
-    const gainNode = context.createGain();
-    gainNode.gain.value = 0.0;
-    gainNode.gain.setValueAtTime(0.0, 0.0);
-    gainNode.gain.linearRampToValueAtTime(0.5, fadeTime);
-    gainNode.gain.setValueAtTime(0.5, duration - fadeTime);
-    gainNode.gain.linearRampToValueAtTime(0.0, duration);
-    oscillator.connect(gainNode).connect(context.destination);
-    return context.startRendering();
-});
 //# sourceMappingURL=dsp.js.map

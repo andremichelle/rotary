@@ -12,9 +12,9 @@ registerProcessor("dsp-meter", class extends AudioWorkletProcessor {
     constructor(options) {
         super(options)
 
-        const fps: number = 60.0
         const rmsSize: number = sampleRate * 0.050 // 50ms
 
+        const fps: number = 60.0
         this.updateRate = (sampleRate / fps) | 0
         this.rmsChannels = [new RMS(rmsSize), new RMS(rmsSize)]
     }

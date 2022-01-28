@@ -11,7 +11,7 @@ import { Mulberry32 } from "./lib/math.js";
 import { RotaryModel } from "./rotary/model.js";
 import { RotaryApp } from "./rotary/app.js";
 import { installApplicationMenu } from "./rotary/env.js";
-import { initAudio } from "./rotary/audio.02.js";
+import { initAudioScene } from "./rotary/audio.default.js";
 import { Audio } from "./rotary/audio.js";
 const showError = (message) => {
     const preloader = document.getElementById("preloader");
@@ -37,11 +37,11 @@ window.onunhandledrejection = (event) => {
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const random = new Mulberry32(0xFFFFFFFF * Math.random());
     const model = new RotaryModel().randomize(random);
-    const audio = yield Audio.create(initAudio(), model);
+    const audio = yield Audio.config(initAudioScene(), model);
     const app = RotaryApp.create(model);
-    installApplicationMenu(document.querySelector("nav#app-menu"), model, audio, app);
+    installApplicationMenu(document.querySelector("nav#app-menu"), model, audio[0], app);
     const exec = () => {
-        const progress = audio.currentTime / model.loopDuration.get();
+        const progress = audio[1].phase();
         app.render(progress);
         requestAnimationFrame(exec);
     };

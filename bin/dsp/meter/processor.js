@@ -6,8 +6,8 @@ registerProcessor("dsp-meter", class extends AudioWorkletProcessor {
         this.maxPeaks = new Float32Array(2);
         this.maxSquares = new Float32Array(2);
         this.updateCount = 0 | 0;
-        const fps = 60.0;
         const rmsSize = sampleRate * 0.050;
+        const fps = 60.0;
         this.updateRate = (sampleRate / fps) | 0;
         this.rmsChannels = [new RMS(rmsSize), new RMS(rmsSize)];
     }

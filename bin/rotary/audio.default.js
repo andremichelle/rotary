@@ -7,19 +7,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { RotaryPlaybackNode } from "./worklets.js";
 import { readAudio, Terminator } from "../lib/common.js";
 import { pulsarDelay } from "../lib/dsp.js";
 import { LimiterWorklet } from "../dsp/limiter/worklet.js";
-const phaseShift = (source, offset) => {
-    const length = source.length;
-    const target = new Float32Array(length);
-    for (let i = 0; i < length; i++) {
-        target[i] = source[(i + offset) % length];
-    }
-    return [source, target];
-};
-export const initAudio = () => {
+import { RotaryWorkletNode } from "./audio/worklet.js";
+export const initAudioScene = () => {
     return {
         build(context, output, model, onProgressInfo) {
             return __awaiter(this, void 0, void 0, function* () {
@@ -29,29 +21,29 @@ export const initAudio = () => {
                     return yield readAudio(context, url);
                 });
                 const limiterWorklet = yield LimiterWorklet.build(context);
-                const rotaryNode = yield RotaryPlaybackNode.build(context);
+                const rotaryNode = yield RotaryWorkletNode.build(context);
                 const masterGain = context.createGain();
                 const updateFormat = () => rotaryNode.updateFormat(model);
                 terminator.with(model.addObserver(updateFormat));
                 updateFormat();
                 let index = 0;
                 for (let i = 0; i <= 19; i++) {
-                    rotaryNode.updateSample(index++, yield loadSample(`samples/kicks/${i}.wav`));
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/kicks/${i}.wav`));
                 }
                 for (let i = 0; i <= 74; i++) {
-                    rotaryNode.updateSample(index++, yield loadSample(`samples/glitch/${i}.wav`));
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/glitch/${i}.wav`));
                 }
                 for (let i = 0; i <= 19; i++) {
-                    rotaryNode.updateSample(index++, yield loadSample(`samples/clicks/${i}.wav`));
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/clicks/${i}.wav`));
                 }
                 for (let i = 0; i <= 12; i++) {
-                    rotaryNode.updateSample(index++, yield loadSample(`samples/vinyl/${i}.wav`));
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/vinyl/${i}.wav`));
                 }
                 for (let i = 0; i <= 9; i++) {
-                    rotaryNode.updateSample(index++, yield loadSample(`samples/snares/${i}.wav`));
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/snares/${i}.wav`));
                 }
                 for (let i = 0; i <= 21; i++) {
-                    rotaryNode.updateSample(index++, yield loadSample(`samples/foley/${i}.wav`));
+                    rotaryNode.uploadSample(index++, yield loadSample(`samples/foley/${i}.wav`));
                 }
                 masterGain.gain.value = 1.0;
                 const wetNode = context.createGain();
@@ -62,9 +54,16 @@ export const initAudio = () => {
                 wetNode.connect(convolverNode).connect(masterGain);
                 rotaryNode.connect(masterGain).connect(limiterWorklet);
                 limiterWorklet.connect(output);
-                return Promise.resolve(terminator);
+                return Promise.resolve({
+                    terminate: () => terminator.terminate(),
+                    phase: () => rotaryNode.phase(),
+                    rewind: () => __awaiter(this, void 0, void 0, function* () {
+                        rotaryNode.rewind();
+                    }),
+                    transport: rotaryNode.transport
+                });
             });
         }
     };
 };
-//# sourceMappingURL=audio.02.js.map
+//# sourceMappingURL=audio.default.js.map

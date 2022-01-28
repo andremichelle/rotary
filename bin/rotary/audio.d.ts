@@ -1,13 +1,18 @@
 import { RotaryModel } from "./model.js";
-import { Terminable } from "../lib/common";
-export interface AudioBuilder {
-    build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, onProgressInfo: (info: string) => void): Promise<Terminable>;
+import { ObservableValue, Terminable } from "../lib/common";
+export interface AudioSceneController extends Terminable {
+    transport: ObservableValue<boolean>;
+    phase(): number;
+    rewind(): void;
+}
+export interface AudioScene {
+    build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, onProgressInfo: (info: string) => void): Promise<AudioSceneController>;
 }
 export declare class Audio {
     readonly context: AudioContext;
-    readonly builder: AudioBuilder;
+    readonly scene: AudioScene;
     readonly model: RotaryModel;
-    static create(builder: AudioBuilder, model: RotaryModel): Promise<Audio>;
+    static config(scene: AudioScene, model: RotaryModel): Promise<[Audio, AudioSceneController]>;
     static RENDER_SAMPLE_RATE: number;
     private constructor();
     readonly currentTime: number;

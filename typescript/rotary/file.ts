@@ -25,7 +25,6 @@ export const save = async (model: RotaryModel) => {
 }
 
 export const renderWebM = async (model: RotaryModel) => {
-    const size = model.exportSettings.size.get()
     const fps = model.exportSettings.fps.get()
     const numFrames = Math.floor(fps * model.loopDuration.get())
     console.log(`numFrames: ${numFrames}`)

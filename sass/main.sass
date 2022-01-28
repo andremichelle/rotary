@@ -45,7 +45,7 @@ body
 
           > h5
             margin: 0
-            padding: 2px 4px
+            padding: 4px 6px
             border-radius: 1px
             color: lighten(#111, 20%)
             text-transform: uppercase
@@ -168,19 +168,29 @@ body
         .rotary
           padding: 32px
           position: relative
-          //background: linear-gradient(to bottom, #080808 0%, #121212 100%)
           background-color: #040404
           box-shadow: 0 8px 8px 0 rgba(black, 0.4)
           height: min-content
 
           div.top-overlay
-            top: 0
+            top: 4px
             left: 8px
-            width: calc(100% - 8px)
+            width: calc(100% - 16px)
             display: flex
             position: absolute
             align-items: center
             column-gap: 8px
+
+            > button.rewind
+              padding: 2px
+
+              &:hover > svg
+                fill: rgba(white, 0.6)
+
+              > svg
+                width: 14px
+                height: 14px
+                fill: rgba(white, 0.2)
 
             > div.spacer
               flex: 1
@@ -191,6 +201,9 @@ body
             label
               color: #AAA
               white-space: nowrap
+
+              &.transport
+                cursor: pointer
 
               &:after
                 opacity: 0.6

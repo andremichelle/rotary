@@ -1,5 +1,6 @@
-import { Edge, RotaryModel } from "../rotary/model.js";
-import { RenderQuantum } from "../dsp/common.js";
+import { Edge, RotaryModel } from "../model.js";
+import { TransportMessage, UpdateCursorMessage } from "./messages-to-worklet.js";
+import { RenderQuantum } from "../../dsp/common.js";
 class Voice {
     constructor(sampleKey, delayFrames, position = 0 | 0) {
         this.sampleKey = sampleKey;
@@ -21,7 +22,7 @@ class Sample {
         this.loop = loop;
     }
 }
-registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
+registerProcessor("rotary", class extends AudioWorkletProcessor {
     constructor() {
         super();
         this.model = new RotaryModel();
@@ -29,6 +30,8 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         this.activeVoices = new Map();
         this.maxKey = 0 | 0;
         this.phase = 0 | 0;
+        this.moving = false;
+        this.updateCount = 0 | 0;
         this.port.onmessage = (event) => {
             const msg = event.data;
             if (msg.type === "format") {
@@ -38,7 +41,19 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 this.samples.set(msg.key, new Sample(msg.sample, msg.loop));
                 this.maxKey = Math.max(msg.key, this.maxKey);
             }
+            else if (msg.type === "rewind") {
+                this.phase = 0.0;
+                this.moving = false;
+                this.port.postMessage(new TransportMessage(false));
+                this.activeVoices.forEach(voices => voices.forEach(voice => voice.stop()));
+            }
+            else if (msg.type === "transport") {
+                this.moving = msg.moving;
+                this.port.postMessage(new TransportMessage(this.moving));
+            }
         };
+        const fps = 60.0;
+        this.updateRate = (sampleRate / fps) | 0;
         for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
             this.activeVoices.set(index, []);
         }
@@ -47,30 +62,8 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
         const output = outputs[0];
         const outL = output[0];
         const outR = output[1];
-        const tracks = this.model.tracks;
-        const loopLength = (sampleRate * this.model.loopDuration.get()) | 0;
-        const x0 = this.phase / loopLength;
-        const x1 = (this.phase + RenderQuantum) / loopLength;
-        for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
-            const track = tracks.get(trackIndex);
-            const t0 = track.globalToLocal(x0);
-            const t1 = track.globalToLocal(x1);
-            const iterator = track.filterSections(t0, t1);
-            while (iterator.hasNext()) {
-                const result = iterator.next();
-                const running = this.activeVoices.get(trackIndex);
-                running.forEach(v => v.stop());
-                if (result.edge === Edge.Start) {
-                    const frameIndex = ((track.localToGlobal(result.position) * loopLength - this.phase)) | 0;
-                    if (0 > frameIndex || frameIndex >= RenderQuantum) {
-                        throw new Error(`frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, p: ${result.position}, 
-                                frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopLength - this.phase)}`);
-                    }
-                    const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1);
-                    const voice = new Voice(sampleKey, -frameIndex, 0);
-                    this.activeVoices.get(trackIndex).push(voice);
-                }
-            }
+        if (this.moving) {
+            this.schedule();
         }
         for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
             const voices = this.activeVoices.get(index);
@@ -108,9 +101,44 @@ registerProcessor("rotary-playback", class extends AudioWorkletProcessor {
                 }
             }
         }
-        this.phase += RenderQuantum;
-        this.phase %= loopLength;
+        this.updateCount += RenderQuantum;
+        if (this.updateCount >= this.updateRate) {
+            this.updateCount -= this.updateRate;
+            this.port.postMessage(new UpdateCursorMessage(this.phase / this.loopFrames()));
+        }
         return true;
     }
+    schedule() {
+        const tracks = this.model.tracks;
+        const loopFrames = this.loopFrames();
+        const x0 = this.phase / loopFrames;
+        const x1 = (this.phase + RenderQuantum) / loopFrames;
+        for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
+            const track = tracks.get(trackIndex);
+            const t0 = track.globalToLocal(x0);
+            const t1 = track.globalToLocal(x1);
+            const iterator = track.filterSections(t0, t1);
+            while (iterator.hasNext()) {
+                const result = iterator.next();
+                const running = this.activeVoices.get(trackIndex);
+                running.forEach(v => v.stop());
+                if (result.edge === Edge.Start) {
+                    const frameIndex = ((track.localToGlobal(result.position) * loopFrames - this.phase)) | 0;
+                    if (0 > frameIndex || frameIndex >= RenderQuantum) {
+                        throw new Error(`frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, p: ${result.position}, 
+                                frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopFrames - this.phase)}`);
+                    }
+                    const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1);
+                    const voice = new Voice(sampleKey, -frameIndex, 0);
+                    this.activeVoices.get(trackIndex).push(voice);
+                }
+            }
+        }
+        this.phase += RenderQuantum;
+        this.phase %= loopFrames;
+    }
+    loopFrames() {
+        return (sampleRate * this.model.loopDuration.get()) | 0;
+    }
 });
-//# sourceMappingURL=playback.js.map
+//# sourceMappingURL=processor.js.map
