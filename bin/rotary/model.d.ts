@@ -46,6 +46,7 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     removeTrack(track: RotaryTrackModel): boolean;
     clear(): void;
     measureRadius(): number;
+    intersects(phase: number): boolean;
     terminate(): void;
     serialize(): RotaryFormat;
     deserialize(format: RotaryFormat): RotaryModel;

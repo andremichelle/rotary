@@ -156,9 +156,12 @@ export class RotaryRenderer {
             context.save();
             context.translate(size >> 1, size >> 1);
             context.scale(scale, scale);
+            const fps = 60.0;
             const phase = i / numFrames;
+            const alphaMultiplier = 1.0 / subFrames;
+            const offset = 1.0 / (model.loopDuration.get() * fps * subFrames);
             for (let i = 0; i < subFrames; i++) {
-                RotaryRenderer.render(context, model, phase + 0.00016 * i, 1.0 / subFrames);
+                RotaryRenderer.render(context, model, phase + offset * i, alphaMultiplier);
             }
             context.restore();
             yield context;

@@ -116,15 +116,16 @@ export class RotaryApp {
         const rof = radius + 12.0;
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
-        this.rawContext.fillStyle = this.model.intersects(phase) ? "rgba(255, 255, 255, 0.75)" : "rgba(255, 255, 255, 0.25)";
+        this.rawContext.fillStyle = this.model.intersects(phase) ? "rgba(255, 255, 255, 0.5)" : "rgba(255, 255, 255, 0.125)";
         this.rawContext.beginPath();
         this.rawContext.arc(cos * rof, sin * rof, 3.0, 0.0, TAU, false);
         this.rawContext.fill();
         const fps = 60.0;
         const subFrames = 16;
+        const alphaMultiplier = 1.0 / subFrames;
         const offset = 1.0 / (this.model.loopDuration.get() * fps * subFrames);
         for (let i = 0; i < subFrames; i++) {
-            RotaryRenderer.render(this.rawContext, this.model, phase + offset * i, 1.0 / subFrames);
+            RotaryRenderer.render(this.rawContext, this.model, phase + offset * i, alphaMultiplier);
         }
         this.rawContext.restore();
         this.liveContext.save();
