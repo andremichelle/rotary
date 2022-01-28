@@ -4,11 +4,12 @@ import {Fill, RotaryModel, RotaryTrackModel} from "./model.js"
 export class RotaryRenderer {
     static render(context: CanvasRenderingContext2D,
                   model: RotaryModel,
-                  phase: number): void {
+                  phase: number,
+                  alphaMultiplier: number = 1.0): void {
         let radiusMin = model.radiusMin.get()
         for (let i = 0; i < model.tracks.size(); i++) {
             const trackModel = model.tracks.get(i)
-            RotaryRenderer.renderTrack(context, trackModel, radiusMin, trackModel.globalToLocal(phase), true)
+            RotaryRenderer.renderTrack(context, trackModel, radiusMin, trackModel.globalToLocal(phase), alphaMultiplier, true)
             radiusMin += trackModel.width.get() + trackModel.widthPadding.get()
         }
     }
@@ -29,6 +30,7 @@ export class RotaryRenderer {
                                trackModel: RotaryTrackModel,
                                radiusStart: number,
                                phase: number,
+                               alphaMultiplier: number = 1.0,
                                highlightCrossing: boolean = false): void {
         const crossingIndex = trackModel.localToSegment(phase)
         const segments = trackModel.segments.get()
@@ -44,7 +46,9 @@ export class RotaryRenderer {
                 continue
             }
             if (highlightCrossing) {
-                context.globalAlpha = index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4
+                context.globalAlpha = alphaMultiplier * (index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4)
+            } else {
+                context.globalAlpha = alphaMultiplier
             }
             const a0 = index / segments, a1 = a0 + lengthRatio / segments
             RotaryRenderer.renderSection(context, trackModel, r0, r1,
@@ -127,11 +131,12 @@ export class RotaryRenderer {
     static async renderFrames(model: RotaryModel,
                               numFrames: number,
                               size: number,
+                              subFrames: number,
                               process: (context: CanvasRenderingContext2D) => void,
                               progress?: (progress: number) => void): Promise<void> {
         let count = 0 | 0
         return new Promise((resolve) => {
-            const iterator: Generator<CanvasRenderingContext2D> = RotaryRenderer.renderFrame(model, numFrames, size)
+            const iterator: Generator<CanvasRenderingContext2D> = RotaryRenderer.renderFrame(model, numFrames, size, subFrames)
             const next = () => {
                 const curr = iterator.next()
                 if (curr.done) {
@@ -147,7 +152,7 @@ export class RotaryRenderer {
         })
     }
 
-    static* renderFrame(model: RotaryModel, numFrames: number, size: number): Generator<CanvasRenderingContext2D> {
+    static* renderFrame(model: RotaryModel, numFrames: number, size: number, subFrames: number): Generator<CanvasRenderingContext2D> {
         const canvas = document.createElement("canvas")
         const context = canvas.getContext("2d", {alpha: true})
         const scale: number = size / (model.measureRadius() + 2.0) * 0.5 // two pixel padding for strokes
@@ -158,9 +163,13 @@ export class RotaryRenderer {
             context.save()
             context.translate(size >> 1, size >> 1)
             context.scale(scale, scale)
-            RotaryRenderer.render(context, model, i / numFrames)
+            const phase: number = i / numFrames
+            for (let i = 0; i < subFrames; i++) {
+                RotaryRenderer.render(context, model, phase + 0.00016 * i, 1.0 / subFrames)
+            }
             context.restore()
             yield context
         }
     }
 }
+

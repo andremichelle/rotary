@@ -56,6 +56,9 @@ export const initAudio = (): AudioBuilder => {
             for (let i = 0; i <= 21; i++) {
                 rotaryNode.updateSample(index++, await loadSample(`samples/foley/${i}.wav`))
             }
+            /*for (let i = 0; i <= 8; i++) {
+                rotaryNode.updateSample(index++, await loadSample(`samples/hang/${i}.wav`))
+            }*/
             masterGain.gain.value = 1.0
 
 

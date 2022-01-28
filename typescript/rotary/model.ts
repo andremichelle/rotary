@@ -138,6 +138,17 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
             * Math.min(1.0, (this.tracks.size() - index - 1)), this.radiusMin.get())
     }
 
+    intersects(phase: number): boolean {
+        for (let i = 0; i < this.tracks.size(); i++) {
+            const trackModel = this.tracks.get(i)
+            const crossingIndex = trackModel.localToSegment(trackModel.globalToLocal(phase))
+            if (-1 < crossingIndex && !trackModel.exclude.getBit(crossingIndex)) {
+                return true
+            }
+        }
+        return false
+    }
+
     terminate(): void {
         this.terminator.terminate()
     }

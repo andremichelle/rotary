@@ -102,7 +102,6 @@ export class RotaryApp {
     render(phase) {
         const zoom = this.zoom.get();
         const radius = this.model.measureRadius();
-        const radiusMin = this.model.radiusMin.get();
         const size = (radius + 64) * 2;
         const ratio = Math.ceil(devicePixelRatio) * zoom;
         this.rawCanvas.width = this.elements.canvas.width = size * ratio;
@@ -114,18 +113,22 @@ export class RotaryApp {
         this.rawContext.scale(ratio, ratio);
         this.rawContext.translate(size >> 1, size >> 1);
         const angle = this.model.phaseOffset.get() * TAU;
+        const rof = radius + 12.0;
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
-        this.rawContext.lineWidth = 0.0;
-        this.rawContext.strokeStyle = "rgba(255, 255, 255, 0.04)";
+        this.rawContext.fillStyle = this.model.intersects(phase) ? "rgba(255, 255, 255, 0.75)" : "rgba(255, 255, 255, 0.25)";
         this.rawContext.beginPath();
-        this.rawContext.moveTo(cos * radiusMin, sin * radiusMin);
-        this.rawContext.lineTo(cos * radius, sin * radius);
-        this.rawContext.stroke();
-        RotaryRenderer.render(this.rawContext, this.model, phase);
+        this.rawContext.arc(cos * rof, sin * rof, 3.0, 0.0, TAU, false);
+        this.rawContext.fill();
+        const fps = 60.0;
+        const subFrames = 16;
+        const offset = 1.0 / (this.model.loopDuration.get() * fps * subFrames);
+        for (let i = 0; i < subFrames; i++) {
+            RotaryRenderer.render(this.rawContext, this.model, phase + offset * i, 1.0 / subFrames);
+        }
         this.rawContext.restore();
         this.liveContext.save();
-        this.liveContext.filter = "blur(32px) brightness(25%)";
+        this.liveContext.filter = "blur(32px) brightness(50%)";
         this.liveContext.drawImage(this.rawCanvas, 0, 0);
         this.liveContext.restore();
         this.liveContext.drawImage(this.rawCanvas, 0, 0);

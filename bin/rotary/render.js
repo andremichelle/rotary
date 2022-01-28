@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { TAU } from "../lib/common.js";
 import { Fill } from "./model.js";
 export class RotaryRenderer {
-    static render(context, model, phase) {
+    static render(context, model, phase, alphaMultiplier = 1.0) {
         let radiusMin = model.radiusMin.get();
         for (let i = 0; i < model.tracks.size(); i++) {
             const trackModel = model.tracks.get(i);
-            RotaryRenderer.renderTrack(context, trackModel, radiusMin, trackModel.globalToLocal(phase), true);
+            RotaryRenderer.renderTrack(context, trackModel, radiusMin, trackModel.globalToLocal(phase), alphaMultiplier, true);
             radiusMin += trackModel.width.get() + trackModel.widthPadding.get();
         }
     }
@@ -27,7 +27,7 @@ export class RotaryRenderer {
         RotaryRenderer.renderTrack(context, trackModel, 32.0, 0.0);
         context.restore();
     }
-    static renderTrack(context, trackModel, radiusStart, phase, highlightCrossing = false) {
+    static renderTrack(context, trackModel, radiusStart, phase, alphaMultiplier = 1.0, highlightCrossing = false) {
         const crossingIndex = trackModel.localToSegment(phase);
         const segments = trackModel.segments.get();
         const length = trackModel.length.get();
@@ -42,7 +42,10 @@ export class RotaryRenderer {
                 continue;
             }
             if (highlightCrossing) {
-                context.globalAlpha = index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4;
+                context.globalAlpha = alphaMultiplier * (index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4);
+            }
+            else {
+                context.globalAlpha = alphaMultiplier;
             }
             const a0 = index / segments, a1 = a0 + lengthRatio / segments;
             RotaryRenderer.renderSection(context, trackModel, r0, r1, phase + bend.fx(a0) * length, phase + bend.fx(a1) * length);
@@ -119,11 +122,11 @@ export class RotaryRenderer {
             context.fill();
         }
     }
-    static renderFrames(model, numFrames, size, process, progress) {
+    static renderFrames(model, numFrames, size, subFrames, process, progress) {
         return __awaiter(this, void 0, void 0, function* () {
             let count = 0 | 0;
             return new Promise((resolve) => {
-                const iterator = RotaryRenderer.renderFrame(model, numFrames, size);
+                const iterator = RotaryRenderer.renderFrame(model, numFrames, size, subFrames);
                 const next = () => {
                     const curr = iterator.next();
                     if (curr.done) {
@@ -142,7 +145,7 @@ export class RotaryRenderer {
             });
         });
     }
-    static *renderFrame(model, numFrames, size) {
+    static *renderFrame(model, numFrames, size, subFrames) {
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d", { alpha: true });
         const scale = size / (model.measureRadius() + 2.0) * 0.5;
@@ -153,7 +156,10 @@ export class RotaryRenderer {
             context.save();
             context.translate(size >> 1, size >> 1);
             context.scale(scale, scale);
-            RotaryRenderer.render(context, model, i / numFrames);
+            const phase = i / numFrames;
+            for (let i = 0; i < subFrames; i++) {
+                RotaryRenderer.render(context, model, phase + 0.00016 * i, 1.0 / subFrames);
+            }
             context.restore();
             yield context;
         }
