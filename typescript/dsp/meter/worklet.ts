@@ -15,8 +15,8 @@ export class MeterWorklet extends AudioWorkletNode {
     private releasePeakHoldTime: Float32Array = new Float32Array(2)
     private peakHoldDuration: number = 1000.0
     private clipHoldDuration: number = 2000.0
-    private height: number = 19
-    private meterPadding: number = 6
+    private height: number = 17
+    private meterPadding: number = 16
     private meterWidth: number
     private scale: number
 
@@ -91,18 +91,18 @@ export class MeterWorklet extends AudioWorkletNode {
         }
 
         graphics.clearRect(0, 0, this.width, 4)
-        graphics.clearRect(0, 15, this.width, 4)
+        graphics.clearRect(0, 13, this.width, 4)
         graphics.fillStyle = "rgba(0, 0, 0, 0.2)"
         const maxGain = dbToGain(this.maxDb)
         this.renderMeter(maxGain, 0, 4)
-        this.renderMeter(maxGain, 15, 4)
+        this.renderMeter(maxGain, 13, 4)
         graphics.fillStyle = this.gradient
         graphics.globalAlpha = 0.5
         this.renderMeter(this.maxPeaks[0], 0, 4)
-        this.renderMeter(this.maxPeaks[1], 15, 4)
+        this.renderMeter(this.maxPeaks[1], 13, 4)
         graphics.globalAlpha = 1.0
         this.renderMeter(this.maxSquares[0], 0, 4)
-        this.renderMeter(this.maxSquares[1], 15, 4)
+        this.renderMeter(this.maxSquares[1], 13, 4)
         const now = performance.now()
         for (let i = 0; i < 2; ++i) {
             this.maxPeaks[i] *= 0.9
@@ -113,7 +113,7 @@ export class MeterWorklet extends AudioWorkletNode {
                 const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[i]))
                 if (db >= this.minDb) {
                     graphics.fillStyle = 0.0 < db ? "rgb(200,200,200)" : "rgb(140,140,140)"
-                    graphics.fillRect(this.dbToX(db), i * 15, 1, 4)
+                    graphics.fillRect(this.dbToX(db), i * 13, 1, 4)
                 }
             }
         }
@@ -129,8 +129,8 @@ export class MeterWorklet extends AudioWorkletNode {
         graphics.textAlign = "center"
         for (let db = this.maxDb; db >= this.minDb; db -= this.labelStepsDb) {
             const x = this.dbToX(db)
-            graphics.fillStyle = db <= 0 ? "rgb(90,90,90)" : "rgb(255,96,16)"
-            graphics.fillText(db === this.minDb ? "dB" : db.toString(10), x, 10)
+            graphics.fillStyle = db <= 0 ? "rgb(70,70,70)" : "rgb(160,26,20)"
+            graphics.fillText(db === this.minDb ? "dB" : db.toString(10), x, 9)
         }
     }
 
