@@ -14,269 +14,280 @@
     <script src="./bin/main.js" type="module"></script>
 </head>
 <body>
-<nav id="app-menu">
-    <button data-menu="file">File</button>
-    <button data-menu="edit">Edit</button>
-    <button data-menu="randomize">Randomize</button>
-    <button data-menu="view">View</button>
-    <button data-menu="help">Help</button>
-</nav>
-<main>
-    <div class="global-editor">
-        <div class="columns">
-            <div class="column">
-                <h5>GLOBAL</h5>
-                <div class="two-columns">
-                    <label class="name">start radius</label>
-                    <fieldset class="stepper" data-parameter="start-radius">
-                        <button>◀︎</button>
-                        <input type="text">
-                        <button>▶</button>
-                    </fieldset>
-                    <label class="name">phase offset</label>
-                    <fieldset class="stepper" data-parameter="phase-offset">
-                        <button>◀︎</button>
-                        <input type="text">
-                        <button>▶</button>
-                    </fieldset>
-                    <label class="name">seconds</label>
-                    <fieldset class="stepper" data-parameter="loop-duration">
-                        <button>◀︎</button>
-                        <input type="text">
-                        <button>▶</button>
-                    </fieldset>
-                    <label class="name">motion</label>
-                    <fieldset class="stepper" data-parameter="live-sub-frames">
-                        <button>◀︎</button>
-                        <input type="text">
-                        <button>▶</button>
-                    </fieldset>
-                </div>
-            </div>
-            <div class="column">
-                <h5>Export</h5>
-                <div class="two-columns">
-                    <label class="name">size</label>
-                    <fieldset class="stepper" data-parameter="export-size">
-                        <button>◀︎</button>
-                        <input type="text">
-                        <button>▶</button>
-                    </fieldset>
-                    <label class="name">fps</label>
-                    <fieldset class="stepper" data-parameter="export-fps">
-                        <button>◀︎</button>
-                        <input type="text">
-                        <button>▶</button>
-                    </fieldset>
-                    <label class="name">motion</label>
-                    <fieldset class="stepper" data-parameter="export-sub-frames">
-                        <button>◀︎</button>
-                        <input type="text">
-                        <button>▶</button>
-                    </fieldset>
-                </div>
-            </div>
-        </div>
+<div class="side"></div>
+<div class="center">
+    <div class="top">
+        <nav id="app-menu">
+            <button data-menu="file">File</button>
+            <button data-menu="edit">Edit</button>
+            <button data-menu="randomize">Randomize</button>
+            <button data-menu="view">View</button>
+            <button data-menu="help">Help</button>
+        </nav>
+        <div id="meter">Replaced by meter...</div>
     </div>
-    <form class="track-nav">
-        <button id="unshift-new-track">+</button>
-        <div id="track-selectors">
-            <article id="template-selector-track">
-                <label class="radio big"><input type="radio" name="track">
-                    <canvas></canvas>
-                </label>
-                <button>+</button>
-            </article>
-        </div>
-        <span>shift-click to copy</span>
-    </form>
-    <div class="editing">
-        <div class="v-split">
+    <main>
+        <div class="global-editor">
             <div class="columns">
-                <div class="track-editor" data-motion="linear" data-bend="linear">
+                <div class="column">
+                    <h5>GLOBAL</h5>
                     <div class="two-columns">
-                        <label class="name">segments</label>
-                        <fieldset class="stepper" data-parameter="segments">
+                        <label class="name">start radius</label>
+                        <fieldset class="stepper" data-parameter="start-radius">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
-                        <label class="name">width</label>
-                        <fieldset class="stepper" data-parameter="width">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">padding</label>
-                        <fieldset class="stepper" data-parameter="width-padding">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">length</label>
-                        <fieldset class="stepper" data-parameter="length">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">thickness</label>
-                        <fieldset class="stepper" data-parameter="length-ratio">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">outline</label>
-                        <fieldset class="stepper" data-parameter="outline">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">color</label>
-                        <input type="text" value="#FFFFFF" data-parameter="rgb">
-                        <label class="name">fill</label>
-                        <select data-parameter="fill"></select>
-                    </div>
-                    <div class="two-columns">
-                        <label class="name">phase</label>
+                        <label class="name">phase offset</label>
                         <fieldset class="stepper" data-parameter="phase-offset">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
-                        <label class="name">frequency</label>
-                        <fieldset class="stepper" data-parameter="frequency">
+                        <label class="name">seconds</label>
+                        <fieldset class="stepper" data-parameter="loop-duration">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
-                        <label class="name">fragments</label>
-                        <fieldset class="stepper" data-parameter="fragments">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">reverse</label>
-                        <label class="checkbox slider">
-                            <input type="checkbox" data-parameter="reverse"/>
-                            <span></span>
-                        </label>
-                        <label class="name bold">motion</label>
-                        <select data-parameter="motion"></select>
-                        <label class="name" data-group="motion" data-injective="pow">exponent</label>
-                        <fieldset class="stepper" data-group="motion" data-injective="pow" data-parameter="exponent">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name" data-group="motion" data-injective="cshape">shape</label>
-                        <fieldset class="stepper" data-group="motion" data-injective="cshape" data-parameter="shape">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name" data-group="motion" data-injective="tshape">shape</label>
-                        <fieldset class="stepper" data-group="motion" data-injective="tshape" data-parameter="shape">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name" data-group="motion" data-injective="smoothstep">edge0</label>
-                        <fieldset class="stepper" data-group="motion" data-injective="smoothstep"
-                                  data-parameter="edge0">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name" data-group="motion" data-injective="smoothstep">edge1</label>
-                        <fieldset class="stepper" data-group="motion" data-injective="smoothstep"
-                                  data-parameter="edge1">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name bold">bend</label>
-                        <select data-parameter="bend"></select>
-                        <label class="name" data-group="bend" data-injective="pow">exponent</label>
-                        <fieldset class="stepper" data-group="bend" data-injective="pow" data-parameter="exponent">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name" data-group="bend" data-injective="cshape">shape</label>
-                        <fieldset class="stepper" data-group="bend" data-injective="cshape" data-parameter="shape">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name" data-group="bend" data-injective="tshape">shape</label>
-                        <fieldset class="stepper" data-group="bend" data-injective="tshape" data-parameter="shape">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name" data-group="bend" data-injective="smoothstep">edge0</label>
-                        <fieldset class="stepper" data-group="bend" data-injective="smoothstep" data-parameter="edge0">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name" data-group="bend" data-injective="smoothstep">edge1</label>
-                        <fieldset class="stepper" data-group="bend" data-injective="smoothstep" data-parameter="edge1">
+                        <label class="name">motion</label>
+                        <fieldset class="stepper" data-parameter="live-sub-frames">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
                     </div>
                 </div>
-                <div class="actions">
-                    <button class="delete">✖︎</button>
+                <div class="column">
+                    <h5>Export</h5>
+                    <div class="two-columns">
+                        <label class="name">size</label>
+                        <fieldset class="stepper" data-parameter="export-size">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name">fps</label>
+                        <fieldset class="stepper" data-parameter="export-fps">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name">motion</label>
+                        <fieldset class="stepper" data-parameter="export-sub-frames">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                    </div>
                 </div>
             </div>
-            <div class="sound">
-
-            </div>
         </div>
-        <div class="preview">
-            <div class="rotary">
-                <div class="top-overlay">
-                    <label class="size" data-unit="px"></label>
-                    <label class="zoom" data-unit="%">100</label>
-                    <div class="spacer"></div>
-                    <label class="checkbox toggle transport">
-                        <input type="checkbox" data-parameter="transport"/>
-                        <span class="unchecked">
+        <form class="track-nav">
+            <button id="unshift-new-track">+</button>
+            <div id="track-selectors">
+                <article id="template-selector-track">
+                    <label class="radio big"><input type="radio" name="track">
+                        <canvas></canvas>
+                    </label>
+                    <button>+</button>
+                </article>
+            </div>
+            <span>shift-click to copy</span>
+        </form>
+        <div class="editing">
+            <div class="v-split">
+                <div class="columns">
+                    <div class="track-editor" data-motion="linear" data-bend="linear">
+                        <div class="two-columns">
+                            <label class="name">segments</label>
+                            <fieldset class="stepper" data-parameter="segments">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name">width</label>
+                            <fieldset class="stepper" data-parameter="width">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name">padding</label>
+                            <fieldset class="stepper" data-parameter="width-padding">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name">length</label>
+                            <fieldset class="stepper" data-parameter="length">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name">thickness</label>
+                            <fieldset class="stepper" data-parameter="length-ratio">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name">outline</label>
+                            <fieldset class="stepper" data-parameter="outline">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name">color</label>
+                            <input type="text" value="#FFFFFF" data-parameter="rgb">
+                            <label class="name">fill</label>
+                            <select data-parameter="fill"></select>
+                        </div>
+                        <div class="two-columns">
+                            <label class="name">phase</label>
+                            <fieldset class="stepper" data-parameter="phase-offset">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name">frequency</label>
+                            <fieldset class="stepper" data-parameter="frequency">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name">fragments</label>
+                            <fieldset class="stepper" data-parameter="fragments">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name">reverse</label>
+                            <label class="checkbox slider">
+                                <input type="checkbox" data-parameter="reverse"/>
+                                <span></span>
+                            </label>
+                            <label class="name bold">motion</label>
+                            <select data-parameter="motion"></select>
+                            <label class="name" data-group="motion" data-injective="pow">exponent</label>
+                            <fieldset class="stepper" data-group="motion" data-injective="pow"
+                                      data-parameter="exponent">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name" data-group="motion" data-injective="cshape">shape</label>
+                            <fieldset class="stepper" data-group="motion" data-injective="cshape"
+                                      data-parameter="shape">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name" data-group="motion" data-injective="tshape">shape</label>
+                            <fieldset class="stepper" data-group="motion" data-injective="tshape"
+                                      data-parameter="shape">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name" data-group="motion" data-injective="smoothstep">edge0</label>
+                            <fieldset class="stepper" data-group="motion" data-injective="smoothstep"
+                                      data-parameter="edge0">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name" data-group="motion" data-injective="smoothstep">edge1</label>
+                            <fieldset class="stepper" data-group="motion" data-injective="smoothstep"
+                                      data-parameter="edge1">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name bold">bend</label>
+                            <select data-parameter="bend"></select>
+                            <label class="name" data-group="bend" data-injective="pow">exponent</label>
+                            <fieldset class="stepper" data-group="bend" data-injective="pow" data-parameter="exponent">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name" data-group="bend" data-injective="cshape">shape</label>
+                            <fieldset class="stepper" data-group="bend" data-injective="cshape" data-parameter="shape">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name" data-group="bend" data-injective="tshape">shape</label>
+                            <fieldset class="stepper" data-group="bend" data-injective="tshape" data-parameter="shape">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name" data-group="bend" data-injective="smoothstep">edge0</label>
+                            <fieldset class="stepper" data-group="bend" data-injective="smoothstep"
+                                      data-parameter="edge0">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                            <label class="name" data-group="bend" data-injective="smoothstep">edge1</label>
+                            <fieldset class="stepper" data-group="bend" data-injective="smoothstep"
+                                      data-parameter="edge1">
+                                <button>◀︎</button>
+                                <input type="text">
+                                <button>▶</button>
+                            </fieldset>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="delete">✖︎</button>
+                    </div>
+                </div>
+                <div class="sound">
+
+                </div>
+            </div>
+            <div class="preview">
+                <div class="rotary">
+                    <div class="top-overlay">
+                        <label class="size" data-unit="px"></label>
+                        <label class="zoom" data-unit="%">100</label>
+                        <div class="spacer"></div>
+                        <label class="checkbox toggle transport">
+                            <input type="checkbox" data-parameter="transport"/>
+                            <span class="unchecked">
                             <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M4.532 1.271c-1.398-0.888-2.532-0.271-2.532 1.393v10.675c0 1.657 1.131 2.283 2.532 1.393l8.911-5.657c0.933-0.593 0.927-1.557 0-2.146l-8.911-5.657z"/>
                             </svg>
                         </span>
-                        <span class="checked">
+                            <span class="checked">
                             <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                                 <rect x="2" y="1" width="4" height="14"></rect>
                                 <rect x="10" y="1" width="4" height="14"></rect>
                             </svg>
                         </span>
-                    </label>
-                    <button class="rewind">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                            <path d="M481.76,510.43c17,0,30.24-13.78,30.24-31.36V32.93c0-17.58-13.28-31.36-30.25-31.36a32.73,32.73,0,0,0-16.3,4.49L128.61,229.12C118.54,234.93,112.53,245,112.53,256s6,21.07,16.08,26.87L465.45,505.94a32.72,32.72,0,0,0,16.3,4.49Z"/>
-                            <path d="M61.94,499.51a61.94,61.94,0,0,0,61.94-61.93V74.42A61.94,61.94,0,0,0,0,74.42V437.58A61.94,61.94,0,0,0,61.94,499.51Z"/>
+                        </label>
+                        <button class="rewind">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                <path d="M481.76,510.43c17,0,30.24-13.78,30.24-31.36V32.93c0-17.58-13.28-31.36-30.25-31.36a32.73,32.73,0,0,0-16.3,4.49L128.61,229.12C118.54,234.93,112.53,245,112.53,256s6,21.07,16.08,26.87L465.45,505.94a32.72,32.72,0,0,0,16.3,4.49Z"/>
+                                <path d="M61.94,499.51a61.94,61.94,0,0,0,61.94-61.93V74.42A61.94,61.94,0,0,0,0,74.42V437.58A61.94,61.94,0,0,0,61.94,499.51Z"/>
+                            </svg>
+                        </button>
+                        <svg width="20" height="20" viewPort="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <circle r="8" cx="10" cy="10" fill="transparent" stroke="#222" stroke-width="3"></circle>
+                            <circle r="8" cx="10" cy="10" fill="transparent" stroke="#666" stroke-width="1.5"
+                                    stroke-dasharray="175.93"
+                                    stroke-dashoffset="0"
+                                    id="progress">
+                            </circle>
                         </svg>
-                    </button>
-                    <svg width="20" height="20" viewPort="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <circle r="8" cx="10" cy="10" fill="transparent" stroke="#222" stroke-width="3"></circle>
-                        <circle r="8" cx="10" cy="10" fill="transparent" stroke="#666" stroke-width="1.5"
-                                stroke-dasharray="175.93"
-                                stroke-dashoffset="0"
-                                id="progress">
-                        </circle>
-                    </svg>
+                    </div>
+                    <canvas></canvas>
                 </div>
-                <canvas></canvas>
             </div>
-            <div id="meter">Replaced by meter...</div>
         </div>
-    </div>
-</main>
+    </main>
+</div>
+<div class="side"></div>
 <div class="menu-layer"></div>
 <div id="preloader"
      style="
