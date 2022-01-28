@@ -44,11 +44,9 @@ export class RotaryRenderer {
             if (highlightCrossing) {
                 context.globalAlpha = alphaMultiplier * (index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4);
             }
-            else {
-                context.globalAlpha = alphaMultiplier;
-            }
             const a0 = index / segments, a1 = a0 + lengthRatio / segments;
             RotaryRenderer.renderSection(context, trackModel, r0, r1, phase + bend.fx(a0) * length, phase + bend.fx(a1) * length);
+            context.globalAlpha = alphaMultiplier;
         }
         const outline = trackModel.outline.get();
         if (0.0 < outline) {
@@ -122,11 +120,11 @@ export class RotaryRenderer {
             context.fill();
         }
     }
-    static renderFrames(model, numFrames, size, subFrames, process, progress) {
+    static renderFrames(model, configuration, process, progress) {
         return __awaiter(this, void 0, void 0, function* () {
             let count = 0 | 0;
             return new Promise((resolve) => {
-                const iterator = RotaryRenderer.renderFrame(model, numFrames, size, subFrames);
+                const iterator = RotaryRenderer.renderFrame(model, configuration);
                 const next = () => {
                     const curr = iterator.next();
                     if (curr.done) {
@@ -136,7 +134,7 @@ export class RotaryRenderer {
                     }
                     else {
                         if (progress !== undefined)
-                            progress(count++ / numFrames);
+                            progress(count++ / configuration.numFrames);
                         process(curr.value);
                         requestAnimationFrame(next);
                     }
@@ -145,9 +143,12 @@ export class RotaryRenderer {
             });
         });
     }
-    static *renderFrame(model, numFrames, size, subFrames) {
+    static *renderFrame(model, configuration) {
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d", { alpha: true });
+        const size = configuration.size;
+        const numFrames = configuration.numFrames;
+        const subFrames = configuration.subFrames;
         const scale = size / (model.measureRadius() + 2.0) * 0.5;
         canvas.width = size;
         canvas.height = size;
@@ -156,10 +157,9 @@ export class RotaryRenderer {
             context.save();
             context.translate(size >> 1, size >> 1);
             context.scale(scale, scale);
-            const fps = 60.0;
             const phase = i / numFrames;
             const alphaMultiplier = 1.0 / subFrames;
-            const offset = 1.0 / (model.loopDuration.get() * fps * subFrames);
+            const offset = 1.0 / (model.loopDuration.get() * configuration.fps * subFrames);
             for (let i = 0; i < subFrames; i++) {
                 RotaryRenderer.render(context, model, phase + offset * i, alphaMultiplier);
             }

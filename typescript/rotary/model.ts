@@ -18,12 +18,19 @@ import {BitArrayFormat, Func, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {Colors} from "../lib/colors.js"
 import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
+import {RenderConfiguration} from "./render"
+
+export declare interface RotaryExportFormat {
+    fps: number
+    subFrames: number
+    size: number
+}
 
 export declare interface RotaryFormat {
     radiusMin: number
-    exportSize: number
     phaseOffset: number
     loopDuration: number
+    exportSettings: RotaryExportFormat
     tracks: RotaryTrackFormat[]
 }
 
@@ -45,16 +52,45 @@ export declare interface RotaryTrackFormat {
     reverse: boolean
 }
 
+export class RotaryExportSetting implements Terminable, Serializer<RotaryExportFormat> {
+    private readonly terminator: Terminator = new Terminator()
+
+    readonly size = this.terminator.with(new BoundNumericValue(new LinearInteger(128, 2048), 256))
+    readonly fps = this.terminator.with(new BoundNumericValue(new LinearInteger(12, 120), 60))
+    readonly subFrames = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 64), 32))
+
+    deserialize(format: RotaryExportFormat): RotaryExportSetting {
+        this.size.set(format.size)
+        this.fps.set(format.fps)
+        this.subFrames.set(format.subFrames)
+        return this
+    }
+
+    serialize(): RotaryExportFormat {
+        return {fps: this.fps.get(), subFrames: this.subFrames.get(), size: this.size.get()}
+    }
+
+    getConfiguration(numFrames: number): RenderConfiguration {
+        return {size: this.size.get(), subFrames: this.subFrames.get(), fps: this.fps.get(), numFrames: numFrames}
+    }
+
+    terminate(): void {
+        this.terminator.terminate()
+    }
+}
+
 export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS = 24
 
     private readonly terminator: Terminator = new Terminator()
     private readonly observable: ObservableImpl<RotaryModel> = new ObservableImpl<RotaryModel>()
+
     readonly tracks: ObservableCollection<RotaryTrackModel> = new ObservableCollection()
+    readonly exportSettings: RotaryExportSetting = this.terminator.with(new RotaryExportSetting())
     readonly radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20))
-    readonly exportSize = this.bindValue(new BoundNumericValue(new LinearInteger(128, 1024), 256))
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75))
     readonly loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0))
+    readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 1))
 
     constructor() {
         ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this))
@@ -156,7 +192,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     serialize(): RotaryFormat {
         return {
             radiusMin: this.radiusMin.get(),
-            exportSize: this.exportSize.get(),
+            exportSettings: this.exportSettings.serialize(),
             phaseOffset: this.phaseOffset.get(),
             loopDuration: this.loopDuration.get(),
             tracks: this.tracks.map(track => track.serialize())
@@ -165,7 +201,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
 
     deserialize(format: RotaryFormat): RotaryModel {
         this.radiusMin.set(format.radiusMin)
-        this.exportSize.set(format.exportSize)
+        this.exportSettings.deserialize(format.exportSettings)
         this.phaseOffset.set(format.phaseOffset)
         this.loopDuration.set(format.loopDuration)
         this.tracks.clear()

@@ -26,6 +26,8 @@ export interface DomElements {
 }
 
 export class RotaryApp implements RotaryTrackEditorExecutor {
+    static FPS: number = 60.0
+
     static create(rotary: RotaryModel): RotaryApp {
         return new RotaryApp(rotary, {
             form: document.querySelector("form.track-nav") as HTMLFormElement,
@@ -56,8 +58,16 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin)
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='phase-offset']"),
             PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.phaseOffset)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='loop-duration']"),
+            PrintMapping.integer("s"), new NumericStepper(1))).with(model.loopDuration)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='live-sub-frames']"),
+            PrintMapping.integer(""), new NumericStepper(1))).with(model.motion)
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='export-size']"),
-            PrintMapping.integer("px"), new NumericStepper(1))).with(model.exportSize)
+            PrintMapping.integer("px"), new NumericStepper(1))).with(model.exportSettings.size)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='export-fps']"),
+            PrintMapping.integer(""), new NumericStepper(1))).with(model.exportSettings.fps)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='export-sub-frames']"),
+            PrintMapping.integer(""), new NumericStepper(1))).with(model.exportSettings.subFrames)
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
             switch (event.type) {
                 case CollectionEventType.Add: {
@@ -154,10 +164,9 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.rawContext.arc(cos * rof, sin * rof, 3.0, 0.0, TAU, false)
         this.rawContext.fill()
 
-        const fps = 60.0
-        const subFrames = 16
+        const subFrames = this.model.motion.get()
         const alphaMultiplier = 1.0 / subFrames
-        const offset = 1.0 / (this.model.loopDuration.get() * fps * subFrames)
+        const offset = 1.0 / (this.model.loopDuration.get() * RotaryApp.FPS * subFrames)
         for (let i = 0; i < subFrames; i++) {
             RotaryRenderer.render(this.rawContext, this.model, phase + offset * i, alphaMultiplier)
         }

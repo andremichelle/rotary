@@ -13,6 +13,7 @@ export interface DomElements {
 export declare class RotaryApp implements RotaryTrackEditorExecutor {
     private readonly model;
     private readonly elements;
+    static FPS: number;
     static create(rotary: RotaryModel): RotaryApp;
     private readonly terminator;
     private readonly editor;

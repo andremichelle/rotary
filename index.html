@@ -23,25 +23,59 @@
 </nav>
 <main>
     <div class="global-editor">
-        <div class="two-columns">
-            <label class="name">start radius</label>
-            <fieldset class="stepper" data-parameter="start-radius">
-                <button>◀︎</button>
-                <input type="text">
-                <button>▶</button>
-            </fieldset>
-            <label class="name">phase offset</label>
-            <fieldset class="stepper" data-parameter="phase-offset">
-                <button>◀︎</button>
-                <input type="text">
-                <button>▶</button>
-            </fieldset>
-            <label class="name">export size</label>
-            <fieldset class="stepper" data-parameter="export-size">
-                <button>◀︎</button>
-                <input type="text">
-                <button>▶</button>
-            </fieldset>
+        <div class="columns">
+            <div class="column">
+                <h5>GLOBAL</h5>
+                <div class="two-columns">
+                    <label class="name">start radius</label>
+                    <fieldset class="stepper" data-parameter="start-radius">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">phase offset</label>
+                    <fieldset class="stepper" data-parameter="phase-offset">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">seconds</label>
+                    <fieldset class="stepper" data-parameter="loop-duration">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">motion</label>
+                    <fieldset class="stepper" data-parameter="live-sub-frames">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                </div>
+            </div>
+            <div class="column">
+                <h5>Export</h5>
+                <div class="two-columns">
+                    <label class="name">size</label>
+                    <fieldset class="stepper" data-parameter="export-size">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">fps</label>
+                    <fieldset class="stepper" data-parameter="export-fps">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                    <label class="name">motion</label>
+                    <fieldset class="stepper" data-parameter="export-sub-frames">
+                        <button>◀︎</button>
+                        <input type="text">
+                        <button>▶</button>
+                    </fieldset>
+                </div>
+            </div>
         </div>
     </div>
     <form class="track-nav">
@@ -147,13 +181,15 @@
                             <button>▶</button>
                         </fieldset>
                         <label class="name" data-group="motion" data-injective="smoothstep">edge0</label>
-                        <fieldset class="stepper" data-group="motion" data-injective="smoothstep" data-parameter="edge0">
+                        <fieldset class="stepper" data-group="motion" data-injective="smoothstep"
+                                  data-parameter="edge0">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>
                         </fieldset>
                         <label class="name" data-group="motion" data-injective="smoothstep">edge1</label>
-                        <fieldset class="stepper" data-group="motion" data-injective="smoothstep" data-parameter="edge1">
+                        <fieldset class="stepper" data-group="motion" data-injective="smoothstep"
+                                  data-parameter="edge1">
                             <button>◀︎</button>
                             <input type="text">
                             <button>▶</button>

@@ -1,6 +1,13 @@
 import {TAU} from "../lib/common.js"
 import {Fill, RotaryModel, RotaryTrackModel} from "./model.js"
 
+export interface RenderConfiguration {
+    fps: number
+    subFrames: number // motion blur off(1), on(2-32)
+    numFrames: number
+    size: number
+}
+
 export class RotaryRenderer {
     static render(context: CanvasRenderingContext2D,
                   model: RotaryModel,
@@ -47,14 +54,13 @@ export class RotaryRenderer {
             }
             if (highlightCrossing) {
                 context.globalAlpha = alphaMultiplier * (index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4)
-            } else {
-                context.globalAlpha = alphaMultiplier
             }
             const a0 = index / segments, a1 = a0 + lengthRatio / segments
             RotaryRenderer.renderSection(context, trackModel, r0, r1,
                 phase + bend.fx(a0) * length,
                 phase + bend.fx(a1) * length
             )
+            context.globalAlpha = alphaMultiplier
         }
         const outline = trackModel.outline.get()
         if (0.0 < outline) {
@@ -129,21 +135,19 @@ export class RotaryRenderer {
     }
 
     static async renderFrames(model: RotaryModel,
-                              numFrames: number,
-                              size: number,
-                              subFrames: number,
+                              configuration: RenderConfiguration,
                               process: (context: CanvasRenderingContext2D) => void,
                               progress?: (progress: number) => void): Promise<void> {
         let count = 0 | 0
         return new Promise((resolve) => {
-            const iterator: Generator<CanvasRenderingContext2D> = RotaryRenderer.renderFrame(model, numFrames, size, subFrames)
+            const iterator: Generator<CanvasRenderingContext2D> = RotaryRenderer.renderFrame(model, configuration)
             const next = () => {
                 const curr = iterator.next()
                 if (curr.done) {
                     if (progress !== undefined) progress(1.0)
                     resolve()
                 } else {
-                    if (progress !== undefined) progress(count++ / numFrames)
+                    if (progress !== undefined) progress(count++ / configuration.numFrames)
                     process(curr.value)
                     requestAnimationFrame(next)
                 }
@@ -152,9 +156,12 @@ export class RotaryRenderer {
         })
     }
 
-    static* renderFrame(model: RotaryModel, numFrames: number, size: number, subFrames: number): Generator<CanvasRenderingContext2D> {
+    static* renderFrame(model: RotaryModel, configuration: RenderConfiguration): Generator<CanvasRenderingContext2D> {
         const canvas = document.createElement("canvas")
         const context = canvas.getContext("2d", {alpha: true})
+        const size = configuration.size
+        const numFrames = configuration.numFrames
+        const subFrames = configuration.subFrames
         const scale: number = size / (model.measureRadius() + 2.0) * 0.5 // two pixel padding for strokes
         canvas.width = size
         canvas.height = size
@@ -163,11 +170,9 @@ export class RotaryRenderer {
             context.save()
             context.translate(size >> 1, size >> 1)
             context.scale(scale, scale)
-            // TODO put into config interface
-            const fps = 60.0
             const phase: number = i / numFrames
             const alphaMultiplier = 1.0 / subFrames
-            const offset = 1.0 / (model.loopDuration.get() * fps * subFrames)
+            const offset = 1.0 / (model.loopDuration.get() * configuration.fps * subFrames)
             for (let i = 0; i < subFrames; i++) {
                 RotaryRenderer.render(context, model, phase + offset * i, alphaMultiplier)
             }
@@ -176,4 +181,3 @@ export class RotaryRenderer {
         }
     }
 }
-

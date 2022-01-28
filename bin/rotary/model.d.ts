@@ -1,11 +1,17 @@
 import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableCollection, ObservableValue, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
 import { BitArrayFormat, Random } from "../lib/math.js";
 import { Injective, InjectiveFormat } from "../lib/injective.js";
+import { RenderConfiguration } from "./render";
+export declare interface RotaryExportFormat {
+    fps: number;
+    subFrames: number;
+    size: number;
+}
 export declare interface RotaryFormat {
     radiusMin: number;
-    exportSize: number;
     phaseOffset: number;
     loopDuration: number;
+    exportSettings: RotaryExportFormat;
     tracks: RotaryTrackFormat[];
 }
 export declare interface RotaryTrackFormat {
@@ -25,15 +31,26 @@ export declare interface RotaryTrackFormat {
     frequency: number;
     reverse: boolean;
 }
+export declare class RotaryExportSetting implements Terminable, Serializer<RotaryExportFormat> {
+    private readonly terminator;
+    readonly size: BoundNumericValue;
+    readonly fps: BoundNumericValue;
+    readonly subFrames: BoundNumericValue;
+    deserialize(format: RotaryExportFormat): RotaryExportSetting;
+    serialize(): RotaryExportFormat;
+    getConfiguration(numFrames: number): RenderConfiguration;
+    terminate(): void;
+}
 export declare class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS: number;
     private readonly terminator;
     private readonly observable;
     readonly tracks: ObservableCollection<RotaryTrackModel>;
+    readonly exportSettings: RotaryExportSetting;
     readonly radiusMin: ObservableValue<any>;
-    readonly exportSize: ObservableValue<any>;
     readonly phaseOffset: ObservableValue<any>;
     readonly loopDuration: ObservableValue<any>;
+    readonly motion: ObservableValue<any>;
     constructor();
     addObserver(observer: Observer<RotaryModel>): Terminable;
     removeObserver(observer: Observer<RotaryModel>): boolean;

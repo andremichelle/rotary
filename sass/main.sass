@@ -32,6 +32,25 @@ body
       padding: 20px 12px 16px 16px
       background-color: #1A1A1A
 
+      > .columns
+        display: flex
+        flex-direction: row
+        column-gap: 24px
+
+        > .column
+          display: flex
+          flex-direction: column
+          background-color: #1A1A1A
+          row-gap: 8px
+
+          > h5
+            margin: 0
+            padding: 2px 4px
+            border-radius: 1px
+            color: lighten(#111, 20%)
+            text-transform: uppercase
+            background-color: #111
+
     > form.track-nav
       margin-top: 1px
       flex: 0 0 auto
@@ -120,7 +139,7 @@ body
             &[data-motion="tshape"] [data-group="motion"]:not([data-injective="tshape"]),
             &[data-motion="smoothstep"] [data-group="motion"]:not([data-injective="smoothstep"])
               display: none
-              
+
             &[data-bend="linear"] [data-group="bend"]:not([data-injective="linear"]),
             &[data-bend="pow"] [data-group="bend"]:not([data-injective="pow"]),
             &[data-bend="cshape"] [data-group="bend"]:not([data-injective="cshape"]),

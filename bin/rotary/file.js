@@ -28,8 +28,8 @@ export const save = (model) => __awaiter(void 0, void 0, void 0, function* () {
     yield fileStream.close();
 });
 export const renderWebM = (model) => __awaiter(void 0, void 0, void 0, function* () {
-    const size = model.exportSize.get();
-    const fps = 60;
+    const size = model.exportSettings.size.get();
+    const fps = model.exportSettings.fps.get();
     const numFrames = Math.floor(fps * model.loopDuration.get());
     console.log(`numFrames: ${numFrames}`);
     const writer = new WebMWriter({
@@ -39,12 +39,13 @@ export const renderWebM = (model) => __awaiter(void 0, void 0, void 0, function*
         alphaQuality: 1.0
     });
     const progressIndicator = new ProgressIndicator("Export WebM");
-    yield progressIndicator.completeWith(RotaryRenderer.renderFrames(model, numFrames, size, 32, context => writer.addFrame(context.canvas), progressIndicator.onProgress));
+    yield progressIndicator.completeWith(RotaryRenderer.renderFrames(model, model.exportSettings.getConfiguration(numFrames), context => writer.addFrame(context.canvas), progressIndicator.onProgress));
     const blob = yield writer.complete();
     window.open(URL.createObjectURL(blob));
 });
 export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* () {
-    const size = model.exportSize.get();
+    const fps = model.exportSettings.fps.get();
+    const size = model.exportSettings.size.get();
     const gif = new GIF({
         workers: 2,
         quality: 10,
@@ -54,11 +55,11 @@ export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* 
     });
     const option = {
         copy: true,
-        delay: 1000 / 60
+        delay: 1000 / fps
     };
-    const numFrames = Math.floor(60 * model.loopDuration.get());
+    const numFrames = Math.floor(fps * model.loopDuration.get());
     const progressIndicator = new ProgressIndicator("Export GIF");
-    yield RotaryRenderer.renderFrames(model, numFrames, size, 32, context => gif.addFrame(context.canvas, option), progress => progressIndicator.onProgress(progress * 0.5));
+    yield RotaryRenderer.renderFrames(model, model.exportSettings.getConfiguration(numFrames), context => gif.addFrame(context.canvas, option), progress => progressIndicator.onProgress(progress * 0.5));
     gif.once("finished", (blob) => {
         progressIndicator.complete();
         window.open(URL.createObjectURL(blob));
@@ -103,18 +104,19 @@ export const renderVideo = (model) => __awaiter(void 0, void 0, void 0, function
             console.log(`error: ${error}`);
         }
     });
-    const size = model.exportSize.get();
+    const size = model.exportSettings.size.get();
     const numFrames = Math.floor(60 * 1);
     const progressIndicator = new ProgressIndicator("Export GIF");
+    const renderConfiguration = model.exportSettings.getConfiguration(numFrames);
     encoder.configure({
         codec: "vp8",
         width: size,
         height: size,
         alpha: "discard",
         latencyMode: "quality",
-        framerate: 60
+        framerate: renderConfiguration.fps
     });
-    yield RotaryRenderer.renderFrames(model, numFrames, size, 32, context => {
+    yield RotaryRenderer.renderFrames(model, renderConfiguration, context => {
         const frame = new VideoFrame(context.canvas);
         encoder.encode(frame);
         frame.close();

@@ -3,15 +3,39 @@ import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { Colors } from "../lib/colors.js";
 import { CShapeInjective, IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
+export class RotaryExportSetting {
+    constructor() {
+        this.terminator = new Terminator();
+        this.size = this.terminator.with(new BoundNumericValue(new LinearInteger(128, 2048), 256));
+        this.fps = this.terminator.with(new BoundNumericValue(new LinearInteger(12, 120), 60));
+        this.subFrames = this.terminator.with(new BoundNumericValue(new LinearInteger(1, 64), 32));
+    }
+    deserialize(format) {
+        this.size.set(format.size);
+        this.fps.set(format.fps);
+        this.subFrames.set(format.subFrames);
+        return this;
+    }
+    serialize() {
+        return { fps: this.fps.get(), subFrames: this.subFrames.get(), size: this.size.get() };
+    }
+    getConfiguration(numFrames) {
+        return { size: this.size.get(), subFrames: this.subFrames.get(), fps: this.fps.get(), numFrames: numFrames };
+    }
+    terminate() {
+        this.terminator.terminate();
+    }
+}
 export class RotaryModel {
     constructor() {
         this.terminator = new Terminator();
         this.observable = new ObservableImpl();
         this.tracks = new ObservableCollection();
+        this.exportSettings = this.terminator.with(new RotaryExportSetting());
         this.radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20));
-        this.exportSize = this.bindValue(new BoundNumericValue(new LinearInteger(128, 1024), 256));
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
         this.loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
+        this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 1));
         ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this));
     }
     addObserver(observer) {
@@ -95,7 +119,7 @@ export class RotaryModel {
     serialize() {
         return {
             radiusMin: this.radiusMin.get(),
-            exportSize: this.exportSize.get(),
+            exportSettings: this.exportSettings.serialize(),
             phaseOffset: this.phaseOffset.get(),
             loopDuration: this.loopDuration.get(),
             tracks: this.tracks.map(track => track.serialize())
@@ -103,7 +127,7 @@ export class RotaryModel {
     }
     deserialize(format) {
         this.radiusMin.set(format.radiusMin);
-        this.exportSize.set(format.exportSize);
+        this.exportSettings.deserialize(format.exportSettings);
         this.phaseOffset.set(format.phaseOffset);
         this.loopDuration.set(format.loopDuration);
         this.tracks.clear();

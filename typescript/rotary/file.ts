@@ -25,8 +25,8 @@ export const save = async (model: RotaryModel) => {
 }
 
 export const renderWebM = async (model: RotaryModel) => {
-    const size = model.exportSize.get()
-    const fps = 60
+    const size = model.exportSettings.size.get()
+    const fps = model.exportSettings.fps.get()
     const numFrames = Math.floor(fps * model.loopDuration.get())
     console.log(`numFrames: ${numFrames}`)
     const writer = new WebMWriter({
@@ -36,14 +36,16 @@ export const renderWebM = async (model: RotaryModel) => {
         alphaQuality: 1.0
     })
     const progressIndicator = new ProgressIndicator("Export WebM")
-    await progressIndicator.completeWith(RotaryRenderer.renderFrames(model, numFrames, size, 32,
+    await progressIndicator.completeWith(RotaryRenderer.renderFrames(model,
+        model.exportSettings.getConfiguration(numFrames),
         context => writer.addFrame(context.canvas), progressIndicator.onProgress))
     const blob = await writer.complete()
     window.open(URL.createObjectURL(blob))
 }
 
 export const renderGIF = async (model: RotaryModel) => {
-    const size = model.exportSize.get()
+    const fps = model.exportSettings.fps.get()
+    const size = model.exportSettings.size.get()
     const gif = new GIF({
         workers: 2,
         quality: 10,
@@ -53,11 +55,12 @@ export const renderGIF = async (model: RotaryModel) => {
     })
     const option = {
         copy: true,
-        delay: 1000 / 60
+        delay: 1000 / fps
     }
-    const numFrames = Math.floor(60 * model.loopDuration.get())
+    const numFrames = Math.floor(fps * model.loopDuration.get())
     const progressIndicator = new ProgressIndicator("Export GIF")
-    await RotaryRenderer.renderFrames(model, numFrames, size, 32,
+    await RotaryRenderer.renderFrames(model,
+        model.exportSettings.getConfiguration(numFrames),
         context => gif.addFrame(context.canvas, option),
         progress => progressIndicator.onProgress(progress * 0.5))
     gif.once("finished", (blob) => {
@@ -106,18 +109,19 @@ export const renderVideo = async (model: RotaryModel) => {
             console.log(`error: ${error}`)
         }
     })
-    const size = model.exportSize.get()
+    const size = model.exportSettings.size.get()
     const numFrames = Math.floor(60 * /*model.loopDuration.get()*/1)
     const progressIndicator = new ProgressIndicator("Export GIF")
+    const renderConfiguration = model.exportSettings.getConfiguration(numFrames)
     encoder.configure({
         codec: "vp8",
         width: size,
         height: size,
         alpha: "discard",
         latencyMode: "quality",
-        framerate: 60
+        framerate: renderConfiguration.fps
     })
-    await RotaryRenderer.renderFrames(model, numFrames, size, 32,
+    await RotaryRenderer.renderFrames(model, renderConfiguration,
         context => {
             const frame = new VideoFrame(context.canvas)
             encoder.encode(frame)

@@ -361,6 +361,25 @@ body main > .global-editor {
   padding: 20px 12px 16px 16px;
   background-color: #1A1A1A;
 }
+body main > .global-editor > .columns {
+  display: flex;
+  flex-direction: row;
+  column-gap: 24px;
+}
+body main > .global-editor > .columns > .column {
+  display: flex;
+  flex-direction: column;
+  background-color: #1A1A1A;
+  row-gap: 8px;
+}
+body main > .global-editor > .columns > .column > h5 {
+  margin: 0;
+  padding: 2px 4px;
+  border-radius: 1px;
+  color: #444444;
+  text-transform: uppercase;
+  background-color: #111;
+}
 body main > form.track-nav {
   margin-top: 1px;
   flex: 0 0 auto;
