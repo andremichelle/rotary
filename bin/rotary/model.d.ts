@@ -80,7 +80,7 @@ export declare enum Edge {
     Start = 0,
     End = 1
 }
-export declare class FilterResult {
+export declare class QueryResult {
     readonly edge: Edge;
     readonly index: number;
     readonly position: number;
@@ -106,6 +106,10 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly frequency: BoundNumericValue;
     readonly fragments: BoundNumericValue;
     readonly reverse: ObservableValueImpl<boolean>;
+    readonly volume: BoundNumericValue;
+    readonly panning: BoundNumericValue;
+    readonly mute: ObservableValueImpl<boolean>;
+    readonly solo: ObservableValueImpl<boolean>;
     constructor(root: RotaryModel);
     bindValue<T extends Observable<any>>(property: T): T;
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
@@ -120,8 +124,8 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     globalToLocal(x: number): number;
     localToGlobal(y: number): number;
     localToSegment(phase: number): number;
-    filterSections(p0: number, p1: number): Iterator<FilterResult>;
-    private branchFilterSection;
+    querySections(p0: number, p1: number): Iterator<QueryResult>;
+    private branchQuerySection;
     private seekSection;
     private updateGradient;
 }

@@ -37,7 +37,7 @@ export class Audio {
     async initPreview(): Promise<AudioSceneController> {
         await MeterWorklet.load(this.context)
         const meter = new MeterWorklet(this.context)
-        Dom.replaceElement(meter.domElement, document.getElementById("meter"))
+        document.getElementById("meter").appendChild(meter.domElement)
         meter.connect(this.context.destination)
         const preview: AudioSceneController = await this.scene.build(this.context, meter, this.model, info => {
             const element = document.getElementById("preloader-message")

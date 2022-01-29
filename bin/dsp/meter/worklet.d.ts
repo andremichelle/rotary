@@ -1,6 +1,9 @@
 export declare class MeterWorklet extends AudioWorkletNode {
-    private width;
     static load(context: AudioContext): Promise<void>;
+    private readonly width;
+    private readonly height;
+    private readonly meterPadding;
+    private readonly meterWidth;
     private minDb;
     private maxDb;
     private labelStepsDb;
@@ -10,15 +13,12 @@ export declare class MeterWorklet extends AudioWorkletNode {
     private releasePeakHoldTime;
     private peakHoldDuration;
     private clipHoldDuration;
-    private height;
-    private meterPadding;
-    private meterWidth;
     private scale;
     private readonly canvas;
     private readonly graphics;
     private readonly gradient;
     private readonly updater;
-    constructor(context: AudioContext, width?: number);
+    constructor(context: AudioContext);
     readonly domElement: HTMLElement;
     update(): void;
     renderScale(): void;

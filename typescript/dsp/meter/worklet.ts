@@ -6,6 +6,11 @@ export class MeterWorklet extends AudioWorkletNode {
         return await context.audioWorklet.addModule("bin/dsp/meter/processor.js")
     }
 
+    private readonly width: number = 288
+    private readonly height: number = 17
+    private readonly meterPadding: number = 5
+    private readonly meterWidth: number
+
     private minDb: number = -48.0
     private maxDb: number = 3.0
     private labelStepsDb: number = 3.0
@@ -15,9 +20,6 @@ export class MeterWorklet extends AudioWorkletNode {
     private releasePeakHoldTime: Float32Array = new Float32Array(2)
     private peakHoldDuration: number = 1000.0
     private clipHoldDuration: number = 2000.0
-    private height: number = 17
-    private meterPadding: number = 16
-    private meterWidth: number
     private scale: number
 
     private readonly canvas: HTMLCanvasElement
@@ -26,7 +28,7 @@ export class MeterWorklet extends AudioWorkletNode {
 
     private readonly updater: () => void
 
-    constructor(context: AudioContext, private width: number = 288) {
+    constructor(context: AudioContext) {
         super(context, "dsp-meter", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
@@ -43,8 +45,8 @@ export class MeterWorklet extends AudioWorkletNode {
         this.canvas.style.height = this.height + "px"
         this.graphics = this.canvas.getContext("2d")
 
-        const green = "rgba(60,60,60)"
-        const yellow = "rgb(62,62,62)"
+        const green = "rgba(40,40,40)"
+        const yellow = "rgb(42,42,42)"
         const red = "rgb(160,16,0)"
         this.gradient = this.graphics.createLinearGradient(this.meterPadding, 0, this.meterPadding + this.meterWidth, 0)
         this.gradient.addColorStop(0.0, green)
@@ -92,7 +94,7 @@ export class MeterWorklet extends AudioWorkletNode {
 
         graphics.clearRect(0, 0, this.width, 4)
         graphics.clearRect(0, 13, this.width, 4)
-        graphics.fillStyle = "rgba(0, 0, 0, 0.2)"
+        graphics.fillStyle = "rgba(0, 0, 0, 0.1)"
         const maxGain = dbToGain(this.maxDb)
         this.renderMeter(maxGain, 0, 4)
         this.renderMeter(maxGain, 13, 4)
@@ -112,7 +114,7 @@ export class MeterWorklet extends AudioWorkletNode {
             } else {
                 const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[i]))
                 if (db >= this.minDb) {
-                    graphics.fillStyle = 0.0 < db ? "rgb(200,200,200)" : "rgb(140,140,140)"
+                    graphics.fillStyle = 0.0 < db ? "rgb(160,16,0)" : "rgb(100,100,100)"
                     graphics.fillRect(this.dbToX(db), i * 13, 1, 4)
                 }
             }

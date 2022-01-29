@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { dbToGain, gainToDb } from "../common.js";
 export class MeterWorklet extends AudioWorkletNode {
-    constructor(context, width = 288) {
+    constructor(context) {
         super(context, "dsp-meter", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
@@ -18,7 +18,9 @@ export class MeterWorklet extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
-        this.width = width;
+        this.width = 288;
+        this.height = 17;
+        this.meterPadding = 5;
         this.minDb = -48.0;
         this.maxDb = 3.0;
         this.labelStepsDb = 3.0;
@@ -28,15 +30,13 @@ export class MeterWorklet extends AudioWorkletNode {
         this.releasePeakHoldTime = new Float32Array(2);
         this.peakHoldDuration = 1000.0;
         this.clipHoldDuration = 2000.0;
-        this.height = 17;
-        this.meterPadding = 16;
         this.meterWidth = this.width - this.meterPadding * 2.0;
         this.canvas = document.createElement("canvas");
         this.canvas.style.width = this.width + "px";
         this.canvas.style.height = this.height + "px";
         this.graphics = this.canvas.getContext("2d");
-        const green = "rgba(60,60,60)";
-        const yellow = "rgb(62,62,62)";
+        const green = "rgba(40,40,40)";
+        const yellow = "rgb(42,42,42)";
         const red = "rgb(160,16,0)";
         this.gradient = this.graphics.createLinearGradient(this.meterPadding, 0, this.meterPadding + this.meterWidth, 0);
         this.gradient.addColorStop(0.0, green);
@@ -85,7 +85,7 @@ export class MeterWorklet extends AudioWorkletNode {
         }
         graphics.clearRect(0, 0, this.width, 4);
         graphics.clearRect(0, 13, this.width, 4);
-        graphics.fillStyle = "rgba(0, 0, 0, 0.2)";
+        graphics.fillStyle = "rgba(0, 0, 0, 0.1)";
         const maxGain = dbToGain(this.maxDb);
         this.renderMeter(maxGain, 0, 4);
         this.renderMeter(maxGain, 13, 4);
@@ -106,7 +106,7 @@ export class MeterWorklet extends AudioWorkletNode {
             else {
                 const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[i]));
                 if (db >= this.minDb) {
-                    graphics.fillStyle = 0.0 < db ? "rgb(200,200,200)" : "rgb(140,140,140)";
+                    graphics.fillStyle = 0.0 < db ? "rgb(160,16,0)" : "rgb(100,100,100)";
                     graphics.fillRect(this.dbToX(db), i * 13, 1, 4);
                 }
             }

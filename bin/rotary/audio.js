@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { MeterWorklet } from "../dsp/meter/worklet.js";
-import { Dom, ProgressIndicator } from "../dom/common.js";
+import { ProgressIndicator } from "../dom/common.js";
 import { encodeWavFloat } from "../dsp/common.js";
 export class Audio {
     constructor(context, scene, model) {
@@ -27,7 +27,7 @@ export class Audio {
         return __awaiter(this, void 0, void 0, function* () {
             yield MeterWorklet.load(this.context);
             const meter = new MeterWorklet(this.context);
-            Dom.replaceElement(meter.domElement, document.getElementById("meter"));
+            document.getElementById("meter").appendChild(meter.domElement);
             meter.connect(this.context.destination);
             const preview = yield this.scene.build(this.context, meter, this.model, info => {
                 const element = document.getElementById("preloader-message");
