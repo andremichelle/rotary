@@ -1,4 +1,4 @@
-import {Edge, FilterResult, RotaryModel} from "../model.js"
+import {Edge, QueryResult, RotaryModel} from "../model.js"
 import {MessageToProcessor} from "./messages-to-processor.js"
 import {TransportMessage, UpdateCursorMessage} from "./messages-to-worklet.js"
 import {RenderQuantum} from "../../dsp/common.js"
@@ -10,7 +10,7 @@ class Voice {
 
     duration: number = Number.MAX_SAFE_INTEGER
 
-    constructor(readonly sampleKey: number, public delayFrames: number, public position: number = 0 | 0) {
+    constructor(public delayFrames: number, readonly output: number, readonly sampleKey: number, public position: number = 0 | 0) {
     }
 
     stop() {
@@ -64,10 +64,6 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
 
         // noinspection JSUnusedGlobalSymbols
         process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
-            const output = outputs[0]
-            const outL = output[0]
-            const outR = output[1]
-
             if (this.transport.get()) {
                 this.schedule()
             }
@@ -78,6 +74,9 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                     const sample: Sample = this.samples.get(voice.sampleKey)
                     if (sample === undefined) continue
                     const frames: Float32Array[] = sample.frames
+                    const output = outputs[voice.output]
+                    const outL = output[0]
+                    const outR = output[1]
                     for (let frameIndex = 0; frameIndex < RenderQuantum; frameIndex++) {
                         if (0 <= voice.delayFrames) {
                             const position = voice.position++
@@ -120,9 +119,9 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                 const track = tracks.get(trackIndex)
                 const t0 = track.globalToLocal(x0)
                 const t1 = track.globalToLocal(x1)
-                const iterator = track.filterSections(t0, t1)
+                const iterator = track.querySections(t0, t1)
                 while (iterator.hasNext()) {
-                    const result: FilterResult = iterator.next()
+                    const result: QueryResult = iterator.next()
                     const running = this.activeVoices.get(trackIndex)
                     running.forEach(v => v.stop())
                     if (result.edge === Edge.Start) {
@@ -140,7 +139,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                                 frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopFrames - this.phase)}`)
                         }
                         const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1)
-                        const voice = new Voice(sampleKey, -frameIndex, 0)
+                        const voice = new Voice(-frameIndex, trackIndex, sampleKey, 0)
                         this.activeVoices.get(trackIndex).push(voice)
                     }
                 }

@@ -7,15 +7,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { RotaryModel } from "../model.js";
 import { RewindMessage, TransportMessage, UpdateFormatMessage, UploadSampleMessage } from "./messages-to-processor.js";
 import { ObservableValueImpl } from "../../lib/common.js";
 export class RotaryWorkletNode extends AudioWorkletNode {
     constructor(context) {
         super(context, "rotary", {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            outputChannelCount: [2],
-            channelCount: 1,
+            numberOfInputs: 0,
+            numberOfOutputs: RotaryModel.MAX_TRACKS,
+            outputChannelCount: new Array(RotaryModel.MAX_TRACKS).fill(2),
+            channelCount: 2,
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });

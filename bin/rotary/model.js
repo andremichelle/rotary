@@ -153,7 +153,7 @@ export var Edge;
     Edge[Edge["Start"] = 0] = "Start";
     Edge[Edge["End"] = 1] = "End";
 })(Edge || (Edge = {}));
-export class FilterResult {
+export class QueryResult {
     constructor(edge, index, position) {
         this.edge = edge;
         this.index = index;
@@ -181,6 +181,10 @@ export class RotaryTrackModel {
         this.frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
         this.fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
         this.reverse = this.bindValue(new ObservableValueImpl(false));
+        this.volume = new BoundNumericValue(Linear.Identity, 1.0);
+        this.panning = new BoundNumericValue(Linear.Bipolar, 1.0);
+        this.mute = new ObservableValueImpl(false);
+        this.solo = new ObservableValueImpl(false);
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()));
         const motionTerminator = this.terminator.with(new Terminator());
         this.terminator.with(this.motion.addObserver((motion) => {
@@ -313,7 +317,7 @@ export class RotaryTrackModel {
         const local = (full - index) / this.lengthRatio.get();
         return 0.0 === local ? index : local <= 1.0 ? index + (this.reverse.get() ? local : 1.0 - local) : -1.0;
     }
-    filterSections(p0, p1) {
+    querySections(p0, p1) {
         if (p0 == p1) {
             return EmptyIterator;
         }
@@ -326,11 +330,13 @@ export class RotaryTrackModel {
             return EmptyIterator;
         }
         const cycleIndex = Math.floor(p0);
-        return GeneratorIterator.wrap(this.branchFilterSection(p0 - cycleIndex, p1 - cycleIndex, cycleIndex));
+        return GeneratorIterator.wrap(this.branchQuerySection(p0 - cycleIndex, p1 - cycleIndex, cycleIndex));
     }
-    *branchFilterSection(p0, p1, index) {
+    *branchQuerySection(p0, p1, index) {
         console.assert(p0 >= 0.0 && p0 < 1.0, `p0(${p0}) must be positive and smaller than 1.0`);
-        console.assert(p1 < 2.0, `p1(${p1}) must be smaller than 2.0`);
+        if (p1 > 2.0) {
+            p1 = p1 - Math.floor(p1) + 1.0;
+        }
         if (p1 > 1.0) {
             yield* this.seekSection(1, p0, 1.0, index);
             yield* this.seekSection(2, 0.0, p1 - 1.0, index + 1);
@@ -357,11 +363,11 @@ export class RotaryTrackModel {
         while (seekMin < t1) {
             if (!this.exclude.getBit(index)) {
                 if (seekMin >= t0) {
-                    yield new FilterResult(this.reverse.get() ? Edge.End : Edge.Start, index, bend.fx(Func.clamp(seekMin / length)) * length + offset);
+                    yield new QueryResult(this.reverse.get() ? Edge.End : Edge.Start, index, bend.fx(Func.clamp(seekMin / length)) * length + offset);
                 }
                 const seekMax = (index + lengthRatio) * step;
                 if (seekMax >= t0 && seekMax < t1) {
-                    yield new FilterResult(this.reverse.get() ? Edge.Start : Edge.End, index, bend.fx(Func.clamp(seekMax / length)) * length + offset);
+                    yield new QueryResult(this.reverse.get() ? Edge.Start : Edge.End, index, bend.fx(Func.clamp(seekMax / length)) * length + offset);
                 }
             }
             seekMin = ++index * step;

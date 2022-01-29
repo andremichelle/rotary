@@ -226,8 +226,7 @@ export enum Edge {
     Start, End
 }
 
-export class FilterResult {
-    // noinspection JSUnusedGlobalSymbols
+export class QueryResult {
     constructor(readonly edge: Edge, readonly index: number, readonly position: number) {
     }
 }
@@ -251,6 +250,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.bindValue(new ObservableValueImpl<boolean>(false))
+
+    // TODO
+    readonly volume = new BoundNumericValue(Linear.Identity, 1.0)
+    readonly panning = new BoundNumericValue(Linear.Bipolar, 1.0)
+    readonly mute = new ObservableValueImpl<boolean>(false)
+    readonly solo = new ObservableValueImpl<boolean>(false)
 
     constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
@@ -400,7 +405,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return 0.0 === local ? index : local <= 1.0 ? index + (this.reverse.get() ? local : 1.0 - local) : -1.0
     }
 
-    filterSections(p0: number, p1: number): Iterator<FilterResult> {
+    querySections(p0: number, p1: number): Iterator<QueryResult> {
         if (p0 == p1) {
             return EmptyIterator
         }
@@ -413,12 +418,14 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             return EmptyIterator
         }
         const cycleIndex = Math.floor(p0)
-        return GeneratorIterator.wrap(this.branchFilterSection(p0 - cycleIndex, p1 - cycleIndex, cycleIndex))
+        return GeneratorIterator.wrap(this.branchQuerySection(p0 - cycleIndex, p1 - cycleIndex, cycleIndex))
     }
 
-    private* branchFilterSection(p0: number, p1: number, index: number): Generator<FilterResult, void, FilterResult> {
+    private* branchQuerySection(p0: number, p1: number, index: number): Generator<QueryResult, void, QueryResult> {
         console.assert(p0 >= 0.0 && p0 < 1.0, `p0(${p0}) must be positive and smaller than 1.0`)
-        console.assert(p1 < 2.0, `p1(${p1}) must be smaller than 2.0`) // TODO so fast it makes more than one revolution!
+        if (p1 > 2.0) { // if it makes more than one turn on a query we cut to a single turn
+            p1 = p1 - Math.floor(p1) + 1.0
+        }
         if (p1 > 1.0) {
             yield* this.seekSection(1, p0, 1.0, index)
             yield* this.seekSection(2, 0.0, p1 - 1.0, index + 1)
@@ -427,7 +434,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         }
     }
 
-    private* seekSection(branch: number, p0: number, p1: number, offset: number): Generator<FilterResult> {
+    private* seekSection(branch: number, p0: number, p1: number, offset: number): Generator<QueryResult> {
         if (p0 >= p1) {
             return
         }
@@ -445,12 +452,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         while (seekMin < t1) {
             if (!this.exclude.getBit(index)) {
                 if (seekMin >= t0) {
-                    yield new FilterResult(this.reverse.get() ? Edge.End : Edge.Start, index,
+                    yield new QueryResult(this.reverse.get() ? Edge.End : Edge.Start, index,
                         bend.fx(Func.clamp(seekMin / length)) * length + offset)
                 }
                 const seekMax = (index + lengthRatio) * step
                 if (seekMax >= t0 && seekMax < t1) {
-                    yield new FilterResult(this.reverse.get() ? Edge.Start : Edge.End, index,
+                    yield new QueryResult(this.reverse.get() ? Edge.Start : Edge.End, index,
                         bend.fx(Func.clamp(seekMax / length)) * length + offset)
                 }
             }

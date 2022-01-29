@@ -3,9 +3,10 @@ import { TransportMessage, UpdateCursorMessage } from "./messages-to-worklet.js"
 import { RenderQuantum } from "../../dsp/common.js";
 import { ObservableValueImpl } from "../../lib/common.js";
 class Voice {
-    constructor(sampleKey, delayFrames, position = 0 | 0) {
-        this.sampleKey = sampleKey;
+    constructor(delayFrames, output, sampleKey, position = 0 | 0) {
         this.delayFrames = delayFrames;
+        this.output = output;
+        this.sampleKey = sampleKey;
         this.position = position;
         this.duration = Number.MAX_SAFE_INTEGER;
     }
@@ -59,9 +60,6 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         }
     }
     process(inputs, outputs) {
-        const output = outputs[0];
-        const outL = output[0];
-        const outR = output[1];
         if (this.transport.get()) {
             this.schedule();
         }
@@ -73,6 +71,9 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                 if (sample === undefined)
                     continue;
                 const frames = sample.frames;
+                const output = outputs[voice.output];
+                const outL = output[0];
+                const outR = output[1];
                 for (let frameIndex = 0; frameIndex < RenderQuantum; frameIndex++) {
                     if (0 <= voice.delayFrames) {
                         const position = voice.position++;
@@ -117,7 +118,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
             const track = tracks.get(trackIndex);
             const t0 = track.globalToLocal(x0);
             const t1 = track.globalToLocal(x1);
-            const iterator = track.filterSections(t0, t1);
+            const iterator = track.querySections(t0, t1);
             while (iterator.hasNext()) {
                 const result = iterator.next();
                 const running = this.activeVoices.get(trackIndex);
@@ -138,7 +139,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                                 frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopFrames - this.phase)}`);
                     }
                     const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1);
-                    const voice = new Voice(sampleKey, -frameIndex, 0);
+                    const voice = new Voice(-frameIndex, trackIndex, sampleKey, 0);
                     this.activeVoices.get(trackIndex).push(voice);
                 }
             }

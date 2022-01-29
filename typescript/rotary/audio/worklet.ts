@@ -15,10 +15,10 @@ export class RotaryWorkletNode extends AudioWorkletNode {
 
     constructor(context: BaseAudioContext) {
         super(context, "rotary", {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            outputChannelCount: [2],
-            channelCount: 1,
+            numberOfInputs: 0,
+            numberOfOutputs: RotaryModel.MAX_TRACKS,
+            outputChannelCount: new Array(RotaryModel.MAX_TRACKS).fill(2),
+            channelCount: 2,
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         })
