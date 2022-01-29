@@ -14,37 +14,36 @@ import { LimiterWorklet } from "../dsp/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
 export const initAudioScene = () => {
     return {
-        build(context, output, model, onProgressInfo) {
+        build(context, output, model, boot) {
             return __awaiter(this, void 0, void 0, function* () {
                 const terminator = new Terminator();
-                const loadSample = (url) => __awaiter(this, void 0, void 0, function* () {
-                    onProgressInfo(`loading ${url}`);
-                    return yield readAudio(context, url);
-                });
                 const limiterWorklet = yield LimiterWorklet.build(context);
                 const rotaryNode = yield RotaryWorkletNode.build(context);
                 const masterGain = context.createGain();
                 const updateFormat = () => rotaryNode.updateFormat(model);
                 terminator.with(model.addObserver(updateFormat));
                 updateFormat();
+                const loadSample = (url) => {
+                    return boot.registerProcess(readAudio(context, url));
+                };
                 let index = 0;
                 for (let i = 0; i <= 19; i++) {
-                    rotaryNode.uploadSample(index++, yield loadSample(`samples/kicks/${i}.wav`));
+                    rotaryNode.uploadSample(index++, loadSample(`samples/kicks/${i}.wav`));
                 }
                 for (let i = 0; i <= 74; i++) {
-                    rotaryNode.uploadSample(index++, yield loadSample(`samples/glitch/${i}.wav`));
+                    rotaryNode.uploadSample(index++, loadSample(`samples/glitch/${i}.wav`));
                 }
                 for (let i = 0; i <= 19; i++) {
-                    rotaryNode.uploadSample(index++, yield loadSample(`samples/clicks/${i}.wav`));
+                    rotaryNode.uploadSample(index++, loadSample(`samples/clicks/${i}.wav`));
                 }
                 for (let i = 0; i <= 12; i++) {
-                    rotaryNode.uploadSample(index++, yield loadSample(`samples/vinyl/${i}.wav`));
+                    rotaryNode.uploadSample(index++, loadSample(`samples/vinyl/${i}.wav`));
                 }
                 for (let i = 0; i <= 9; i++) {
-                    rotaryNode.uploadSample(index++, yield loadSample(`samples/snares/${i}.wav`));
+                    rotaryNode.uploadSample(index++, loadSample(`samples/snares/${i}.wav`));
                 }
                 for (let i = 0; i <= 21; i++) {
-                    rotaryNode.uploadSample(index++, yield loadSample(`samples/foley/${i}.wav`));
+                    rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`));
                 }
                 masterGain.gain.value = 1.0;
                 const rotaryMuxer = context.createGain();
@@ -61,6 +60,7 @@ export const initAudioScene = () => {
                 wetNode.connect(convolverNode).connect(masterGain);
                 rotaryMuxer.connect(masterGain).connect(limiterWorklet);
                 limiterWorklet.connect(output);
+                yield boot.waitForCompletion();
                 return Promise.resolve({
                     transport: rotaryNode.transport,
                     rewind: () => __awaiter(this, void 0, void 0, function* () {

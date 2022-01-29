@@ -53,9 +53,18 @@ export class RotaryWorkletNode extends AudioWorkletNode {
         this.port.postMessage(new UpdateFormatMessage(model.serialize()));
     }
     uploadSample(key, sample, loop = false) {
-        this.port.postMessage(sample instanceof AudioBuffer
-            ? UploadSampleMessage.from(key, sample, loop)
-            : new UploadSampleMessage(key, sample instanceof Float32Array ? [sample, sample] : sample, loop));
+        if (sample instanceof AudioBuffer) {
+            this.port.postMessage(UploadSampleMessage.from(key, sample, loop));
+        }
+        else if (sample instanceof Promise) {
+            sample.then(buffer => this.port.postMessage(UploadSampleMessage.from(key, buffer, loop)));
+        }
+        else if (sample instanceof Float32Array) {
+            this.port.postMessage(new UploadSampleMessage(key, [sample, sample], loop));
+        }
+        else if (Array.isArray(sample) && sample[0] instanceof Float32Array) {
+            this.port.postMessage(new UploadSampleMessage(key, sample, loop));
+        }
     }
 }
 //# sourceMappingURL=worklet.js.map

@@ -1,4 +1,4 @@
-import {readAudio, Terminator} from "../lib/common.js"
+import {Boot, readAudio, Terminator} from "../lib/common.js"
 import {pulsarDelay} from "../lib/dsp.js"
 import {AudioScene, AudioSceneController} from "./audio.js"
 import {RotaryModel} from "./model.js"
@@ -7,12 +7,11 @@ import {RotaryWorkletNode} from "./audio/worklet.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
-        async build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, onProgressInfo: (info: string) => void): Promise<AudioSceneController> {
+        async build(context: BaseAudioContext,
+                    output: AudioNode,
+                    model: RotaryModel,
+                    boot: Boot): Promise<AudioSceneController> {
             const terminator = new Terminator()
-            const loadSample = async (url: string): Promise<AudioBuffer> => {
-                onProgressInfo(`loading ${url}`)
-                return await readAudio(context, url)
-            }
 
             const limiterWorklet = await LimiterWorklet.build(context)
             const rotaryNode = await RotaryWorkletNode.build(context)
@@ -21,24 +20,28 @@ export const initAudioScene = (): AudioScene => {
             terminator.with(model.addObserver(updateFormat))
             updateFormat()
 
+            const loadSample = (url: string): Promise<AudioBuffer> => {
+                return boot.registerProcess(readAudio(context, url))
+            }
+
             let index = 0
             for (let i = 0; i <= 19; i++) {
-                rotaryNode.uploadSample(index++, await loadSample(`samples/kicks/${i}.wav`))
+                rotaryNode.uploadSample(index++, loadSample(`samples/kicks/${i}.wav`))
             }
             for (let i = 0; i <= 74; i++) {
-                rotaryNode.uploadSample(index++, await loadSample(`samples/glitch/${i}.wav`))
+                rotaryNode.uploadSample(index++, loadSample(`samples/glitch/${i}.wav`))
             }
             for (let i = 0; i <= 19; i++) {
-                rotaryNode.uploadSample(index++, await loadSample(`samples/clicks/${i}.wav`))
+                rotaryNode.uploadSample(index++, loadSample(`samples/clicks/${i}.wav`))
             }
             for (let i = 0; i <= 12; i++) {
-                rotaryNode.uploadSample(index++, await loadSample(`samples/vinyl/${i}.wav`))
+                rotaryNode.uploadSample(index++, loadSample(`samples/vinyl/${i}.wav`))
             }
             for (let i = 0; i <= 9; i++) {
-                rotaryNode.uploadSample(index++, await loadSample(`samples/snares/${i}.wav`))
+                rotaryNode.uploadSample(index++, loadSample(`samples/snares/${i}.wav`))
             }
             for (let i = 0; i <= 21; i++) {
-                rotaryNode.uploadSample(index++, await loadSample(`samples/foley/${i}.wav`))
+                rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`))
             }
             masterGain.gain.value = 1.0
 
@@ -62,6 +65,7 @@ export const initAudioScene = (): AudioScene => {
             wetNode.connect(convolverNode).connect(masterGain)
             rotaryMuxer.connect(masterGain).connect(limiterWorklet)
             limiterWorklet.connect(output)
+            await boot.waitForCompletion()
             return Promise.resolve({
                 transport: rotaryNode.transport,
                 rewind: async () => {

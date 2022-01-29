@@ -2,8 +2,8 @@
 
 import {RotaryModel} from "./model.js"
 import {MeterWorklet} from "../dsp/meter/worklet.js"
-import {Dom, ProgressIndicator} from "../dom/common.js"
-import {ObservableValue, Terminable} from "../lib/common.js"
+import {ProgressIndicator} from "../dom/common.js"
+import {Boot, ObservableValue, Terminable} from "../lib/common.js"
 import {encodeWavFloat} from "../dsp/common.js"
 
 export interface AudioSceneController extends Terminable {
@@ -17,7 +17,10 @@ export interface AudioSceneController extends Terminable {
 }
 
 export interface AudioScene {
-    build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, onProgressInfo: (info: string) => void): Promise<AudioSceneController>
+    build(context: BaseAudioContext,
+          output: AudioNode,
+          model: RotaryModel,
+          boot: Boot): Promise<AudioSceneController>
 }
 
 export class Audio {
@@ -39,12 +42,14 @@ export class Audio {
         const meter = new MeterWorklet(this.context)
         document.getElementById("meter").appendChild(meter.domElement)
         meter.connect(this.context.destination)
-        const preview: AudioSceneController = await this.scene.build(this.context, meter, this.model, info => {
+        const boot: Boot = new Boot()
+        boot.addObserver(boot => {
             const element = document.getElementById("preloader-message")
             if (null !== element) {
-                element.textContent = info
+                element.textContent = `${boot.percentage()}% loaded`
             }
         })
+        const preview: AudioSceneController = await this.scene.build(this.context, meter, this.model, boot)
         const playButton = document.querySelector("[data-parameter='transport']") as HTMLInputElement
         preview.transport.addObserver(moving => playButton.checked = moving)
         playButton.onchange = async () => {
@@ -97,10 +102,10 @@ export class Audio {
         const offlineAudioContext = new OfflineAudioContext(2,
             length + Audio.RENDER_SAMPLE_RATE /* A SECOND EXTRA FOR LATENCY COMPENSATION */, Audio.RENDER_SAMPLE_RATE)
         const loadingIndicator = new ProgressIndicator("Preparing Export...")
+        const boot: Boot = new Boot()
+        boot.addObserver(boot => loadingIndicator.onProgress(boot.normalizedPercentage()))
         const controller: AudioSceneController = await loadingIndicator.completeWith(
-            this.scene.build(offlineAudioContext, offlineAudioContext.destination, this.model, info => {
-                console.debug(info)
-            }))
+            this.scene.build(offlineAudioContext, offlineAudioContext.destination, this.model, boot))
         controller.transport.set(true)
         const exportIndicator = new ProgressIndicator("Exporting Audio...")
         const watch = () => {

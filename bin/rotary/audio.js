@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { MeterWorklet } from "../dsp/meter/worklet.js";
 import { ProgressIndicator } from "../dom/common.js";
+import { Boot } from "../lib/common.js";
 import { encodeWavFloat } from "../dsp/common.js";
 export class Audio {
     constructor(context, scene, model) {
@@ -29,12 +30,14 @@ export class Audio {
             const meter = new MeterWorklet(this.context);
             document.getElementById("meter").appendChild(meter.domElement);
             meter.connect(this.context.destination);
-            const preview = yield this.scene.build(this.context, meter, this.model, info => {
+            const boot = new Boot();
+            boot.addObserver(boot => {
                 const element = document.getElementById("preloader-message");
                 if (null !== element) {
-                    element.textContent = info;
+                    element.textContent = `${boot.percentage()}% loaded`;
                 }
             });
+            const preview = yield this.scene.build(this.context, meter, this.model, boot);
             const playButton = document.querySelector("[data-parameter='transport']");
             preview.transport.addObserver(moving => playButton.checked = moving);
             playButton.onchange = () => __awaiter(this, void 0, void 0, function* () {
@@ -87,9 +90,9 @@ export class Audio {
             const length = Math.floor(Audio.RENDER_SAMPLE_RATE * duration) | 0;
             const offlineAudioContext = new OfflineAudioContext(2, length + Audio.RENDER_SAMPLE_RATE, Audio.RENDER_SAMPLE_RATE);
             const loadingIndicator = new ProgressIndicator("Preparing Export...");
-            const controller = yield loadingIndicator.completeWith(this.scene.build(offlineAudioContext, offlineAudioContext.destination, this.model, info => {
-                console.debug(info);
-            }));
+            const boot = new Boot();
+            boot.addObserver(boot => loadingIndicator.onProgress(boot.normalizedPercentage()));
+            const controller = yield loadingIndicator.completeWith(this.scene.build(offlineAudioContext, offlineAudioContext.destination, this.model, boot));
             controller.transport.set(true);
             const exportIndicator = new ProgressIndicator("Exporting Audio...");
             const watch = () => {

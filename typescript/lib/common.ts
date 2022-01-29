@@ -27,6 +27,61 @@ export class Terminator implements Terminable {
     }
 }
 
+export class Boot implements Observable<Boot> {
+    private readonly observable = new ObservableImpl<Boot>()
+    private readonly completion = new Promise<void>((resolve: (value: void) => void) => {
+        this.observable.addObserver(boot => {
+            if (boot.isCompleted()) {
+                requestAnimationFrame(() => resolve())
+                boot.terminate()
+            }
+        })
+    })
+
+    private finishedTasks: number = 0 | 0
+    private totalTasks: number = 0 | 0
+    private completed: boolean = false
+
+    addObserver(observer: Observer<Boot>): Terminable {
+        return this.observable.addObserver(observer)
+    }
+
+    removeObserver(observer: Observer<Boot>): boolean {
+        return this.observable.removeObserver(observer)
+    }
+
+    terminate(): void {
+        this.observable.terminate()
+    }
+
+    registerProcess<T>(promise: Promise<T>): Promise<T> {
+        console.assert(!this.completed, "Cannot register processes when boot is already completed.")
+        promise.then(() => {
+            this.finishedTasks++
+            if (this.isCompleted()) this.completed = true
+            this.observable.notify(this)
+        })
+        this.totalTasks++
+        return promise
+    }
+
+    isCompleted(): boolean {
+        return this.finishedTasks === this.totalTasks
+    }
+
+    normalizedPercentage() {
+        return this.finishedTasks / this.totalTasks
+    }
+
+    percentage() {
+        return Math.round(this.normalizedPercentage() * 100.0)
+    }
+
+    waitForCompletion(): Promise<void> {
+        return this.completion
+    }
+}
+
 export interface Option<T> {
     get(): T
 

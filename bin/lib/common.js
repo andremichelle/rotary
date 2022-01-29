@@ -19,6 +19,54 @@ export class Terminator {
         }
     }
 }
+export class Boot {
+    constructor() {
+        this.observable = new ObservableImpl();
+        this.completion = new Promise((resolve) => {
+            this.observable.addObserver(boot => {
+                if (boot.isCompleted()) {
+                    requestAnimationFrame(() => resolve());
+                    boot.terminate();
+                }
+            });
+        });
+        this.finishedTasks = 0 | 0;
+        this.totalTasks = 0 | 0;
+        this.completed = false;
+    }
+    addObserver(observer) {
+        return this.observable.addObserver(observer);
+    }
+    removeObserver(observer) {
+        return this.observable.removeObserver(observer);
+    }
+    terminate() {
+        this.observable.terminate();
+    }
+    registerProcess(promise) {
+        console.assert(!this.completed, "Cannot register processes when boot is already completed.");
+        promise.then(() => {
+            this.finishedTasks++;
+            if (this.isCompleted())
+                this.completed = true;
+            this.observable.notify(this);
+        });
+        this.totalTasks++;
+        return promise;
+    }
+    isCompleted() {
+        return this.finishedTasks === this.totalTasks;
+    }
+    normalizedPercentage() {
+        return this.finishedTasks / this.totalTasks;
+    }
+    percentage() {
+        return Math.round(this.normalizedPercentage() * 100.0);
+    }
+    waitForCompletion() {
+        return this.completion;
+    }
+}
 export class Options {
     static valueOf(value) {
         return null === value || undefined === value ? Options.None : new Options.Some(value);
