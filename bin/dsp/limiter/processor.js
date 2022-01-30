@@ -44,6 +44,9 @@ registerProcessor("limiter", class extends AudioWorkletProcessor {
         const output = outputs[0];
         const input0 = input[0];
         const input1 = input[1];
+        if (undefined === input0 || undefined === input1) {
+            return true;
+        }
         const output0 = output[0];
         const output1 = output[1];
         const buffer0 = buffer[0];

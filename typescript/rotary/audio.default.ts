@@ -1,9 +1,9 @@
 import {Boot, readAudio, Terminator} from "../lib/common.js"
-import {pulsarDelay} from "../lib/dsp.js"
 import {AudioScene, AudioSceneController} from "./audio.js"
 import {RotaryModel} from "./model.js"
 import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
+import {Mixer, MixerModel} from "./mixer.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -15,7 +15,6 @@ export const initAudioScene = (): AudioScene => {
 
             const limiterWorklet = await LimiterWorklet.build(context)
             const rotaryNode = await RotaryWorkletNode.build(context)
-            const masterGain = context.createGain()
             const updateFormat = () => rotaryNode.updateFormat(model)
             terminator.with(model.addObserver(updateFormat))
             updateFormat()
@@ -43,27 +42,22 @@ export const initAudioScene = (): AudioScene => {
             for (let i = 0; i <= 21; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`))
             }
-            masterGain.gain.value = 1.0
 
-            /*const rotaryMuxer = context.createChannelMerger(RotaryModel.MAX_TRACKS)
+            const mixerModel = new MixerModel(RotaryModel.MAX_TRACKS, 4)
+            // mixerModel.channels[0].solo.set(true)
+            for (let i = 0; i < RotaryModel.MAX_TRACKS; i++) {
+                mixerModel.channels[i].auxSends[0].set(i/RotaryModel.MAX_TRACKS)
+            }
+            const mixer: Mixer = new Mixer(context, mixerModel)
             for (let outIndex = 0; outIndex < RotaryModel.MAX_TRACKS; outIndex++) {
-                rotaryNode.connect(rotaryMuxer, outIndex, 0)
-            }*/
-
-            const rotaryMuxer = context.createGain()
-            for (let outIndex = 0; outIndex < RotaryModel.MAX_TRACKS; outIndex++) {
-                const outputGain = context.createGain()
-                outputGain.gain.value = 1.0
-                rotaryNode.connect(outputGain, outIndex, 0).connect(rotaryMuxer)
+                rotaryNode.connect(mixer.channelstrips[outIndex].input(), outIndex, 0)
             }
 
-            const wetNode = context.createGain()
-            wetNode.gain.value = 0.2
-            pulsarDelay(context, rotaryMuxer, wetNode, 0.125, 0.250, .250, 0.9, 2000, 200)
             const convolverNode = context.createConvolver()
-            convolverNode.buffer = await loadSample("impulse/DeepSpace.ogg")
-            wetNode.connect(convolverNode).connect(masterGain)
-            rotaryMuxer.connect(masterGain).connect(limiterWorklet)
+            convolverNode.buffer = await loadSample("impulse/LargeWideEchoHall.ogg")
+            mixer.auxSend(0).connect(convolverNode).connect(mixer.auxReturn(0))
+
+            mixer.masterOutput().connect(limiterWorklet)
             limiterWorklet.connect(output)
             await boot.waitForCompletion()
             return Promise.resolve({

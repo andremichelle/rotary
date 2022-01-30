@@ -166,25 +166,21 @@ export class RotaryTrackModel {
         this.terminator = new Terminator();
         this.observable = new ObservableImpl();
         this.gradient = [];
-        this.segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 128), 8));
-        this.exclude = this.bindValue(new ObservableBits(128));
-        this.width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12));
-        this.widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0));
-        this.length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0));
-        this.lengthRatio = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5));
-        this.outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0));
-        this.fill = this.bindValue(new ObservableValueImpl(Fill.Flat));
-        this.rgb = this.bindValue(new ObservableValueImpl((0xFFFFFF)));
-        this.motion = this.bindValue(new ObservableValueImpl(new IdentityInjective()));
-        this.bend = this.bindValue(new ObservableValueImpl(new IdentityInjective()));
-        this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0));
-        this.frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
-        this.fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
-        this.reverse = this.bindValue(new ObservableValueImpl(false));
-        this.volume = new BoundNumericValue(Linear.Identity, 1.0);
-        this.panning = new BoundNumericValue(Linear.Bipolar, 1.0);
-        this.mute = new ObservableValueImpl(false);
-        this.solo = new ObservableValueImpl(false);
+        this.segments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 128), 8));
+        this.exclude = this.observeValue(new ObservableBits(128));
+        this.width = this.observeValue(new BoundNumericValue(new LinearInteger(1, 1024), 12));
+        this.widthPadding = this.observeValue(new BoundNumericValue(new LinearInteger(0, 1024), 0));
+        this.length = this.observeValue(new BoundNumericValue(Linear.Identity, 1.0));
+        this.lengthRatio = this.observeValue(new BoundNumericValue(Linear.Identity, 0.5));
+        this.outline = this.observeValue(new BoundNumericValue(new LinearInteger(0, 16), 0));
+        this.fill = this.observeValue(new ObservableValueImpl(Fill.Flat));
+        this.rgb = this.observeValue(new ObservableValueImpl((0xFFFFFF)));
+        this.motion = this.observeValue(new ObservableValueImpl(new IdentityInjective()));
+        this.bend = this.observeValue(new ObservableValueImpl(new IdentityInjective()));
+        this.phaseOffset = this.observeValue(new BoundNumericValue(Linear.Identity, 0.0));
+        this.frequency = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
+        this.fragments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
+        this.reverse = this.observeValue(new ObservableValueImpl(false));
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()));
         const motionTerminator = this.terminator.with(new Terminator());
         this.terminator.with(this.motion.addObserver((motion) => {
@@ -198,7 +194,7 @@ export class RotaryTrackModel {
         }));
         this.updateGradient();
     }
-    bindValue(property) {
+    observeValue(property) {
         this.terminator.with(property.addObserver(() => this.observable.notify(this)));
         return this.terminator.with(property);
     }

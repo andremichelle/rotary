@@ -69,7 +69,7 @@ export class Boolean {
     }
 }
 export class Volume {
-    constructor(min = -72.0, mid = -12.0, max = 0.0) {
+    constructor(min, mid, max) {
         this.min = min;
         this.mid = mid;
         this.max = max;
@@ -105,5 +105,5 @@ export class Volume {
         return Math.min(this.max, Math.max(this.min, y));
     }
 }
-Volume.Default = new Volume();
+Volume.Default = new Volume(-72.0, -12.0, 0.0);
 //# sourceMappingURL=mapping.js.map

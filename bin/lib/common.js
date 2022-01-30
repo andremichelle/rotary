@@ -319,8 +319,8 @@ export class ObservableValueImpl {
 export class BoundNumericValue {
     constructor(range = Linear.Identity, value = 0.0) {
         this.range = range;
-        this.value = value;
         this.observable = new ObservableImpl();
+        this.set(value);
     }
     get() {
         return this.value;
@@ -553,6 +553,17 @@ export class GeneratorIterator {
             return value;
         }
         return null;
+    }
+}
+export class ArrayUtils {
+    static fill(n, factory) {
+        const array = [];
+        for (let i = 0; i < n; i++) {
+            array[i] = factory(i);
+        }
+        return array;
+    }
+    constructor() {
     }
 }
 //# sourceMappingURL=common.js.map

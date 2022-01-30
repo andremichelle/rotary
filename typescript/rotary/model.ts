@@ -235,27 +235,21 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     private readonly terminator: Terminator = new Terminator()
     private readonly observable: ObservableImpl<RotaryTrackModel> = new ObservableImpl<RotaryTrackModel>()
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
-    readonly segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 128), 8))
-    readonly exclude = this.bindValue(new ObservableBits(128))
-    readonly width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12))
-    readonly widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0))
-    readonly length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0))
-    readonly lengthRatio = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5))
-    readonly outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0))
-    readonly fill = this.bindValue(new ObservableValueImpl<Fill>(Fill.Flat))
-    readonly rgb = this.bindValue(new ObservableValueImpl(<number>(0xFFFFFF)))
-    readonly motion: ObservableValue<Injective<any>> = this.bindValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
-    readonly bend: ObservableValue<Injective<any>> = this.bindValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
-    readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
-    readonly frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
-    readonly fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
-    readonly reverse = this.bindValue(new ObservableValueImpl<boolean>(false))
-
-    // TODO
-    readonly volume = new BoundNumericValue(Linear.Identity, 1.0)
-    readonly panning = new BoundNumericValue(Linear.Bipolar, 1.0)
-    readonly mute = new ObservableValueImpl<boolean>(false)
-    readonly solo = new ObservableValueImpl<boolean>(false)
+    readonly segments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 128), 8))
+    readonly exclude = this.observeValue(new ObservableBits(128))
+    readonly width = this.observeValue(new BoundNumericValue(new LinearInteger(1, 1024), 12))
+    readonly widthPadding = this.observeValue(new BoundNumericValue(new LinearInteger(0, 1024), 0))
+    readonly length = this.observeValue(new BoundNumericValue(Linear.Identity, 1.0))
+    readonly lengthRatio = this.observeValue(new BoundNumericValue(Linear.Identity, 0.5))
+    readonly outline = this.observeValue(new BoundNumericValue(new LinearInteger(0, 16), 0))
+    readonly fill = this.observeValue(new ObservableValueImpl<Fill>(Fill.Flat))
+    readonly rgb = this.observeValue(new ObservableValueImpl(<number>(0xFFFFFF)))
+    readonly motion: ObservableValue<Injective<any>> = this.observeValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
+    readonly bend: ObservableValue<Injective<any>> = this.observeValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
+    readonly phaseOffset = this.observeValue(new BoundNumericValue(Linear.Identity, 0.0))
+    readonly frequency = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
+    readonly fragments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
+    readonly reverse = this.observeValue(new ObservableValueImpl<boolean>(false))
 
     constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
@@ -273,7 +267,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.updateGradient()
     }
 
-    bindValue<T extends Observable<any>>(property: T): T {
+    observeValue<T extends Observable<any>>(property: T): T {
         this.terminator.with(property.addObserver(() => this.observable.notify(this)))
         return this.terminator.with(property)
     }

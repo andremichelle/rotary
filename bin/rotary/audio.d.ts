@@ -1,5 +1,5 @@
 import { RotaryModel } from "./model.js";
-import { ObservableValue, Terminable } from "../lib/common.js";
+import { Boot, ObservableValue, Terminable } from "../lib/common.js";
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>;
     rewind(): void;
@@ -7,7 +7,7 @@ export interface AudioSceneController extends Terminable {
     latency(): number;
 }
 export interface AudioScene {
-    build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, onProgressInfo: (info: string) => void): Promise<AudioSceneController>;
+    build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, boot: Boot): Promise<AudioSceneController>;
 }
 export declare class Audio {
     readonly context: AudioContext;

@@ -410,9 +410,11 @@ export class ObservableValueImpl<T> implements ObservableValue<T> {
 
 export class BoundNumericValue implements ObservableValue<number> {
     private readonly observable = new ObservableImpl<number>()
+    private value: number
 
     constructor(private readonly range: Range = Linear.Identity,
-                private value: number = 0.0) {
+                value: number = 0.0) {
+        this.set(value)
     }
 
     get(): number {
@@ -677,5 +679,18 @@ export class GeneratorIterator<T> {
             return value
         }
         return null
+    }
+}
+
+export class ArrayUtils {
+    static fill<T>(n: number, factory: (index: number) => T): T[] {
+        const array: T[] = []
+        for (let i = 0; i < n; i++) {
+            array[i] = factory(i)
+        }
+        return array
+    }
+
+    private constructor() {
     }
 }

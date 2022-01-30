@@ -12,6 +12,21 @@ export declare class Terminator implements Terminable {
     with<T extends Terminable>(terminable: T): T;
     terminate(): void;
 }
+export declare class Boot implements Observable<Boot> {
+    private readonly observable;
+    private readonly completion;
+    private finishedTasks;
+    private totalTasks;
+    private completed;
+    addObserver(observer: Observer<Boot>): Terminable;
+    removeObserver(observer: Observer<Boot>): boolean;
+    terminate(): void;
+    registerProcess<T>(promise: Promise<T>): Promise<T>;
+    isCompleted(): boolean;
+    normalizedPercentage(): number;
+    percentage(): number;
+    waitForCompletion(): Promise<void>;
+}
 export interface Option<T> {
     get(): T;
     ifPresent(callback: (value: T) => void): void;
@@ -128,8 +143,8 @@ export declare class ObservableValueImpl<T> implements ObservableValue<T> {
 }
 export declare class BoundNumericValue implements ObservableValue<number> {
     private readonly range;
-    private value;
     private readonly observable;
+    private value;
     constructor(range?: Range, value?: number);
     get(): number;
     set(value: number): boolean;
@@ -201,4 +216,8 @@ export declare class GeneratorIterator<T> {
     constructor(generator: Generator<T>);
     hasNext(): boolean;
     next(): T;
+}
+export declare class ArrayUtils {
+    static fill<T>(n: number, factory: (index: number) => T): T[];
+    private constructor();
 }

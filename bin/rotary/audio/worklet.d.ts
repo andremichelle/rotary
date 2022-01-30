@@ -8,5 +8,5 @@ export declare class RotaryWorkletNode extends AudioWorkletNode {
     phase(): number;
     rewind(): void;
     updateFormat(model: RotaryModel): void;
-    uploadSample(key: number, sample: AudioBuffer | Float32Array | Float32Array[], loop?: boolean): void;
+    uploadSample(key: number, sample: Promise<AudioBuffer> | AudioBuffer | Float32Array | Float32Array[], loop?: boolean): void;
 }

@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 export abstract class Range {
     readonly min: number
     readonly max: number
@@ -112,7 +114,7 @@ export class Boolean implements ValueMapping<boolean> {
  * Solved in Maxima: solve([min=a-b/c,max=a-b/(1+c),mid=a-b/(1/2+c)],[a,b,c]);
  */
 export class Volume implements ValueMapping<number>, Range {
-    static Default = new Volume()
+    static Default = new Volume(-72.0, -12.0, 0.0)
 
     private readonly a: number
     private readonly b: number
@@ -123,9 +125,7 @@ export class Volume implements ValueMapping<number>, Range {
      * @param mid The decibel value in the center [0.5]
      * @param max The highest decibel value [1.0]
      */
-    constructor(readonly min = -72.0,
-                readonly mid = -12.0,
-                readonly max = 0.0) {
+    constructor(readonly min, readonly mid, readonly max) {
         const min2 = min * min
         const max2 = max * max
         const mid2 = mid * mid
