@@ -108,7 +108,7 @@ body
         white-space: nowrap
 
       button#unshift-new-track
-        margin-top: 15px
+        margin-top: 16px
         align-self: flex-start
 
       > #track-selectors
@@ -118,34 +118,55 @@ body
         row-gap: 20px
 
         > article
-          display: flex
+          display: grid
           align-items: center
+          grid-template-columns: 48px $SIZE
 
-        label.radio.big
-          width: 48px
-          height: 48px
-          position: relative
-          overflow: hidden
-          cursor: pointer
+          > footer
+            margin-top: 3px
+            display: flex
+            justify-content: space-between
 
-          > canvas
-            top: 0
-            left: 0
-            width: 100%
-            height: 100%
-            border-radius: 3px
-            background-color: #0A0A0A
-            box-sizing: border-box
+            > label
+              display: flex
+              color: #666
+              background-color: #0A0A0A
+              font-size: $FONT_SIZE
+              border-radius: 2px
+              overflow: hidden
 
-          > input[type=radio]
-            display: none
-            appearance: none
+              & input[type=checkbox]:checked + span
+                color: orange
 
-            &:checked + canvas
-              box-shadow: 0 0 1px 1px white inset
+              > span
+                width: $SIZE
+                height: $SIZE
+                line-height: $SIZE
+                text-align: center
 
-            &:not(:checked):hover + canvas
-              box-shadow: 0 0 1px 1px #888 inset
+          > label.radio.big
+            position: relative
+            cursor: pointer
+            display: grid
+
+            > canvas
+              top: 0
+              left: 0
+              width: 48px
+              height: 48px
+              border-radius: 3px
+              background-color: #0A0A0A
+              box-sizing: border-box
+
+            > input[type=radio]
+              display: none
+              appearance: none
+
+              &:checked + canvas
+                box-shadow: 0 0 1px 1px white inset
+
+              &:not(:checked):hover + canvas
+                box-shadow: 0 0 1px 1px #888 inset
 
       > button.delete
         padding: 1px

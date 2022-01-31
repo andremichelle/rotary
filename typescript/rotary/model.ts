@@ -18,7 +18,8 @@ import {BitArrayFormat, Func, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {Colors} from "../lib/colors.js"
 import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
-import {RenderConfiguration} from "./render"
+import {RenderConfiguration} from "./render.js"
+import {ChannelstripModel} from "./mixer.js"
 
 export declare interface RotaryExportFormat {
     fps: number
@@ -250,6 +251,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly frequency = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly fragments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.observeValue(new ObservableValueImpl<boolean>(false))
+
+    readonly channelstrip: ChannelstripModel = new ChannelstripModel(4)
 
     constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
