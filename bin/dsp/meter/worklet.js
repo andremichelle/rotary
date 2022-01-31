@@ -18,12 +18,13 @@ export class MeterWorklet extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
-        this.height = 17;
         this.meterMargin = 5;
-        this.meterWidth = 5;
         this.meterSegmentWidth = 12;
         this.meterSegmentGap = 2;
         this.meterSegmentCount = 16;
+        this.meterWidth = this.meterSegmentCount * (this.meterSegmentWidth + this.meterSegmentGap) - this.meterSegmentGap;
+        this.width = this.meterMargin * 2.0 + this.meterWidth;
+        this.height = 17;
         this.labelStepsDb = 3.0;
         this.maxDb = 3.0;
         this.minDb = this.maxDb - this.labelStepsDb * (this.meterSegmentCount - 1);
@@ -33,8 +34,7 @@ export class MeterWorklet extends AudioWorkletNode {
         this.releasePeakHoldTime = new Float32Array(2);
         this.peakHoldDuration = 1000.0;
         this.clipHoldDuration = 2000.0;
-        this.meterWidth = this.meterSegmentCount * (this.meterSegmentWidth + this.meterSegmentGap) - this.meterSegmentGap;
-        this.width = this.meterMargin * 2.0 + this.meterWidth;
+        this.scale = NaN;
         this.canvas = document.createElement("canvas");
         this.canvas.style.width = this.width + "px";
         this.canvas.style.height = this.height + "px";
@@ -49,12 +49,11 @@ export class MeterWorklet extends AudioWorkletNode {
         this.gradient.addColorStop(this.dbToNorm(0.0), highGain);
         this.gradient.addColorStop(this.dbToNorm(0.0), clipGain);
         this.gradient.addColorStop(1.0, clipGain);
-        this.scale = NaN;
         this.port.onmessage = event => {
             const now = performance.now();
             const message = event.data;
-            this.maxPeaks = message.maxPeaks;
-            this.maxSquares = message.maxSquares;
+            this.maxPeaks.set(message.maxPeaks, 0);
+            this.maxSquares.set(message.maxSquares, 0);
             for (let i = 0; i < 2; ++i) {
                 const maxPeak = this.maxPeaks[i];
                 if (this.maxPeakHoldValue[i] <= maxPeak) {

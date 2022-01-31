@@ -6,30 +6,30 @@ export class MeterWorklet extends AudioWorkletNode {
         return await context.audioWorklet.addModule("bin/dsp/meter/processor.js")
     }
 
-    private readonly width: number
-    private readonly height: number = 17
     private readonly meterMargin: number = 5
-    private readonly meterWidth: number = 5
     private readonly meterSegmentWidth: number = 12
     private readonly meterSegmentGap: number = 2
     private readonly meterSegmentCount: number = 16
+    private readonly meterWidth: number = this.meterSegmentCount * (this.meterSegmentWidth + this.meterSegmentGap) - this.meterSegmentGap
+    private readonly width: number = this.meterMargin * 2.0 + this.meterWidth
+    private readonly height: number = 17
 
     private readonly labelStepsDb: number = 3.0
     private readonly maxDb: number = 3.0
     private readonly minDb: number = this.maxDb - this.labelStepsDb * (this.meterSegmentCount - 1)
-    private maxPeaks: Float32Array = new Float32Array(2)
-    private maxSquares: Float32Array = new Float32Array(2)
-    private maxPeakHoldValue: Float32Array = new Float32Array(2)
-    private releasePeakHoldTime: Float32Array = new Float32Array(2)
-    private peakHoldDuration: number = 1000.0
-    private clipHoldDuration: number = 2000.0
-    private scale: number
+    private readonly maxPeaks: Float32Array = new Float32Array(2)
+    private readonly maxSquares: Float32Array = new Float32Array(2)
+    private readonly maxPeakHoldValue: Float32Array = new Float32Array(2)
+    private readonly releasePeakHoldTime: Float32Array = new Float32Array(2)
+    private readonly peakHoldDuration: number = 1000.0
+    private readonly clipHoldDuration: number = 2000.0
 
     private readonly canvas: HTMLCanvasElement
     private readonly graphics: CanvasRenderingContext2D
     private readonly gradient: CanvasGradient
-
     private readonly updater: () => void
+
+    private scale: number = NaN
 
     constructor(context: AudioContext) {
         super(context, "dsp-meter", {
@@ -40,9 +40,6 @@ export class MeterWorklet extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         })
-
-        this.meterWidth = this.meterSegmentCount * (this.meterSegmentWidth + this.meterSegmentGap) - this.meterSegmentGap
-        this.width = this.meterMargin * 2.0 + this.meterWidth
 
         this.canvas = document.createElement("canvas")
         this.canvas.style.width = this.width + "px"
@@ -59,13 +56,12 @@ export class MeterWorklet extends AudioWorkletNode {
         this.gradient.addColorStop(this.dbToNorm(0.0), highGain)
         this.gradient.addColorStop(this.dbToNorm(0.0), clipGain)
         this.gradient.addColorStop(1.0, clipGain)
-        this.scale = NaN
 
         this.port.onmessage = event => {
             const now = performance.now()
             const message: UpdateMeterMessage = event.data as UpdateMeterMessage
-            this.maxPeaks = message.maxPeaks
-            this.maxSquares = message.maxSquares
+            this.maxPeaks.set(message.maxPeaks, 0)
+            this.maxSquares.set(message.maxSquares, 0)
             for (let i = 0; i < 2; ++i) {
                 const maxPeak = this.maxPeaks[i]
                 if (this.maxPeakHoldValue[i] <= maxPeak) {
@@ -145,7 +141,7 @@ export class MeterWorklet extends AudioWorkletNode {
         }
     }
 
-    renderMeter(gain: number, y: number, h: number) {
+    renderMeter(gain: number, y: number, h: number): void {
         const db = gainToDb(gain)
         const dbIndex = Math.max(1, this.dbToIndex(db)) | 0
         for (let i = 0; i < dbIndex; i++) {
