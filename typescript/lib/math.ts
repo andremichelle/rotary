@@ -116,11 +116,7 @@ export interface Bits {
     clear(): void
 }
 
-export interface BitArrayFormat {
-    array: number[]
-}
-
-export class BitArray implements Bits, Serializer<BitArrayFormat> {
+export class BitArray implements Bits, Serializer<number[]> {
     private array: Uint32Array
 
     constructor(numBits: number = 32 | 0) {
@@ -149,12 +145,12 @@ export class BitArray implements Bits, Serializer<BitArrayFormat> {
         this.array.fill(0)
     }
 
-    deserialize(format: BitArrayFormat): BitArray {
-        this.array = new Uint32Array(format.array)
+    deserialize(format: number[]): BitArray {
+        this.array = new Uint32Array(format)
         return this
     }
 
-    serialize(): BitArrayFormat {
-        return {array: Array.from(this.array)}
+    serialize(): number[] {
+        return Array.from(this.array)
     }
 }

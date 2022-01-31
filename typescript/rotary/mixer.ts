@@ -96,6 +96,7 @@ export class Channelstrip implements Terminable {
     }
 
     terminate(): void {
+        // TODO https://developer.mozilla.org/en-US/docs/Web/API/AudioNode/disconnect
         this.inputNode.disconnect()
         this.volumeNode.disconnect()
         this.panningNode.disconnect()

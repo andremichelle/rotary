@@ -25,6 +25,9 @@ export class RotaryTrackEditor implements Terminable {
     private readonly fragments: NumericStepperInput
     private readonly reverse: Checkbox
 
+    private readonly volume: NumericStepperInput
+    private readonly panning: NumericStepperInput
+
     subject: Option<RotaryTrackModel> = Options.None
 
     constructor(private readonly executor: RotaryTrackEditorExecutor, parentNode: ParentNode) {
@@ -52,10 +55,15 @@ export class RotaryTrackEditor implements Terminable {
             PrintMapping.integer("x"), NumericStepper.Integer))
         this.reverse = this.terminator.with(new Checkbox(parentNode.querySelector("input[data-parameter='reverse']")))
 
-        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
+        this.volume = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='volume']"),
+            PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
+        this.panning = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='panning']"),
+            PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
+
+        /*this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault()
             this.subject.ifPresent(() => executor.deleteTrack())
-        }))
+        }))*/ // TODO
     }
 
     edit(model: RotaryTrackModel): void {
@@ -73,6 +81,10 @@ export class RotaryTrackEditor implements Terminable {
         this.frequency.with(model.frequency)
         this.fragments.with(model.fragments)
         this.reverse.with(model.reverse)
+
+        this.volume.with(model.volume)
+        this.panning.with(model.panning)
+
         this.subject = Options.valueOf(model)
     }
 

@@ -1,5 +1,5 @@
 import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableCollection, ObservableValue, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
-import { BitArrayFormat, Random } from "../lib/math.js";
+import { Random } from "../lib/math.js";
 import { Injective, InjectiveFormat } from "../lib/injective.js";
 import { RenderConfiguration } from "./render.js";
 export declare interface RotaryExportFormat {
@@ -16,7 +16,7 @@ export declare interface RotaryFormat {
 }
 export declare interface RotaryTrackFormat {
     segments: number;
-    exclude: BitArrayFormat;
+    exclude: number[];
     width: number;
     widthPadding: number;
     length: number;

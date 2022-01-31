@@ -47,14 +47,28 @@ export const initAudioScene = () => {
                 const mixer = new Mixer(context, RotaryModel.NUM_AUX);
                 const map = new Map();
                 const addTrack = (track, index) => {
+                    const terminator = new Terminator();
                     const channelstrip = mixer.createChannelstrip();
                     rotaryNode.connect(channelstrip.input(), index, 0);
-                    track.mute.addObserver(mute => channelstrip.setMute(mute));
-                    track.solo.addObserver(solo => channelstrip.setSolo(solo));
+                    channelstrip.setMute(track.mute.get());
+                    channelstrip.setSolo(track.solo.get());
+                    channelstrip.setVolume(track.volume.get());
+                    channelstrip.setPanning(track.panning.get());
+                    terminator.with(track.mute.addObserver(mute => channelstrip.setMute(mute)));
+                    terminator.with(track.solo.addObserver(solo => channelstrip.setSolo(solo)));
+                    terminator.with(track.volume.addObserver(volume => channelstrip.setVolume(volume)));
+                    terminator.with(track.panning.addObserver(panning => channelstrip.setPanning(panning)));
+                    terminator.with({ terminate: () => mixer.removeChannelstrip(channelstrip) });
+                    return terminator;
                 };
                 terminator.with(model.tracks.addObserver((event) => {
+                    const track = event.item;
                     if (event.type === CollectionEventType.Add) {
-                        addTrack(event.item, event.index);
+                        map.set(track, addTrack(track, event.index));
+                    }
+                    else if (event.type === CollectionEventType.Remove) {
+                        map.get(track).terminate();
+                        map.delete(track);
                     }
                 }));
                 model.tracks.forEach((track, index) => addTrack(track, index));

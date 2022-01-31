@@ -31,9 +31,9 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         this.samples = new Map();
         this.activeVoices = new Map();
         this.transport = new ObservableValueImpl(false);
+        this.updateCount = 0 | 0;
         this.maxKey = 0 | 0;
         this.phase = 0 | 0;
-        this.updateCount = 0 | 0;
         const fps = 60.0;
         this.updateRate = (sampleRate / fps) | 0;
         this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving)));

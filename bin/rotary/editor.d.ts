@@ -20,6 +20,8 @@ export declare class RotaryTrackEditor implements Terminable {
     private readonly frequency;
     private readonly fragments;
     private readonly reverse;
+    private readonly volume;
+    private readonly panning;
     subject: Option<RotaryTrackModel>;
     constructor(executor: RotaryTrackEditorExecutor, parentNode: ParentNode);
     edit(model: RotaryTrackModel): void;

@@ -31,10 +31,10 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         private readonly activeVoices: Map<number, Voice[]> = new Map()
         private readonly transport: ObservableValueImpl<boolean> = new ObservableValueImpl<boolean>(false)
 
+        private readonly updateRate: number
+        private updateCount: number = 0 | 0
         private maxKey: number = 0 | 0
         private phase: number = 0 | 0
-        private updateRate: number
-        private updateCount: number = 0 | 0
 
         constructor() {
             super()

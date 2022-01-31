@@ -1,7 +1,6 @@
 import { NumericStepper, Options, PrintMapping, Terminator } from "../lib/common.js";
 import { Checkbox, NumericInput, NumericStepperInput, SelectInput } from "../dom/inputs.js";
 import { Fills } from "./model.js";
-import { Dom } from "../dom/common.js";
 import { InjectiveEditor } from "../dom/injective.js";
 export class RotaryTrackEditor {
     constructor(executor, parentNode) {
@@ -22,10 +21,8 @@ export class RotaryTrackEditor {
         this.frequency = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='frequency']"), PrintMapping.integer("x"), NumericStepper.Integer));
         this.fragments = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='fragments']"), PrintMapping.integer("x"), NumericStepper.Integer));
         this.reverse = this.terminator.with(new Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
-        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
-            event.preventDefault();
-            this.subject.ifPresent(() => executor.deleteTrack());
-        }));
+        this.volume = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='volume']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
+        this.panning = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='panning']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
     }
     edit(model) {
         this.segments.with(model.segments);
@@ -42,6 +39,8 @@ export class RotaryTrackEditor {
         this.frequency.with(model.frequency);
         this.fragments.with(model.fragments);
         this.reverse.with(model.reverse);
+        this.volume.with(model.volume);
+        this.panning.with(model.panning);
         this.subject = Options.valueOf(model);
     }
     clear() {

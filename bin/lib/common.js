@@ -149,7 +149,8 @@ export class ObservableBits {
         this.bits.clear();
     }
     deserialize(format) {
-        return this.bits.deserialize(format);
+        this.bits.deserialize(format);
+        return this;
     }
     serialize() {
         return this.bits.serialize();

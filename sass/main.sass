@@ -63,6 +63,15 @@ body
     width: 100%
     height: 100%
 
+    h5
+      margin: 0
+      padding: 4px 6px
+      border-radius: 1px
+      color: lighten(#111, 20%)
+      text-transform: uppercase
+      font-size: $FONT_SIZE
+      background-color: #111
+
     > .global-editor
       flex: 0 0 auto
       margin: 1px 0 0 0
@@ -79,15 +88,6 @@ body
           flex-direction: column
           background-color: #1A1A1A
           row-gap: 8px
-
-          > h5
-            margin: 0
-            padding: 4px 6px
-            border-radius: 1px
-            color: lighten(#111, 20%)
-            text-transform: uppercase
-            font-size: $FONT_SIZE
-            background-color: #111
 
     > form.track-nav
       margin-top: 1px
@@ -177,37 +177,41 @@ body
       display: flex
 
       > .v-split
+        margin: 1px 0 0 0
         display: flex
         flex-direction: column
+        padding: 16px
+        background-color: #1A1A1A
 
-        > .columns
-          display: flex
-          flex-direction: row
-          padding: 16px
-          background-color: #1A1A1A
+        //> .columns
+        //  display: flex
+        //  flex-direction: row
+        //  padding: 16px
 
-          > .track-editor
-            display: grid
-            grid-template-columns: min-content min-content min-content
-            column-gap: 16px
-            border-radius: 2px
+        > .track-editor
+          margin: 16px 0 0 0
+          display: grid
+          grid-template-columns: min-content min-content min-content
+          column-gap: 16px
+          border-radius: 2px
+          min-height: 208px
 
-            &[data-motion="linear"] [data-group="motion"]:not([data-injective="linear"]),
-            &[data-motion="pow"] [data-group="motion"]:not([data-injective="pow"]),
-            &[data-motion="cshape"] [data-group="motion"]:not([data-injective="cshape"]),
-            &[data-motion="tshape"] [data-group="motion"]:not([data-injective="tshape"]),
-            &[data-motion="smoothstep"] [data-group="motion"]:not([data-injective="smoothstep"])
-              display: none
+          &[data-motion="linear"] [data-group="motion"]:not([data-injective="linear"]),
+          &[data-motion="pow"] [data-group="motion"]:not([data-injective="pow"]),
+          &[data-motion="cshape"] [data-group="motion"]:not([data-injective="cshape"]),
+          &[data-motion="tshape"] [data-group="motion"]:not([data-injective="tshape"]),
+          &[data-motion="smoothstep"] [data-group="motion"]:not([data-injective="smoothstep"])
+            display: none
 
-            &[data-bend="linear"] [data-group="bend"]:not([data-injective="linear"]),
-            &[data-bend="pow"] [data-group="bend"]:not([data-injective="pow"]),
-            &[data-bend="cshape"] [data-group="bend"]:not([data-injective="cshape"]),
-            &[data-bend="tshape"] [data-group="bend"]:not([data-injective="tshape"]),
-            &[data-bend="smoothstep"] [data-group="bend"]:not([data-injective="smoothstep"])
-              display: none
+          &[data-bend="linear"] [data-group="bend"]:not([data-injective="linear"]),
+          &[data-bend="pow"] [data-group="bend"]:not([data-injective="pow"]),
+          &[data-bend="cshape"] [data-group="bend"]:not([data-injective="cshape"]),
+          &[data-bend="tshape"] [data-group="bend"]:not([data-injective="tshape"]),
+          &[data-bend="smoothstep"] [data-group="bend"]:not([data-injective="smoothstep"])
+            display: none
 
-          > .actions
-            display: flex
+          //> .actions
+          //  display: flex
 
         > .sound
           flex: 1 0 0

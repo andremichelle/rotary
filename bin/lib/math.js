@@ -100,11 +100,11 @@ export class BitArray {
         this.array.fill(0);
     }
     deserialize(format) {
-        this.array = new Uint32Array(format.array);
+        this.array = new Uint32Array(format);
         return this;
     }
     serialize() {
-        return { array: Array.from(this.array) };
+        return Array.from(this.array);
     }
 }
 //# sourceMappingURL=math.js.map

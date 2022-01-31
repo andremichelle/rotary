@@ -1,4 +1,4 @@
-import {BitArray, BitArrayFormat, Bits, Random} from "./math.js"
+import {BitArray, Bits, Random} from "./math.js"
 import {Linear, Range, ValueMapping} from "./mapping.js"
 
 export interface Terminable {
@@ -165,7 +165,7 @@ export class ObservableImpl<T> implements Observable<T> {
     }
 }
 
-export class ObservableBits implements Bits, Observable<ObservableBits>, Serializer<BitArrayFormat> {
+export class ObservableBits implements Bits, Observable<ObservableBits>, Serializer<number[]> {
     private readonly bits: BitArray
     private readonly observable = new ObservableImpl<ObservableBits>()
 
@@ -197,11 +197,12 @@ export class ObservableBits implements Bits, Observable<ObservableBits>, Seriali
         this.bits.clear()
     }
 
-    deserialize(format: BitArrayFormat): Serializer<BitArrayFormat> {
-        return this.bits.deserialize(format)
+    deserialize(format: number[]): ObservableBits {
+        this.bits.deserialize(format)
+        return this
     }
 
-    serialize(): BitArrayFormat {
+    serialize(): number[] {
         return this.bits.serialize()
     }
 
@@ -691,6 +692,7 @@ export class ArrayUtils {
         return array
     }
 
+    // noinspection JSUnusedLocalSymbols
     private constructor() {
     }
 }

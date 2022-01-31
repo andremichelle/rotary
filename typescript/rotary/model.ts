@@ -15,7 +15,7 @@ import {
     Terminable,
     Terminator
 } from "../lib/common.js"
-import {BitArrayFormat, Func, Random} from "../lib/math.js"
+import {Func, Random} from "../lib/math.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {Colors} from "../lib/colors.js"
 import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
@@ -38,7 +38,7 @@ export declare interface RotaryFormat {
 
 export declare interface RotaryTrackFormat {
     segments: number
-    exclude: BitArrayFormat
+    exclude: number[]
     width: number
     widthPadding: number
     length: number
