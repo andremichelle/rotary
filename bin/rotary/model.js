@@ -1,9 +1,9 @@
-import { BoundNumericValue, EmptyIterator, GeneratorIterator, ObservableBits, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
+import { ArrayUtils, BoundNumericValue, EmptyIterator, GeneratorIterator, ObservableBits, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../lib/common.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { Colors } from "../lib/colors.js";
 import { CShapeInjective, IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
-import { ChannelstripModel } from "./mixer.js";
+import { Channelstrip } from "./mixer.js";
 export class RotaryExportSetting {
     constructor() {
         this.terminator = new Terminator();
@@ -141,6 +141,7 @@ export class RotaryModel {
     }
 }
 RotaryModel.MAX_TRACKS = 24;
+RotaryModel.NUM_AUX = 4;
 export var Fill;
 (function (Fill) {
     Fill[Fill["Flat"] = 0] = "Flat";
@@ -182,7 +183,12 @@ export class RotaryTrackModel {
         this.frequency = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
         this.fragments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
         this.reverse = this.observeValue(new ObservableValueImpl(false));
-        this.channelstrip = new ChannelstripModel(4);
+        this.gain = new BoundNumericValue(Channelstrip.GAIN_MAPPING, 0.5);
+        this.volume = new BoundNumericValue(Linear.Identity, 1.0);
+        this.panning = new BoundNumericValue(Linear.Bipolar, 0.0);
+        this.auxSends = ArrayUtils.fill(RotaryModel.NUM_AUX, () => new BoundNumericValue(Linear.Identity, 0.0));
+        this.mute = new ObservableValueImpl(false);
+        this.solo = new ObservableValueImpl(false);
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()));
         const motionTerminator = this.terminator.with(new Terminator());
         this.terminator.with(this.motion.addObserver((motion) => {

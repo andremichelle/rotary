@@ -3,7 +3,7 @@ import {AudioScene, AudioSceneController} from "./audio.js"
 import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
-import {Mixer, MixerModel} from "./mixer.js"
+import {Mixer} from "./mixer.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -43,27 +43,22 @@ export const initAudioScene = (): AudioScene => {
                 rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`))
             }
 
-            const mixerModel = new MixerModel(RotaryModel.MAX_TRACKS, 4)
-            for (let i = 0; i < RotaryModel.MAX_TRACKS; i++) {
-                mixerModel.channels[i].auxSends[0].set(i / RotaryModel.MAX_TRACKS)
-            }
-            const mixer: Mixer = new Mixer(context, mixerModel)
-            for (let outIndex = 0; outIndex < RotaryModel.MAX_TRACKS; outIndex++) {
-                rotaryNode.connect(mixer.channelstrips[outIndex].input(), outIndex, 0)
-            }
+            const mixer: Mixer = new Mixer(context, RotaryModel.NUM_AUX)
 
-            // TODO find better way to connect all models and terminate properly
-            const trackTerminator: Terminator = new Terminator()
-            const config = (track: RotaryTrackModel, index: number): void => {
-                track.channelstrip.mute.addObserver(value => mixer.channelstrips[index].model.mute.set(value))
-                track.channelstrip.solo.addObserver(value => mixer.channelstrips[index].model.solo.set(value))
+            // TODO terminate
+            const map: Map<RotaryTrackModel, Terminator> = new Map()
+            const addTrack = (track: RotaryTrackModel, index: number): void => {
+                const channelstrip = mixer.createChannelstrip()
+                rotaryNode.connect(channelstrip.input(), index, 0)
+                track.mute.addObserver(mute => channelstrip.setMute(mute))
+                track.solo.addObserver(solo => channelstrip.setSolo(solo))
             }
             terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
-                if(event.type === CollectionEventType.Add) {
-                    config(event.item, event.index)
+                if (event.type === CollectionEventType.Add) {
+                    addTrack(event.item, event.index)
                 }
             }))
-            model.tracks.forEach((track, index) => config(track, index))
+            model.tracks.forEach((track, index) => addTrack(track, index))
 
             const convolverNode = context.createConvolver()
             convolverNode.buffer = await loadSample("impulse/LargeWideEchoHall.ogg")

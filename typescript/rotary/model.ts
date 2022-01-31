@@ -1,4 +1,5 @@
 import {
+    ArrayUtils,
     BoundNumericValue,
     EmptyIterator,
     GeneratorIterator,
@@ -19,7 +20,7 @@ import {Linear, LinearInteger} from "../lib/mapping.js"
 import {Colors} from "../lib/colors.js"
 import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
 import {RenderConfiguration} from "./render.js"
-import {ChannelstripModel} from "./mixer.js"
+import {Channelstrip} from "./mixer.js"
 
 export declare interface RotaryExportFormat {
     fps: number
@@ -82,6 +83,7 @@ export class RotaryExportSetting implements Terminable, Serializer<RotaryExportF
 
 export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS = 24
+    static NUM_AUX = 4
 
     private readonly terminator: Terminator = new Terminator()
     private readonly observable: ObservableImpl<RotaryModel> = new ObservableImpl<RotaryModel>()
@@ -252,7 +254,13 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly fragments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.observeValue(new ObservableValueImpl<boolean>(false))
 
-    readonly channelstrip: ChannelstripModel = new ChannelstripModel(4)
+    // TODO Put into format
+    readonly gain = new BoundNumericValue(Channelstrip.GAIN_MAPPING, 0.5)
+    readonly volume = new BoundNumericValue(Linear.Identity, 1.0)
+    readonly panning = new BoundNumericValue(Linear.Bipolar, 0.0)
+    readonly auxSends: BoundNumericValue[] = ArrayUtils.fill(RotaryModel.NUM_AUX, () => new BoundNumericValue(Linear.Identity, 0.0))
+    readonly mute = new ObservableValueImpl<boolean>(false)
+    readonly solo = new ObservableValueImpl<boolean>(false)
 
     constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))

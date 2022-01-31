@@ -11,7 +11,7 @@ import { CollectionEventType, readAudio, Terminator } from "../lib/common.js";
 import { RotaryModel } from "./model.js";
 import { LimiterWorklet } from "../dsp/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
-import { Mixer, MixerModel } from "./mixer.js";
+import { Mixer } from "./mixer.js";
 export const initAudioScene = () => {
     return {
         build(context, output, model, boot) {
@@ -44,25 +44,20 @@ export const initAudioScene = () => {
                 for (let i = 0; i <= 21; i++) {
                     rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`));
                 }
-                const mixerModel = new MixerModel(RotaryModel.MAX_TRACKS, 4);
-                for (let i = 0; i < RotaryModel.MAX_TRACKS; i++) {
-                    mixerModel.channels[i].auxSends[0].set(i / RotaryModel.MAX_TRACKS);
-                }
-                const mixer = new Mixer(context, mixerModel);
-                for (let outIndex = 0; outIndex < RotaryModel.MAX_TRACKS; outIndex++) {
-                    rotaryNode.connect(mixer.channelstrips[outIndex].input(), outIndex, 0);
-                }
-                const trackTerminator = new Terminator();
-                const config = (track, index) => {
-                    track.channelstrip.mute.addObserver(value => mixer.channelstrips[index].model.mute.set(value));
-                    track.channelstrip.solo.addObserver(value => mixer.channelstrips[index].model.solo.set(value));
+                const mixer = new Mixer(context, RotaryModel.NUM_AUX);
+                const map = new Map();
+                const addTrack = (track, index) => {
+                    const channelstrip = mixer.createChannelstrip();
+                    rotaryNode.connect(channelstrip.input(), index, 0);
+                    track.mute.addObserver(mute => channelstrip.setMute(mute));
+                    track.solo.addObserver(solo => channelstrip.setSolo(solo));
                 };
                 terminator.with(model.tracks.addObserver((event) => {
                     if (event.type === CollectionEventType.Add) {
-                        config(event.item, event.index);
+                        addTrack(event.item, event.index);
                     }
                 }));
-                model.tracks.forEach((track, index) => config(track, index));
+                model.tracks.forEach((track, index) => addTrack(track, index));
                 const convolverNode = context.createConvolver();
                 convolverNode.buffer = yield loadSample("impulse/LargeWideEchoHall.ogg");
                 mixer.auxSend(0).connect(convolverNode).connect(mixer.auxReturn(0));

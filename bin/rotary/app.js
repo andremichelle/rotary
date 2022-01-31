@@ -244,9 +244,9 @@ export class RotaryTrackSelector {
         this.canvas = this.element.querySelector("canvas");
         this.context = this.canvas.getContext("2d");
         this.mute = this.terminator.with(new Checkbox(element.querySelector("label.checkbox.mute input")));
-        this.mute.with(this.model.channelstrip.mute);
+        this.mute.with(this.model.mute);
         this.solo = this.terminator.with(new Checkbox(element.querySelector("label.checkbox.solo input")));
-        this.solo.with(this.model.channelstrip.solo);
+        this.solo.with(this.model.solo);
         this.terminator.with(this.model.addObserver(() => this.updatePreview()));
         requestAnimationFrame(() => this.updatePreview());
     }

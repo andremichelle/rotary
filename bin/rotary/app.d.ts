@@ -44,6 +44,8 @@ export declare class RotaryTrackSelector implements Terminable {
     private readonly terminator;
     private readonly canvas;
     private readonly context;
+    private readonly mute;
+    private readonly solo;
     constructor(ui: RotaryApp, model: RotaryTrackModel, element: HTMLElement, radio: HTMLInputElement, button: HTMLButtonElement);
     updatePreview(): void;
     terminate(): void;
