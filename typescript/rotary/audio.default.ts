@@ -1,6 +1,6 @@
-import {Boot, readAudio, Terminator} from "../lib/common.js"
+import {Boot, CollectionEvent, CollectionEventType, readAudio, Terminator} from "../lib/common.js"
 import {AudioScene, AudioSceneController} from "./audio.js"
-import {RotaryModel} from "./model.js"
+import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
 import {Mixer, MixerModel} from "./mixer.js"
@@ -44,15 +44,26 @@ export const initAudioScene = (): AudioScene => {
             }
 
             const mixerModel = new MixerModel(RotaryModel.MAX_TRACKS, 4)
-            // mixerModel.channels[0].solo.set(true)
-            // mixerModel.channels[1].solo.set(true)
             for (let i = 0; i < RotaryModel.MAX_TRACKS; i++) {
-                mixerModel.channels[i].auxSends[0].set(i/RotaryModel.MAX_TRACKS)
+                mixerModel.channels[i].auxSends[0].set(i / RotaryModel.MAX_TRACKS)
             }
             const mixer: Mixer = new Mixer(context, mixerModel)
             for (let outIndex = 0; outIndex < RotaryModel.MAX_TRACKS; outIndex++) {
                 rotaryNode.connect(mixer.channelstrips[outIndex].input(), outIndex, 0)
             }
+
+            // TODO find better way to connect all models and terminate properly
+            const trackTerminator: Terminator = new Terminator()
+            const config = (track: RotaryTrackModel, index: number): void => {
+                track.channelstrip.mute.addObserver(value => mixer.channelstrips[index].model.mute.set(value))
+                track.channelstrip.solo.addObserver(value => mixer.channelstrips[index].model.solo.set(value))
+            }
+            terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
+                if(event.type === CollectionEventType.Add) {
+                    config(event.item, event.index)
+                }
+            }))
+            model.tracks.forEach((track, index) => config(track, index))
 
             const convolverNode = context.createConvolver()
             convolverNode.buffer = await loadSample("impulse/LargeWideEchoHall.ogg")

@@ -8,7 +8,7 @@ import {
     Terminator
 } from "../lib/common.js"
 import {RotaryModel, RotaryTrackModel} from "./model.js"
-import {NumericStepperInput} from "../dom/inputs.js"
+import {Checkbox, NumericStepperInput} from "../dom/inputs.js"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor.js"
 import {Dom} from "../dom/common.js"
 import {RotaryRenderer} from "./render.js"
@@ -272,6 +272,9 @@ export class RotaryTrackSelector implements Terminable {
     private readonly canvas: HTMLCanvasElement
     private readonly context: CanvasRenderingContext2D
 
+    private readonly mute: Checkbox
+    private readonly solo: Checkbox
+
     constructor(readonly ui: RotaryApp,
                 readonly model: RotaryTrackModel,
                 readonly element: HTMLElement,
@@ -286,6 +289,10 @@ export class RotaryTrackSelector implements Terminable {
             }))
         this.canvas = this.element.querySelector("canvas")
         this.context = this.canvas.getContext("2d")
+        this.mute = this.terminator.with(new Checkbox(element.querySelector("label.checkbox.mute input")))
+        this.mute.with(this.model.channelstrip.mute)
+        this.solo = this.terminator.with(new Checkbox(element.querySelector("label.checkbox.solo input")))
+        this.solo.with(this.model.channelstrip.solo)
         this.terminator.with(this.model.addObserver(() => this.updatePreview()))
         requestAnimationFrame(() => this.updatePreview())
     }

@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { readAudio, Terminator } from "../lib/common.js";
+import { CollectionEventType, readAudio, Terminator } from "../lib/common.js";
 import { RotaryModel } from "./model.js";
 import { LimiterWorklet } from "../dsp/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
@@ -52,6 +52,17 @@ export const initAudioScene = () => {
                 for (let outIndex = 0; outIndex < RotaryModel.MAX_TRACKS; outIndex++) {
                     rotaryNode.connect(mixer.channelstrips[outIndex].input(), outIndex, 0);
                 }
+                const trackTerminator = new Terminator();
+                const config = (track, index) => {
+                    track.channelstrip.mute.addObserver(value => mixer.channelstrips[index].model.mute.set(value));
+                    track.channelstrip.solo.addObserver(value => mixer.channelstrips[index].model.solo.set(value));
+                };
+                terminator.with(model.tracks.addObserver((event) => {
+                    if (event.type === CollectionEventType.Add) {
+                        config(event.item, event.index);
+                    }
+                }));
+                model.tracks.forEach((track, index) => config(track, index));
                 const convolverNode = context.createConvolver();
                 convolverNode.buffer = yield loadSample("impulse/LargeWideEchoHall.ogg");
                 mixer.auxSend(0).connect(convolverNode).connect(mixer.auxReturn(0));

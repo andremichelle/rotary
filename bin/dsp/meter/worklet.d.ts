@@ -2,11 +2,14 @@ export declare class MeterWorklet extends AudioWorkletNode {
     static load(context: AudioContext): Promise<void>;
     private readonly width;
     private readonly height;
-    private readonly meterPadding;
+    private readonly meterMargin;
     private readonly meterWidth;
-    private minDb;
-    private maxDb;
+    private readonly meterSegmentWidth;
+    private readonly meterSegmentGap;
+    private readonly meterSegmentCount;
     private labelStepsDb;
+    private readonly maxDb;
+    private readonly minDb;
     private maxPeaks;
     private maxSquares;
     private maxPeakHoldValue;
@@ -23,6 +26,7 @@ export declare class MeterWorklet extends AudioWorkletNode {
     update(): void;
     renderScale(): void;
     renderMeter(gain: number, y: number, h: number): void;
-    dbToX(db: any): number;
-    dbToNorm(db: any): number;
+    dbToX(db: number): number;
+    dbToIndex(db: number): number;
+    dbToNorm(db: number): number;
 }
