@@ -46,14 +46,14 @@ export declare class Boolean implements ValueMapping<boolean> {
     clamp(y: boolean): boolean;
 }
 export declare class Volume implements ValueMapping<number>, Range {
-    readonly min: number;
-    readonly mid: number;
-    readonly max: number;
+    readonly min: any;
+    readonly mid: any;
+    readonly max: any;
     static Default: Volume;
     private readonly a;
     private readonly b;
     private readonly c;
-    constructor(min?: number, mid?: number, max?: number);
+    constructor(min: any, mid: any, max: any);
     y(x: number): number;
     x(y: number): number;
     clamp(y: number): number;

@@ -106,12 +106,8 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly frequency: BoundNumericValue;
     readonly fragments: BoundNumericValue;
     readonly reverse: ObservableValueImpl<boolean>;
-    readonly volume: BoundNumericValue;
-    readonly panning: BoundNumericValue;
-    readonly mute: ObservableValueImpl<boolean>;
-    readonly solo: ObservableValueImpl<boolean>;
     constructor(root: RotaryModel);
-    bindValue<T extends Observable<any>>(property: T): T;
+    observeValue<T extends Observable<any>>(property: T): T;
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
     test(): void;

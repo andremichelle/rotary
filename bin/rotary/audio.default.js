@@ -45,6 +45,8 @@ export const initAudioScene = () => {
                     rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`));
                 }
                 const mixerModel = new MixerModel(RotaryModel.MAX_TRACKS, 4);
+                mixerModel.channels[0].solo.set(true);
+                mixerModel.channels[1].solo.set(true);
                 for (let i = 0; i < RotaryModel.MAX_TRACKS; i++) {
                     mixerModel.channels[i].auxSends[0].set(i / RotaryModel.MAX_TRACKS);
                 }

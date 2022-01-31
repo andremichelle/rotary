@@ -56,11 +56,11 @@
 }
 button {
   color: rgba(255, 255, 255, 0.4);
-  font-size: 10px;
+  font-size: 9px;
   font-family: "IBM Plex Sans", sans-serif;
-  height: 19px;
-  line-height: 19px;
-  min-width: 19px;
+  height: 17px;
+  line-height: 17px;
+  min-width: 17px;
   border-radius: 2px;
   text-align: center;
   appearance: none;
@@ -140,13 +140,13 @@ fieldset:disabled * {
 }
 
 input[type=text] {
-  height: 19px;
+  height: 17px;
   color: rgba(255, 255, 255, 0.7);
   border: none;
   outline: none;
   margin: 0;
   padding: 0;
-  font-size: 10px;
+  font-size: 9px;
   text-align: center;
   background-color: rgba(0, 0, 0, 0.3);
   font-family: "IBM Plex Sans", sans-serif;
@@ -165,7 +165,7 @@ select {
   outline: none;
   margin: 0;
   padding: 0;
-  font-size: 10px;
+  font-size: 9px;
   background-color: rgba(0, 0, 0, 0.3);
   appearance: none;
 }
@@ -336,8 +336,8 @@ html, body {
   height: 100%;
   color: white;
   background-color: black;
-  font-size: 11px;
   font-family: "IBM Plex Sans", sans-serif;
+  font-size: 9px;
   overflow-x: hidden;
 }
 
@@ -402,7 +402,7 @@ body main > .global-editor {
 body main > .global-editor > .columns {
   display: flex;
   flex-direction: row;
-  column-gap: 24px;
+  column-gap: 16px;
 }
 body main > .global-editor > .columns > .column {
   display: flex;
@@ -416,6 +416,7 @@ body main > .global-editor > .columns > .column > h5 {
   border-radius: 1px;
   color: #444444;
   text-transform: uppercase;
+  font-size: 9px;
   background-color: #111;
 }
 body main > form.track-nav {
@@ -497,7 +498,7 @@ body main > .editing > .v-split > .columns {
 body main > .editing > .v-split > .columns > .track-editor {
   display: grid;
   grid-template-columns: min-content min-content min-content;
-  column-gap: 32px;
+  column-gap: 16px;
   border-radius: 2px;
 }
 body main > .editing > .v-split > .columns > .track-editor[data-motion=linear] [data-group=motion]:not([data-injective=linear]), body main > .editing > .v-split > .columns > .track-editor[data-motion=pow] [data-group=motion]:not([data-injective=pow]), body main > .editing > .v-split > .columns > .track-editor[data-motion=cshape] [data-group=motion]:not([data-injective=cshape]), body main > .editing > .v-split > .columns > .track-editor[data-motion=tshape] [data-group=motion]:not([data-injective=tshape]), body main > .editing > .v-split > .columns > .track-editor[data-motion=smoothstep] [data-group=motion]:not([data-injective=smoothstep]) {
@@ -530,8 +531,8 @@ body main > .editing > .preview .rotary {
   background-color: #040404;
   box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.4);
   height: min-content;
-  min-width: 520px;
-  min-height: 520px;
+  min-width: 480px;
+  min-height: 480px;
   display: flex;
 }
 body main > .editing > .preview .rotary canvas {
@@ -578,14 +579,14 @@ body main > .editing > .preview .rotary div.top-overlay label:after {
 div.two-columns {
   display: grid;
   align-items: center;
-  grid-template-columns: 64px min-content;
-  row-gap: 6px;
-  column-gap: 8px;
-  line-height: 19px;
+  grid-template-columns: 48px 76px;
+  row-gap: 3px;
+  column-gap: 6px;
+  line-height: 17px;
   height: min-content;
 }
 div.two-columns > * {
-  height: 19px;
+  height: 17px;
   overflow: hidden;
   border-radius: 2px;
 }
@@ -605,9 +606,9 @@ div.two-columns label.bold {
 }
 div.two-columns fieldset.stepper {
   display: grid;
-  grid-template-columns: 19px auto 19px;
+  grid-template-columns: 17px 40px 17px;
   column-gap: 1px;
-  font-size: 10px;
+  font-size: 9px;
   outline: none;
   border: none;
   padding: 0;
@@ -615,9 +616,10 @@ div.two-columns fieldset.stepper {
 }
 div.two-columns fieldset.stepper > button {
   color: rgba(255, 255, 255, 0.2);
-  font-size: 8px;
+  font-size: 7px;
   font-family: "IBM Plex Sans", sans-serif;
-  height: 19px;
+  width: 17px;
+  height: 17px;
   text-align: center;
   appearance: none;
   border-radius: 0;
@@ -629,12 +631,6 @@ div.two-columns fieldset.stepper > button:hover {
 }
 div.two-columns fieldset.stepper > button:active {
   color: white;
-}
-div.two-columns fieldset.stepper > input[type=text] {
-  width: 64px;
-}
-div.two-columns select {
-  grid-column: 2/3;
 }
 
 /*# sourceMappingURL=main.css.map */
