@@ -18,27 +18,31 @@ export class MeterWorklet extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
-        this.width = 288;
         this.height = 17;
-        this.meterPadding = 5;
-        this.minDb = -48.0;
-        this.maxDb = 3.0;
+        this.meterMargin = 5;
+        this.meterWidth = 5;
+        this.meterSegmentWidth = 15;
+        this.meterSegmentGap = 1;
+        this.meterSegmentCount = 16;
         this.labelStepsDb = 3.0;
+        this.maxDb = 3.0;
+        this.minDb = this.maxDb - this.labelStepsDb * (this.meterSegmentCount - 1);
         this.maxPeaks = new Float32Array(2);
         this.maxSquares = new Float32Array(2);
         this.maxPeakHoldValue = new Float32Array(2);
         this.releasePeakHoldTime = new Float32Array(2);
         this.peakHoldDuration = 1000.0;
         this.clipHoldDuration = 2000.0;
-        this.meterWidth = this.width - this.meterPadding * 2.0;
+        this.meterWidth = this.meterSegmentCount * (this.meterSegmentWidth + this.meterSegmentGap) - this.meterSegmentGap;
+        this.width = this.meterMargin * 2.0 + this.meterWidth;
         this.canvas = document.createElement("canvas");
         this.canvas.style.width = this.width + "px";
         this.canvas.style.height = this.height + "px";
         this.graphics = this.canvas.getContext("2d");
         const green = "rgba(40,40,40)";
-        const yellow = "rgb(42,42,42)";
+        const yellow = "rgb(40,40,40)";
         const red = "rgb(160,16,0)";
-        this.gradient = this.graphics.createLinearGradient(this.meterPadding, 0, this.meterPadding + this.meterWidth, 0);
+        this.gradient = this.graphics.createLinearGradient(this.meterMargin, 0, this.meterMargin + this.meterWidth, 0);
         this.gradient.addColorStop(0.0, green);
         this.gradient.addColorStop(this.dbToNorm(-9.0), green);
         this.gradient.addColorStop(this.dbToNorm(-9.0), yellow);
@@ -107,7 +111,7 @@ export class MeterWorklet extends AudioWorkletNode {
                 const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[i]));
                 if (db >= this.minDb) {
                     graphics.fillStyle = 0.0 < db ? "rgb(160,16,0)" : "rgb(100,100,100)";
-                    graphics.fillRect(this.dbToX(db), i * 13, 1, 4);
+                    graphics.fillRect(this.dbToX(db) - 1, i * 13, 1, 4);
                 }
             }
         }
@@ -120,24 +124,33 @@ export class MeterWorklet extends AudioWorkletNode {
         graphics.font = "7px IBM Plex Sans";
         graphics.textBaseline = "middle";
         graphics.textAlign = "center";
-        for (let db = this.maxDb; db >= this.minDb; db -= this.labelStepsDb) {
-            const x = this.dbToX(db);
+        for (let i = 0; i < this.meterSegmentCount; i++) {
+            const db = this.maxDb - this.labelStepsDb * i;
+            const x = this.meterMargin + (this.meterSegmentWidth + this.meterSegmentGap) * (this.meterSegmentCount - i - 1) + (this.meterSegmentWidth >> 1);
             graphics.fillStyle = db <= 0 ? "rgb(70,70,70)" : "rgb(160,26,20)";
-            graphics.fillText(db === this.minDb ? "dB" : db.toString(10), x, 9);
+            if (db > this.minDb) {
+                graphics.fillText(db.toString(10), x, 9);
+            }
+            else {
+                graphics.fillText("dB", x, 9);
+            }
         }
     }
     renderMeter(gain, y, h) {
         const db = gainToDb(gain);
-        if (db >= this.minDb) {
-            const w = Math.floor(this.dbToNorm(Math.min(db, this.maxDb)) * this.meterWidth);
-            this.graphics.fillRect(this.meterPadding, y, w + 1, h);
+        const dbIndex = Math.max(0, this.dbToIndex(db)) | 0;
+        for (let i = 0; i < dbIndex; i++) {
+            this.graphics.fillRect(this.meterMargin + (this.meterSegmentWidth + this.meterSegmentGap) * i, y, this.meterSegmentWidth, h);
         }
     }
     dbToX(db) {
-        return this.meterPadding + Math.round(this.dbToNorm(db) * this.meterWidth);
+        return this.meterMargin + this.dbToIndex(db) * (this.meterSegmentWidth + this.meterSegmentGap);
+    }
+    dbToIndex(db) {
+        return this.meterSegmentCount - Math.floor((this.maxDb - db) / this.labelStepsDb) - 1;
     }
     dbToNorm(db) {
-        return (db - this.minDb) / (this.maxDb - this.minDb);
+        return 1.0 - Math.floor((this.maxDb - db) / this.labelStepsDb + 1.0) / this.meterSegmentCount;
     }
 }
 //# sourceMappingURL=worklet.js.map

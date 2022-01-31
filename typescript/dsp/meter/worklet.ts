@@ -6,14 +6,17 @@ export class MeterWorklet extends AudioWorkletNode {
         return await context.audioWorklet.addModule("bin/dsp/meter/processor.js")
     }
 
-    private readonly width: number = 288
+    private readonly width: number
     private readonly height: number = 17
-    private readonly meterPadding: number = 5
-    private readonly meterWidth: number
+    private readonly meterMargin: number = 5
+    private readonly meterWidth: number = 5
+    private readonly meterSegmentWidth: number = 15
+    private readonly meterSegmentGap: number = 1
+    private readonly meterSegmentCount: number = 16
 
-    private minDb: number = -48.0
-    private maxDb: number = 3.0
     private labelStepsDb: number = 3.0
+    private readonly maxDb: number = 3.0
+    private readonly minDb: number = this.maxDb - this.labelStepsDb * (this.meterSegmentCount - 1)
     private maxPeaks: Float32Array = new Float32Array(2)
     private maxSquares: Float32Array = new Float32Array(2)
     private maxPeakHoldValue: Float32Array = new Float32Array(2)
@@ -38,7 +41,8 @@ export class MeterWorklet extends AudioWorkletNode {
             channelInterpretation: "speakers"
         })
 
-        this.meterWidth = this.width - this.meterPadding * 2.0
+        this.meterWidth = this.meterSegmentCount * (this.meterSegmentWidth + this.meterSegmentGap) - this.meterSegmentGap
+        this.width = this.meterMargin * 2.0 + this.meterWidth
 
         this.canvas = document.createElement("canvas")
         this.canvas.style.width = this.width + "px"
@@ -46,9 +50,9 @@ export class MeterWorklet extends AudioWorkletNode {
         this.graphics = this.canvas.getContext("2d")
 
         const green = "rgba(40,40,40)"
-        const yellow = "rgb(42,42,42)"
+        const yellow = "rgb(40,40,40)"
         const red = "rgb(160,16,0)"
-        this.gradient = this.graphics.createLinearGradient(this.meterPadding, 0, this.meterPadding + this.meterWidth, 0)
+        this.gradient = this.graphics.createLinearGradient(this.meterMargin, 0, this.meterMargin + this.meterWidth, 0)
         this.gradient.addColorStop(0.0, green)
         this.gradient.addColorStop(this.dbToNorm(-9.0), green)
         this.gradient.addColorStop(this.dbToNorm(-9.0), yellow)
@@ -115,7 +119,7 @@ export class MeterWorklet extends AudioWorkletNode {
                 const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[i]))
                 if (db >= this.minDb) {
                     graphics.fillStyle = 0.0 < db ? "rgb(160,16,0)" : "rgb(100,100,100)"
-                    graphics.fillRect(this.dbToX(db), i * 13, 1, 4)
+                    graphics.fillRect(this.dbToX(db) - 1, i * 13, 1, 4)
                 }
             }
         }
@@ -129,26 +133,35 @@ export class MeterWorklet extends AudioWorkletNode {
         graphics.font = "7px IBM Plex Sans"
         graphics.textBaseline = "middle"
         graphics.textAlign = "center"
-        for (let db = this.maxDb; db >= this.minDb; db -= this.labelStepsDb) {
-            const x = this.dbToX(db)
+        for (let i = 0; i < this.meterSegmentCount; i++) {
+            const db = this.maxDb - this.labelStepsDb * i
+            const x = this.meterMargin + (this.meterSegmentWidth + this.meterSegmentGap) * (this.meterSegmentCount - i - 1) + (this.meterSegmentWidth >> 1)
             graphics.fillStyle = db <= 0 ? "rgb(70,70,70)" : "rgb(160,26,20)"
-            graphics.fillText(db === this.minDb ? "dB" : db.toString(10), x, 9)
+            if (db > this.minDb) {
+                graphics.fillText(db.toString(10), x, 9)
+            } else {
+                graphics.fillText("dB", x, 9)
+            }
         }
     }
 
     renderMeter(gain: number, y: number, h: number) {
         const db = gainToDb(gain)
-        if (db >= this.minDb) {
-            const w = Math.floor(this.dbToNorm(Math.min(db, this.maxDb)) * this.meterWidth)
-            this.graphics.fillRect(this.meterPadding, y, w + 1, h)
+        const dbIndex = Math.max(0, this.dbToIndex(db)) | 0
+        for (let i = 0; i < dbIndex; i++) {
+            this.graphics.fillRect(this.meterMargin + (this.meterSegmentWidth + this.meterSegmentGap) * i, y, this.meterSegmentWidth, h)
         }
     }
 
-    dbToX(db) {
-        return this.meterPadding + Math.round(this.dbToNorm(db) * this.meterWidth)
+    dbToX(db: number): number {
+        return this.meterMargin + this.dbToIndex(db) * (this.meterSegmentWidth + this.meterSegmentGap)
     }
 
-    dbToNorm(db) {
-        return (db - this.minDb) / (this.maxDb - this.minDb)
+    dbToIndex(db: number): number {
+        return this.meterSegmentCount - Math.floor((this.maxDb - db) / this.labelStepsDb) - 1
+    }
+
+    dbToNorm(db: number): number {
+        return 1.0 - Math.floor((this.maxDb - db) / this.labelStepsDb + 1.0) / this.meterSegmentCount
     }
 }
