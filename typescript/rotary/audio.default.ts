@@ -4,6 +4,7 @@ import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
 import {Mixer} from "./mixer.js"
+import {pulsarDelay} from "../lib/dsp.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -49,14 +50,14 @@ export const initAudioScene = (): AudioScene => {
                 const terminator: Terminator = new Terminator()
                 const channelstrip = mixer.createChannelstrip()
                 rotaryNode.connect(channelstrip.input(), index, 0)
-                channelstrip.setMute(track.mute.get())
-                channelstrip.setSolo(track.solo.get())
-                channelstrip.setVolume(track.volume.get())
-                channelstrip.setPanning(track.panning.get())
-                terminator.with(track.mute.addObserver(mute => channelstrip.setMute(mute)))
-                terminator.with(track.solo.addObserver(solo => channelstrip.setSolo(solo)))
-                terminator.with(track.volume.addObserver(volume => channelstrip.setVolume(volume)))
-                terminator.with(track.panning.addObserver(panning => channelstrip.setPanning(panning)))
+                terminator.with(track.mute.addObserver(mute => channelstrip.setMute(mute), true))
+                terminator.with(track.solo.addObserver(solo => channelstrip.setSolo(solo), true))
+                terminator.with(track.volume.addObserver(volume => channelstrip.setVolume(volume), true))
+                terminator.with(track.panning.addObserver(panning => channelstrip.setPanning(panning), true))
+                for (let index = 0; index < RotaryModel.NUM_AUX; index++) {
+                    terminator.with(track.auxSends[index]
+                        .addObserver(volume => channelstrip.setAuxSend(index, volume), true))
+                }
                 terminator.with({terminate: () => mixer.removeChannelstrip(channelstrip)})
                 return terminator
             }
@@ -68,12 +69,13 @@ export const initAudioScene = (): AudioScene => {
                     map.get(track).terminate()
                     map.delete(track)
                 }
-            }))
-            model.tracks.forEach((track, index) => addTrack(track, index))
+            }, true))
 
             const convolverNode = context.createConvolver()
             convolverNode.buffer = await loadSample("impulse/LargeWideEchoHall.ogg")
             mixer.auxSend(0).connect(convolverNode).connect(mixer.auxReturn(0))
+
+            pulsarDelay(context, mixer.auxSend(1), mixer.auxReturn(1), 0.250, 0.500, 0.250, 0.94, 12000, 200)
 
             mixer.masterOutput().connect(limiterWorklet)
             limiterWorklet.connect(output)

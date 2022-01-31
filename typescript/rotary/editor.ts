@@ -1,7 +1,6 @@
-import {NumericStepper, Option, Options, PrintMapping, Terminable, Terminator} from "../lib/common.js"
+import {ArrayUtils, NumericStepper, Option, Options, PrintMapping, Terminable, Terminator} from "../lib/common.js"
 import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
-import {Fill, Fills, RotaryTrackModel} from "./model.js"
-import {Dom} from "../dom/common.js"
+import {Fill, Fills, RotaryModel, RotaryTrackModel} from "./model.js"
 import {InjectiveEditor} from "../dom/injective.js"
 
 export interface RotaryTrackEditorExecutor {
@@ -27,6 +26,7 @@ export class RotaryTrackEditor implements Terminable {
 
     private readonly volume: NumericStepperInput
     private readonly panning: NumericStepperInput
+    private readonly auxSends: NumericStepperInput[]
 
     subject: Option<RotaryTrackModel> = Options.None
 
@@ -59,6 +59,9 @@ export class RotaryTrackEditor implements Terminable {
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
         this.panning = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='panning']"),
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
+        this.auxSends = ArrayUtils.fill(RotaryModel.NUM_AUX, (index: number) =>
+            this.terminator.with(new NumericStepperInput(parentNode.querySelector(`fieldset[data-parameter='aux-${index}']`),
+                PrintMapping.UnipolarPercent, NumericStepper.Hundredth)))
 
         /*this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault()
@@ -84,6 +87,10 @@ export class RotaryTrackEditor implements Terminable {
 
         this.volume.with(model.volume)
         this.panning.with(model.panning)
+        this.auxSends[0].with(model.auxSends[0])
+        this.auxSends[1].with(model.auxSends[1])
+        this.auxSends[2].with(model.auxSends[2])
+        this.auxSends[3].with(model.auxSends[3])
 
         this.subject = Options.valueOf(model)
     }

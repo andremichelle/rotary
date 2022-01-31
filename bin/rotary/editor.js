@@ -1,6 +1,6 @@
-import { NumericStepper, Options, PrintMapping, Terminator } from "../lib/common.js";
+import { ArrayUtils, NumericStepper, Options, PrintMapping, Terminator } from "../lib/common.js";
 import { Checkbox, NumericInput, NumericStepperInput, SelectInput } from "../dom/inputs.js";
-import { Fills } from "./model.js";
+import { Fills, RotaryModel } from "./model.js";
 import { InjectiveEditor } from "../dom/injective.js";
 export class RotaryTrackEditor {
     constructor(executor, parentNode) {
@@ -23,6 +23,7 @@ export class RotaryTrackEditor {
         this.reverse = this.terminator.with(new Checkbox(parentNode.querySelector("input[data-parameter='reverse']")));
         this.volume = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='volume']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
         this.panning = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='panning']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
+        this.auxSends = ArrayUtils.fill(RotaryModel.NUM_AUX, (index) => this.terminator.with(new NumericStepperInput(parentNode.querySelector(`fieldset[data-parameter='aux-${index}']`), PrintMapping.UnipolarPercent, NumericStepper.Hundredth)));
     }
     edit(model) {
         this.segments.with(model.segments);
@@ -41,6 +42,10 @@ export class RotaryTrackEditor {
         this.reverse.with(model.reverse);
         this.volume.with(model.volume);
         this.panning.with(model.panning);
+        this.auxSends[0].with(model.auxSends[0]);
+        this.auxSends[1].with(model.auxSends[1]);
+        this.auxSends[2].with(model.auxSends[2]);
+        this.auxSends[3].with(model.auxSends[3]);
         this.subject = Options.valueOf(model);
     }
     clear() {

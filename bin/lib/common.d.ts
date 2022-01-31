@@ -114,7 +114,7 @@ export declare class CollectionEvent<T> {
 export declare class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
     static observeNested<U extends Observable<U>>(collection: ObservableCollection<U>, observer: (collection: ObservableCollection<U>) => void): Terminable;
     private readonly observable;
-    private readonly values;
+    private readonly items;
     add(value: T, index?: number): boolean;
     addAll(values: T[]): void;
     remove(value: T): boolean;
@@ -125,9 +125,9 @@ export declare class ObservableCollection<T> implements Observable<CollectionEve
     indexOf(value: T): number;
     size(): number;
     map<U>(fn: (value: T, index: number, array: T[]) => U): U[];
-    forEach(fn: (value: T, index: number) => void): void;
+    forEach(fn: (item: T, index: number) => void): void;
     reduce<U>(fn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U): U;
-    addObserver(observer: Observer<CollectionEvent<T>>): Terminable;
+    addObserver(observer: Observer<CollectionEvent<T>>, notify?: boolean): Terminable;
     removeObserver(observer: Observer<CollectionEvent<T>>): boolean;
     terminate(): void;
 }
@@ -137,7 +137,7 @@ export declare class ObservableValueImpl<T> implements ObservableValue<T> {
     constructor(value?: T);
     get(): T;
     set(value: T): boolean;
-    addObserver(observer: Observer<T>): Terminable;
+    addObserver(observer: Observer<T>, notify?: boolean): Terminable;
     removeObserver(observer: Observer<T>): boolean;
     terminate(): void;
 }
@@ -148,7 +148,7 @@ export declare class BoundNumericValue implements ObservableValue<number> {
     constructor(range?: Range, value?: number);
     get(): number;
     set(value: number): boolean;
-    addObserver(observer: Observer<number>): Terminable;
+    addObserver(observer: Observer<number>, notify?: boolean): Terminable;
     removeObserver(observer: Observer<number>): boolean;
     terminate(): void;
 }

@@ -291,13 +291,13 @@ export class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
 
     private readonly observable = new ObservableImpl<CollectionEvent<T>>()
 
-    private readonly values: T[] = []
+    private readonly items: T[] = []
 
     add(value: T, index: number = Number.MAX_SAFE_INTEGER): boolean {
         console.assert(0 <= index)
-        index = Math.min(index, this.values.length)
-        if (this.values.includes(value)) return false
-        this.values.splice(index, 0, value)
+        index = Math.min(index, this.items.length)
+        if (this.items.includes(value)) return false
+        this.items.splice(index, 0, value)
         this.observable.notify(new CollectionEvent(this, CollectionEventType.Add, value, index))
         return true
     }
@@ -309,62 +309,63 @@ export class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
     }
 
     remove(value: T): boolean {
-        return this.removeIndex(this.values.indexOf(value))
+        return this.removeIndex(this.items.indexOf(value))
     }
 
     removeIndex(index: number) {
         if (-1 === index) return false
-        const removed: T[] = this.values.splice(index, 1)
+        const removed: T[] = this.items.splice(index, 1)
         if (0 === removed.length) return false
         this.observable.notify(new CollectionEvent(this, CollectionEventType.Remove, removed[0], index))
         return true
     }
 
     clear() {
-        for (let index = this.values.length - 1; index > -1; index--) {
+        for (let index = this.items.length - 1; index > -1; index--) {
             this.removeIndex(index)
         }
     }
 
     get(index: number): T {
-        return this.values[index]
+        return this.items[index]
     }
 
     first(): Option<T> {
-        return 0 < this.values.length ? Options.valueOf(this.values[0]) : Options.None
+        return 0 < this.items.length ? Options.valueOf(this.items[0]) : Options.None
     }
 
     indexOf(value: T): number {
-        return this.values.indexOf(value)
+        return this.items.indexOf(value)
     }
 
     size(): number {
-        return this.values.length
+        return this.items.length
     }
 
     map<U>(fn: (value: T, index: number, array: T[]) => U): U[] {
         const arr: U[] = []
-        for (let i = 0; i < this.values.length; i++) {
-            arr[i] = fn(this.values[i], i, this.values)
+        for (let i = 0; i < this.items.length; i++) {
+            arr[i] = fn(this.items[i], i, this.items)
         }
         return arr
     }
 
-    forEach(fn: (value: T, index: number) => void): void {
-        for (let i = 0; i < this.values.length; i++) {
-            fn(this.values[i], i)
+    forEach(fn: (item: T, index: number) => void): void {
+        for (let i = 0; i < this.items.length; i++) {
+            fn(this.items[i], i)
         }
     }
 
     reduce<U>(fn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U): U {
         let value: U = initialValue
-        for (let i = 0; i < this.values.length; i++) {
-            value = fn(value, this.values[i], i)
+        for (let i = 0; i < this.items.length; i++) {
+            value = fn(value, this.items[i], i)
         }
         return value
     }
 
-    addObserver(observer: Observer<CollectionEvent<T>>): Terminable {
+    addObserver(observer: Observer<CollectionEvent<T>>, notify: boolean = false): Terminable {
+        if (notify) this.forEach((item: T, index: number) => observer(new CollectionEvent<T>(this, CollectionEventType.Add, item, index)))
         return this.observable.addObserver(observer)
     }
 
@@ -396,7 +397,8 @@ export class ObservableValueImpl<T> implements ObservableValue<T> {
         return true
     }
 
-    addObserver(observer: Observer<T>): Terminable {
+    addObserver(observer: Observer<T>, notify: boolean = false): Terminable {
+        if (notify) observer(this.value)
         return this.observable.addObserver(observer)
     }
 
@@ -432,7 +434,8 @@ export class BoundNumericValue implements ObservableValue<number> {
         return true
     }
 
-    addObserver(observer: Observer<number>): Terminable {
+    addObserver(observer: Observer<number>, notify: boolean = false): Terminable {
+        if (notify) observer(this.value)
         return this.observable.addObserver(observer)
     }
 

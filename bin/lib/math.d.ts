@@ -34,15 +34,12 @@ export interface Bits {
     getBit(index: number): boolean;
     clear(): void;
 }
-export interface BitArrayFormat {
-    array: number[];
-}
-export declare class BitArray implements Bits, Serializer<BitArrayFormat> {
+export declare class BitArray implements Bits, Serializer<number[]> {
     private array;
     constructor(numBits?: number);
     getBit(index: number): boolean;
     setBit(index: number, value: boolean): boolean;
     clear(): void;
-    deserialize(format: BitArrayFormat): BitArray;
-    serialize(): BitArrayFormat;
+    deserialize(format: number[]): BitArray;
+    serialize(): number[];
 }
