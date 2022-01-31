@@ -10,11 +10,11 @@ export class MeterWorklet extends AudioWorkletNode {
     private readonly height: number = 17
     private readonly meterMargin: number = 5
     private readonly meterWidth: number = 5
-    private readonly meterSegmentWidth: number = 15
-    private readonly meterSegmentGap: number = 1
+    private readonly meterSegmentWidth: number = 12
+    private readonly meterSegmentGap: number = 2
     private readonly meterSegmentCount: number = 16
 
-    private labelStepsDb: number = 3.0
+    private readonly labelStepsDb: number = 3.0
     private readonly maxDb: number = 3.0
     private readonly minDb: number = this.maxDb - this.labelStepsDb * (this.meterSegmentCount - 1)
     private maxPeaks: Float32Array = new Float32Array(2)
@@ -49,16 +49,16 @@ export class MeterWorklet extends AudioWorkletNode {
         this.canvas.style.height = this.height + "px"
         this.graphics = this.canvas.getContext("2d")
 
-        const green = "rgba(40,40,40)"
-        const yellow = "rgb(40,40,40)"
-        const red = "rgb(160,16,0)"
+        const lowGain = "rgba(60,60,60)"
+        const highGain = "rgb(60,60,60)"
+        const clipGain = "rgb(160,16,0)"
         this.gradient = this.graphics.createLinearGradient(this.meterMargin, 0, this.meterMargin + this.meterWidth, 0)
-        this.gradient.addColorStop(0.0, green)
-        this.gradient.addColorStop(this.dbToNorm(-9.0), green)
-        this.gradient.addColorStop(this.dbToNorm(-9.0), yellow)
-        this.gradient.addColorStop(this.dbToNorm(0.0), yellow)
-        this.gradient.addColorStop(this.dbToNorm(0.0), red)
-        this.gradient.addColorStop(1.0, red)
+        this.gradient.addColorStop(0.0, lowGain)
+        this.gradient.addColorStop(this.dbToNorm(-9.0), lowGain)
+        this.gradient.addColorStop(this.dbToNorm(-9.0), highGain)
+        this.gradient.addColorStop(this.dbToNorm(0.0), highGain)
+        this.gradient.addColorStop(this.dbToNorm(0.0), clipGain)
+        this.gradient.addColorStop(1.0, clipGain)
         this.scale = NaN
 
         this.port.onmessage = event => {
@@ -98,12 +98,12 @@ export class MeterWorklet extends AudioWorkletNode {
 
         graphics.clearRect(0, 0, this.width, 4)
         graphics.clearRect(0, 13, this.width, 4)
-        graphics.fillStyle = "rgba(0, 0, 0, 0.1)"
+        graphics.fillStyle = "rgba(0, 0, 0, 0.2)"
         const maxGain = dbToGain(this.maxDb)
         this.renderMeter(maxGain, 0, 4)
         this.renderMeter(maxGain, 13, 4)
         graphics.fillStyle = this.gradient
-        graphics.globalAlpha = 0.5
+        graphics.globalAlpha = 0.8
         this.renderMeter(this.maxPeaks[0], 0, 4)
         this.renderMeter(this.maxPeaks[1], 13, 4)
         graphics.globalAlpha = 1.0
@@ -111,8 +111,8 @@ export class MeterWorklet extends AudioWorkletNode {
         this.renderMeter(this.maxSquares[1], 13, 4)
         const now = performance.now()
         for (let i = 0; i < 2; ++i) {
-            this.maxPeaks[i] *= 0.9
-            this.maxSquares[i] *= 0.9
+            this.maxPeaks[i] *= 0.97
+            this.maxSquares[i] *= 0.97
             if (0.0 <= now - this.releasePeakHoldTime[i]) {
                 this.maxPeakHoldValue[i] = 0.0
             } else {
@@ -136,7 +136,7 @@ export class MeterWorklet extends AudioWorkletNode {
         for (let i = 0; i < this.meterSegmentCount; i++) {
             const db = this.maxDb - this.labelStepsDb * i
             const x = this.meterMargin + (this.meterSegmentWidth + this.meterSegmentGap) * (this.meterSegmentCount - i - 1) + (this.meterSegmentWidth >> 1)
-            graphics.fillStyle = db <= 0 ? "rgb(70,70,70)" : "rgb(160,26,20)"
+            graphics.fillStyle = db <= 0 ? "rgb(60,60,60)" : "rgb(160,26,20)"
             if (db > this.minDb) {
                 graphics.fillText(db.toString(10), x, 9)
             } else {
@@ -147,7 +147,7 @@ export class MeterWorklet extends AudioWorkletNode {
 
     renderMeter(gain: number, y: number, h: number) {
         const db = gainToDb(gain)
-        const dbIndex = Math.max(0, this.dbToIndex(db)) | 0
+        const dbIndex = Math.max(1, this.dbToIndex(db)) | 0
         for (let i = 0; i < dbIndex; i++) {
             this.graphics.fillRect(this.meterMargin + (this.meterSegmentWidth + this.meterSegmentGap) * i, y, this.meterSegmentWidth, h)
         }

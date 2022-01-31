@@ -27,7 +27,11 @@ export class Colors {
         return (r << 16) | (g << 8) | b;
     }
     static getRandomPalette(random) {
-        return Colors.PALETTES[Math.floor(random.nextDouble(0, Colors.PALETTES.length))];
+        return Colors.getPaletteByIndex(Math.floor(random.nextDouble(0, Colors.PALETTES.length)));
+    }
+    static getPaletteByIndex(index) {
+        console.assert(0 <= index && index < Colors.PALETTES.length);
+        return Colors.PALETTES[index];
     }
 }
 Colors.PALETTES = [

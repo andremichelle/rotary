@@ -30,7 +30,12 @@ export class Colors {
     }
 
     static getRandomPalette(random: Random): number[] {
-        return Colors.PALETTES[Math.floor(random.nextDouble(0, Colors.PALETTES.length))]
+        return Colors.getPaletteByIndex(Math.floor(random.nextDouble(0, Colors.PALETTES.length)))
+    }
+
+    static getPaletteByIndex(index: number): number[] {
+        console.assert(0 <= index && index < Colors.PALETTES.length)
+        return Colors.PALETTES[index]
     }
 
     // https://github.com/Jam3/nice-color-palettes

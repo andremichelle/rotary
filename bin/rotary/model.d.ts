@@ -2,7 +2,6 @@ import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableColl
 import { BitArrayFormat, Random } from "../lib/math.js";
 import { Injective, InjectiveFormat } from "../lib/injective.js";
 import { RenderConfiguration } from "./render.js";
-import { ChannelstripModel } from "./mixer.js";
 export declare interface RotaryExportFormat {
     fps: number;
     subFrames: number;
@@ -44,6 +43,7 @@ export declare class RotaryExportSetting implements Terminable, Serializer<Rotar
 }
 export declare class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS: number;
+    static NUM_AUX: number;
     private readonly terminator;
     private readonly observable;
     readonly tracks: ObservableCollection<RotaryTrackModel>;
@@ -107,7 +107,12 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly frequency: BoundNumericValue;
     readonly fragments: BoundNumericValue;
     readonly reverse: ObservableValueImpl<boolean>;
-    readonly channelstrip: ChannelstripModel;
+    readonly gain: BoundNumericValue;
+    readonly volume: BoundNumericValue;
+    readonly panning: BoundNumericValue;
+    readonly auxSends: BoundNumericValue[];
+    readonly mute: ObservableValueImpl<boolean>;
+    readonly solo: ObservableValueImpl<boolean>;
     constructor(root: RotaryModel);
     observeValue<T extends Observable<any>>(property: T): T;
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
