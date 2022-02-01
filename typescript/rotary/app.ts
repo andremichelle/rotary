@@ -153,18 +153,30 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.select(newModel)
     }
 
-    deleteTrack(): void {
-        this.editor.subject.ifPresent(track => {
-            const beforeIndex = this.model.tracks.indexOf(track)
-            console.assert(-1 !== beforeIndex, "Could not find model")
-            this.model.removeTrack(track)
-            const numTracks = this.model.tracks.size()
-            if (0 < numTracks) {
-                this.select(this.model.tracks.get(Math.min(beforeIndex, numTracks - 1)))
-            } else {
-                this.editor.clear()
-            }
-        })
+    deleteTrack(trackModel: RotaryTrackModel): void {
+        const beforeIndex = this.model.tracks.indexOf(trackModel)
+        console.assert(-1 !== beforeIndex, "Could not find model")
+        this.model.removeTrack(trackModel)
+        const numTracks = this.model.tracks.size()
+        if (0 < numTracks) {
+            this.select(this.model.tracks.get(Math.min(beforeIndex, numTracks - 1)))
+        } else {
+            this.editor.clear()
+        }
+    }
+
+    moveTrackLeft(trackModel: RotaryTrackModel): void {
+        const beforeIndex = this.model.tracks.indexOf(trackModel)
+        if (0 < beforeIndex) {
+            this.model.tracks.move(beforeIndex, beforeIndex - 1)
+        }
+    }
+
+    moveTrackRight(trackModel: RotaryTrackModel): void {
+        const beforeIndex = this.model.tracks.indexOf(trackModel)
+        if (beforeIndex < this.model.tracks.size() - 1) {
+            this.model.tracks.move(beforeIndex, beforeIndex + 1)
+        }
     }
 
     select(track: RotaryTrackModel): void {
@@ -270,7 +282,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
                     .onTrigger(() => this.createNew(null, true)))
                 .addListItem(ListItem.default("Delete Track", "", false)
                     .onOpening(item => item.isSelectable(this.hasSelected()))
-                    .onTrigger(() => this.deleteTrack()))
+                    .onTrigger(() => this.editor.subject.ifPresent(trackModel => this.deleteTrack(trackModel))))
             )
             .addButton(element.querySelector("[data-menu='randomize']"), ListItem.root()
                 .addListItem(ListItem.default("All", "R", false)

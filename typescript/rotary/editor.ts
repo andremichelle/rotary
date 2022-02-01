@@ -5,7 +5,11 @@ import {InjectiveEditor} from "../dom/injective.js"
 import {Dom} from "../dom/common.js"
 
 export interface RotaryTrackEditorExecutor {
-    deleteTrack(): void
+    deleteTrack(trackModel: RotaryTrackModel): void
+
+    moveTrackLeft(trackModel: RotaryTrackModel): void
+
+    moveTrackRight(trackModel: RotaryTrackModel): void
 }
 
 export class RotaryTrackEditor implements Terminable {
@@ -66,7 +70,15 @@ export class RotaryTrackEditor implements Terminable {
 
         this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault()
-            this.subject.ifPresent(() => executor.deleteTrack())
+            this.subject.ifPresent((trackModel: RotaryTrackModel) => executor.deleteTrack(trackModel))
+        }))
+        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.move-left"), "click", event => {
+            event.preventDefault()
+            this.subject.ifPresent((trackModel: RotaryTrackModel) => executor.moveTrackLeft(trackModel))
+        }))
+        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.move-right"), "click", event => {
+            event.preventDefault()
+            this.subject.ifPresent((trackModel: RotaryTrackModel) => executor.moveTrackRight(trackModel))
         }))
     }
 

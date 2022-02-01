@@ -27,7 +27,15 @@ export class RotaryTrackEditor {
         this.auxSends = ArrayUtils.fill(RotaryModel.NUM_AUX, (index) => this.terminator.with(new NumericStepperInput(parentNode.querySelector(`fieldset[data-parameter='aux-${index}']`), PrintMapping.UnipolarPercent, NumericStepper.Hundredth)));
         this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault();
-            this.subject.ifPresent(() => executor.deleteTrack());
+            this.subject.ifPresent((trackModel) => executor.deleteTrack(trackModel));
+        }));
+        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.move-left"), "click", event => {
+            event.preventDefault();
+            this.subject.ifPresent((trackModel) => executor.moveTrackLeft(trackModel));
+        }));
+        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.move-right"), "click", event => {
+            event.preventDefault();
+            this.subject.ifPresent((trackModel) => executor.moveTrackRight(trackModel));
         }));
     }
     edit(model) {

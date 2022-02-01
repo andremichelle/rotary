@@ -356,6 +356,14 @@ export class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
         }
     }
 
+    move(fromIndex: number, toIndex: number) {
+        if (fromIndex === toIndex) return
+        console.assert(0 <= toIndex && toIndex < this.size())
+        console.assert(0 <= fromIndex && fromIndex < this.size())
+        this.items.splice(toIndex, 0, this.items.splice(fromIndex, 1)[0])
+        this.observable.notify(new CollectionEvent<T>(this, CollectionEventType.Order))
+    }
+
     reduce<U>(fn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U): U {
         let value: U = initialValue
         for (let i = 0; i < this.items.length; i++) {

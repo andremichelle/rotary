@@ -274,6 +274,14 @@ export class ObservableCollection {
             fn(this.items[i], i);
         }
     }
+    move(fromIndex, toIndex) {
+        if (fromIndex === toIndex)
+            return;
+        console.assert(0 <= toIndex && toIndex < this.size());
+        console.assert(0 <= fromIndex && fromIndex < this.size());
+        this.items.splice(toIndex, 0, this.items.splice(fromIndex, 1)[0]);
+        this.observable.notify(new CollectionEvent(this, CollectionEventType.Order));
+    }
     reduce(fn, initialValue) {
         let value = initialValue;
         for (let i = 0; i < this.items.length; i++) {
