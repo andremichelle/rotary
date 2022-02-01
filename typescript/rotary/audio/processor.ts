@@ -1,7 +1,7 @@
 import {Edge, QueryResult, RotaryModel} from "../model.js"
 import {MessageToProcessor} from "./messages-to-processor.js"
 import {TransportMessage, UpdateCursorMessage} from "./messages-to-worklet.js"
-import {RenderQuantum} from "../../dsp/common.js"
+import {RENDER_QUANTUM} from "../../dsp/common.js"
 import {ObservableValueImpl} from "../../lib/common.js"
 
 class Voice {
@@ -77,7 +77,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                     const output = outputs[voice.output]
                     const outL = output[0]
                     const outR = output[1]
-                    for (let frameIndex = 0; frameIndex < RenderQuantum; frameIndex++) {
+                    for (let frameIndex = 0; frameIndex < RENDER_QUANTUM; frameIndex++) {
                         if (0 <= voice.delayFrames) {
                             const position = voice.position++
                             const duration = voice.duration--
@@ -102,7 +102,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                     }
                 }
             }
-            this.updateCount += RenderQuantum
+            this.updateCount += RENDER_QUANTUM
             if (this.updateCount >= this.updateRate) {
                 this.updateCount -= this.updateRate
                 this.port.postMessage(new UpdateCursorMessage(this.phase / this.loopFrames()))
@@ -114,7 +114,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
             const tracks = this.model.tracks
             const loopFrames = this.loopFrames()
             const x0 = this.phase / loopFrames
-            const x1 = (this.phase + RenderQuantum) / loopFrames
+            const x1 = (this.phase + RENDER_QUANTUM) / loopFrames
             for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
                 const track = tracks.get(trackIndex)
                 const t0 = track.globalToLocal(x0)
@@ -132,7 +132,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                         } else {
                             frameIndex = ((track.localToGlobal(result.position) * loopFrames - this.phase)) | 0
                         }
-                        if (0 > frameIndex || frameIndex >= RenderQuantum) {
+                        if (0 > frameIndex || frameIndex >= RENDER_QUANTUM) {
                             throw new Error(`frameIndex(${frameIndex}), 
                             t0: ${t0}, t1: ${t1}, t0*: ${t0 + 1e-7 - 1e-7}, t1*: ${t1 + 1e-7 - 1e-7}, 
                             td: ${t1 - t0}, p: ${result.position}, 
@@ -144,7 +144,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                     }
                 }
             }
-            this.phase += RenderQuantum
+            this.phase += RENDER_QUANTUM
             this.phase %= loopFrames
         }
 

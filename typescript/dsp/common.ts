@@ -2,7 +2,8 @@
 
 const LogDb = Math.log(10.0) / 20.0
 
-export const RenderQuantum: number = 128 | 0
+export const RENDER_QUANTUM: number = 128 | 0
+export const VALUE_INTERPOLATION_TIME: number = 0.005
 export const midiToHz = (note: number = 60.0, baseFrequency: number = 440.0): number => baseFrequency * Math.pow(2.0, (note + 3.0) / 12.0 - 6.0)
 export const dbToGain = (db: number): number => Math.exp(db * LogDb)
 export const gainToDb = (gain: number): number => Math.log(gain) / LogDb

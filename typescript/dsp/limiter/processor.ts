@@ -1,4 +1,4 @@
-import {dbToGain, gainToDb, RenderQuantum} from "../common.js"
+import {dbToGain, gainToDb, RENDER_QUANTUM} from "../common.js"
 import {Message} from "./message.js"
 
 registerProcessor("limiter", class extends AudioWorkletProcessor {
@@ -60,7 +60,7 @@ registerProcessor("limiter", class extends AudioWorkletProcessor {
         const output1 = output[1]
         const buffer0 = buffer[0]
         const buffer1 = buffer[1]
-        for (let i = 0; i < RenderQuantum; i++) {
+        for (let i = 0; i < RENDER_QUANTUM; i++) {
             const inp0 = input0[i]
             const inp1 = input1[i]
             const peak = Math.max(Math.abs(inp0), Math.abs(inp1))

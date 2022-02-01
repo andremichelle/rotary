@@ -1,15 +1,15 @@
 // noinspection JSUnusedGlobalSymbols
 
-import {ArrayUtils, Option, Options, Terminable} from "../lib/common.js"
+import {ArrayUtils, Option, Options, Serializer, Terminable} from "../lib/common.js"
 import {Linear, Volume} from "../lib/mapping.js"
-import {dbToGain, gainToDb} from "./common.js"
+import {dbToGain, gainToDb, VALUE_INTERPOLATION_TIME} from "./common.js"
 
-const INTERPOLATION_TIME: number = 0.005
+
 export const interpolateParameterValueIfRunning = (context: BaseAudioContext, audioParam: AudioParam, value: number): void => {
     if (context.state === "running") {
         audioParam.value = value
     } else {
-        audioParam.linearRampToValueAtTime(value, context.currentTime + INTERPOLATION_TIME)
+        audioParam.linearRampToValueAtTime(value, context.currentTime + VALUE_INTERPOLATION_TIME)
     }
 }
 
@@ -197,7 +197,7 @@ export interface PulsarDelayFormat {
     feedbackHighpass: number
 }
 
-export class PulsarDelay implements Terminable {
+export class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
     private readonly preSplitter: ChannelSplitterNode
     private readonly preDelayL: DelayNode
     private readonly preDelayR: DelayNode
@@ -238,12 +238,16 @@ export class PulsarDelay implements Terminable {
         this.feedbackSplitter.connect(this.feedbackMerger, 0, 1)
         this.feedbackSplitter.connect(this.feedbackMerger, 1, 0)
 
-        this.setPreDelayTimeL(format === undefined ? 0.125 : format.preDelayTimeL)
-        this.setPreDelayTimeR(format === undefined ? 0.500 : format.preDelayTimeR)
-        this.setFeedbackDelayTime(format === undefined ? 0.250 : format.feedbackDelayTime)
-        this.setFeedbackGain(format === undefined ? 0.6 : format.feedbackGain)
-        this.setFeedbackLowpass(format === undefined ? 12000.0 : format.feedbackLowpass)
-        this.setFeedbackHighpass(format === undefined ? 480.0 : format.feedbackHighpass)
+        if (format === undefined) {
+            this.setPreDelayTimeL(0.125)
+            this.setPreDelayTimeR(0.500)
+            this.setFeedbackDelayTime(0.250)
+            this.setFeedbackGain(0.6)
+            this.setFeedbackLowpass(12000.0)
+            this.setFeedbackHighpass(480.0)
+        } else {
+            this.deserialize(format)
+        }
     }
 
     public connectToInput(output: AudioNode, outputIndex: number = 0 | 0): void {
@@ -262,24 +266,69 @@ export class PulsarDelay implements Terminable {
         this.setParameterValue(this.preDelayL.delayTime, seconds)
     }
 
+    public getPreDelayTimeL(): number {
+        return this.preDelayL.delayTime.value
+    }
+
     public setPreDelayTimeR(seconds: number): void {
         this.setParameterValue(this.preDelayR.delayTime, seconds)
+    }
+
+    public getPreDelayTimeR(): number {
+        return this.preDelayR.delayTime.value
     }
 
     public setFeedbackDelayTime(seconds: number): void {
         this.setParameterValue(this.feedbackDelay.delayTime, seconds)
     }
 
+    public getFeedbackDelayTime(): number {
+        return this.feedbackDelay.delayTime.value
+    }
+
     public setFeedbackGain(gain: number): void {
         this.setParameterValue(this.feedbackGain.gain, gain)
+    }
+
+    public getFeedbackGain(): number {
+        return this.feedbackGain.gain.value
     }
 
     public setFeedbackLowpass(frequency: number): void {
         this.setParameterValue(this.feedbackLowpass.frequency, frequency)
     }
 
+    public getFeedbackLowpass(): number {
+        return this.feedbackLowpass.frequency.value
+    }
+
     public setFeedbackHighpass(frequency: number): void {
         this.setParameterValue(this.feedbackHighpass.frequency, frequency)
+    }
+
+    public getFeedbackHighpass(): number {
+        return this.feedbackHighpass.frequency.value
+    }
+
+    deserialize(format: PulsarDelayFormat): PulsarDelay {
+        this.setPreDelayTimeL(format.preDelayTimeL)
+        this.setPreDelayTimeR(format.preDelayTimeR)
+        this.setFeedbackDelayTime(format.feedbackDelayTime)
+        this.setFeedbackGain(format.feedbackGain)
+        this.setFeedbackLowpass(format.feedbackLowpass)
+        this.setFeedbackHighpass(format.feedbackHighpass)
+        return this
+    }
+
+    serialize(): PulsarDelayFormat {
+        return {
+            preDelayTimeL: this.getPreDelayTimeL(),
+            preDelayTimeR: this.getPreDelayTimeR(),
+            feedbackDelayTime: this.getFeedbackDelayTime(),
+            feedbackGain: this.getFeedbackGain(),
+            feedbackLowpass: this.getFeedbackLowpass(),
+            feedbackHighpass: this.getFeedbackHighpass()
+        }
     }
 
     terminate(): void {

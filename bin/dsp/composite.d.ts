@@ -1,4 +1,4 @@
-import { Terminable } from "../lib/common.js";
+import { Serializer, Terminable } from "../lib/common.js";
 import { Linear } from "../lib/mapping.js";
 export declare const interpolateParameterValueIfRunning: (context: BaseAudioContext, audioParam: AudioParam, value: number) => void;
 export declare class Channelstrip implements Terminable {
@@ -55,7 +55,7 @@ export interface PulsarDelayFormat {
     feedbackLowpass: number;
     feedbackHighpass: number;
 }
-export declare class PulsarDelay implements Terminable {
+export declare class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
     private readonly context;
     private readonly preSplitter;
     private readonly preDelayL;
@@ -72,11 +72,19 @@ export declare class PulsarDelay implements Terminable {
     connectToInput(output: AudioNode, outputIndex?: number): void;
     connectToOutput(input: AudioNode, inputIndex?: number): void;
     setPreDelayTimeL(seconds: number): void;
+    getPreDelayTimeL(): number;
     setPreDelayTimeR(seconds: number): void;
+    getPreDelayTimeR(): number;
     setFeedbackDelayTime(seconds: number): void;
+    getFeedbackDelayTime(): number;
     setFeedbackGain(gain: number): void;
+    getFeedbackGain(): number;
     setFeedbackLowpass(frequency: number): void;
+    getFeedbackLowpass(): number;
     setFeedbackHighpass(frequency: number): void;
+    getFeedbackHighpass(): number;
+    deserialize(format: PulsarDelayFormat): PulsarDelay;
+    serialize(): PulsarDelayFormat;
     terminate(): void;
     private setParameterValue;
 }

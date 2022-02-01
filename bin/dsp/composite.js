@@ -1,13 +1,12 @@
 import { ArrayUtils, Options } from "../lib/common.js";
 import { Linear, Volume } from "../lib/mapping.js";
-import { dbToGain, gainToDb } from "./common.js";
-const INTERPOLATION_TIME = 0.005;
+import { dbToGain, gainToDb, VALUE_INTERPOLATION_TIME } from "./common.js";
 export const interpolateParameterValueIfRunning = (context, audioParam, value) => {
     if (context.state === "running") {
         audioParam.value = value;
     }
     else {
-        audioParam.linearRampToValueAtTime(value, context.currentTime + INTERPOLATION_TIME);
+        audioParam.linearRampToValueAtTime(value, context.currentTime + VALUE_INTERPOLATION_TIME);
     }
 };
 export class Channelstrip {
@@ -177,12 +176,17 @@ export class PulsarDelay {
             .connect(this.feedbackSplitter);
         this.feedbackSplitter.connect(this.feedbackMerger, 0, 1);
         this.feedbackSplitter.connect(this.feedbackMerger, 1, 0);
-        this.setPreDelayTimeL(format === undefined ? 0.125 : format.preDelayTimeL);
-        this.setPreDelayTimeR(format === undefined ? 0.500 : format.preDelayTimeR);
-        this.setFeedbackDelayTime(format === undefined ? 0.250 : format.feedbackDelayTime);
-        this.setFeedbackGain(format === undefined ? 0.6 : format.feedbackGain);
-        this.setFeedbackLowpass(format === undefined ? 12000.0 : format.feedbackLowpass);
-        this.setFeedbackHighpass(format === undefined ? 480.0 : format.feedbackHighpass);
+        if (format === undefined) {
+            this.setPreDelayTimeL(0.125);
+            this.setPreDelayTimeR(0.500);
+            this.setFeedbackDelayTime(0.250);
+            this.setFeedbackGain(0.6);
+            this.setFeedbackLowpass(12000.0);
+            this.setFeedbackHighpass(480.0);
+        }
+        else {
+            this.deserialize(format);
+        }
     }
     connectToInput(output, outputIndex = 0 | 0) {
         console.assert(this.incoming.isEmpty());
@@ -197,20 +201,57 @@ export class PulsarDelay {
     setPreDelayTimeL(seconds) {
         this.setParameterValue(this.preDelayL.delayTime, seconds);
     }
+    getPreDelayTimeL() {
+        return this.preDelayL.delayTime.value;
+    }
     setPreDelayTimeR(seconds) {
         this.setParameterValue(this.preDelayR.delayTime, seconds);
+    }
+    getPreDelayTimeR() {
+        return this.preDelayR.delayTime.value;
     }
     setFeedbackDelayTime(seconds) {
         this.setParameterValue(this.feedbackDelay.delayTime, seconds);
     }
+    getFeedbackDelayTime() {
+        return this.feedbackDelay.delayTime.value;
+    }
     setFeedbackGain(gain) {
         this.setParameterValue(this.feedbackGain.gain, gain);
+    }
+    getFeedbackGain() {
+        return this.feedbackGain.gain.value;
     }
     setFeedbackLowpass(frequency) {
         this.setParameterValue(this.feedbackLowpass.frequency, frequency);
     }
+    getFeedbackLowpass() {
+        return this.feedbackLowpass.frequency.value;
+    }
     setFeedbackHighpass(frequency) {
         this.setParameterValue(this.feedbackHighpass.frequency, frequency);
+    }
+    getFeedbackHighpass() {
+        return this.feedbackHighpass.frequency.value;
+    }
+    deserialize(format) {
+        this.setPreDelayTimeL(format.preDelayTimeL);
+        this.setPreDelayTimeR(format.preDelayTimeR);
+        this.setFeedbackDelayTime(format.feedbackDelayTime);
+        this.setFeedbackGain(format.feedbackGain);
+        this.setFeedbackLowpass(format.feedbackLowpass);
+        this.setFeedbackHighpass(format.feedbackHighpass);
+        return this;
+    }
+    serialize() {
+        return {
+            preDelayTimeL: this.getPreDelayTimeL(),
+            preDelayTimeR: this.getPreDelayTimeR(),
+            feedbackDelayTime: this.getFeedbackDelayTime(),
+            feedbackGain: this.getFeedbackGain(),
+            feedbackLowpass: this.getFeedbackLowpass(),
+            feedbackHighpass: this.getFeedbackHighpass()
+        };
     }
     terminate() {
         this.preDelayL.disconnect();
