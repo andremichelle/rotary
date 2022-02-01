@@ -21,7 +21,6 @@ export const initAudioScene = (): AudioScene => {
             updateFormat()
 
             const loadSample = (url: string): Promise<AudioBuffer> => {
-                console.log(`url: ${url}`)
                 return boot.registerProcess(readAudio(context, url))
             }
 

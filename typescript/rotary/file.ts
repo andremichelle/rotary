@@ -1,24 +1,42 @@
 import {RotaryModel} from "./model.js"
 import {RotaryRenderer} from "./render.js"
 import {ProgressIndicator} from "../dom/common.js"
-import {encodeWavFloat} from "../dsp/common.js"
-import {Audio} from "./audio.js"
 
 const pickerOpts = {types: [{description: "rotary", accept: {"json/*": [".json"]}}]}
 
 export const open = async (model: RotaryModel) => {
-    const fileHandles = await window.showOpenFilePicker(pickerOpts)
-    if (0 === fileHandles.length) {
+    let fileHandles: FileSystemFileHandle[]
+
+    try {
+        fileHandles = await window.showOpenFilePicker(pickerOpts)
+    } catch (e) {
+        return
+    }
+    if (undefined === fileHandles || 0 === fileHandles.length) {
         return
     }
     const fileStream = await fileHandles[0].getFile()
     const text: string = await fileStream.text()
     const format = await JSON.parse(text)
-    model.deserialize(format)
+    try {
+        new RotaryModel().deserialize(format)
+        model.deserialize(format)
+    } catch (e) {
+        console.warn(e)
+        alert("Could not load format. Check console for details.")
+    }
 }
 
 export const save = async (model: RotaryModel) => {
-    const fileHandle = await window.showSaveFilePicker(pickerOpts)
+    let fileHandle: FileSystemFileHandle
+    try {
+        fileHandle = await window.showSaveFilePicker(pickerOpts)
+    } catch (e) {
+        return
+    }
+    if (undefined === fileHandle) {
+        return
+    }
     const fileStream = await fileHandle.createWritable()
     await fileStream.write(new Blob([JSON.stringify(model.serialize())], {type: "application/json"}))
     await fileStream.close()

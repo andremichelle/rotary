@@ -7,21 +7,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { RotaryModel } from "./model.js";
 import { RotaryRenderer } from "./render.js";
 import { ProgressIndicator } from "../dom/common.js";
 const pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
 export const open = (model) => __awaiter(void 0, void 0, void 0, function* () {
-    const fileHandles = yield window.showOpenFilePicker(pickerOpts);
-    if (0 === fileHandles.length) {
+    let fileHandles;
+    try {
+        fileHandles = yield window.showOpenFilePicker(pickerOpts);
+    }
+    catch (e) {
+        return;
+    }
+    if (undefined === fileHandles || 0 === fileHandles.length) {
         return;
     }
     const fileStream = yield fileHandles[0].getFile();
     const text = yield fileStream.text();
     const format = yield JSON.parse(text);
-    model.deserialize(format);
+    try {
+        new RotaryModel().deserialize(format);
+        model.deserialize(format);
+    }
+    catch (e) {
+        console.warn(e);
+        alert("Could not load format. Check console for details.");
+    }
 });
 export const save = (model) => __awaiter(void 0, void 0, void 0, function* () {
-    const fileHandle = yield window.showSaveFilePicker(pickerOpts);
+    let fileHandle;
+    try {
+        fileHandle = yield window.showSaveFilePicker(pickerOpts);
+    }
+    catch (e) {
+        return;
+    }
+    if (undefined === fileHandle) {
+        return;
+    }
     const fileStream = yield fileHandle.createWritable();
     yield fileStream.write(new Blob([JSON.stringify(model.serialize())], { type: "application/json" }));
     yield fileStream.close();

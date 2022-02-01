@@ -40,12 +40,14 @@ export class Audio {
             });
             const preview = yield this.scene.build(this.context, meter, this.model, boot);
             const playButton = document.querySelector("[data-parameter='transport']");
-            preview.transport.addObserver(moving => playButton.checked = moving);
+            preview.transport.addObserver((moving) => __awaiter(this, void 0, void 0, function* () {
+                if (moving && this.context.state !== "running") {
+                    yield this.context.resume();
+                }
+                playButton.checked = moving;
+            }));
             playButton.onchange = () => __awaiter(this, void 0, void 0, function* () {
                 if (playButton.checked) {
-                    if (this.context.state !== "running") {
-                        yield this.context.resume();
-                    }
                     preview.transport.set(true);
                 }
                 else {

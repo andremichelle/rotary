@@ -175,14 +175,35 @@ export class RotaryApp {
         circle.setAttribute("stroke-dasharray", radiant.toFixed(2));
         circle.setAttribute("stroke-dashoffset", ((1.0 - phase) * radiant).toFixed(2));
     }
+    installShortcuts(audio, preview) {
+        window.addEventListener("keydown", (event) => __awaiter(this, void 0, void 0, function* () {
+            if (event.key === "r" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+                event.preventDefault();
+                this.randomizeAll();
+            }
+            else if (event.key === "o" && !event.shiftKey && !event.ctrlKey && event.metaKey) {
+                event.preventDefault();
+                yield open(this.model);
+            }
+            else if (event.key === "s" && !event.shiftKey && !event.ctrlKey && event.metaKey) {
+                event.preventDefault();
+                yield save(this.model);
+            }
+            else if (event.code === "Space" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+                event.preventDefault();
+                preview.transport.set(!preview.transport.get());
+            }
+        }));
+        return this;
+    }
     installApplicationMenu(audio) {
         const element = document.querySelector("nav#app-menu");
         MenuBar.install()
             .offset(0, 0)
             .addButton(element.querySelector("[data-menu='file']"), ListItem.root()
-            .addListItem(ListItem.default("Open...", "", false)
+            .addListItem(ListItem.default("Open...", "⌘O", false)
             .onTrigger(() => __awaiter(this, void 0, void 0, function* () { return open(this.model); })))
-            .addListItem(ListItem.default("Save...", "", false)
+            .addListItem(ListItem.default("Save...", "⌘S", false)
             .onTrigger(() => __awaiter(this, void 0, void 0, function* () { return save(this.model); })))
             .addListItem(ListItem.default("Export Video (experimental)", "", false)
             .onTrigger(() => renderVideo(this.model)))
@@ -204,8 +225,8 @@ export class RotaryApp {
             .onOpening(item => item.isSelectable(this.hasSelected()))
             .onTrigger(() => this.deleteTrack())))
             .addButton(element.querySelector("[data-menu='randomize']"), ListItem.root()
-            .addListItem(ListItem.default("All", "", false)
-            .onTrigger(() => this.model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))))
+            .addListItem(ListItem.default("All", "R", false)
+            .onTrigger(() => this.randomizeAll()))
             .addListItem(ListItem.default("Tracks", "", false)
             .onTrigger(() => this.model.randomizeTracks(new Mulberry32(Math.floor(0x987123F * Math.random())))))
             .addListItem(ListItem.default("Color", "", false)
@@ -222,6 +243,9 @@ export class RotaryApp {
             .addListItem(ListItem.default("Open TODOs in Github (protected)", "", false)
             .onTrigger(_ => window.open("https://github.com/andremichelle/rotary/wiki/TODOs"))));
         return this;
+    }
+    randomizeAll() {
+        return this.model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())));
     }
     createSelector(track) {
         const element = this.elements.template.cloneNode(true);

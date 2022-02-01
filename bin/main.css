@@ -287,6 +287,9 @@ nav.menu > div.container > div.default > span.label {
   padding: 0 20px 0 4px;
 }
 nav.menu > div.container > div.default > span.shortcut {
+  width: 20px;
+  opacity: 0.3;
+  text-align: left;
   pointer-events: none;
   margin: 0;
 }
@@ -561,8 +564,8 @@ body main > .editing > .preview .rotary {
   background-color: #040404;
   box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.4);
   height: min-content;
-  min-width: 500px;
-  min-height: 500px;
+  min-width: 400px;
+  min-height: 400px;
   display: flex;
 }
 body main > .editing > .preview .rotary canvas {

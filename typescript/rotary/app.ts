@@ -15,7 +15,7 @@ import {RotaryRenderer} from "./render.js"
 import {Mulberry32, Random, TAU} from "../lib/math.js"
 import {ListItem, MenuBar} from "../dom/menu.js"
 import {open, renderGIF, renderVideo, renderWebM, save} from "./file.js"
-import {Audio} from "./audio.js"
+import {Audio, AudioSceneController} from "./audio.js"
 
 const zoomLevel: Map<string, number> = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
@@ -224,14 +224,33 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         circle.setAttribute("stroke-dashoffset", ((1.0 - phase) * radiant).toFixed(2))
     }
 
+    installShortcuts(audio: Audio, preview: AudioSceneController): RotaryApp {
+        window.addEventListener("keydown", async (event: KeyboardEvent) => {
+            if (event.key === "r" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+                event.preventDefault()
+                this.randomizeAll()
+            } else if (event.key === "o" && !event.shiftKey && !event.ctrlKey && event.metaKey) {
+                event.preventDefault()
+                await open(this.model)
+            } else if (event.key === "s" && !event.shiftKey && !event.ctrlKey && event.metaKey) {
+                event.preventDefault()
+                await save(this.model)
+            } else if (event.code === "Space" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+                event.preventDefault()
+                preview.transport.set(!preview.transport.get())
+            }
+        })
+        return this
+    }
+
     installApplicationMenu(audio: Audio): RotaryApp {
         const element = document.querySelector("nav#app-menu")
         MenuBar.install()
             .offset(0, 0)
             .addButton(element.querySelector("[data-menu='file']"), ListItem.root()
-                .addListItem(ListItem.default("Open...", "", false)
+                .addListItem(ListItem.default("Open...", "⌘O", false)
                     .onTrigger(async () => open(this.model)))
-                .addListItem(ListItem.default("Save...", "", false)
+                .addListItem(ListItem.default("Save...", "⌘S", false)
                     .onTrigger(async () => save(this.model)))
                 .addListItem(ListItem.default("Export Video (experimental)", "", false)
                     .onTrigger(() => renderVideo(this.model)))
@@ -254,8 +273,8 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
                     .onTrigger(() => this.deleteTrack()))
             )
             .addButton(element.querySelector("[data-menu='randomize']"), ListItem.root()
-                .addListItem(ListItem.default("All", "", false)
-                    .onTrigger(() => this.model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))))
+                .addListItem(ListItem.default("All", "R", false)
+                    .onTrigger(() => this.randomizeAll()))
                 .addListItem(ListItem.default("Tracks", "", false)
                     .onTrigger(() => this.model.randomizeTracks(new Mulberry32(Math.floor(0x987123F * Math.random())))))
                 .addListItem(ListItem.default("Color", "", false)
@@ -273,6 +292,10 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
                 .addListItem(ListItem.default("Open TODOs in Github (protected)", "", false)
                     .onTrigger(_ => window.open("https://github.com/andremichelle/rotary/wiki/TODOs"))))
         return this
+    }
+
+    private randomizeAll() {
+        return this.model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))
     }
 
     private createSelector(track: RotaryTrackModel): void {

@@ -52,12 +52,14 @@ export class Audio {
         })
         const preview: AudioSceneController = await this.scene.build(this.context, meter, this.model, boot)
         const playButton = document.querySelector("[data-parameter='transport']") as HTMLInputElement
-        preview.transport.addObserver(moving => playButton.checked = moving)
+        preview.transport.addObserver(async moving => {
+            if (moving && this.context.state !== "running") {
+                await this.context.resume()
+            }
+            playButton.checked = moving
+        })
         playButton.onchange = async () => {
             if (playButton.checked) {
-                if (this.context.state !== "running") {
-                    await this.context.resume()
-                }
                 preview.transport.set(true)
             } else {
                 preview.transport.set(false)

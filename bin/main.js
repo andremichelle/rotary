@@ -45,7 +45,9 @@ window.onunhandledrejection = (event) => {
     const model = new RotaryModel().randomize(random);
     const audio = yield Audio.config(initAudioScene(), model);
     const preview = yield audio.initPreview();
-    const app = RotaryApp.create(model).installApplicationMenu(audio);
+    const app = RotaryApp.create(model)
+        .installShortcuts(audio, preview)
+        .installApplicationMenu(audio);
     const exec = () => {
         const progress = preview.phase();
         app.render(progress);

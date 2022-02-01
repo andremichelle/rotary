@@ -24,7 +24,6 @@ export const initAudioScene = () => {
                 terminator.with(model.addObserver(updateFormat));
                 updateFormat();
                 const loadSample = (url) => {
-                    console.log(`url: ${url}`);
                     return boot.registerProcess(readAudio(context, url));
                 };
                 let index = 0;
