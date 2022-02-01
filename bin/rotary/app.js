@@ -29,7 +29,7 @@ export class RotaryApp {
         this.liveContext = this.elements.canvas.getContext("2d", { alpha: true });
         this.rawCanvas = document.createElement("canvas");
         this.rawContext = this.rawCanvas.getContext("2d", { alpha: true });
-        this.zoom = new ObservableValueImpl(0.75);
+        this.zoom = new ObservableValueImpl(0.5);
         this.elements.template.remove();
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin);
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='phase-offset']"), PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.phaseOffset);

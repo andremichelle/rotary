@@ -523,11 +523,11 @@ body main > .editing > .v-split {
 }
 body main > .editing > .v-split > .structure {
   display: flex;
-  padding: 16px 0;
+  padding: 8px 0 16px 0;
   flex-direction: row;
 }
 body main > .editing > .v-split > .track-editor {
-  margin: 16px 0 0 0;
+  margin: 8px 0 0 0;
   display: grid;
   grid-template-columns: min-content min-content min-content;
   column-gap: 16px;
@@ -561,8 +561,8 @@ body main > .editing > .preview .rotary {
   background-color: #040404;
   box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.4);
   height: min-content;
-  min-width: 480px;
-  min-height: 480px;
+  min-width: 500px;
+  min-height: 500px;
   display: flex;
 }
 body main > .editing > .preview .rotary canvas {

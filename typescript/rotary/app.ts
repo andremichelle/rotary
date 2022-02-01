@@ -55,7 +55,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     private readonly rawCanvas: HTMLCanvasElement = document.createElement("canvas")
     private readonly rawContext: CanvasRenderingContext2D = this.rawCanvas.getContext("2d", {alpha: true})
 
-    readonly zoom = new ObservableValueImpl<number>(0.75)
+    readonly zoom = new ObservableValueImpl<number>(0.5)
 
     private constructor(private readonly model: RotaryModel,
                         private readonly elements: DomElements) {
