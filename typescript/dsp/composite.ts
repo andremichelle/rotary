@@ -1,8 +1,8 @@
 // noinspection JSUnusedGlobalSymbols
 
-import {ArrayUtils, Terminable} from "../lib/common.js"
+import {ArrayUtils, Option, Options, Terminable} from "../lib/common.js"
 import {Linear, Volume} from "../lib/mapping.js"
-import {dbToGain, gainToDb} from "../dsp/common.js"
+import {dbToGain, gainToDb} from "./common.js"
 
 export class Channelstrip implements Terminable {
     static GAIN_MAPPING = new Linear(-18.0, +18.0)
@@ -11,6 +11,8 @@ export class Channelstrip implements Terminable {
     private readonly volumeNode: GainNode
     private readonly panningNode: StereoPannerNode
     private readonly auxSendNodes: GainNode[]
+
+    private connected: Option<[AudioNode, number]> = Options.None
 
     solo: boolean = false
 
@@ -30,8 +32,10 @@ export class Channelstrip implements Terminable {
         this.inputNode.connect(this.panningNode).connect(this.volumeNode).connect(mixer.outputNode)
     }
 
-    public input(): AudioNode {
-        return this.inputNode
+    public connectToInput(output: AudioNode, outputIndex: number): void {
+        console.assert(this.connected.isEmpty())
+        output.connect(this.inputNode, outputIndex, 0)
+        this.connected = Options.valueOf([output, outputIndex])
     }
 
     public setInputDecibel(db: number): void {
@@ -96,8 +100,8 @@ export class Channelstrip implements Terminable {
     }
 
     terminate(): void {
-        // TODO https://developer.mozilla.org/en-US/docs/Web/API/AudioNode/disconnect
-        this.inputNode.disconnect()
+        this.connected.ifPresent(pair => pair[0].disconnect(this.inputNode, pair[1]))
+        this.connected = Options.None
         this.volumeNode.disconnect()
         this.panningNode.disconnect()
         this.auxSendNodes.forEach(gainNode => gainNode.disconnect())

@@ -2,6 +2,7 @@ import {ArrayUtils, NumericStepper, Option, Options, PrintMapping, Terminable, T
 import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, RotaryModel, RotaryTrackModel} from "./model.js"
 import {InjectiveEditor} from "../dom/injective.js"
+import {Dom} from "../dom/common.js"
 
 export interface RotaryTrackEditorExecutor {
     deleteTrack(): void
@@ -63,10 +64,10 @@ export class RotaryTrackEditor implements Terminable {
             this.terminator.with(new NumericStepperInput(parentNode.querySelector(`fieldset[data-parameter='aux-${index}']`),
                 PrintMapping.UnipolarPercent, NumericStepper.Hundredth)))
 
-        /*this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
+        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault()
             this.subject.ifPresent(() => executor.deleteTrack())
-        }))*/ // TODO
+        }))
     }
 
     edit(model: RotaryTrackModel): void {

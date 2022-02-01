@@ -3,8 +3,8 @@ import {AudioScene, AudioSceneController} from "./audio.js"
 import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
-import {Mixer} from "./mixer.js"
 import {pulsarDelay} from "../lib/dsp.js"
+import {Mixer} from "../dsp/composite.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -49,7 +49,7 @@ export const initAudioScene = (): AudioScene => {
             const addTrack = (track: RotaryTrackModel, index: number): Terminable => {
                 const terminator: Terminator = new Terminator()
                 const channelstrip = mixer.createChannelstrip()
-                rotaryNode.connect(channelstrip.input(), index, 0)
+                channelstrip.connectToInput(rotaryNode, index)
                 terminator.with(track.mute.addObserver(mute => channelstrip.setMute(mute), true))
                 terminator.with(track.solo.addObserver(solo => channelstrip.setSolo(solo), true))
                 terminator.with(track.volume.addObserver(volume => channelstrip.setVolume(volume), true))
@@ -82,9 +82,7 @@ export const initAudioScene = (): AudioScene => {
             await boot.waitForCompletion()
             return Promise.resolve({
                 transport: rotaryNode.transport,
-                rewind: async () => {
-                    rotaryNode.rewind()
-                },
+                rewind: () => rotaryNode.rewind(),
                 phase: () => rotaryNode.phase(),
                 latency: () => limiterWorklet.lookahead,
                 terminate: () => terminator.terminate()

@@ -513,6 +513,11 @@ body main > .editing > .v-split {
   padding: 16px;
   background-color: #1A1A1A;
 }
+body main > .editing > .v-split > .structure {
+  display: flex;
+  padding: 16px 0;
+  flex-direction: row;
+}
 body main > .editing > .v-split > .track-editor {
   margin: 16px 0 0 0;
   display: grid;

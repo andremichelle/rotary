@@ -20,7 +20,7 @@ import {Linear, LinearInteger} from "../lib/mapping.js"
 import {Colors} from "../lib/colors.js"
 import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
 import {RenderConfiguration} from "./render.js"
-import {Channelstrip} from "./mixer.js"
+import {Channelstrip} from "../dsp/composite.js"
 
 export declare interface RotaryExportFormat {
     fps: number
@@ -52,6 +52,13 @@ export declare interface RotaryTrackFormat {
     fragments: number
     frequency: number
     reverse: boolean
+
+    gain: number
+    volume: number
+    panning: number
+    auxSends: number[]
+    mute: boolean
+    solo: boolean
 }
 
 export class RotaryExportSetting implements Terminable, Serializer<RotaryExportFormat> {
@@ -254,7 +261,6 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly fragments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
     readonly reverse = this.observeValue(new ObservableValueImpl<boolean>(false))
 
-    // TODO Put into format
     readonly gain = new BoundNumericValue(Channelstrip.GAIN_MAPPING, 0.5)
     readonly volume = new BoundNumericValue(Linear.Identity, 1.0)
     readonly panning = new BoundNumericValue(Linear.Bipolar, 0.0)
@@ -339,6 +345,9 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.fragments.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.reverse.set(random.nextBoolean())
+
+        this.panning.set(random.nextDouble(-1.0, 1.0))
+        this.auxSends.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0)
         return this
     }
 
@@ -362,7 +371,14 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             bend: this.bend.get().serialize(),
             frequency: this.frequency.get(),
             fragments: this.fragments.get(),
-            reverse: this.reverse.get()
+            reverse: this.reverse.get(),
+
+            gain: this.gain.get(),
+            volume: this.volume.get(),
+            panning: this.panning.get(),
+            auxSends: this.auxSends.map(value => value.get()),
+            mute: this.mute.get(),
+            solo: this.solo.get(),
         }
     }
 
@@ -382,6 +398,13 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.frequency.set(format.frequency)
         this.fragments.set(format.fragments)
         this.reverse.set(format.reverse)
+
+        this.gain.set(format.gain)
+        this.volume.set(format.volume)
+        this.panning.set(format.panning)
+        this.auxSends.forEach((value: BoundNumericValue, index: number) => value.set(format.auxSends[index]))
+        this.mute.set(format.mute)
+        this.solo.set(format.solo)
         return this
     }
 

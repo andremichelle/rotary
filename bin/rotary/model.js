@@ -3,7 +3,7 @@ import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { Colors } from "../lib/colors.js";
 import { CShapeInjective, IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
-import { Channelstrip } from "./mixer.js";
+import { Channelstrip } from "../dsp/composite.js";
 export class RotaryExportSetting {
     constructor() {
         this.terminator = new Terminator();
@@ -257,6 +257,8 @@ export class RotaryTrackModel {
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)));
         this.fragments.set(Math.floor(random.nextDouble(1.0, 3.0)));
         this.reverse.set(random.nextBoolean());
+        this.panning.set(random.nextDouble(-1.0, 1.0));
+        this.auxSends.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0);
         return this;
     }
     terminate() {
@@ -278,7 +280,13 @@ export class RotaryTrackModel {
             bend: this.bend.get().serialize(),
             frequency: this.frequency.get(),
             fragments: this.fragments.get(),
-            reverse: this.reverse.get()
+            reverse: this.reverse.get(),
+            gain: this.gain.get(),
+            volume: this.volume.get(),
+            panning: this.panning.get(),
+            auxSends: this.auxSends.map(value => value.get()),
+            mute: this.mute.get(),
+            solo: this.solo.get(),
         };
     }
     deserialize(format) {
@@ -297,6 +305,12 @@ export class RotaryTrackModel {
         this.frequency.set(format.frequency);
         this.fragments.set(format.fragments);
         this.reverse.set(format.reverse);
+        this.gain.set(format.gain);
+        this.volume.set(format.volume);
+        this.panning.set(format.panning);
+        this.auxSends.forEach((value, index) => value.set(format.auxSends[index]));
+        this.mute.set(format.mute);
+        this.solo.set(format.solo);
         return this;
     }
     globalToLocal(x) {

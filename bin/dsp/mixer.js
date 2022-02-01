@@ -1,6 +1,6 @@
 import { ArrayUtils, Options } from "../lib/common.js";
 import { Linear, Volume } from "../lib/mapping.js";
-import { dbToGain, gainToDb } from "../dsp/common.js";
+import { dbToGain, gainToDb } from "./common.js";
 export class Channelstrip {
     constructor(mixer, numAux = 0) {
         this.mixer = mixer;

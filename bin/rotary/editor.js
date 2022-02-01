@@ -2,6 +2,7 @@ import { ArrayUtils, NumericStepper, Options, PrintMapping, Terminator } from ".
 import { Checkbox, NumericInput, NumericStepperInput, SelectInput } from "../dom/inputs.js";
 import { Fills, RotaryModel } from "./model.js";
 import { InjectiveEditor } from "../dom/injective.js";
+import { Dom } from "../dom/common.js";
 export class RotaryTrackEditor {
     constructor(executor, parentNode) {
         this.executor = executor;
@@ -24,6 +25,10 @@ export class RotaryTrackEditor {
         this.volume = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='volume']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
         this.panning = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='panning']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
         this.auxSends = ArrayUtils.fill(RotaryModel.NUM_AUX, (index) => this.terminator.with(new NumericStepperInput(parentNode.querySelector(`fieldset[data-parameter='aux-${index}']`), PrintMapping.UnipolarPercent, NumericStepper.Hundredth)));
+        this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
+            event.preventDefault();
+            this.subject.ifPresent(() => executor.deleteTrack());
+        }));
     }
     edit(model) {
         this.segments.with(model.segments);

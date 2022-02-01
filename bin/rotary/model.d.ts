@@ -30,6 +30,12 @@ export declare interface RotaryTrackFormat {
     fragments: number;
     frequency: number;
     reverse: boolean;
+    gain: number;
+    volume: number;
+    panning: number;
+    auxSends: number[];
+    mute: boolean;
+    solo: boolean;
 }
 export declare class RotaryExportSetting implements Terminable, Serializer<RotaryExportFormat> {
     private readonly terminator;
