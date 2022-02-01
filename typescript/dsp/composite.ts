@@ -4,6 +4,15 @@ import {ArrayUtils, Option, Options, Terminable} from "../lib/common.js"
 import {Linear, Volume} from "../lib/mapping.js"
 import {dbToGain, gainToDb} from "./common.js"
 
+const INTERPOLATION_TIME: number = 0.005
+export const interpolateParameterValueIfRunning = (context: BaseAudioContext, audioParam: AudioParam, value: number): void => {
+    if (context.state === "running") {
+        audioParam.value = value
+    } else {
+        audioParam.linearRampToValueAtTime(value, context.currentTime + INTERPOLATION_TIME)
+    }
+}
+
 export class Channelstrip implements Terminable {
     static GAIN_MAPPING = new Linear(-18.0, +18.0)
 
@@ -134,13 +143,13 @@ export class Mixer {
         })
     }
 
-    createChannelstrip(): Channelstrip {
+    public createChannelstrip(): Channelstrip {
         const channelstrip = new Channelstrip(this, this.numAux)
         this.channelstrips.push(channelstrip)
         return channelstrip
     }
 
-    removeChannelstrip(channelstrip: Channelstrip): void {
+    public removeChannelstrip(channelstrip: Channelstrip): void {
         const index = this.channelstrips.indexOf(channelstrip)
         if (-1 === index) {
             throw new Error("Unknown Channelstrip")
@@ -149,15 +158,15 @@ export class Mixer {
         channelstrip.terminate()
     }
 
-    masterOutput(): AudioNode {
+    public masterOutput(): AudioNode {
         return this.outputNode
     }
 
-    auxSend(index: number): AudioNode {
+    public auxSend(index: number): AudioNode {
         return this.auxSendNodes[index]
     }
 
-    auxReturn(index: number): AudioNode {
+    public auxReturn(index: number): AudioNode {
         return this.auxReturnNodes[index]
     }
 
@@ -175,10 +184,121 @@ export class Mixer {
     }
 
     setParameterValue(audioParam: AudioParam, value: number) {
-        if (this.context.state === "running") {
-            audioParam.value = value
-        } else {
-            audioParam.linearRampToValueAtTime(value, this.context.currentTime + 0.005)
-        }
+        interpolateParameterValueIfRunning(this.context, audioParam, value)
+    }
+}
+
+export interface PulsarDelayFormat {
+    preDelayTimeL: number
+    preDelayTimeR: number
+    feedbackDelayTime: number
+    feedbackGain: number
+    feedbackLowpass: number
+    feedbackHighpass: number
+}
+
+export class PulsarDelay implements Terminable {
+    private readonly preSplitter: ChannelSplitterNode
+    private readonly preDelayL: DelayNode
+    private readonly preDelayR: DelayNode
+    private readonly feedbackMerger: ChannelMergerNode
+    private readonly feedbackLowpass: BiquadFilterNode
+    private readonly feedbackHighpass: BiquadFilterNode
+    private readonly feedbackDelay: DelayNode
+    private readonly feedbackGain: GainNode
+    private readonly feedbackSplitter: ChannelSplitterNode
+
+    private incoming: Option<[AudioNode, number]> = Options.None
+    private outgoing: Option<[AudioNode, number]> = Options.None
+
+    constructor(private readonly context: BaseAudioContext, format?: PulsarDelayFormat) {
+        this.preSplitter = context.createChannelSplitter(2)
+        this.preDelayL = context.createDelay()
+        this.preDelayR = context.createDelay()
+        this.preSplitter.connect(this.preDelayL, 0, 0)
+        this.preSplitter.connect(this.preDelayR, 1, 0)
+        this.feedbackMerger = context.createChannelMerger(2)
+        this.preDelayL.connect(this.feedbackMerger, 0, 1)
+        this.preDelayR.connect(this.feedbackMerger, 0, 0)
+        this.feedbackLowpass = context.createBiquadFilter()
+        this.feedbackLowpass.type = "lowpass"
+        this.feedbackLowpass.Q.value = -3.0
+        this.feedbackHighpass = context.createBiquadFilter()
+        this.feedbackHighpass.type = "highpass"
+        this.feedbackHighpass.Q.value = -3.0
+        this.feedbackDelay = context.createDelay()
+        this.feedbackGain = context.createGain()
+        this.feedbackSplitter = context.createChannelSplitter(2)
+        this.feedbackMerger
+            .connect(this.feedbackLowpass)
+            .connect(this.feedbackHighpass)
+            .connect(this.feedbackGain)
+            .connect(this.feedbackDelay)
+            .connect(this.feedbackSplitter)
+        this.feedbackSplitter.connect(this.feedbackMerger, 0, 1)
+        this.feedbackSplitter.connect(this.feedbackMerger, 1, 0)
+
+        this.setPreDelayTimeL(format === undefined ? 0.125 : format.preDelayTimeL)
+        this.setPreDelayTimeR(format === undefined ? 0.500 : format.preDelayTimeR)
+        this.setFeedbackDelayTime(format === undefined ? 0.250 : format.feedbackDelayTime)
+        this.setFeedbackGain(format === undefined ? 0.6 : format.feedbackGain)
+        this.setFeedbackLowpass(format === undefined ? 12000.0 : format.feedbackLowpass)
+        this.setFeedbackHighpass(format === undefined ? 480.0 : format.feedbackHighpass)
+    }
+
+    public connectToInput(output: AudioNode, outputIndex: number = 0 | 0): void {
+        console.assert(this.incoming.isEmpty())
+        output.connect(this.preSplitter, outputIndex, 0)
+        this.incoming = Options.valueOf([output, outputIndex])
+    }
+
+    public connectToOutput(input: AudioNode, inputIndex: number = 0 | 0): void {
+        console.assert(this.outgoing.isEmpty())
+        this.feedbackGain.connect(input, 0, inputIndex)
+        this.outgoing = Options.valueOf([input, inputIndex])
+    }
+
+    public setPreDelayTimeL(seconds: number): void {
+        this.setParameterValue(this.preDelayL.delayTime, seconds)
+    }
+
+    public setPreDelayTimeR(seconds: number): void {
+        this.setParameterValue(this.preDelayR.delayTime, seconds)
+    }
+
+    public setFeedbackDelayTime(seconds: number): void {
+        this.setParameterValue(this.feedbackDelay.delayTime, seconds)
+    }
+
+    public setFeedbackGain(gain: number): void {
+        this.setParameterValue(this.feedbackGain.gain, gain)
+    }
+
+    public setFeedbackLowpass(frequency: number): void {
+        this.setParameterValue(this.feedbackLowpass.frequency, frequency)
+    }
+
+    public setFeedbackHighpass(frequency: number): void {
+        this.setParameterValue(this.feedbackHighpass.frequency, frequency)
+    }
+
+    terminate(): void {
+        this.preDelayL.disconnect()
+        this.preDelayR.disconnect()
+        this.preSplitter.disconnect()
+        this.feedbackMerger.disconnect()
+        this.feedbackLowpass.disconnect()
+        this.feedbackHighpass.disconnect()
+        this.feedbackGain.disconnect()
+        this.feedbackDelay.disconnect()
+        this.feedbackSplitter.disconnect(this.feedbackMerger)
+        this.incoming.ifPresent(pair => pair[0].disconnect(this.preSplitter, pair[1], 0))
+        this.outgoing.ifPresent(pair => this.feedbackGain.disconnect(pair[0], 0, pair[1]))
+        this.incoming = Options.None
+        this.outgoing = Options.None
+    }
+
+    private setParameterValue(audioParam: AudioParam, value: number) {
+        interpolateParameterValueIfRunning(this.context, audioParam, value)
     }
 }

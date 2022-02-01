@@ -3,8 +3,7 @@ import {AudioScene, AudioSceneController} from "./audio.js"
 import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
-import {pulsarDelay} from "../lib/dsp.js"
-import {Mixer} from "../dsp/composite.js"
+import {Mixer, PulsarDelay} from "../dsp/composite.js"
 import {WorkletModules} from "../dsp/waa.js"
 
 export const initAudioScene = (): AudioScene => {
@@ -76,7 +75,9 @@ export const initAudioScene = (): AudioScene => {
             convolverNode.buffer = await loadSample("impulse/LargeWideEchoHall.ogg")
             mixer.auxSend(0).connect(convolverNode).connect(mixer.auxReturn(0))
 
-            pulsarDelay(context, mixer.auxSend(1), mixer.auxReturn(1), 0.250, 0.500, 0.250, 0.94, 12000, 200)
+            const pulsarDelay = new PulsarDelay(context)
+            pulsarDelay.connectToInput(mixer.auxSend(1), 0)
+            pulsarDelay.connectToOutput(mixer.auxReturn(1), 0)
 
             mixer.masterOutput().connect(limiterWorklet)
             limiterWorklet.connect(output)

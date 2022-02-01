@@ -1,6 +1,15 @@
 import { ArrayUtils, Options } from "../lib/common.js";
 import { Linear, Volume } from "../lib/mapping.js";
 import { dbToGain, gainToDb } from "./common.js";
+const INTERPOLATION_TIME = 0.005;
+export const interpolateParameterValueIfRunning = (context, audioParam, value) => {
+    if (context.state === "running") {
+        audioParam.value = value;
+    }
+    else {
+        audioParam.linearRampToValueAtTime(value, context.currentTime + INTERPOLATION_TIME);
+    }
+};
 export class Channelstrip {
     constructor(mixer, numAux = 0) {
         this.mixer = mixer;
@@ -135,12 +144,91 @@ export class Mixer {
         return this.channelstrips.some(strip => strip.solo, this.channelstrips);
     }
     setParameterValue(audioParam, value) {
-        if (this.context.state === "running") {
-            audioParam.value = value;
-        }
-        else {
-            audioParam.linearRampToValueAtTime(value, this.context.currentTime + 0.005);
-        }
+        interpolateParameterValueIfRunning(this.context, audioParam, value);
+    }
+}
+export class PulsarDelay {
+    constructor(context, format) {
+        this.context = context;
+        this.incoming = Options.None;
+        this.outgoing = Options.None;
+        this.preSplitter = context.createChannelSplitter(2);
+        this.preDelayL = context.createDelay();
+        this.preDelayR = context.createDelay();
+        this.preSplitter.connect(this.preDelayL, 0, 0);
+        this.preSplitter.connect(this.preDelayR, 1, 0);
+        this.feedbackMerger = context.createChannelMerger(2);
+        this.preDelayL.connect(this.feedbackMerger, 0, 1);
+        this.preDelayR.connect(this.feedbackMerger, 0, 0);
+        this.feedbackLowpass = context.createBiquadFilter();
+        this.feedbackLowpass.type = "lowpass";
+        this.feedbackLowpass.Q.value = -3.0;
+        this.feedbackHighpass = context.createBiquadFilter();
+        this.feedbackHighpass.type = "highpass";
+        this.feedbackHighpass.Q.value = -3.0;
+        this.feedbackDelay = context.createDelay();
+        this.feedbackGain = context.createGain();
+        this.feedbackSplitter = context.createChannelSplitter(2);
+        this.feedbackMerger
+            .connect(this.feedbackLowpass)
+            .connect(this.feedbackHighpass)
+            .connect(this.feedbackGain)
+            .connect(this.feedbackDelay)
+            .connect(this.feedbackSplitter);
+        this.feedbackSplitter.connect(this.feedbackMerger, 0, 1);
+        this.feedbackSplitter.connect(this.feedbackMerger, 1, 0);
+        this.setPreDelayTimeL(format === undefined ? 0.125 : format.preDelayTimeL);
+        this.setPreDelayTimeR(format === undefined ? 0.500 : format.preDelayTimeR);
+        this.setFeedbackDelayTime(format === undefined ? 0.250 : format.feedbackDelayTime);
+        this.setFeedbackGain(format === undefined ? 0.6 : format.feedbackGain);
+        this.setFeedbackLowpass(format === undefined ? 12000.0 : format.feedbackLowpass);
+        this.setFeedbackHighpass(format === undefined ? 480.0 : format.feedbackHighpass);
+    }
+    connectToInput(output, outputIndex = 0 | 0) {
+        console.assert(this.incoming.isEmpty());
+        output.connect(this.preSplitter, outputIndex, 0);
+        this.incoming = Options.valueOf([output, outputIndex]);
+    }
+    connectToOutput(input, inputIndex = 0 | 0) {
+        console.assert(this.outgoing.isEmpty());
+        this.feedbackGain.connect(input, 0, inputIndex);
+        this.outgoing = Options.valueOf([input, inputIndex]);
+    }
+    setPreDelayTimeL(seconds) {
+        this.setParameterValue(this.preDelayL.delayTime, seconds);
+    }
+    setPreDelayTimeR(seconds) {
+        this.setParameterValue(this.preDelayR.delayTime, seconds);
+    }
+    setFeedbackDelayTime(seconds) {
+        this.setParameterValue(this.feedbackDelay.delayTime, seconds);
+    }
+    setFeedbackGain(gain) {
+        this.setParameterValue(this.feedbackGain.gain, gain);
+    }
+    setFeedbackLowpass(frequency) {
+        this.setParameterValue(this.feedbackLowpass.frequency, frequency);
+    }
+    setFeedbackHighpass(frequency) {
+        this.setParameterValue(this.feedbackHighpass.frequency, frequency);
+    }
+    terminate() {
+        this.preDelayL.disconnect();
+        this.preDelayR.disconnect();
+        this.preSplitter.disconnect();
+        this.feedbackMerger.disconnect();
+        this.feedbackLowpass.disconnect();
+        this.feedbackHighpass.disconnect();
+        this.feedbackGain.disconnect();
+        this.feedbackDelay.disconnect();
+        this.feedbackSplitter.disconnect(this.feedbackMerger);
+        this.incoming.ifPresent(pair => pair[0].disconnect(this.preSplitter, pair[1], 0));
+        this.outgoing.ifPresent(pair => this.feedbackGain.disconnect(pair[0], 0, pair[1]));
+        this.incoming = Options.None;
+        this.outgoing = Options.None;
+    }
+    setParameterValue(audioParam, value) {
+        interpolateParameterValueIfRunning(this.context, audioParam, value);
     }
 }
 //# sourceMappingURL=composite.js.map

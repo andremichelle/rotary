@@ -1,7 +1,6 @@
 import { RotaryModel } from "../model.js";
 import { ObservableValueImpl } from "../../lib/common.js";
 export declare class RotaryWorkletNode extends AudioWorkletNode {
-    static build(context: BaseAudioContext): Promise<RotaryWorkletNode>;
     readonly transport: ObservableValueImpl<boolean>;
     private $phase;
     constructor(context: BaseAudioContext);
