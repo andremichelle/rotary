@@ -44,6 +44,7 @@ export class SelectInput {
         this.value = value;
         this.value.addObserver(this.observer);
         this.update();
+        return this;
     }
     clear() {
         this.with(ObservableValueVoid.Instance);

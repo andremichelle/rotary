@@ -30,7 +30,7 @@ export class RotaryExportSetting {
 export class Aux {
     constructor() {
         this.sendPulsarDelay = new PulsarDelaySettings();
-        this.sendConvolver = new ObservableValueImpl();
+        this.sendConvolver = new ObservableValueImpl("impulse/DeepSpace.ogg");
     }
 }
 export class RotaryModel {

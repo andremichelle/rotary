@@ -8,7 +8,7 @@ import {
     Terminator
 } from "../lib/common.js"
 import {RotaryModel, RotaryTrackModel} from "./model.js"
-import {Checkbox, NumericStepperInput} from "../dom/inputs.js"
+import {Checkbox, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor.js"
 import {Dom} from "../dom/common.js"
 import {RotaryRenderer} from "./render.js"
@@ -87,6 +87,17 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             PrintMapping.integer("Hz"), new NumericStepper(1))).with(model.aux.sendPulsarDelay.feedbackLowpass)
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='pulsar-delay-feedback-highpass']"),
             PrintMapping.integer("Hz"), new NumericStepper(1))).with(model.aux.sendPulsarDelay.feedbackHighpass)
+        this.terminator.with(new SelectInput<string>(document.querySelector("select[data-parameter='convolver-impulse']"),
+            new Map<string, string>([
+                ["Church", "impulse/Church.ogg"],
+                ["Deep Space", "impulse/DeepSpace.ogg"],
+                ["Hangar", "impulse/Hangar.ogg"],
+                ["Large Echo Hall", "impulse/LargeWideEchoHall.ogg"],
+                ["Plate Small", "impulse/PlateSmall.ogg"],
+                ["Plate Medium", "impulse/PlateMedium.ogg"],
+                ["Plate Large", "impulse/PlateLarge.ogg"],
+                ["Prime Long", "impulse/PrimeLong.ogg"],
+            ])).with(model.aux.sendConvolver))
 
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
             switch (event.type) {

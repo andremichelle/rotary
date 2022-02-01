@@ -21,6 +21,7 @@ export const initAudioScene = (): AudioScene => {
             updateFormat()
 
             const loadSample = (url: string): Promise<AudioBuffer> => {
+                console.log(`url: ${url}`)
                 return boot.registerProcess(readAudio(context, url))
             }
 
@@ -79,7 +80,7 @@ export const initAudioScene = (): AudioScene => {
 
             // AUX 1
             const convolverNode = context.createConvolver()
-            convolverNode.buffer = await loadSample("impulse/LargeWideEchoHall.ogg")
+            convolverNode.buffer = await loadSample(model.aux.sendConvolver.get())
             terminator.with(model.aux.sendConvolver.addObserver(async path => convolverNode.buffer = await readAudio(context, path)))
             mixer.auxSend(1).connect(convolverNode).connect(mixer.auxReturn(1))
 

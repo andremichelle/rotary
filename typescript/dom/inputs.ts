@@ -62,11 +62,12 @@ export class SelectInput<T> implements Editor<ObservableValue<T>> {
         this.connect()
     }
 
-    with(value: ObservableValue<T>): void {
+    with(value: ObservableValue<T>): SelectInput<T> {
         this.value.removeObserver(this.observer)
         this.value = value
         this.value.addObserver(this.observer)
         this.update()
+        return this
     }
 
     clear(): void {

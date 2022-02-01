@@ -23,7 +23,7 @@ export declare class SelectInput<T> implements Editor<ObservableValue<T>> {
     private readonly values;
     private value;
     constructor(select: HTMLSelectElement, map: Map<string, T>);
-    with(value: ObservableValue<T>): void;
+    with(value: ObservableValue<T>): SelectInput<T>;
     clear(): void;
     terminate(): void;
     private observer;

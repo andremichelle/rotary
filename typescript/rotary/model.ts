@@ -94,7 +94,7 @@ export class RotaryExportSetting implements Terminable, Serializer<RotaryExportF
 
 export class Aux {
     readonly sendPulsarDelay: PulsarDelaySettings = new PulsarDelaySettings()
-    readonly sendConvolver: ObservableValueImpl<string> = new ObservableValueImpl<string>()
+    readonly sendConvolver: ObservableValueImpl<string> = new ObservableValueImpl<string>("impulse/DeepSpace.ogg")
 }
 
 export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {

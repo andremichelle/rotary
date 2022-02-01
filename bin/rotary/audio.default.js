@@ -24,6 +24,7 @@ export const initAudioScene = () => {
                 terminator.with(model.addObserver(updateFormat));
                 updateFormat();
                 const loadSample = (url) => {
+                    console.log(`url: ${url}`);
                     return boot.registerProcess(readAudio(context, url));
                 };
                 let index = 0;
@@ -77,7 +78,7 @@ export const initAudioScene = () => {
                 pulsarDelay.connectToOutput(mixer.auxReturn(0), 0);
                 terminator.with(pulsarDelay.watchSettings(model.aux.sendPulsarDelay));
                 const convolverNode = context.createConvolver();
-                convolverNode.buffer = yield loadSample("impulse/LargeWideEchoHall.ogg");
+                convolverNode.buffer = yield loadSample(model.aux.sendConvolver.get());
                 terminator.with(model.aux.sendConvolver.addObserver((path) => __awaiter(this, void 0, void 0, function* () { return convolverNode.buffer = yield readAudio(context, path); })));
                 mixer.auxSend(1).connect(convolverNode).connect(mixer.auxReturn(1));
                 mixer.masterOutput().connect(limiterWorklet);
