@@ -72,12 +72,14 @@ export const initAudioScene = () => {
                         map.delete(track);
                     }
                 }, true));
+                const pulsarDelay = new PulsarDelay(context);
+                pulsarDelay.connectToInput(mixer.auxSend(0), 0);
+                pulsarDelay.connectToOutput(mixer.auxReturn(0), 0);
+                terminator.with(pulsarDelay.watchSettings(model.aux.sendPulsarDelay));
                 const convolverNode = context.createConvolver();
                 convolverNode.buffer = yield loadSample("impulse/LargeWideEchoHall.ogg");
-                mixer.auxSend(0).connect(convolverNode).connect(mixer.auxReturn(0));
-                const pulsarDelay = new PulsarDelay(context);
-                pulsarDelay.connectToInput(mixer.auxSend(1), 0);
-                pulsarDelay.connectToOutput(mixer.auxReturn(1), 0);
+                terminator.with(model.aux.sendConvolver.addObserver((path) => __awaiter(this, void 0, void 0, function* () { return convolverNode.buffer = yield readAudio(context, path); })));
+                mixer.auxSend(1).connect(convolverNode).connect(mixer.auxReturn(1));
                 mixer.masterOutput().connect(limiterWorklet);
                 limiterWorklet.connect(output);
                 yield boot.waitForCompletion();

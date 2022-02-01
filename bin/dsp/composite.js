@@ -1,4 +1,4 @@
-import { ArrayUtils, Options } from "../lib/common.js";
+import { ArrayUtils, BoundNumericValue, Options, Terminator } from "../lib/common.js";
 import { Linear, Volume } from "../lib/mapping.js";
 import { dbToGain, gainToDb, VALUE_INTERPOLATION_TIME } from "./common.js";
 export const interpolateParameterValueIfRunning = (context, audioParam, value) => {
@@ -146,6 +146,35 @@ export class Mixer {
         interpolateParameterValueIfRunning(this.context, audioParam, value);
     }
 }
+export class PulsarDelaySettings {
+    constructor() {
+        this.preDelayTimeL = new BoundNumericValue(Linear.Identity, 0.125);
+        this.preDelayTimeR = new BoundNumericValue(Linear.Identity, 0.500);
+        this.feedbackDelayTime = new BoundNumericValue(Linear.Identity, 0.250);
+        this.feedbackGain = new BoundNumericValue(Linear.Identity, 0.6);
+        this.feedbackLowpass = new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0);
+        this.feedbackHighpass = new BoundNumericValue(new Linear(20.0, 20000.0), 480.0);
+    }
+    deserialize(format) {
+        this.preDelayTimeL.set(format.preDelayTimeL);
+        this.preDelayTimeR.set(format.preDelayTimeR);
+        this.feedbackDelayTime.set(format.feedbackDelayTime);
+        this.feedbackGain.set(format.feedbackGain);
+        this.feedbackLowpass.set(format.feedbackLowpass);
+        this.feedbackHighpass.set(format.feedbackHighpass);
+        return this;
+    }
+    serialize() {
+        return {
+            preDelayTimeL: this.preDelayTimeL.get(),
+            preDelayTimeR: this.preDelayTimeR.get(),
+            feedbackDelayTime: this.feedbackDelayTime.get(),
+            feedbackGain: this.feedbackGain.get(),
+            feedbackLowpass: this.feedbackLowpass.get(),
+            feedbackHighpass: this.feedbackHighpass.get()
+        };
+    }
+}
 export class PulsarDelay {
     constructor(context, format) {
         this.context = context;
@@ -197,6 +226,16 @@ export class PulsarDelay {
         console.assert(this.outgoing.isEmpty());
         this.feedbackGain.connect(input, 0, inputIndex);
         this.outgoing = Options.valueOf([input, inputIndex]);
+    }
+    watchSettings(settings) {
+        const terminator = new Terminator();
+        terminator.with(settings.preDelayTimeL.addObserver(seconds => this.setPreDelayTimeL(seconds)));
+        terminator.with(settings.preDelayTimeR.addObserver(seconds => this.setPreDelayTimeR(seconds)));
+        terminator.with(settings.feedbackDelayTime.addObserver(seconds => this.setFeedbackDelayTime(seconds)));
+        terminator.with(settings.feedbackGain.addObserver(gain => this.setFeedbackGain(gain)));
+        terminator.with(settings.feedbackLowpass.addObserver(frequency => this.setFeedbackLowpass(frequency)));
+        terminator.with(settings.feedbackHighpass.addObserver(frequency => this.setFeedbackHighpass(frequency)));
+        return terminator;
     }
     setPreDelayTimeL(seconds) {
         this.setParameterValue(this.preDelayL.delayTime, seconds);

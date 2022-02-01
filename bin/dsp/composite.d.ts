@@ -1,4 +1,4 @@
-import { Serializer, Terminable } from "../lib/common.js";
+import { BoundNumericValue, Serializer, Terminable } from "../lib/common.js";
 import { Linear } from "../lib/mapping.js";
 export declare const interpolateParameterValueIfRunning: (context: BaseAudioContext, audioParam: AudioParam, value: number) => void;
 export declare class Channelstrip implements Terminable {
@@ -55,6 +55,16 @@ export interface PulsarDelayFormat {
     feedbackLowpass: number;
     feedbackHighpass: number;
 }
+export declare class PulsarDelaySettings implements Serializer<PulsarDelayFormat> {
+    readonly preDelayTimeL: BoundNumericValue;
+    readonly preDelayTimeR: BoundNumericValue;
+    readonly feedbackDelayTime: BoundNumericValue;
+    readonly feedbackGain: BoundNumericValue;
+    readonly feedbackLowpass: BoundNumericValue;
+    readonly feedbackHighpass: BoundNumericValue;
+    deserialize(format: PulsarDelayFormat): PulsarDelaySettings;
+    serialize(): PulsarDelayFormat;
+}
 export declare class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
     private readonly context;
     private readonly preSplitter;
@@ -71,6 +81,7 @@ export declare class PulsarDelay implements Serializer<PulsarDelayFormat>, Termi
     constructor(context: BaseAudioContext, format?: PulsarDelayFormat);
     connectToInput(output: AudioNode, outputIndex?: number): void;
     connectToOutput(input: AudioNode, inputIndex?: number): void;
+    watchSettings(settings: PulsarDelaySettings): Terminable;
     setPreDelayTimeL(seconds: number): void;
     getPreDelayTimeL(): number;
     setPreDelayTimeR(seconds: number): void;

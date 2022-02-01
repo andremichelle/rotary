@@ -1,7 +1,8 @@
 import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableCollection, ObservableValue, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
-import { Injective, InjectiveFormat } from "../lib/injective.js";
 import { RenderConfiguration } from "./render.js";
+import { PulsarDelayFormat, PulsarDelaySettings } from "../dsp/composite.js";
+import { Injective, InjectiveFormat } from "../lib/injective.js";
 export declare interface RotaryExportFormat {
     fps: number;
     subFrames: number;
@@ -13,6 +14,10 @@ export declare interface RotaryFormat {
     loopDuration: number;
     exportSettings: RotaryExportFormat;
     tracks: RotaryTrackFormat[];
+    aux: {
+        sendPulsarDelay: PulsarDelayFormat;
+        sendConvolver: string;
+    };
 }
 export declare interface RotaryTrackFormat {
     segments: number;
@@ -47,6 +52,10 @@ export declare class RotaryExportSetting implements Terminable, Serializer<Rotar
     getConfiguration(numFrames: number): RenderConfiguration;
     terminate(): void;
 }
+export declare class Aux {
+    readonly sendPulsarDelay: PulsarDelaySettings;
+    readonly sendConvolver: ObservableValueImpl<string>;
+}
 export declare class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS: number;
     static NUM_AUX: number;
@@ -58,6 +67,7 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     readonly phaseOffset: ObservableValue<any>;
     readonly loopDuration: ObservableValue<any>;
     readonly motion: ObservableValue<any>;
+    readonly aux: Aux;
     constructor();
     addObserver(observer: Observer<RotaryModel>): Terminable;
     removeObserver(observer: Observer<RotaryModel>): boolean;

@@ -74,6 +74,20 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             PrintMapping.integer(""), new NumericStepper(1))).with(model.exportSettings.fps)
         this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='export-sub-frames']"),
             PrintMapping.integer(""), new NumericStepper(1))).with(model.exportSettings.subFrames)
+
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='pulsar-delay-delay-l']"),
+            PrintMapping.float(3, "", "s"), new NumericStepper(0.001))).with(model.aux.sendPulsarDelay.preDelayTimeL)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='pulsar-delay-delay-r']"),
+            PrintMapping.float(3, "", "s"), new NumericStepper(0.001))).with(model.aux.sendPulsarDelay.preDelayTimeR)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='pulsar-delay-feedback-delay']"),
+            PrintMapping.float(3, "", "s"), new NumericStepper(0.001))).with(model.aux.sendPulsarDelay.feedbackDelayTime)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='pulsar-delay-feedback-gain']"),
+            PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.aux.sendPulsarDelay.feedbackGain)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='pulsar-delay-feedback-lowpass']"),
+            PrintMapping.integer("Hz"), new NumericStepper(1))).with(model.aux.sendPulsarDelay.feedbackLowpass)
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='pulsar-delay-feedback-highpass']"),
+            PrintMapping.integer("Hz"), new NumericStepper(1))).with(model.aux.sendPulsarDelay.feedbackHighpass)
+
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
             switch (event.type) {
                 case CollectionEventType.Add: {

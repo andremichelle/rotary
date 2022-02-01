@@ -1,6 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
-import {ArrayUtils, Option, Options, Serializer, Terminable} from "../lib/common.js"
+import {ArrayUtils, BoundNumericValue, Option, Options, Serializer, Terminable, Terminator} from "../lib/common.js"
 import {Linear, Volume} from "../lib/mapping.js"
 import {dbToGain, gainToDb, VALUE_INTERPOLATION_TIME} from "./common.js"
 
@@ -197,6 +197,36 @@ export interface PulsarDelayFormat {
     feedbackHighpass: number
 }
 
+export class PulsarDelaySettings implements Serializer<PulsarDelayFormat> {
+    readonly preDelayTimeL: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.125)
+    readonly preDelayTimeR: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.500)
+    readonly feedbackDelayTime: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.250)
+    readonly feedbackGain: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.6)
+    readonly feedbackLowpass: BoundNumericValue = new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0)
+    readonly feedbackHighpass: BoundNumericValue = new BoundNumericValue(new Linear(20.0, 20000.0), 480.0)
+
+    deserialize(format: PulsarDelayFormat): PulsarDelaySettings {
+        this.preDelayTimeL.set(format.preDelayTimeL)
+        this.preDelayTimeR.set(format.preDelayTimeR)
+        this.feedbackDelayTime.set(format.feedbackDelayTime)
+        this.feedbackGain.set(format.feedbackGain)
+        this.feedbackLowpass.set(format.feedbackLowpass)
+        this.feedbackHighpass.set(format.feedbackHighpass)
+        return this
+    }
+
+    serialize(): PulsarDelayFormat {
+        return {
+            preDelayTimeL: this.preDelayTimeL.get(),
+            preDelayTimeR: this.preDelayTimeR.get(),
+            feedbackDelayTime: this.feedbackDelayTime.get(),
+            feedbackGain: this.feedbackGain.get(),
+            feedbackLowpass: this.feedbackLowpass.get(),
+            feedbackHighpass: this.feedbackHighpass.get()
+        }
+    }
+}
+
 export class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
     private readonly preSplitter: ChannelSplitterNode
     private readonly preDelayL: DelayNode
@@ -260,6 +290,17 @@ export class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
         console.assert(this.outgoing.isEmpty())
         this.feedbackGain.connect(input, 0, inputIndex)
         this.outgoing = Options.valueOf([input, inputIndex])
+    }
+
+    public watchSettings(settings: PulsarDelaySettings): Terminable {
+        const terminator = new Terminator()
+        terminator.with(settings.preDelayTimeL.addObserver(seconds => this.setPreDelayTimeL(seconds)))
+        terminator.with(settings.preDelayTimeR.addObserver(seconds => this.setPreDelayTimeR(seconds)))
+        terminator.with(settings.feedbackDelayTime.addObserver(seconds => this.setFeedbackDelayTime(seconds)))
+        terminator.with(settings.feedbackGain.addObserver(gain => this.setFeedbackGain(gain)))
+        terminator.with(settings.feedbackLowpass.addObserver(frequency => this.setFeedbackLowpass(frequency)))
+        terminator.with(settings.feedbackHighpass.addObserver(frequency => this.setFeedbackHighpass(frequency)))
+        return terminator
     }
 
     public setPreDelayTimeL(seconds: number): void {
