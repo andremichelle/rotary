@@ -13,13 +13,14 @@ import { LimiterWorklet } from "../dsp/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
 import { pulsarDelay } from "../lib/dsp.js";
 import { Mixer } from "../dsp/composite.js";
+import { WorkletModules } from "../dsp/waa.js";
 export const initAudioScene = () => {
     return {
         build(context, output, model, boot) {
             return __awaiter(this, void 0, void 0, function* () {
                 const terminator = new Terminator();
-                const limiterWorklet = yield LimiterWorklet.build(context);
-                const rotaryNode = yield RotaryWorkletNode.build(context);
+                const rotaryNode = yield WorkletModules.create(context, RotaryWorkletNode);
+                const limiterWorklet = yield WorkletModules.create(context, LimiterWorklet);
                 const updateFormat = () => rotaryNode.updateFormat(model);
                 terminator.with(model.addObserver(updateFormat));
                 updateFormat();

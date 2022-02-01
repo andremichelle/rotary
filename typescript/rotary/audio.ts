@@ -5,6 +5,7 @@ import {MeterWorklet} from "../dsp/meter/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, ObservableValue, Terminable} from "../lib/common.js"
 import {encodeWavFloat} from "../dsp/common.js"
+import {WorkletModules} from "../dsp/waa.js"
 
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>
@@ -38,7 +39,7 @@ export class Audio {
     }
 
     async initPreview(): Promise<AudioSceneController> {
-        await MeterWorklet.load(this.context)
+        await WorkletModules.create(this.context, MeterWorklet)
         const meter = new MeterWorklet(this.context)
         document.getElementById("meter").appendChild(meter.domElement)
         meter.connect(this.context.destination)

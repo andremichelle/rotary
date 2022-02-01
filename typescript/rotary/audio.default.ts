@@ -5,6 +5,7 @@ import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
 import {pulsarDelay} from "../lib/dsp.js"
 import {Mixer} from "../dsp/composite.js"
+import {WorkletModules} from "../dsp/waa.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -14,8 +15,8 @@ export const initAudioScene = (): AudioScene => {
                     boot: Boot): Promise<AudioSceneController> {
             const terminator = new Terminator()
 
-            const limiterWorklet = await LimiterWorklet.build(context)
-            const rotaryNode = await RotaryWorkletNode.build(context)
+            const rotaryNode = await WorkletModules.create(context, RotaryWorkletNode)
+            const limiterWorklet = await WorkletModules.create(context, LimiterWorklet)
             const updateFormat = () => rotaryNode.updateFormat(model)
             terminator.with(model.addObserver(updateFormat))
             updateFormat()

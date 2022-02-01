@@ -1,8 +1,9 @@
 export declare class MeterWorklet extends AudioWorkletNode {
-    static load(context: AudioContext): Promise<void>;
-    private readonly meterMargin;
+    private readonly meterHPadding;
     private readonly meterSegmentWidth;
-    private readonly meterSegmentGap;
+    private readonly meterSegmentHeight;
+    private readonly meterSegmentHGap;
+    private readonly meterSegmentVGap;
     private readonly meterSegmentCount;
     private readonly meterWidth;
     private readonly width;

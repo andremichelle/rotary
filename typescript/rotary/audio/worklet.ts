@@ -4,11 +4,6 @@ import {MessageToWorklet} from "./messages-to-worklet.js"
 import {ObservableValueImpl} from "../../lib/common.js"
 
 export class RotaryWorkletNode extends AudioWorkletNode {
-    static async build(context: BaseAudioContext): Promise<RotaryWorkletNode> {
-        await context.audioWorklet.addModule("bin/rotary/audio/processor.js")
-        return new RotaryWorkletNode(context)
-    }
-
     readonly transport: ObservableValueImpl<boolean> = new ObservableValueImpl<boolean>(false)
 
     private $phase: number = 0.0

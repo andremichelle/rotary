@@ -11,6 +11,7 @@ import { MeterWorklet } from "../dsp/meter/worklet.js";
 import { ProgressIndicator } from "../dom/common.js";
 import { Boot } from "../lib/common.js";
 import { encodeWavFloat } from "../dsp/common.js";
+import { WorkletModules } from "../dsp/waa.js";
 export class Audio {
     constructor(context, scene, model) {
         this.context = context;
@@ -26,7 +27,7 @@ export class Audio {
     }
     initPreview() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield MeterWorklet.load(this.context);
+            yield WorkletModules.create(this.context, MeterWorklet);
             const meter = new MeterWorklet(this.context);
             document.getElementById("meter").appendChild(meter.domElement);
             meter.connect(this.context.destination);

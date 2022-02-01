@@ -1,11 +1,6 @@
 import {SetLookahead, SetThreshold} from "./message.js"
 
 export class LimiterWorklet extends AudioWorkletNode {
-    static async build(context: BaseAudioContext): Promise<LimiterWorklet> {
-        await context.audioWorklet.addModule("bin/dsp/limiter/processor.js")
-        return new LimiterWorklet(context)
-    }
-
     private $lookahead: number = NaN
     private $threshold: number = NaN
 
