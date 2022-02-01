@@ -1,6 +1,6 @@
 import {CreatedMessage, Harmonic, Message} from "./data.js"
-import {FFT} from "../fft.js"
 import {Mulberry32, TAU} from "../../lib/math.js"
+import {FFT} from "../common.js"
 
 export class WavetableCreator {
     static MIN_EXP = 14.71280603 // This value is the bound at which the values get too small

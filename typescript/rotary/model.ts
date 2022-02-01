@@ -141,7 +141,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     // noinspection JSUnusedGlobalSymbols
     test(): RotaryModel {
         this.tracks.clear()
-        this.radiusMin.set(256)
+        this.radiusMin.set(160)
         this.createTrack().test()
         return this
     }
@@ -166,6 +166,13 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         copy.bend.set(source.bend.get())
         copy.phaseOffset.set(source.phaseOffset.get())
         copy.frequency.set(source.frequency.get())
+
+        copy.gain.set(source.gain.get())
+        copy.volume.set(source.volume.get())
+        copy.panning.set(source.panning.get())
+        copy.auxSends.forEach((value, index) => value.set(source.auxSends[index].get()))
+        copy.mute.set(source.mute.get())
+        copy.solo.set(source.solo.get())
         return copy
     }
 

@@ -1,6 +1,6 @@
 import { CreatedMessage } from "./data.js";
-import { FFT } from "../fft.js";
 import { Mulberry32, TAU } from "../../lib/math.js";
+import { FFT } from "../common.js";
 export class WavetableCreator {
     constructor(fftSize, sampleRate) {
         this.fftSize = fftSize;

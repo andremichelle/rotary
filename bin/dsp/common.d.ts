@@ -1,4 +1,5 @@
-export declare const RenderQuantum: number;
+export declare const RENDER_QUANTUM: number;
+export declare const VALUE_INTERPOLATION_TIME: number;
 export declare const midiToHz: (note?: number, baseFrequency?: number) => number;
 export declare const dbToGain: (db: number) => number;
 export declare const gainToDb: (gain: number) => number;
@@ -22,3 +23,24 @@ export interface FloatAudio {
     numFrames: number;
 }
 export declare const encodeWavFloat: (audio: AudioBuffer | FloatAudio) => ArrayBuffer;
+export declare class FFT {
+    private readonly n;
+    static reverse(i: number): number;
+    private readonly levels;
+    private readonly cosTable;
+    private readonly sinTable;
+    constructor(n: number);
+    process(real: Float32Array, imag: Float32Array): void;
+}
+export declare class Window {
+    static generate(type: Window.Shape, n?: number): Float32Array;
+}
+export declare namespace Window {
+    enum Shape {
+        Bartlett = 0,
+        Blackman = 1,
+        BlackmanHarris = 2,
+        Hamming = 3,
+        Hanning = 4
+    }
+}

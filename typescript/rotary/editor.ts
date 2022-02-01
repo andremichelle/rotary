@@ -112,6 +112,13 @@ export class RotaryTrackEditor implements Terminable {
         this.frequency.clear()
         this.fragments.clear()
         this.reverse.clear()
+
+        this.volume.clear()
+        this.panning.clear()
+        this.auxSends[0].clear()
+        this.auxSends[1].clear()
+        this.auxSends[2].clear()
+        this.auxSends[3].clear()
     }
 
     terminate() {
