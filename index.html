@@ -30,7 +30,7 @@
         <div class="global-editor">
             <div class="columns">
                 <div class="column">
-                    <h5>GLOBAL</h5>
+                    <h5 class="global">GLOBAL</h5>
                     <div class="two-columns">
                         <label class="name">start radius</label>
                         <fieldset class="stepper" data-parameter="start-radius">
@@ -59,7 +59,7 @@
                     </div>
                 </div>
                 <div class="column">
-                    <h5>Export</h5>
+                    <h5 class="global">Export</h5>
                     <div class="two-columns">
                         <label class="name">size</label>
                         <fieldset class="stepper" data-parameter="export-size">
@@ -82,7 +82,7 @@
                     </div>
                 </div>
                 <div class="column">
-                    <h5>Aux A (Pulsar Delay)</h5>
+                    <h5 class="aux">Aux A (Pulsar Delay)</h5>
                     <div class="two-columns">
                         <label class="name">Predelay time (L)</label>
                         <fieldset class="stepper" data-parameter="pulsar-delay-delay-l">
@@ -123,10 +123,39 @@
                     </div>
                 </div>
                 <div class="column">
-                    <h5>Aux B (Impulse Reverb)</h5>
+                    <h5 class="aux">Aux B (Impulse Reverb)</h5>
                     <div class="two-columns">
                         <label class="name">Impulse</label>
                         <select data-parameter="convolver-impulse"></select>
+                    </div>
+                </div>
+                <div class="column">
+                    <h5 class="aux">Aux C (Flanger)</h5>
+                    <div class="two-columns">
+                        <label class="name">Delay time</label>
+                        <fieldset class="stepper" data-parameter="flanger-delay">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name">Feedback</label>
+                        <fieldset class="stepper" data-parameter="flanger-feedback">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name">Depth</label>
+                        <fieldset class="stepper" data-parameter="flanger-depth">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
+                        <label class="name">Lfo Rate</label>
+                        <fieldset class="stepper" data-parameter="flanger-rate">
+                            <button>◀︎</button>
+                            <input type="text">
+                            <button>▶</button>
+                        </fieldset>
                     </div>
                 </div>
             </div>

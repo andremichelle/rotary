@@ -11,7 +11,7 @@ import { CollectionEventType, readAudio, Terminator } from "../lib/common.js";
 import { RotaryModel } from "./model.js";
 import { LimiterWorklet } from "../dsp/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
-import { Mixer, PulsarDelay } from "../dsp/composite.js";
+import { Flanger, Mixer, PulsarDelay } from "../dsp/composite.js";
 import { WorkletModules } from "../dsp/waa.js";
 export const initAudioScene = () => {
     return {
@@ -81,6 +81,10 @@ export const initAudioScene = () => {
                 convolverNode.buffer = yield loadSample(model.aux.sendConvolver.get());
                 terminator.with(model.aux.sendConvolver.addObserver((path) => __awaiter(this, void 0, void 0, function* () { return convolverNode.buffer = yield readAudio(context, path); })));
                 mixer.auxSend(1).connect(convolverNode).connect(mixer.auxReturn(1));
+                const flanger = new Flanger(context);
+                terminator.with(flanger.watchSettings(model.aux.sendFlanger));
+                flanger.connectToInput(mixer.auxSend(2), 0);
+                flanger.connectToOutput(mixer.auxReturn(2), 0);
                 mixer.masterOutput().connect(limiterWorklet);
                 limiterWorklet.connect(output);
                 yield boot.waitForCompletion();

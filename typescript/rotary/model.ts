@@ -19,7 +19,7 @@ import {Colors} from "../lib/colors.js"
 import {Func, Random} from "../lib/math.js"
 import {RenderConfiguration} from "./render.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
-import {Channelstrip, PulsarDelayFormat, PulsarDelaySettings} from "../dsp/composite.js"
+import {Channelstrip, FlangerFormat, FlangerSettings, PulsarDelayFormat, PulsarDelaySettings} from "../dsp/composite.js"
 import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
 
 export declare interface RotaryExportFormat {
@@ -36,7 +36,8 @@ export declare interface RotaryFormat {
     tracks: RotaryTrackFormat[],
     aux: {
         sendPulsarDelay: PulsarDelayFormat,
-        sendConvolver: string
+        sendConvolver: string,
+        sendFlanger: FlangerFormat
     }
 }
 
@@ -95,6 +96,7 @@ export class RotaryExportSetting implements Terminable, Serializer<RotaryExportF
 export class Aux {
     readonly sendPulsarDelay: PulsarDelaySettings = new PulsarDelaySettings()
     readonly sendConvolver: ObservableValueImpl<string> = new ObservableValueImpl<string>("impulse/DeepSpace.ogg")
+    readonly sendFlanger: FlangerSettings = new FlangerSettings()
 }
 
 export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
@@ -226,7 +228,8 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
             tracks: this.tracks.map(track => track.serialize()),
             aux: {
                 sendPulsarDelay: this.aux.sendPulsarDelay.serialize(),
-                sendConvolver: this.aux.sendConvolver.get()
+                sendConvolver: this.aux.sendConvolver.get(),
+                sendFlanger: this.aux.sendFlanger.serialize()
             }
         }
     }
@@ -239,6 +242,8 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         this.tracks.clear()
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)))
         this.aux.sendPulsarDelay.deserialize(format.aux.sendPulsarDelay)
+        this.aux.sendConvolver.set(format.aux.sendConvolver)
+        this.aux.sendFlanger.deserialize(format.aux.sendFlanger)
         return this
     }
 

@@ -3,7 +3,7 @@ import {AudioScene, AudioSceneController} from "./audio.js"
 import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
-import {Mixer, PulsarDelay} from "../dsp/composite.js"
+import {Flanger, Mixer, PulsarDelay} from "../dsp/composite.js"
 import {WorkletModules} from "../dsp/waa.js"
 
 export const initAudioScene = (): AudioScene => {
@@ -83,6 +83,12 @@ export const initAudioScene = (): AudioScene => {
             convolverNode.buffer = await loadSample(model.aux.sendConvolver.get())
             terminator.with(model.aux.sendConvolver.addObserver(async path => convolverNode.buffer = await readAudio(context, path)))
             mixer.auxSend(1).connect(convolverNode).connect(mixer.auxReturn(1))
+
+            // AUX 2
+            const flanger: Flanger = new Flanger(context)
+            terminator.with(flanger.watchSettings(model.aux.sendFlanger))
+            flanger.connectToInput(mixer.auxSend(2), 0)
+            flanger.connectToOutput(mixer.auxReturn(2), 0)
 
             mixer.masterOutput().connect(limiterWorklet)
             limiterWorklet.connect(output)

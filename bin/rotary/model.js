@@ -2,7 +2,7 @@ import { ArrayUtils, BoundNumericValue, EmptyIterator, GeneratorIterator, Observ
 import { Colors } from "../lib/colors.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
-import { Channelstrip, PulsarDelaySettings } from "../dsp/composite.js";
+import { Channelstrip, FlangerSettings, PulsarDelaySettings } from "../dsp/composite.js";
 import { CShapeInjective, IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
 export class RotaryExportSetting {
     constructor() {
@@ -31,6 +31,7 @@ export class Aux {
     constructor() {
         this.sendPulsarDelay = new PulsarDelaySettings();
         this.sendConvolver = new ObservableValueImpl("impulse/DeepSpace.ogg");
+        this.sendFlanger = new FlangerSettings();
     }
 }
 export class RotaryModel {
@@ -139,7 +140,8 @@ export class RotaryModel {
             tracks: this.tracks.map(track => track.serialize()),
             aux: {
                 sendPulsarDelay: this.aux.sendPulsarDelay.serialize(),
-                sendConvolver: this.aux.sendConvolver.get()
+                sendConvolver: this.aux.sendConvolver.get(),
+                sendFlanger: this.aux.sendFlanger.serialize()
             }
         };
     }
@@ -151,6 +153,8 @@ export class RotaryModel {
         this.tracks.clear();
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)));
         this.aux.sendPulsarDelay.deserialize(format.aux.sendPulsarDelay);
+        this.aux.sendConvolver.set(format.aux.sendConvolver);
+        this.aux.sendFlanger.deserialize(format.aux.sendFlanger);
         return this;
     }
     bindValue(property) {

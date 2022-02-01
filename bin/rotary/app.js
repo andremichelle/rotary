@@ -54,6 +54,10 @@ export class RotaryApp {
             ["Plate Large", "impulse/PlateLarge.ogg"],
             ["Prime Long", "impulse/PrimeLong.ogg"],
         ])).with(model.aux.sendConvolver));
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='flanger-delay']"), PrintMapping.float(3, "", "s"), new NumericStepper(0.001))).with(model.aux.sendFlanger.delayTime);
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='flanger-feedback']"), PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.aux.sendFlanger.feedback);
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='flanger-rate']"), PrintMapping.float(2, "", "Hz"), new NumericStepper(0.01))).with(model.aux.sendFlanger.rate);
+        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='flanger-depth']"), PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.aux.sendFlanger.depth);
         this.terminator.with(model.tracks.addObserver((event) => {
             switch (event.type) {
                 case CollectionEventType.Add: {

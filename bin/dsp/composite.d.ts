@@ -65,7 +65,18 @@ export declare class PulsarDelaySettings implements Serializer<PulsarDelayFormat
     deserialize(format: PulsarDelayFormat): PulsarDelaySettings;
     serialize(): PulsarDelayFormat;
 }
-export declare class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
+export declare abstract class DefaultIO implements Terminable {
+    private incoming;
+    private outgoing;
+    private input;
+    private output;
+    protected constructor();
+    protected setIO(input: AudioNode, output: AudioNode): void;
+    connectToInput(output: AudioNode, outputIndex?: number): void;
+    connectToOutput(input: AudioNode, inputIndex?: number): void;
+    terminate(): void;
+}
+export declare class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayFormat>, Terminable {
     private readonly context;
     private readonly preSplitter;
     private readonly preDelayL;
@@ -76,11 +87,7 @@ export declare class PulsarDelay implements Serializer<PulsarDelayFormat>, Termi
     private readonly feedbackDelay;
     private readonly feedbackGain;
     private readonly feedbackSplitter;
-    private incoming;
-    private outgoing;
     constructor(context: BaseAudioContext, format?: PulsarDelayFormat);
-    connectToInput(output: AudioNode, outputIndex?: number): void;
-    connectToOutput(input: AudioNode, inputIndex?: number): void;
     watchSettings(settings: PulsarDelaySettings): Terminable;
     setPreDelayTimeL(seconds: number): void;
     getPreDelayTimeL(): number;
@@ -96,6 +103,41 @@ export declare class PulsarDelay implements Serializer<PulsarDelayFormat>, Termi
     getFeedbackHighpass(): number;
     deserialize(format: PulsarDelayFormat): PulsarDelay;
     serialize(): PulsarDelayFormat;
+    terminate(): void;
+    private setParameterValue;
+}
+export declare class FlangerSettings implements Serializer<FlangerFormat> {
+    readonly delayTime: BoundNumericValue;
+    readonly feedback: BoundNumericValue;
+    readonly rate: BoundNumericValue;
+    readonly depth: BoundNumericValue;
+    deserialize(format: FlangerFormat): FlangerSettings;
+    serialize(): FlangerFormat;
+}
+export interface FlangerFormat {
+    delayTime: number;
+    feedback: number;
+    rate: number;
+    depth: number;
+}
+export declare class Flanger extends DefaultIO implements Serializer<FlangerFormat>, Terminable {
+    private readonly context;
+    private readonly delayNode;
+    private readonly feedbackGainNode;
+    private readonly depthNode;
+    private readonly lfoNode;
+    constructor(context: BaseAudioContext, format?: FlangerFormat);
+    setDelayTime(seconds: number): void;
+    getDelayTime(): number;
+    setLfoRate(frequency: number): void;
+    getLfoRate(): number;
+    setFeedback(gain: number): void;
+    getFeedback(): number;
+    setDepth(value: number): void;
+    getDepth(): number;
+    deserialize(format: FlangerFormat): Flanger;
+    serialize(): FlangerFormat;
+    watchSettings(settings: FlangerSettings): Terminable;
     terminate(): void;
     private setParameterValue;
 }

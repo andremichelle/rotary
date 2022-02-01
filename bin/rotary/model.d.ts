@@ -1,7 +1,7 @@
 import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableCollection, ObservableValue, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
 import { RenderConfiguration } from "./render.js";
-import { PulsarDelayFormat, PulsarDelaySettings } from "../dsp/composite.js";
+import { FlangerFormat, FlangerSettings, PulsarDelayFormat, PulsarDelaySettings } from "../dsp/composite.js";
 import { Injective, InjectiveFormat } from "../lib/injective.js";
 export declare interface RotaryExportFormat {
     fps: number;
@@ -17,6 +17,7 @@ export declare interface RotaryFormat {
     aux: {
         sendPulsarDelay: PulsarDelayFormat;
         sendConvolver: string;
+        sendFlanger: FlangerFormat;
     };
 }
 export declare interface RotaryTrackFormat {
@@ -55,6 +56,7 @@ export declare class RotaryExportSetting implements Terminable, Serializer<Rotar
 export declare class Aux {
     readonly sendPulsarDelay: PulsarDelaySettings;
     readonly sendConvolver: ObservableValueImpl<string>;
+    readonly sendFlanger: FlangerSettings;
 }
 export declare class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS: number;

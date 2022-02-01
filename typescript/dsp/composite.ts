@@ -1,7 +1,7 @@
 // noinspection JSUnusedGlobalSymbols
 
 import {ArrayUtils, BoundNumericValue, Option, Options, Serializer, Terminable, Terminator} from "../lib/common.js"
-import {Linear, Volume} from "../lib/mapping.js"
+import {Exp, Linear, Volume} from "../lib/mapping.js"
 import {dbToGain, gainToDb, VALUE_INTERPOLATION_TIME} from "./common.js"
 
 
@@ -227,7 +227,42 @@ export class PulsarDelaySettings implements Serializer<PulsarDelayFormat> {
     }
 }
 
-export class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
+export abstract class DefaultIO implements Terminable {
+    private incoming: Option<[AudioNode, number]> = Options.None
+    private outgoing: Option<[AudioNode, number]> = Options.None
+
+    private input: AudioNode = null
+    private output: AudioNode = null
+
+    protected constructor() {
+    }
+
+    protected setIO(input: AudioNode, output: AudioNode): void {
+        this.input = input
+        this.output = output
+    }
+
+    public connectToInput(output: AudioNode, outputIndex: number = 0 | 0): void {
+        console.assert(null !== this.input && this.incoming.isEmpty())
+        output.connect(this.input, outputIndex, 0)
+        this.incoming = Options.valueOf([output, outputIndex])
+    }
+
+    public connectToOutput(input: AudioNode, inputIndex: number = 0 | 0): void {
+        console.assert(null !== this.output && this.outgoing.isEmpty())
+        this.output.connect(input, 0, inputIndex)
+        this.outgoing = Options.valueOf([input, inputIndex])
+    }
+
+    terminate(): void {
+        this.incoming.ifPresent(pair => pair[0].disconnect(this.input, pair[1], 0))
+        this.outgoing.ifPresent(pair => this.output.disconnect(pair[0], 0, pair[1]))
+        this.incoming = Options.None
+        this.outgoing = Options.None
+    }
+}
+
+export class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayFormat>, Terminable {
     private readonly preSplitter: ChannelSplitterNode
     private readonly preDelayL: DelayNode
     private readonly preDelayR: DelayNode
@@ -238,10 +273,8 @@ export class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
     private readonly feedbackGain: GainNode
     private readonly feedbackSplitter: ChannelSplitterNode
 
-    private incoming: Option<[AudioNode, number]> = Options.None
-    private outgoing: Option<[AudioNode, number]> = Options.None
-
     constructor(private readonly context: BaseAudioContext, format?: PulsarDelayFormat) {
+        super()
         this.preSplitter = context.createChannelSplitter(2)
         this.preDelayL = context.createDelay()
         this.preDelayR = context.createDelay()
@@ -267,6 +300,7 @@ export class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
             .connect(this.feedbackSplitter)
         this.feedbackSplitter.connect(this.feedbackMerger, 0, 1)
         this.feedbackSplitter.connect(this.feedbackMerger, 1, 0)
+        this.setIO(this.preSplitter, this.feedbackGain)
 
         if (format === undefined) {
             this.setPreDelayTimeL(0.125)
@@ -278,18 +312,6 @@ export class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
         } else {
             this.deserialize(format)
         }
-    }
-
-    public connectToInput(output: AudioNode, outputIndex: number = 0 | 0): void {
-        console.assert(this.incoming.isEmpty())
-        output.connect(this.preSplitter, outputIndex, 0)
-        this.incoming = Options.valueOf([output, outputIndex])
-    }
-
-    public connectToOutput(input: AudioNode, inputIndex: number = 0 | 0): void {
-        console.assert(this.outgoing.isEmpty())
-        this.feedbackGain.connect(input, 0, inputIndex)
-        this.outgoing = Options.valueOf([input, inputIndex])
     }
 
     public watchSettings(settings: PulsarDelaySettings): Terminable {
@@ -373,6 +395,7 @@ export class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
     }
 
     terminate(): void {
+        super.terminate()
         this.preDelayL.disconnect()
         this.preDelayR.disconnect()
         this.preSplitter.disconnect()
@@ -382,10 +405,134 @@ export class PulsarDelay implements Serializer<PulsarDelayFormat>, Terminable {
         this.feedbackGain.disconnect()
         this.feedbackDelay.disconnect()
         this.feedbackSplitter.disconnect(this.feedbackMerger)
-        this.incoming.ifPresent(pair => pair[0].disconnect(this.preSplitter, pair[1], 0))
-        this.outgoing.ifPresent(pair => this.feedbackGain.disconnect(pair[0], 0, pair[1]))
-        this.incoming = Options.None
-        this.outgoing = Options.None
+    }
+
+    private setParameterValue(audioParam: AudioParam, value: number) {
+        interpolateParameterValueIfRunning(this.context, audioParam, value)
+    }
+}
+
+export class FlangerSettings implements Serializer<FlangerFormat> {
+    readonly delayTime: BoundNumericValue = new BoundNumericValue(new Linear(0.005, 0.200), 0.007)
+    readonly feedback: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.9)
+    readonly rate: BoundNumericValue = new BoundNumericValue(new Exp(0.01, 10.0), 0.1)
+    readonly depth: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.1)
+
+    public deserialize(format: FlangerFormat): FlangerSettings {
+        this.delayTime.set(format.delayTime)
+        this.feedback.set(format.feedback)
+        this.rate.set(format.rate)
+        this.depth.set(format.depth)
+        return this
+    }
+
+    public serialize(): FlangerFormat {
+        return {
+            delayTime: this.delayTime.get(),
+            feedback: this.feedback.get(),
+            rate: this.rate.get(),
+            depth: this.depth.get()
+        }
+    }
+}
+
+export interface FlangerFormat {
+    delayTime: number
+    feedback: number
+    rate: number
+    depth: number
+}
+
+export class Flanger extends DefaultIO implements Serializer<FlangerFormat>, Terminable {
+    private readonly delayNode: DelayNode
+    private readonly feedbackGainNode: GainNode
+    private readonly depthNode: GainNode
+    private readonly lfoNode: OscillatorNode
+
+    constructor(private readonly context: BaseAudioContext, format?: FlangerFormat) {
+        super()
+        this.delayNode = context.createDelay()
+        this.feedbackGainNode = context.createGain()
+        this.depthNode = context.createGain()
+        this.lfoNode = context.createOscillator()
+        this.lfoNode.connect(this.depthNode).connect(this.delayNode.delayTime)
+        this.lfoNode.start()
+        if (format === undefined) {
+            this.setDelayTime(0.007)
+            this.setFeedback(0.9)
+            this.setLfoRate(0.1)
+            this.setDepth(0.001)
+        } else {
+            this.deserialize(format)
+        }
+        this.delayNode.connect(this.feedbackGainNode).connect(this.delayNode)
+        this.setIO(this.delayNode, this.feedbackGainNode)
+    }
+
+    public setDelayTime(seconds: number): void {
+        this.setParameterValue(this.delayNode.delayTime, seconds)
+    }
+
+    public getDelayTime(): number {
+        return this.delayNode.delayTime.value
+    }
+
+    public setLfoRate(frequency: number): void {
+        this.setParameterValue(this.lfoNode.frequency, frequency)
+    }
+
+    public getLfoRate(): number {
+        return this.lfoNode.frequency.value
+    }
+
+    public setFeedback(gain: number): void {
+        this.setParameterValue(this.feedbackGainNode.gain, gain)
+    }
+
+    public getFeedback(): number {
+        return this.feedbackGainNode.gain.value
+    }
+
+    public setDepth(value: number): void {
+        this.setParameterValue(this.depthNode.gain, value / 100.0)
+    }
+
+    public getDepth(): number {
+        return this.depthNode.gain.value * 100.0
+    }
+
+    public deserialize(format: FlangerFormat): Flanger {
+        this.setDelayTime(format.delayTime)
+        this.setFeedback(format.feedback)
+        this.setLfoRate(format.rate)
+        this.setDepth(format.depth)
+        return this
+    }
+
+    public serialize(): FlangerFormat {
+        return {
+            delayTime: this.getDelayTime(),
+            feedback: this.getFeedback(),
+            rate: this.getLfoRate(),
+            depth: this.getDepth(),
+        }
+    }
+
+    public watchSettings(settings: FlangerSettings): Terminable {
+        const terminator: Terminator = new Terminator()
+        terminator.with(settings.delayTime.addObserver(seconds => this.setDelayTime(seconds)))
+        terminator.with(settings.feedback.addObserver(gain => this.setFeedback(gain)))
+        terminator.with(settings.rate.addObserver(frequency => this.setLfoRate(frequency)))
+        terminator.with(settings.depth.addObserver(value => this.setDepth(value)))
+        return terminator
+    }
+
+    public terminate(): void {
+        super.terminate()
+        this.delayNode.disconnect()
+        this.feedbackGainNode.disconnect()
+        this.lfoNode.disconnect()
+        this.depthNode.disconnect()
     }
 
     private setParameterValue(audioParam: AudioParam, value: number) {

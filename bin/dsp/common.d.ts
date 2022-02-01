@@ -22,7 +22,7 @@ export interface FloatAudio {
     sampleRate: number;
     numFrames: number;
 }
-export declare const encodeWavFloat: (audio: AudioBuffer | FloatAudio) => ArrayBuffer;
+export declare const encodeWavFloat: (audio: FloatAudio | AudioBuffer) => ArrayBuffer;
 export declare class FFT {
     private readonly n;
     static reverse(i: number): number;
@@ -43,4 +43,12 @@ export declare namespace Window {
         Hamming = 3,
         Hanning = 4
     }
+}
+export declare class Chords {
+    static Major: Uint8Array;
+    static Minor: Uint8Array;
+    static Semitones: string[];
+    static toString(midiNote: number): string;
+    static toStrings(midiNotes: any): string;
+    static compose(scale: Uint8Array, rootKey: number, variation: number, numKeys: number): Uint8Array;
 }

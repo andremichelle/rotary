@@ -402,6 +402,14 @@ body main h5 {
   font-size: 9px;
   background-color: #111;
 }
+body main h5.global {
+  color: #656565;
+  background-color: #12211c;
+}
+body main h5.aux {
+  color: #656565;
+  background-color: #121721;
+}
 body main > .global-editor {
   flex: 0 0 auto;
   margin: 1px 0 0 0;
