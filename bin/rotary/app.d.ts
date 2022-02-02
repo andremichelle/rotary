@@ -26,7 +26,9 @@ export declare class RotaryApp implements RotaryTrackEditorExecutor {
     readonly zoom: ObservableValueImpl<number>;
     private constructor();
     createNew(model: RotaryTrackModel | null, copy: boolean): void;
-    deleteTrack(): void;
+    deleteTrack(trackModel: RotaryTrackModel): void;
+    moveTrackLeft(trackModel: RotaryTrackModel): void;
+    moveTrackRight(trackModel: RotaryTrackModel): void;
     select(track: RotaryTrackModel): void;
     hasSelected(): boolean;
     render(phase: number): void;

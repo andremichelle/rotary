@@ -1,7 +1,9 @@
 import { Option, Terminable } from "../lib/common.js";
 import { RotaryTrackModel } from "./model.js";
 export interface RotaryTrackEditorExecutor {
-    deleteTrack(): void;
+    deleteTrack(trackModel: RotaryTrackModel): void;
+    moveTrackLeft(trackModel: RotaryTrackModel): void;
+    moveTrackRight(trackModel: RotaryTrackModel): void;
 }
 export declare class RotaryTrackEditor implements Terminable {
     private readonly executor;

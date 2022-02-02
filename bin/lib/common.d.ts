@@ -126,6 +126,7 @@ export declare class ObservableCollection<T> implements Observable<CollectionEve
     size(): number;
     map<U>(fn: (value: T, index: number, array: T[]) => U): U[];
     forEach(fn: (item: T, index: number) => void): void;
+    move(fromIndex: number, toIndex: number): void;
     reduce<U>(fn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U): U;
     addObserver(observer: Observer<CollectionEvent<T>>, notify?: boolean): Terminable;
     removeObserver(observer: Observer<CollectionEvent<T>>): boolean;

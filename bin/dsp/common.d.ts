@@ -22,7 +22,7 @@ export interface FloatAudio {
     sampleRate: number;
     numFrames: number;
 }
-export declare const encodeWavFloat: (audio: FloatAudio | AudioBuffer) => ArrayBuffer;
+export declare const encodeWavFloat: (audio: AudioBuffer | FloatAudio) => ArrayBuffer;
 export declare class FFT {
     private readonly n;
     static reverse(i: number): number;
