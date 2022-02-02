@@ -75,7 +75,7 @@ export class ProgressIndicator {
         this.progress.style.width = "180px"
         this.progress.style.height = "21px"
         this.progress.max = 1.0
-        if(undefined !== title) {
+        if (undefined !== title) {
             this.title.textContent = title
             this.layer.appendChild(this.title)
         }
