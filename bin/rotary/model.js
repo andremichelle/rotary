@@ -146,13 +146,7 @@ export class RotaryModel {
             phaseOffset: this.phaseOffset.get(),
             loopDuration: this.loopDuration.get(),
             tracks: this.tracks.map(track => track.serialize()),
-            aux: this.aux.map((value) => {
-                const settings = value.get();
-                return ({
-                    class: settings.constructor.name,
-                    data: settings.serialize()
-                });
-            })
+            aux: this.aux.map((value) => value.get().serialize())
         };
     }
     deserialize(format) {

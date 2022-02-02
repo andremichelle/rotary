@@ -11,8 +11,9 @@ export declare class TransportMessage {
 }
 export declare class UpdateFormatMessage {
     readonly format: RotaryFormat;
+    readonly version: number;
     readonly type = "format";
-    constructor(format: RotaryFormat);
+    constructor(format: RotaryFormat, version: number);
 }
 export declare class UploadSampleMessage {
     readonly key: number;

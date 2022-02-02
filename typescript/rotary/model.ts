@@ -130,7 +130,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     }
 
     addObserver(observer: Observer<RotaryModel>, notify: boolean): Terminable {
-        if(notify) observer(this)
+        if (notify) observer(this)
         return this.observable.addObserver(observer)
     }
 
@@ -236,13 +236,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
             phaseOffset: this.phaseOffset.get(),
             loopDuration: this.loopDuration.get(),
             tracks: this.tracks.map(track => track.serialize()),
-            aux: this.aux.map((value: ObservableValue<CompositeSettings<any>>): CompositeSettingsFormat<any> => {
-                const settings: CompositeSettings<any> = value.get()
-                return ({
-                    class: settings.constructor.name,
-                    data: settings.serialize()
-                })
-            })
+            aux: this.aux.map((value: ObservableValue<CompositeSettings<any>>): CompositeSettingsFormat<any> => value.get().serialize())
         }
     }
 
