@@ -45,7 +45,7 @@ export class Audio {
                     yield this.context.resume();
                 }
                 playButton.checked = moving;
-            }));
+            }), false);
             playButton.onchange = () => __awaiter(this, void 0, void 0, function* () {
                 if (playButton.checked) {
                     preview.transport.set(true);

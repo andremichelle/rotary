@@ -57,7 +57,7 @@ export class Audio {
                 await this.context.resume()
             }
             playButton.checked = moving
-        })
+        }, false)
         playButton.onchange = async () => {
             if (playButton.checked) {
                 preview.transport.set(true)

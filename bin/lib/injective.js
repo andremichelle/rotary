@@ -41,12 +41,12 @@ export class Injective {
         console.assert(this.constructor.name === format.class);
         return format.data;
     }
-    bindValue(property) {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this)));
-        return this.terminator.with(property);
-    }
     terminate() {
         this.terminator.terminate();
+    }
+    bindValue(property) {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false));
+        return this.terminator.with(property);
     }
 }
 export class IdentityInjective extends Injective {
@@ -104,8 +104,7 @@ export class CShapeInjective extends Injective {
         super();
         this.range = new Linear(0.0, 2.0);
         this.slope = this.bindValue(new BoundNumericValue(this.range, 1.0));
-        this.terminator.with(this.slope.addObserver(() => this.update()));
-        this.update();
+        this.terminator.with(this.slope.addObserver(() => this.update(), true));
     }
     fx(x) {
         return this.c * Math.sign(x - 0.5) * Math.pow(Math.abs(x - 0.5), this.o) + 0.5;

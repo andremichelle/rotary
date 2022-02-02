@@ -197,10 +197,10 @@ export class ObservableCollection {
     static observeNested(collection, observer) {
         const itemObserver = _ => observer(collection);
         const observers = new Map();
-        collection.forEach((observable) => observers.set(observable, observable.addObserver(itemObserver)));
+        collection.forEach((observable) => observers.set(observable, observable.addObserver(itemObserver, false)));
         collection.addObserver((event) => {
             if (event.type === CollectionEventType.Add) {
-                observers.set(event.item, event.item.addObserver(itemObserver));
+                observers.set(event.item, event.item.addObserver(itemObserver, false));
             }
             else if (event.type === CollectionEventType.Remove) {
                 const observer = observers.get(event.item);

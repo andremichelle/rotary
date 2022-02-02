@@ -100,10 +100,10 @@ export class RotaryTrackEditor implements Terminable {
 
         this.volume.with(model.volume)
         this.panning.with(model.panning)
-        this.auxSends[0].with(model.auxSends[0])
-        this.auxSends[1].with(model.auxSends[1])
-        this.auxSends[2].with(model.auxSends[2])
-        this.auxSends[3].with(model.auxSends[3])
+        this.auxSends[0].with(model.aux[0])
+        this.auxSends[1].with(model.aux[1])
+        this.auxSends[2].with(model.aux[2])
+        this.auxSends[3].with(model.aux[3])
 
         this.subject = Options.valueOf(model)
     }

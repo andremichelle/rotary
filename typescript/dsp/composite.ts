@@ -3,7 +3,11 @@
 import {
     ArrayUtils,
     BoundNumericValue,
+    Observable,
+    ObservableImpl,
+    ObservableValue,
     ObservableValueImpl,
+    Observer,
     Option,
     Options,
     readAudio,
@@ -205,7 +209,7 @@ export interface CompositeSettingsFormat<DATA extends Data> {
     data: DATA
 }
 
-export abstract class CompositeSettings<DATA extends Data> implements Serializer<CompositeSettingsFormat<DATA>> {
+export abstract class CompositeSettings<DATA extends Data> implements Observable<CompositeSettings<DATA>>, Serializer<CompositeSettingsFormat<DATA>>, Terminable {
     static from(format: CompositeSettingsFormat<any>): CompositeSettings<any> {
         switch (format.class) {
             case PulsarDelaySettings.name:
@@ -218,20 +222,40 @@ export abstract class CompositeSettings<DATA extends Data> implements Serializer
         throw new Error("Unknown movement format")
     }
 
+    protected readonly terminator: Terminator = new Terminator()
+    protected readonly observable: ObservableImpl<CompositeSettings<DATA>> = new ObservableImpl<CompositeSettings<DATA>>()
+
     abstract deserialize(format: CompositeSettingsFormat<DATA>): CompositeSettings<DATA>
 
     abstract serialize(): CompositeSettingsFormat<DATA>
 
-    pack(data?: DATA): CompositeSettingsFormat<DATA> {
+    protected pack(data?: DATA): CompositeSettingsFormat<DATA> {
         return {
             class: this.constructor.name,
             data: data
         }
     }
 
-    unpack(format: CompositeSettingsFormat<DATA>): DATA {
+    protected unpack(format: CompositeSettingsFormat<DATA>): DATA {
         console.assert(this.constructor.name === format.class)
         return format.data
+    }
+
+    protected bindValue<T>(property: ObservableValue<T>): ObservableValue<T> {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false))
+        return this.terminator.with(property)
+    }
+
+    addObserver(observer: Observer<CompositeSettings<DATA>>): Terminable {
+        return this.observable.addObserver(observer)
+    }
+
+    removeObserver(observer: Observer<CompositeSettings<DATA>>): boolean {
+        return this.observable.removeObserver(observer)
+    }
+
+    terminate(): void {
+        this.terminator.terminate()
     }
 }
 
@@ -277,7 +301,7 @@ export interface ConvolverData {
 }
 
 export class ConvolverSettings extends CompositeSettings<ConvolverData> {
-    readonly url: ObservableValueImpl<string> = new ObservableValueImpl<string>(null)
+    readonly url: ObservableValue<string> = this.bindValue(new ObservableValueImpl<string>(null))
 
     deserialize(format: CompositeSettingsFormat<ConvolverData>): ConvolverSettings {
         this.url.set(super.unpack(format).url)
@@ -304,7 +328,7 @@ export class Convolver extends DefaultComposite<ConvolverSettings> {
     }
 
     watchSettings(settings: ConvolverSettings): Terminable {
-        return settings.url.addObserver(url => this.setURL(url))
+        return settings.url.addObserver(url => this.setURL(url), true)
     }
 
     async setURL(url: string): Promise<void> {
@@ -346,12 +370,12 @@ export declare interface PulsarDelayData {
 }
 
 export class PulsarDelaySettings extends CompositeSettings<PulsarDelayData> {
-    readonly preDelayTimeL: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.125)
-    readonly preDelayTimeR: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.500)
-    readonly feedbackDelayTime: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.250)
-    readonly feedbackGain: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.6)
-    readonly feedbackLowpass: BoundNumericValue = new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0)
-    readonly feedbackHighpass: BoundNumericValue = new BoundNumericValue(new Linear(20.0, 20000.0), 480.0)
+    readonly preDelayTimeL = this.bindValue(new BoundNumericValue(Linear.Identity, 0.125))
+    readonly preDelayTimeR = this.bindValue(new BoundNumericValue(Linear.Identity, 0.500))
+    readonly feedbackDelayTime = this.bindValue(new BoundNumericValue(Linear.Identity, 0.250))
+    readonly feedbackGain = this.bindValue(new BoundNumericValue(Linear.Identity, 0.6))
+    readonly feedbackLowpass = this.bindValue(new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0))
+    readonly feedbackHighpass = this.bindValue(new BoundNumericValue(new Linear(20.0, 20000.0), 480.0))
 
     serialize(): CompositeSettingsFormat<PulsarDelayData> {
         return super.pack({
@@ -534,10 +558,10 @@ export interface FlangerData {
 }
 
 export class FlangerSettings extends CompositeSettings<FlangerData> {
-    readonly delayTime: BoundNumericValue = new BoundNumericValue(new Linear(0.005, 0.200), 0.007)
-    readonly feedback: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.9)
-    readonly rate: BoundNumericValue = new BoundNumericValue(new Exp(0.01, 10.0), 0.1)
-    readonly depth: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.1)
+    readonly delayTime = this.bindValue(new BoundNumericValue(new Linear(0.005, 0.200), 0.007))
+    readonly feedback = this.bindValue(new BoundNumericValue(Linear.Identity, 0.9))
+    readonly rate = this.bindValue(new BoundNumericValue(new Exp(0.01, 10.0), 0.1))
+    readonly depth = this.bindValue(new BoundNumericValue(Linear.Identity, 0.1))
 
     public deserialize(format: CompositeSettingsFormat<FlangerData>): FlangerSettings {
         const data = super.unpack(format)
@@ -586,10 +610,10 @@ export class Flanger extends DefaultComposite<FlangerSettings> {
 
     public watchSettings(settings: FlangerSettings): Terminable {
         const terminator: Terminator = new Terminator()
-        terminator.with(settings.delayTime.addObserver(seconds => this.setDelayTime(seconds)))
-        terminator.with(settings.feedback.addObserver(gain => this.setFeedback(gain)))
-        terminator.with(settings.rate.addObserver(frequency => this.setLfoRate(frequency)))
-        terminator.with(settings.depth.addObserver(value => this.setDepth(value)))
+        terminator.with(settings.delayTime.addObserver(seconds => this.setDelayTime(seconds), true))
+        terminator.with(settings.feedback.addObserver(gain => this.setFeedback(gain), true))
+        terminator.with(settings.rate.addObserver(frequency => this.setLfoRate(frequency), true))
+        terminator.with(settings.depth.addObserver(value => this.setDepth(value), true))
         return terminator
     }
 

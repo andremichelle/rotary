@@ -79,13 +79,13 @@ export abstract class Injective<DATA extends Data> implements Observable<Injecti
         return format.data
     }
 
-    bindValue(property: ObservableValue<any>): ObservableValue<any> {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this)))
-        return this.terminator.with(property)
-    }
-
     terminate(): void {
         this.terminator.terminate()
+    }
+
+    protected bindValue<T>(property: ObservableValue<T>): ObservableValue<T> {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false))
+        return this.terminator.with(property)
     }
 }
 
@@ -169,8 +169,7 @@ export class CShapeInjective extends Injective<CShapeData> {
 
     constructor() {
         super()
-        this.terminator.with(this.slope.addObserver(() => this.update()))
-        this.update()
+        this.terminator.with(this.slope.addObserver(() => this.update(), true))
     }
 
     fx(x: number): number {

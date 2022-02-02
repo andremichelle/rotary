@@ -1,4 +1,4 @@
-import { BoundNumericValue, Serializer, Terminable } from "../lib/common.js";
+import { Observable, ObservableImpl, ObservableValue, Observer, Serializer, Terminable, Terminator } from "../lib/common.js";
 import { Linear } from "../lib/mapping.js";
 export declare const interpolateParameterValueIfRunning: (context: BaseAudioContext, audioParam: AudioParam, value: number) => void;
 export declare class Channelstrip implements Terminable {
@@ -47,7 +47,58 @@ export declare class Mixer {
     isAnyChannelSolo(): boolean;
     setParameterValue(audioParam: AudioParam, value: number): void;
 }
-export interface PulsarDelayFormat {
+declare type Data = PulsarDelayData | ConvolverData | FlangerData;
+export interface CompositeSettingsFormat<DATA extends Data> {
+    class: string;
+    data: DATA;
+}
+export declare abstract class CompositeSettings<DATA extends Data> implements Observable<CompositeSettings<DATA>>, Serializer<CompositeSettingsFormat<DATA>>, Terminable {
+    static from(format: CompositeSettingsFormat<any>): CompositeSettings<any>;
+    protected readonly terminator: Terminator;
+    protected readonly observable: ObservableImpl<CompositeSettings<DATA>>;
+    abstract deserialize(format: CompositeSettingsFormat<DATA>): CompositeSettings<DATA>;
+    abstract serialize(): CompositeSettingsFormat<DATA>;
+    protected pack(data?: DATA): CompositeSettingsFormat<DATA>;
+    protected unpack(format: CompositeSettingsFormat<DATA>): DATA;
+    protected bindValue<T>(property: ObservableValue<T>): ObservableValue<T>;
+    addObserver(observer: Observer<CompositeSettings<DATA>>): Terminable;
+    removeObserver(observer: Observer<CompositeSettings<DATA>>): boolean;
+    terminate(): void;
+}
+export declare abstract class DefaultComposite<SETTINGS extends CompositeSettings<Data>> implements Terminable {
+    private incoming;
+    private outgoing;
+    private input;
+    private output;
+    protected constructor();
+    protected setInputOutput(input: AudioNode, output: AudioNode): void;
+    abstract watchSettings(settings: SETTINGS): Terminable;
+    connectToInput(output: AudioNode, outputIndex?: number): void;
+    connectToOutput(input: AudioNode, inputIndex?: number): void;
+    terminate(): void;
+}
+export interface ConvolverData {
+    url: string;
+}
+export declare class ConvolverSettings extends CompositeSettings<ConvolverData> {
+    readonly url: ObservableValue<string>;
+    deserialize(format: CompositeSettingsFormat<ConvolverData>): ConvolverSettings;
+    serialize(): CompositeSettingsFormat<ConvolverData>;
+}
+export declare class Convolver extends DefaultComposite<ConvolverSettings> {
+    private readonly context;
+    private readonly convolverNode;
+    private ready;
+    private url;
+    constructor(context: BaseAudioContext, format?: ConvolverData);
+    watchSettings(settings: ConvolverSettings): Terminable;
+    setURL(url: string): Promise<void>;
+    getURL(): string;
+    isReady(): boolean;
+    deserialize(data: ConvolverData): Convolver;
+    serialize(): ConvolverData;
+}
+export declare interface PulsarDelayData {
     preDelayTimeL: number;
     preDelayTimeR: number;
     feedbackDelayTime: number;
@@ -55,28 +106,17 @@ export interface PulsarDelayFormat {
     feedbackLowpass: number;
     feedbackHighpass: number;
 }
-export declare class PulsarDelaySettings implements Serializer<PulsarDelayFormat> {
-    readonly preDelayTimeL: BoundNumericValue;
-    readonly preDelayTimeR: BoundNumericValue;
-    readonly feedbackDelayTime: BoundNumericValue;
-    readonly feedbackGain: BoundNumericValue;
-    readonly feedbackLowpass: BoundNumericValue;
-    readonly feedbackHighpass: BoundNumericValue;
-    deserialize(format: PulsarDelayFormat): PulsarDelaySettings;
-    serialize(): PulsarDelayFormat;
+export declare class PulsarDelaySettings extends CompositeSettings<PulsarDelayData> {
+    readonly preDelayTimeL: ObservableValue<number>;
+    readonly preDelayTimeR: ObservableValue<number>;
+    readonly feedbackDelayTime: ObservableValue<number>;
+    readonly feedbackGain: ObservableValue<number>;
+    readonly feedbackLowpass: ObservableValue<number>;
+    readonly feedbackHighpass: ObservableValue<number>;
+    serialize(): CompositeSettingsFormat<PulsarDelayData>;
+    deserialize(format: CompositeSettingsFormat<PulsarDelayData>): PulsarDelaySettings;
 }
-export declare abstract class DefaultIO implements Terminable {
-    private incoming;
-    private outgoing;
-    private input;
-    private output;
-    protected constructor();
-    protected setIO(input: AudioNode, output: AudioNode): void;
-    connectToInput(output: AudioNode, outputIndex?: number): void;
-    connectToOutput(input: AudioNode, inputIndex?: number): void;
-    terminate(): void;
-}
-export declare class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayFormat>, Terminable {
+export declare class PulsarDelay extends DefaultComposite<PulsarDelaySettings> {
     private readonly context;
     private readonly preSplitter;
     private readonly preDelayL;
@@ -87,7 +127,7 @@ export declare class PulsarDelay extends DefaultIO implements Serializer<PulsarD
     private readonly feedbackDelay;
     private readonly feedbackGain;
     private readonly feedbackSplitter;
-    constructor(context: BaseAudioContext, format?: PulsarDelayFormat);
+    constructor(context: BaseAudioContext, format?: PulsarDelayData);
     watchSettings(settings: PulsarDelaySettings): Terminable;
     setPreDelayTimeL(seconds: number): void;
     getPreDelayTimeL(): number;
@@ -101,32 +141,33 @@ export declare class PulsarDelay extends DefaultIO implements Serializer<PulsarD
     getFeedbackLowpass(): number;
     setFeedbackHighpass(frequency: number): void;
     getFeedbackHighpass(): number;
-    deserialize(format: PulsarDelayFormat): PulsarDelay;
-    serialize(): PulsarDelayFormat;
+    deserialize(format: PulsarDelayData): PulsarDelay;
+    serialize(): PulsarDelayData;
     terminate(): void;
     private setParameterValue;
 }
-export declare class FlangerSettings implements Serializer<FlangerFormat> {
-    readonly delayTime: BoundNumericValue;
-    readonly feedback: BoundNumericValue;
-    readonly rate: BoundNumericValue;
-    readonly depth: BoundNumericValue;
-    deserialize(format: FlangerFormat): FlangerSettings;
-    serialize(): FlangerFormat;
-}
-export interface FlangerFormat {
+export interface FlangerData {
     delayTime: number;
     feedback: number;
     rate: number;
     depth: number;
 }
-export declare class Flanger extends DefaultIO implements Serializer<FlangerFormat>, Terminable {
+export declare class FlangerSettings extends CompositeSettings<FlangerData> {
+    readonly delayTime: ObservableValue<number>;
+    readonly feedback: ObservableValue<number>;
+    readonly rate: ObservableValue<number>;
+    readonly depth: ObservableValue<number>;
+    deserialize(format: CompositeSettingsFormat<FlangerData>): FlangerSettings;
+    serialize(): CompositeSettingsFormat<FlangerData>;
+}
+export declare class Flanger extends DefaultComposite<FlangerSettings> {
     private readonly context;
     private readonly delayNode;
     private readonly feedbackGainNode;
     private readonly depthNode;
     private readonly lfoNode;
-    constructor(context: BaseAudioContext, format?: FlangerFormat);
+    constructor(context: BaseAudioContext, format?: FlangerData);
+    watchSettings(settings: FlangerSettings): Terminable;
     setDelayTime(seconds: number): void;
     getDelayTime(): number;
     setLfoRate(frequency: number): void;
@@ -135,9 +176,9 @@ export declare class Flanger extends DefaultIO implements Serializer<FlangerForm
     getFeedback(): number;
     setDepth(value: number): void;
     getDepth(): number;
-    deserialize(format: FlangerFormat): Flanger;
-    serialize(): FlangerFormat;
-    watchSettings(settings: FlangerSettings): Terminable;
+    deserialize(format: FlangerData): Flanger;
+    serialize(): FlangerData;
     terminate(): void;
     private setParameterValue;
 }
+export {};

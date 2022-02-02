@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ArrayUtils, BoundNumericValue, ObservableValueImpl, Options, readAudio, Terminator } from "../lib/common.js";
+import { ArrayUtils, BoundNumericValue, ObservableImpl, ObservableValueImpl, Options, readAudio, Terminator } from "../lib/common.js";
 import { Exp, Linear, Volume } from "../lib/mapping.js";
 import { dbToGain, gainToDb, VALUE_INTERPOLATION_TIME } from "./common.js";
 export const interpolateParameterValueIfRunning = (context, audioParam, value) => {
@@ -156,6 +156,10 @@ export class Mixer {
     }
 }
 export class CompositeSettings {
+    constructor() {
+        this.terminator = new Terminator();
+        this.observable = new ObservableImpl();
+    }
     static from(format) {
         switch (format.class) {
             case PulsarDelaySettings.name:
@@ -176,6 +180,19 @@ export class CompositeSettings {
     unpack(format) {
         console.assert(this.constructor.name === format.class);
         return format.data;
+    }
+    bindValue(property) {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false));
+        return this.terminator.with(property);
+    }
+    addObserver(observer) {
+        return this.observable.addObserver(observer);
+    }
+    removeObserver(observer) {
+        return this.observable.removeObserver(observer);
+    }
+    terminate() {
+        this.terminator.terminate();
     }
 }
 export class DefaultComposite {
@@ -209,7 +226,7 @@ export class DefaultComposite {
 export class ConvolverSettings extends CompositeSettings {
     constructor() {
         super(...arguments);
-        this.url = new ObservableValueImpl(null);
+        this.url = this.bindValue(new ObservableValueImpl(null));
     }
     deserialize(format) {
         this.url.set(super.unpack(format).url);
@@ -232,7 +249,7 @@ export class Convolver extends DefaultComposite {
         }
     }
     watchSettings(settings) {
-        return settings.url.addObserver(url => this.setURL(url));
+        return settings.url.addObserver(url => this.setURL(url), true);
     }
     setURL(url) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -264,12 +281,12 @@ export class Convolver extends DefaultComposite {
 export class PulsarDelaySettings extends CompositeSettings {
     constructor() {
         super(...arguments);
-        this.preDelayTimeL = new BoundNumericValue(Linear.Identity, 0.125);
-        this.preDelayTimeR = new BoundNumericValue(Linear.Identity, 0.500);
-        this.feedbackDelayTime = new BoundNumericValue(Linear.Identity, 0.250);
-        this.feedbackGain = new BoundNumericValue(Linear.Identity, 0.6);
-        this.feedbackLowpass = new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0);
-        this.feedbackHighpass = new BoundNumericValue(new Linear(20.0, 20000.0), 480.0);
+        this.preDelayTimeL = this.bindValue(new BoundNumericValue(Linear.Identity, 0.125));
+        this.preDelayTimeR = this.bindValue(new BoundNumericValue(Linear.Identity, 0.500));
+        this.feedbackDelayTime = this.bindValue(new BoundNumericValue(Linear.Identity, 0.250));
+        this.feedbackGain = this.bindValue(new BoundNumericValue(Linear.Identity, 0.6));
+        this.feedbackLowpass = this.bindValue(new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0));
+        this.feedbackHighpass = this.bindValue(new BoundNumericValue(new Linear(20.0, 20000.0), 480.0));
     }
     serialize() {
         return super.pack({
@@ -418,10 +435,10 @@ export class PulsarDelay extends DefaultComposite {
 export class FlangerSettings extends CompositeSettings {
     constructor() {
         super(...arguments);
-        this.delayTime = new BoundNumericValue(new Linear(0.005, 0.200), 0.007);
-        this.feedback = new BoundNumericValue(Linear.Identity, 0.9);
-        this.rate = new BoundNumericValue(new Exp(0.01, 10.0), 0.1);
-        this.depth = new BoundNumericValue(Linear.Identity, 0.1);
+        this.delayTime = this.bindValue(new BoundNumericValue(new Linear(0.005, 0.200), 0.007));
+        this.feedback = this.bindValue(new BoundNumericValue(Linear.Identity, 0.9));
+        this.rate = this.bindValue(new BoundNumericValue(new Exp(0.01, 10.0), 0.1));
+        this.depth = this.bindValue(new BoundNumericValue(Linear.Identity, 0.1));
     }
     deserialize(format) {
         const data = super.unpack(format);
@@ -464,10 +481,10 @@ export class Flanger extends DefaultComposite {
     }
     watchSettings(settings) {
         const terminator = new Terminator();
-        terminator.with(settings.delayTime.addObserver(seconds => this.setDelayTime(seconds)));
-        terminator.with(settings.feedback.addObserver(gain => this.setFeedback(gain)));
-        terminator.with(settings.rate.addObserver(frequency => this.setLfoRate(frequency)));
-        terminator.with(settings.depth.addObserver(value => this.setDepth(value)));
+        terminator.with(settings.delayTime.addObserver(seconds => this.setDelayTime(seconds), true));
+        terminator.with(settings.feedback.addObserver(gain => this.setFeedback(gain), true));
+        terminator.with(settings.rate.addObserver(frequency => this.setLfoRate(frequency), true));
+        terminator.with(settings.depth.addObserver(value => this.setDepth(value), true));
         return terminator;
     }
     setDelayTime(seconds) {

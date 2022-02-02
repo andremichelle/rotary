@@ -64,7 +64,7 @@ export declare interface RotaryTrackFormat {
     gain: number
     volume: number
     panning: number
-    auxSends: number[]
+    aux: number[]
     mute: boolean
     solo: boolean
 }
@@ -113,11 +113,20 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     readonly aux: ObservableValue<CompositeSettings<any>>[] = [
         new ObservableValueImpl(new PulsarDelaySettings()),
         new ObservableValueImpl(new ConvolverSettings()),
-        new ObservableValueImpl(new FlangerSettings())
+        new ObservableValueImpl(new FlangerSettings()),
+        new ObservableValueImpl(new ConvolverSettings())
     ]
 
     constructor() {
-        ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this))
+        const notify = () => this.observable.notify(this)
+        ObservableCollection.observeNested(this.tracks, notify)
+        const auxTerminators: Terminator[] = ArrayUtils.fill(this.aux.length, () => this.terminator.with(new Terminator()))
+        this.aux.forEach((value: ObservableValue<CompositeSettings<any>>, index: number) => {
+            this.terminator.with(value.addObserver((compositeSettings: CompositeSettings<any>) => {
+                auxTerminators[index].terminate()
+                auxTerminators[index].with(compositeSettings.addObserver(notify))
+            }, false))
+        })
     }
 
     addObserver(observer: Observer<RotaryModel>): Terminable {
@@ -176,15 +185,14 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         copy.width.set(source.width.get())
         copy.widthPadding.set(source.widthPadding.get())
         copy.motion.set(source.motion.get().copy())
-        copy.reverse.set(source.reverse.get())
         copy.bend.set(source.bend.get())
         copy.phaseOffset.set(source.phaseOffset.get())
         copy.frequency.set(source.frequency.get())
-
+        copy.reverse.set(source.reverse.get())
         copy.gain.set(source.gain.get())
         copy.volume.set(source.volume.get())
         copy.panning.set(source.panning.get())
-        copy.auxSends.forEach((value, index) => value.set(source.auxSends[index].get()))
+        copy.aux.forEach((value: BoundNumericValue, index: number) => value.set(source.aux[index].get()))
         copy.mute.set(source.mute.get())
         copy.solo.set(source.solo.get())
         return copy
@@ -244,14 +252,12 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         this.loopDuration.set(format.loopDuration)
         this.tracks.clear()
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)))
-        this.aux.forEach((value: ObservableValue<CompositeSettings<any>>, index: number) => {
-            value.set(CompositeSettings.from(format.aux[index]))
-        })
+        this.aux.forEach((value: ObservableValue<CompositeSettings<any>>, index: number) => value.set(CompositeSettings.from(format.aux[index])))
         return this
     }
 
-    private bindValue(property: ObservableValue<any>): ObservableValue<any> {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this)))
+    private bindValue<T>(property: ObservableValue<T>): ObservableValue<T> {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false))
         return this.terminator.with(property)
     }
 }
@@ -276,26 +282,27 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     private readonly terminator: Terminator = new Terminator()
     private readonly observable: ObservableImpl<RotaryTrackModel> = new ObservableImpl<RotaryTrackModel>()
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
-    readonly segments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 128), 8))
-    readonly exclude = this.observeValue(new ObservableBits(128))
-    readonly width = this.observeValue(new BoundNumericValue(new LinearInteger(1, 1024), 12))
-    readonly widthPadding = this.observeValue(new BoundNumericValue(new LinearInteger(0, 1024), 0))
-    readonly length = this.observeValue(new BoundNumericValue(Linear.Identity, 1.0))
-    readonly lengthRatio = this.observeValue(new BoundNumericValue(Linear.Identity, 0.5))
-    readonly outline = this.observeValue(new BoundNumericValue(new LinearInteger(0, 16), 0))
-    readonly fill = this.observeValue(new ObservableValueImpl<Fill>(Fill.Flat))
-    readonly rgb = this.observeValue(new ObservableValueImpl(<number>(0xFFFFFF)))
-    readonly motion: ObservableValue<Injective<any>> = this.observeValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
-    readonly bend: ObservableValue<Injective<any>> = this.observeValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
-    readonly phaseOffset = this.observeValue(new BoundNumericValue(Linear.Identity, 0.0))
-    readonly frequency = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
-    readonly fragments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
-    readonly reverse = this.observeValue(new ObservableValueImpl<boolean>(false))
+    readonly segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 128), 8))
+    readonly exclude = this.bindValue(new ObservableBits(128))
+    readonly width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12))
+    readonly widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0))
+    readonly length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0))
+    readonly lengthRatio = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5))
+    readonly outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0))
+    readonly fill = this.bindValue(new ObservableValueImpl<Fill>(Fill.Flat))
+    readonly rgb = this.bindValue(new ObservableValueImpl(<number>(0xFFFFFF)))
+    readonly motion: ObservableValue<Injective<any>> = this.bindValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
+    readonly bend: ObservableValue<Injective<any>> = this.bindValue(new ObservableValueImpl<Injective<any>>(new IdentityInjective()))
+    readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0))
+    readonly frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
+    readonly fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0))
+    readonly reverse = this.bindValue(new ObservableValueImpl<boolean>(false))
 
     readonly gain = new BoundNumericValue(Channelstrip.GAIN_MAPPING, 0.5)
     readonly volume = new BoundNumericValue(Linear.Identity, 1.0)
     readonly panning = new BoundNumericValue(Linear.Bipolar, 0.0)
-    readonly auxSends: BoundNumericValue[] = ArrayUtils.fill(RotaryModel.NUM_AUX, () => new BoundNumericValue(Linear.Identity, 0.0))
+    readonly aux: BoundNumericValue[] = ArrayUtils.fill(RotaryModel.NUM_AUX,
+        () => new BoundNumericValue(Linear.Identity, 0.0))
     readonly mute = new ObservableValueImpl<boolean>(false)
     readonly solo = new ObservableValueImpl<boolean>(false)
 
@@ -306,18 +313,13 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.terminator.with(this.motion.addObserver((motion: Injective<any>) => {
             motionTerminator.terminate()
             motionTerminator.with(motion.addObserver(() => this.observable.notify(this)))
-        }))
+        }, false))
         const bendTerminator: Terminator = this.terminator.with(new Terminator())
         this.terminator.with(this.bend.addObserver((bend: Injective<any>) => {
             bendTerminator.terminate()
             bendTerminator.with(bend.addObserver(() => this.observable.notify(this)))
-        }))
+        }, false))
         this.updateGradient()
-    }
-
-    observeValue<T extends Observable<any>>(property: T): T {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this)))
-        return this.terminator.with(property)
     }
 
     addObserver(observer: Observer<RotaryTrackModel>): Terminable {
@@ -378,7 +380,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.reverse.set(random.nextBoolean())
 
         this.panning.set(random.nextDouble(-1.0, 1.0))
-        this.auxSends.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0)
+        this.aux.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0)
         return this
     }
 
@@ -407,7 +409,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             gain: this.gain.get(),
             volume: this.volume.get(),
             panning: this.panning.get(),
-            auxSends: this.auxSends.map(value => value.get()),
+            aux: this.aux.map(value => value.get()),
             mute: this.mute.get(),
             solo: this.solo.get(),
         }
@@ -433,7 +435,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.gain.set(format.gain)
         this.volume.set(format.volume)
         this.panning.set(format.panning)
-        this.auxSends.forEach((value: BoundNumericValue, index: number) => value.set(format.auxSends[index]))
+        this.aux.forEach((value: BoundNumericValue, index: number) => value.set(format.aux[index]))
         this.mute.set(format.mute)
         this.solo.set(format.solo)
         return this
@@ -522,6 +524,11 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             }
             seekMin = ++index * step
         }
+    }
+
+    private bindValue<T extends Observable<any>>(property: T): T {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false))
+        return this.terminator.with(property)
     }
 
     private updateGradient(): void {

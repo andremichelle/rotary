@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { CollectionEventType, readAudio, Terminator } from "../lib/common.js";
+import { ArrayUtils, CollectionEventType, readAudio, Terminator } from "../lib/common.js";
 import { RotaryModel } from "./model.js";
 import { LimiterWorklet } from "../dsp/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
@@ -56,7 +56,7 @@ export const initAudioScene = () => {
                     terminator.with(track.volume.addObserver(volume => channelstrip.setVolume(volume), true));
                     terminator.with(track.panning.addObserver(panning => channelstrip.setPanning(panning), true));
                     for (let index = 0; index < RotaryModel.NUM_AUX; index++) {
-                        terminator.with(track.auxSends[index]
+                        terminator.with(track.aux[index]
                             .addObserver(volume => channelstrip.setAuxSend(index, volume), true));
                     }
                     terminator.with({ terminate: () => mixer.removeChannelstrip(channelstrip) });
@@ -72,24 +72,29 @@ export const initAudioScene = () => {
                         map.delete(track);
                     }
                 }, true));
+                const auxTerminators = ArrayUtils.fill(model.aux.length, () => terminator.with(new Terminator()));
                 model.aux.forEach((value, index) => {
-                    const settings = value.get();
-                    let composite = null;
-                    if (settings instanceof PulsarDelaySettings) {
-                        composite = new PulsarDelay(context);
-                    }
-                    else if (settings instanceof ConvolverSettings) {
-                        composite = new Convolver(context);
-                    }
-                    else if (settings instanceof FlangerSettings) {
-                        composite = new Flanger(context);
-                    }
-                    if (null === composite) {
-                        throw new Error(`Unknown composite for aux ${settings}`);
-                    }
-                    terminator.with(composite.watchSettings(settings));
-                    composite.connectToInput(mixer.auxSend(index));
-                    composite.connectToOutput(mixer.auxReturn(index));
+                    terminator.with(value.addObserver(settings => {
+                        const auxTerminator = auxTerminators[index];
+                        auxTerminator.terminate();
+                        let composite = null;
+                        if (settings instanceof PulsarDelaySettings) {
+                            composite = new PulsarDelay(context);
+                        }
+                        else if (settings instanceof ConvolverSettings) {
+                            composite = new Convolver(context);
+                        }
+                        else if (settings instanceof FlangerSettings) {
+                            composite = new Flanger(context);
+                        }
+                        if (null === composite) {
+                            throw new Error(`Unknown composite for ${settings}`);
+                        }
+                        composite.connectToInput(mixer.auxSend(index));
+                        composite.connectToOutput(mixer.auxReturn(index));
+                        auxTerminator.with(composite.watchSettings(settings));
+                        auxTerminator.with(composite);
+                    }, true));
                 });
                 mixer.masterOutput().connect(limiterWorklet);
                 limiterWorklet.connect(output);

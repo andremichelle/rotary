@@ -1,4 +1,5 @@
 import {
+    ArrayUtils,
     Boot,
     CollectionEvent,
     CollectionEventType,
@@ -15,6 +16,7 @@ import {
     CompositeSettings,
     Convolver,
     ConvolverSettings,
+    DefaultComposite,
     Flanger,
     FlangerSettings,
     Mixer,
@@ -72,7 +74,7 @@ export const initAudioScene = (): AudioScene => {
                 terminator.with(track.volume.addObserver(volume => channelstrip.setVolume(volume), true))
                 terminator.with(track.panning.addObserver(panning => channelstrip.setPanning(panning), true))
                 for (let index = 0; index < RotaryModel.NUM_AUX; index++) {
-                    terminator.with(track.auxSends[index]
+                    terminator.with(track.aux[index]
                         .addObserver(volume => channelstrip.setAuxSend(index, volume), true))
                 }
                 terminator.with({terminate: () => mixer.removeChannelstrip(channelstrip)})
@@ -88,22 +90,27 @@ export const initAudioScene = (): AudioScene => {
                 }
             }, true))
 
+            const auxTerminators: Terminator[] = ArrayUtils.fill(model.aux.length, () => terminator.with(new Terminator()))
             model.aux.forEach((value: ObservableValue<CompositeSettings<any>>, index: number) => {
-                const settings = value.get()
-                let composite = null
-                if (settings instanceof PulsarDelaySettings) {
-                    composite = new PulsarDelay(context)
-                } else if (settings instanceof ConvolverSettings) {
-                    composite = new Convolver(context)
-                } else if (settings instanceof FlangerSettings) {
-                    composite = new Flanger(context)
-                }
-                if (null === composite) {
-                    throw new Error(`Unknown composite for aux ${settings}`)
-                }
-                terminator.with(composite.watchSettings(settings))
-                composite.connectToInput(mixer.auxSend(index))
-                composite.connectToOutput(mixer.auxReturn(index))
+                terminator.with(value.addObserver(settings => {
+                    const auxTerminator = auxTerminators[index]
+                    auxTerminator.terminate()
+                    let composite: DefaultComposite<any> = null
+                    if (settings instanceof PulsarDelaySettings) {
+                        composite = new PulsarDelay(context)
+                    } else if (settings instanceof ConvolverSettings) {
+                        composite = new Convolver(context)
+                    } else if (settings instanceof FlangerSettings) {
+                        composite = new Flanger(context)
+                    }
+                    if (null === composite) {
+                        throw new Error(`Unknown composite for ${settings}`)
+                    }
+                    composite.connectToInput(mixer.auxSend(index))
+                    composite.connectToOutput(mixer.auxReturn(index))
+                    auxTerminator.with(composite.watchSettings(settings))
+                    auxTerminator.with(composite)
+                }, true))
             })
 
             mixer.masterOutput().connect(limiterWorklet)

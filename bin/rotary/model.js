@@ -40,9 +40,18 @@ export class RotaryModel {
         this.aux = [
             new ObservableValueImpl(new PulsarDelaySettings()),
             new ObservableValueImpl(new ConvolverSettings()),
-            new ObservableValueImpl(new FlangerSettings())
+            new ObservableValueImpl(new FlangerSettings()),
+            new ObservableValueImpl(new ConvolverSettings())
         ];
-        ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this));
+        const notify = () => this.observable.notify(this);
+        ObservableCollection.observeNested(this.tracks, notify);
+        const auxTerminators = ArrayUtils.fill(this.aux.length, () => this.terminator.with(new Terminator()));
+        this.aux.forEach((value, index) => {
+            this.terminator.with(value.addObserver((compositeSettings) => {
+                auxTerminators[index].terminate();
+                auxTerminators[index].with(compositeSettings.addObserver(notify));
+            }, false));
+        });
     }
     addObserver(observer) {
         return this.observable.addObserver(observer);
@@ -92,14 +101,14 @@ export class RotaryModel {
         copy.width.set(source.width.get());
         copy.widthPadding.set(source.widthPadding.get());
         copy.motion.set(source.motion.get().copy());
-        copy.reverse.set(source.reverse.get());
         copy.bend.set(source.bend.get());
         copy.phaseOffset.set(source.phaseOffset.get());
         copy.frequency.set(source.frequency.get());
+        copy.reverse.set(source.reverse.get());
         copy.gain.set(source.gain.get());
         copy.volume.set(source.volume.get());
         copy.panning.set(source.panning.get());
-        copy.auxSends.forEach((value, index) => value.set(source.auxSends[index].get()));
+        copy.aux.forEach((value, index) => value.set(source.aux[index].get()));
         copy.mute.set(source.mute.get());
         copy.solo.set(source.solo.get());
         return copy;
@@ -151,13 +160,11 @@ export class RotaryModel {
         this.loopDuration.set(format.loopDuration);
         this.tracks.clear();
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)));
-        this.aux.forEach((value, index) => {
-            value.set(CompositeSettings.from(format.aux[index]));
-        });
+        this.aux.forEach((value, index) => value.set(CompositeSettings.from(format.aux[index])));
         return this;
     }
     bindValue(property) {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this)));
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false));
         return this.terminator.with(property);
     }
 }
@@ -189,25 +196,25 @@ export class RotaryTrackModel {
         this.terminator = new Terminator();
         this.observable = new ObservableImpl();
         this.gradient = [];
-        this.segments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 128), 8));
-        this.exclude = this.observeValue(new ObservableBits(128));
-        this.width = this.observeValue(new BoundNumericValue(new LinearInteger(1, 1024), 12));
-        this.widthPadding = this.observeValue(new BoundNumericValue(new LinearInteger(0, 1024), 0));
-        this.length = this.observeValue(new BoundNumericValue(Linear.Identity, 1.0));
-        this.lengthRatio = this.observeValue(new BoundNumericValue(Linear.Identity, 0.5));
-        this.outline = this.observeValue(new BoundNumericValue(new LinearInteger(0, 16), 0));
-        this.fill = this.observeValue(new ObservableValueImpl(Fill.Flat));
-        this.rgb = this.observeValue(new ObservableValueImpl((0xFFFFFF)));
-        this.motion = this.observeValue(new ObservableValueImpl(new IdentityInjective()));
-        this.bend = this.observeValue(new ObservableValueImpl(new IdentityInjective()));
-        this.phaseOffset = this.observeValue(new BoundNumericValue(Linear.Identity, 0.0));
-        this.frequency = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
-        this.fragments = this.observeValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
-        this.reverse = this.observeValue(new ObservableValueImpl(false));
+        this.segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 128), 8));
+        this.exclude = this.bindValue(new ObservableBits(128));
+        this.width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12));
+        this.widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0));
+        this.length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0));
+        this.lengthRatio = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5));
+        this.outline = this.bindValue(new BoundNumericValue(new LinearInteger(0, 16), 0));
+        this.fill = this.bindValue(new ObservableValueImpl(Fill.Flat));
+        this.rgb = this.bindValue(new ObservableValueImpl((0xFFFFFF)));
+        this.motion = this.bindValue(new ObservableValueImpl(new IdentityInjective()));
+        this.bend = this.bindValue(new ObservableValueImpl(new IdentityInjective()));
+        this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.0));
+        this.frequency = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
+        this.fragments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 16), 1.0));
+        this.reverse = this.bindValue(new ObservableValueImpl(false));
         this.gain = new BoundNumericValue(Channelstrip.GAIN_MAPPING, 0.5);
         this.volume = new BoundNumericValue(Linear.Identity, 1.0);
         this.panning = new BoundNumericValue(Linear.Bipolar, 0.0);
-        this.auxSends = ArrayUtils.fill(RotaryModel.NUM_AUX, () => new BoundNumericValue(Linear.Identity, 0.0));
+        this.aux = ArrayUtils.fill(RotaryModel.NUM_AUX, () => new BoundNumericValue(Linear.Identity, 0.0));
         this.mute = new ObservableValueImpl(false);
         this.solo = new ObservableValueImpl(false);
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()));
@@ -215,17 +222,13 @@ export class RotaryTrackModel {
         this.terminator.with(this.motion.addObserver((motion) => {
             motionTerminator.terminate();
             motionTerminator.with(motion.addObserver(() => this.observable.notify(this)));
-        }));
+        }, false));
         const bendTerminator = this.terminator.with(new Terminator());
         this.terminator.with(this.bend.addObserver((bend) => {
             bendTerminator.terminate();
             bendTerminator.with(bend.addObserver(() => this.observable.notify(this)));
-        }));
+        }, false));
         this.updateGradient();
-    }
-    observeValue(property) {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this)));
-        return this.terminator.with(property);
     }
     addObserver(observer) {
         return this.observable.addObserver(observer);
@@ -279,7 +282,7 @@ export class RotaryTrackModel {
         this.fragments.set(Math.floor(random.nextDouble(1.0, 3.0)));
         this.reverse.set(random.nextBoolean());
         this.panning.set(random.nextDouble(-1.0, 1.0));
-        this.auxSends.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0);
+        this.aux.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0);
         return this;
     }
     terminate() {
@@ -305,7 +308,7 @@ export class RotaryTrackModel {
             gain: this.gain.get(),
             volume: this.volume.get(),
             panning: this.panning.get(),
-            auxSends: this.auxSends.map(value => value.get()),
+            aux: this.aux.map(value => value.get()),
             mute: this.mute.get(),
             solo: this.solo.get(),
         };
@@ -329,7 +332,7 @@ export class RotaryTrackModel {
         this.gain.set(format.gain);
         this.volume.set(format.volume);
         this.panning.set(format.panning);
-        this.auxSends.forEach((value, index) => value.set(format.auxSends[index]));
+        this.aux.forEach((value, index) => value.set(format.aux[index]));
         this.mute.set(format.mute);
         this.solo.set(format.solo);
         return this;
@@ -411,6 +414,10 @@ export class RotaryTrackModel {
             }
             seekMin = ++index * step;
         }
+    }
+    bindValue(property) {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false));
+        return this.terminator.with(property);
     }
     updateGradient() {
         const rgb = this.rgb.get();

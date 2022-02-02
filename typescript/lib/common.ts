@@ -134,7 +134,7 @@ export class Options {
 export type Observer<VALUE> = (value: VALUE) => void
 
 export interface Observable<VALUE> extends Terminable {
-    addObserver(observer: Observer<VALUE>): Terminable
+    addObserver(observer: Observer<VALUE>, notify: boolean): Terminable
 
     removeObserver(observer: Observer<VALUE>): boolean
 }
@@ -266,10 +266,10 @@ export class ObservableCollection<T> implements Observable<CollectionEvent<T>> {
                                                   observer: (collection: ObservableCollection<U>) => void): Terminable {
         const itemObserver = _ => observer(collection)
         const observers: Map<U, Terminable> = new Map()
-        collection.forEach((observable: U) => observers.set(observable, observable.addObserver(itemObserver)))
+        collection.forEach((observable: U) => observers.set(observable, observable.addObserver(itemObserver, false)))
         collection.addObserver((event: CollectionEvent<U>) => {
             if (event.type === CollectionEventType.Add) {
-                observers.set(event.item, event.item.addObserver(itemObserver))
+                observers.set(event.item, event.item.addObserver(itemObserver, false))
             } else if (event.type === CollectionEventType.Remove) {
                 const observer = observers.get(event.item)
                 console.assert(observer !== undefined)

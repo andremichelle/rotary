@@ -23,13 +23,12 @@ export class InjectiveEditor {
         this.cShapeInjectiveEditor = this.terminator.with(new CShapeInjectiveEditor(element, name));
         this.tShapeInjectiveEditor = this.terminator.with(new TShapeInjectiveEditor(element, name));
         this.smoothStepInjectiveEditor = this.terminator.with(new SmoothStepInjectiveEditor(element, name));
-        this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => value.set(new type()))));
+        this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => value.set(new type())), false));
     }
     with(value) {
         this.subscription.ifPresent(_ => _.terminate());
         this.editable = Options.None;
-        this.subscription = Options.valueOf(value.addObserver(value => this.updateType(value)));
-        this.updateType(value.get());
+        this.subscription = Options.valueOf(value.addObserver(value => this.updateType(value), true));
         this.editable = Options.valueOf(value);
     }
     clear() {

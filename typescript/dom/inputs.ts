@@ -25,8 +25,7 @@ export class Checkbox implements Editor<ObservableValue<boolean>> {
     with(value: ObservableValue<boolean>): void {
         this.value.removeObserver(this.observer)
         this.value = value
-        this.value.addObserver(this.observer)
-        this.update()
+        this.value.addObserver(this.observer, true)
     }
 
     clear(): void {
@@ -65,8 +64,7 @@ export class SelectInput<T> implements Editor<ObservableValue<T>> {
     with(value: ObservableValue<T>): SelectInput<T> {
         this.value.removeObserver(this.observer)
         this.value = value
-        this.value.addObserver(this.observer)
-        this.update()
+        this.value.addObserver(this.observer, true)
         return this
     }
 
@@ -121,8 +119,7 @@ export class NumericStepperInput implements Editor<ObservableValue<number>> {
     with(value: ObservableValue<number>): void {
         this.value.removeObserver(this.observer)
         this.value = value
-        this.value.addObserver(this.observer)
-        this.update()
+        this.value.addObserver(this.observer, true)
     }
 
     clear(): void {
@@ -211,8 +208,7 @@ export class NumericInput implements Editor<ObservableValue<number>> {
     with(value: ObservableValue<number>): void {
         this.value.removeObserver(this.observer)
         this.value = value
-        this.value.addObserver(this.observer)
-        this.update()
+        this.value.addObserver(this.observer, true)
     }
 
     clear(): void {

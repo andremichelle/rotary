@@ -11,8 +11,7 @@ export class Checkbox {
     with(value) {
         this.value.removeObserver(this.observer);
         this.value = value;
-        this.value.addObserver(this.observer);
-        this.update();
+        this.value.addObserver(this.observer, true);
     }
     clear() {
         this.with(ObservableValueVoid.Instance);
@@ -42,8 +41,7 @@ export class SelectInput {
     with(value) {
         this.value.removeObserver(this.observer);
         this.value = value;
-        this.value.addObserver(this.observer);
-        this.update();
+        this.value.addObserver(this.observer, true);
         return this;
     }
     clear() {
@@ -88,8 +86,7 @@ export class NumericStepperInput {
     with(value) {
         this.value.removeObserver(this.observer);
         this.value = value;
-        this.value.addObserver(this.observer);
-        this.update();
+        this.value.addObserver(this.observer, true);
     }
     clear() {
         this.with(ObservableValueVoid.Instance);
@@ -171,8 +168,7 @@ export class NumericInput {
     with(value) {
         this.value.removeObserver(this.observer);
         this.value = value;
-        this.value.addObserver(this.observer);
-        this.update();
+        this.value.addObserver(this.observer, true);
     }
     clear() {
         this.with(ObservableValueVoid.Instance);
