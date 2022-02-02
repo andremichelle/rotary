@@ -1,7 +1,7 @@
 import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableCollection, ObservableValue, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
 import { RenderConfiguration } from "./render.js";
-import { FlangerFormat, FlangerSettings, PulsarDelayFormat, PulsarDelaySettings } from "../dsp/composite.js";
+import { CompositeSettings, CompositeSettingsFormat } from "../dsp/composite.js";
 import { Injective, InjectiveFormat } from "../lib/injective.js";
 export declare interface RotaryExportFormat {
     fps: number;
@@ -14,11 +14,7 @@ export declare interface RotaryFormat {
     loopDuration: number;
     exportSettings: RotaryExportFormat;
     tracks: RotaryTrackFormat[];
-    aux: {
-        sendPulsarDelay: PulsarDelayFormat;
-        sendConvolver: string;
-        sendFlanger: FlangerFormat;
-    };
+    aux: CompositeSettingsFormat<any>[];
 }
 export declare interface RotaryTrackFormat {
     segments: number;
@@ -53,11 +49,6 @@ export declare class RotaryExportSetting implements Terminable, Serializer<Rotar
     getConfiguration(numFrames: number): RenderConfiguration;
     terminate(): void;
 }
-export declare class Aux {
-    readonly sendPulsarDelay: PulsarDelaySettings;
-    readonly sendConvolver: ObservableValueImpl<string>;
-    readonly sendFlanger: FlangerSettings;
-}
 export declare class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS: number;
     static NUM_AUX: number;
@@ -69,7 +60,7 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     readonly phaseOffset: ObservableValue<any>;
     readonly loopDuration: ObservableValue<any>;
     readonly motion: ObservableValue<any>;
-    readonly aux: Aux;
+    readonly aux: ObservableValue<CompositeSettings<any>>[];
     constructor();
     addObserver(observer: Observer<RotaryModel>): Terminable;
     removeObserver(observer: Observer<RotaryModel>): boolean;

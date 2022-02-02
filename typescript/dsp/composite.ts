@@ -1,6 +1,16 @@
 // noinspection JSUnusedGlobalSymbols
 
-import {ArrayUtils, BoundNumericValue, Option, Options, Serializer, Terminable, Terminator} from "../lib/common.js"
+import {
+    ArrayUtils,
+    BoundNumericValue,
+    ObservableValueImpl,
+    Option,
+    Options,
+    readAudio,
+    Serializer,
+    Terminable,
+    Terminator
+} from "../lib/common.js"
 import {Exp, Linear, Volume} from "../lib/mapping.js"
 import {dbToGain, gainToDb, VALUE_INTERPOLATION_TIME} from "./common.js"
 
@@ -188,46 +198,44 @@ export class Mixer {
     }
 }
 
-export interface PulsarDelayFormat {
-    preDelayTimeL: number
-    preDelayTimeR: number
-    feedbackDelayTime: number
-    feedbackGain: number
-    feedbackLowpass: number
-    feedbackHighpass: number
+type Data = PulsarDelayData | ConvolverData | FlangerData
+
+export interface CompositeSettingsFormat<DATA extends Data> {
+    class: string
+    data: DATA
 }
 
-export class PulsarDelaySettings implements Serializer<PulsarDelayFormat> {
-    readonly preDelayTimeL: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.125)
-    readonly preDelayTimeR: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.500)
-    readonly feedbackDelayTime: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.250)
-    readonly feedbackGain: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.6)
-    readonly feedbackLowpass: BoundNumericValue = new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0)
-    readonly feedbackHighpass: BoundNumericValue = new BoundNumericValue(new Linear(20.0, 20000.0), 480.0)
-
-    deserialize(format: PulsarDelayFormat): PulsarDelaySettings {
-        this.preDelayTimeL.set(format.preDelayTimeL)
-        this.preDelayTimeR.set(format.preDelayTimeR)
-        this.feedbackDelayTime.set(format.feedbackDelayTime)
-        this.feedbackGain.set(format.feedbackGain)
-        this.feedbackLowpass.set(format.feedbackLowpass)
-        this.feedbackHighpass.set(format.feedbackHighpass)
-        return this
+export abstract class CompositeSettings<DATA extends Data> implements Serializer<CompositeSettingsFormat<DATA>> {
+    static from(format: CompositeSettingsFormat<any>): CompositeSettings<any> {
+        switch (format.class) {
+            case PulsarDelaySettings.name:
+                return new PulsarDelaySettings().deserialize(format)
+            case ConvolverSettings.name:
+                return new ConvolverSettings().deserialize(format)
+            case FlangerSettings.name:
+                return new FlangerSettings().deserialize(format)
+        }
+        throw new Error("Unknown movement format")
     }
 
-    serialize(): PulsarDelayFormat {
+    abstract deserialize(format: CompositeSettingsFormat<DATA>): CompositeSettings<DATA>
+
+    abstract serialize(): CompositeSettingsFormat<DATA>
+
+    pack(data?: DATA): CompositeSettingsFormat<DATA> {
         return {
-            preDelayTimeL: this.preDelayTimeL.get(),
-            preDelayTimeR: this.preDelayTimeR.get(),
-            feedbackDelayTime: this.feedbackDelayTime.get(),
-            feedbackGain: this.feedbackGain.get(),
-            feedbackLowpass: this.feedbackLowpass.get(),
-            feedbackHighpass: this.feedbackHighpass.get()
+            class: this.constructor.name,
+            data: data
         }
     }
+
+    unpack(format: CompositeSettingsFormat<DATA>): DATA {
+        console.assert(this.constructor.name === format.class)
+        return format.data
+    }
 }
 
-export abstract class DefaultIO implements Terminable {
+export abstract class DefaultComposite<SETTINGS extends CompositeSettings<Data>> implements Terminable {
     private incoming: Option<[AudioNode, number]> = Options.None
     private outgoing: Option<[AudioNode, number]> = Options.None
 
@@ -237,10 +245,12 @@ export abstract class DefaultIO implements Terminable {
     protected constructor() {
     }
 
-    protected setIO(input: AudioNode, output: AudioNode): void {
+    protected setInputOutput(input: AudioNode, output: AudioNode): void {
         this.input = input
         this.output = output
     }
+
+    public abstract watchSettings(settings: SETTINGS): Terminable
 
     public connectToInput(output: AudioNode, outputIndex: number = 0 | 0): void {
         console.assert(null !== this.input && this.incoming.isEmpty())
@@ -262,7 +272,111 @@ export abstract class DefaultIO implements Terminable {
     }
 }
 
-export class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayFormat>, Terminable {
+export interface ConvolverData {
+    url: string
+}
+
+export class ConvolverSettings extends CompositeSettings<ConvolverData> {
+    readonly url: ObservableValueImpl<string> = new ObservableValueImpl<string>(null)
+
+    deserialize(format: CompositeSettingsFormat<ConvolverData>): ConvolverSettings {
+        this.url.set(super.unpack(format).url)
+        return this
+    }
+
+    serialize(): CompositeSettingsFormat<ConvolverData> {
+        return super.pack({url: this.url.get()})
+    }
+}
+
+export class Convolver extends DefaultComposite<ConvolverSettings> {
+    private readonly convolverNode: ConvolverNode
+    private ready: boolean = false
+    private url: string = null
+
+    constructor(private readonly context: BaseAudioContext, format?: ConvolverData) {
+        super()
+        this.convolverNode = context.createConvolver()
+        this.setInputOutput(this.convolverNode, this.convolverNode)
+        if (undefined !== format) {
+            this.deserialize(format)
+        }
+    }
+
+    watchSettings(settings: ConvolverSettings): Terminable {
+        return settings.url.addObserver(url => this.setURL(url))
+    }
+
+    async setURL(url: string): Promise<void> {
+        try {
+            this.ready = false
+            this.convolverNode.buffer = null === url ? null : await readAudio(this.context, url)
+            this.ready = true
+        } catch (e) {
+            console.warn(e)
+        }
+    }
+
+    getURL(): string {
+        return this.url
+    }
+
+    isReady(): boolean {
+        return this.ready
+    }
+
+    deserialize(data: ConvolverData): Convolver {
+        this.ready = false
+        this.setURL(data.url).then(() => this.ready = true)
+        return this
+    }
+
+    serialize(): ConvolverData {
+        return {url: this.getURL()}
+    }
+}
+
+export declare interface PulsarDelayData {
+    preDelayTimeL: number
+    preDelayTimeR: number
+    feedbackDelayTime: number
+    feedbackGain: number
+    feedbackLowpass: number
+    feedbackHighpass: number
+}
+
+export class PulsarDelaySettings extends CompositeSettings<PulsarDelayData> {
+    readonly preDelayTimeL: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.125)
+    readonly preDelayTimeR: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.500)
+    readonly feedbackDelayTime: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.250)
+    readonly feedbackGain: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.6)
+    readonly feedbackLowpass: BoundNumericValue = new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0)
+    readonly feedbackHighpass: BoundNumericValue = new BoundNumericValue(new Linear(20.0, 20000.0), 480.0)
+
+    serialize(): CompositeSettingsFormat<PulsarDelayData> {
+        return super.pack({
+            preDelayTimeL: this.preDelayTimeL.get(),
+            preDelayTimeR: this.preDelayTimeR.get(),
+            feedbackDelayTime: this.feedbackDelayTime.get(),
+            feedbackGain: this.feedbackGain.get(),
+            feedbackLowpass: this.feedbackLowpass.get(),
+            feedbackHighpass: this.feedbackHighpass.get()
+        })
+    }
+
+    deserialize(format: CompositeSettingsFormat<PulsarDelayData>): PulsarDelaySettings {
+        const data: PulsarDelayData = super.unpack(format)
+        this.preDelayTimeL.set(data.preDelayTimeL)
+        this.preDelayTimeR.set(data.preDelayTimeR)
+        this.feedbackDelayTime.set(data.feedbackDelayTime)
+        this.feedbackGain.set(data.feedbackGain)
+        this.feedbackLowpass.set(data.feedbackLowpass)
+        this.feedbackHighpass.set(data.feedbackHighpass)
+        return this
+    }
+}
+
+export class PulsarDelay extends DefaultComposite<PulsarDelaySettings> {
     private readonly preSplitter: ChannelSplitterNode
     private readonly preDelayL: DelayNode
     private readonly preDelayR: DelayNode
@@ -273,7 +387,7 @@ export class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayForm
     private readonly feedbackGain: GainNode
     private readonly feedbackSplitter: ChannelSplitterNode
 
-    constructor(private readonly context: BaseAudioContext, format?: PulsarDelayFormat) {
+    constructor(private readonly context: BaseAudioContext, format?: PulsarDelayData) {
         super()
         this.preSplitter = context.createChannelSplitter(2)
         this.preDelayL = context.createDelay()
@@ -300,7 +414,7 @@ export class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayForm
             .connect(this.feedbackSplitter)
         this.feedbackSplitter.connect(this.feedbackMerger, 0, 1)
         this.feedbackSplitter.connect(this.feedbackMerger, 1, 0)
-        this.setIO(this.preSplitter, this.feedbackGain)
+        this.setInputOutput(this.preSplitter, this.feedbackGain)
 
         if (format === undefined) {
             this.setPreDelayTimeL(0.125)
@@ -316,12 +430,12 @@ export class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayForm
 
     public watchSettings(settings: PulsarDelaySettings): Terminable {
         const terminator = new Terminator()
-        terminator.with(settings.preDelayTimeL.addObserver(seconds => this.setPreDelayTimeL(seconds)))
-        terminator.with(settings.preDelayTimeR.addObserver(seconds => this.setPreDelayTimeR(seconds)))
-        terminator.with(settings.feedbackDelayTime.addObserver(seconds => this.setFeedbackDelayTime(seconds)))
-        terminator.with(settings.feedbackGain.addObserver(gain => this.setFeedbackGain(gain)))
-        terminator.with(settings.feedbackLowpass.addObserver(frequency => this.setFeedbackLowpass(frequency)))
-        terminator.with(settings.feedbackHighpass.addObserver(frequency => this.setFeedbackHighpass(frequency)))
+        terminator.with(settings.preDelayTimeL.addObserver(seconds => this.setPreDelayTimeL(seconds), true))
+        terminator.with(settings.preDelayTimeR.addObserver(seconds => this.setPreDelayTimeR(seconds), true))
+        terminator.with(settings.feedbackDelayTime.addObserver(seconds => this.setFeedbackDelayTime(seconds), true))
+        terminator.with(settings.feedbackGain.addObserver(gain => this.setFeedbackGain(gain), true))
+        terminator.with(settings.feedbackLowpass.addObserver(frequency => this.setFeedbackLowpass(frequency), true))
+        terminator.with(settings.feedbackHighpass.addObserver(frequency => this.setFeedbackHighpass(frequency), true))
         return terminator
     }
 
@@ -373,7 +487,7 @@ export class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayForm
         return this.feedbackHighpass.frequency.value
     }
 
-    deserialize(format: PulsarDelayFormat): PulsarDelay {
+    deserialize(format: PulsarDelayData): PulsarDelay {
         this.setPreDelayTimeL(format.preDelayTimeL)
         this.setPreDelayTimeR(format.preDelayTimeR)
         this.setFeedbackDelayTime(format.feedbackDelayTime)
@@ -383,7 +497,7 @@ export class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayForm
         return this
     }
 
-    serialize(): PulsarDelayFormat {
+    serialize(): PulsarDelayData {
         return {
             preDelayTimeL: this.getPreDelayTimeL(),
             preDelayTimeR: this.getPreDelayTimeR(),
@@ -412,44 +526,45 @@ export class PulsarDelay extends DefaultIO implements Serializer<PulsarDelayForm
     }
 }
 
-export class FlangerSettings implements Serializer<FlangerFormat> {
-    readonly delayTime: BoundNumericValue = new BoundNumericValue(new Linear(0.005, 0.200), 0.007)
-    readonly feedback: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.9)
-    readonly rate: BoundNumericValue = new BoundNumericValue(new Exp(0.01, 10.0), 0.1)
-    readonly depth: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.1)
-
-    public deserialize(format: FlangerFormat): FlangerSettings {
-        this.delayTime.set(format.delayTime)
-        this.feedback.set(format.feedback)
-        this.rate.set(format.rate)
-        this.depth.set(format.depth)
-        return this
-    }
-
-    public serialize(): FlangerFormat {
-        return {
-            delayTime: this.delayTime.get(),
-            feedback: this.feedback.get(),
-            rate: this.rate.get(),
-            depth: this.depth.get()
-        }
-    }
-}
-
-export interface FlangerFormat {
+export interface FlangerData {
     delayTime: number
     feedback: number
     rate: number
     depth: number
 }
 
-export class Flanger extends DefaultIO implements Serializer<FlangerFormat>, Terminable {
+export class FlangerSettings extends CompositeSettings<FlangerData> {
+    readonly delayTime: BoundNumericValue = new BoundNumericValue(new Linear(0.005, 0.200), 0.007)
+    readonly feedback: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.9)
+    readonly rate: BoundNumericValue = new BoundNumericValue(new Exp(0.01, 10.0), 0.1)
+    readonly depth: BoundNumericValue = new BoundNumericValue(Linear.Identity, 0.1)
+
+    public deserialize(format: CompositeSettingsFormat<FlangerData>): FlangerSettings {
+        const data = super.unpack(format)
+        this.delayTime.set(data.delayTime)
+        this.feedback.set(data.feedback)
+        this.rate.set(data.rate)
+        this.depth.set(data.depth)
+        return this
+    }
+
+    public serialize(): CompositeSettingsFormat<FlangerData> {
+        return super.pack({
+            delayTime: this.delayTime.get(),
+            feedback: this.feedback.get(),
+            rate: this.rate.get(),
+            depth: this.depth.get()
+        })
+    }
+}
+
+export class Flanger extends DefaultComposite<FlangerSettings> {
     private readonly delayNode: DelayNode
     private readonly feedbackGainNode: GainNode
     private readonly depthNode: GainNode
     private readonly lfoNode: OscillatorNode
 
-    constructor(private readonly context: BaseAudioContext, format?: FlangerFormat) {
+    constructor(private readonly context: BaseAudioContext, format?: FlangerData) {
         super()
         this.delayNode = context.createDelay()
         this.feedbackGainNode = context.createGain()
@@ -466,7 +581,16 @@ export class Flanger extends DefaultIO implements Serializer<FlangerFormat>, Ter
             this.deserialize(format)
         }
         this.delayNode.connect(this.feedbackGainNode).connect(this.delayNode)
-        this.setIO(this.delayNode, this.feedbackGainNode)
+        this.setInputOutput(this.delayNode, this.feedbackGainNode)
+    }
+
+    public watchSettings(settings: FlangerSettings): Terminable {
+        const terminator: Terminator = new Terminator()
+        terminator.with(settings.delayTime.addObserver(seconds => this.setDelayTime(seconds)))
+        terminator.with(settings.feedback.addObserver(gain => this.setFeedback(gain)))
+        terminator.with(settings.rate.addObserver(frequency => this.setLfoRate(frequency)))
+        terminator.with(settings.depth.addObserver(value => this.setDepth(value)))
+        return terminator
     }
 
     public setDelayTime(seconds: number): void {
@@ -501,7 +625,7 @@ export class Flanger extends DefaultIO implements Serializer<FlangerFormat>, Ter
         return this.depthNode.gain.value * 100.0
     }
 
-    public deserialize(format: FlangerFormat): Flanger {
+    public deserialize(format: FlangerData): Flanger {
         this.setDelayTime(format.delayTime)
         this.setFeedback(format.feedback)
         this.setLfoRate(format.rate)
@@ -509,22 +633,13 @@ export class Flanger extends DefaultIO implements Serializer<FlangerFormat>, Ter
         return this
     }
 
-    public serialize(): FlangerFormat {
+    public serialize(): FlangerData {
         return {
             delayTime: this.getDelayTime(),
             feedback: this.getFeedback(),
             rate: this.getLfoRate(),
             depth: this.getDepth(),
         }
-    }
-
-    public watchSettings(settings: FlangerSettings): Terminable {
-        const terminator: Terminator = new Terminator()
-        terminator.with(settings.delayTime.addObserver(seconds => this.setDelayTime(seconds)))
-        terminator.with(settings.feedback.addObserver(gain => this.setFeedback(gain)))
-        terminator.with(settings.rate.addObserver(frequency => this.setLfoRate(frequency)))
-        terminator.with(settings.depth.addObserver(value => this.setDepth(value)))
-        return terminator
     }
 
     public terminate(): void {

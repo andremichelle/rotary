@@ -1,4 +1,13 @@
-import { ArrayUtils, BoundNumericValue, Options, Terminator } from "../lib/common.js";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+import { ArrayUtils, BoundNumericValue, ObservableValueImpl, Options, readAudio, Terminator } from "../lib/common.js";
 import { Exp, Linear, Volume } from "../lib/mapping.js";
 import { dbToGain, gainToDb, VALUE_INTERPOLATION_TIME } from "./common.js";
 export const interpolateParameterValueIfRunning = (context, audioParam, value) => {
@@ -146,43 +155,37 @@ export class Mixer {
         interpolateParameterValueIfRunning(this.context, audioParam, value);
     }
 }
-export class PulsarDelaySettings {
-    constructor() {
-        this.preDelayTimeL = new BoundNumericValue(Linear.Identity, 0.125);
-        this.preDelayTimeR = new BoundNumericValue(Linear.Identity, 0.500);
-        this.feedbackDelayTime = new BoundNumericValue(Linear.Identity, 0.250);
-        this.feedbackGain = new BoundNumericValue(Linear.Identity, 0.6);
-        this.feedbackLowpass = new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0);
-        this.feedbackHighpass = new BoundNumericValue(new Linear(20.0, 20000.0), 480.0);
+export class CompositeSettings {
+    static from(format) {
+        switch (format.class) {
+            case PulsarDelaySettings.name:
+                return new PulsarDelaySettings().deserialize(format);
+            case ConvolverSettings.name:
+                return new ConvolverSettings().deserialize(format);
+            case FlangerSettings.name:
+                return new FlangerSettings().deserialize(format);
+        }
+        throw new Error("Unknown movement format");
     }
-    deserialize(format) {
-        this.preDelayTimeL.set(format.preDelayTimeL);
-        this.preDelayTimeR.set(format.preDelayTimeR);
-        this.feedbackDelayTime.set(format.feedbackDelayTime);
-        this.feedbackGain.set(format.feedbackGain);
-        this.feedbackLowpass.set(format.feedbackLowpass);
-        this.feedbackHighpass.set(format.feedbackHighpass);
-        return this;
-    }
-    serialize() {
+    pack(data) {
         return {
-            preDelayTimeL: this.preDelayTimeL.get(),
-            preDelayTimeR: this.preDelayTimeR.get(),
-            feedbackDelayTime: this.feedbackDelayTime.get(),
-            feedbackGain: this.feedbackGain.get(),
-            feedbackLowpass: this.feedbackLowpass.get(),
-            feedbackHighpass: this.feedbackHighpass.get()
+            class: this.constructor.name,
+            data: data
         };
     }
+    unpack(format) {
+        console.assert(this.constructor.name === format.class);
+        return format.data;
+    }
 }
-export class DefaultIO {
+export class DefaultComposite {
     constructor() {
         this.incoming = Options.None;
         this.outgoing = Options.None;
         this.input = null;
         this.output = null;
     }
-    setIO(input, output) {
+    setInputOutput(input, output) {
         this.input = input;
         this.output = output;
     }
@@ -203,7 +206,93 @@ export class DefaultIO {
         this.outgoing = Options.None;
     }
 }
-export class PulsarDelay extends DefaultIO {
+export class ConvolverSettings extends CompositeSettings {
+    constructor() {
+        super(...arguments);
+        this.url = new ObservableValueImpl(null);
+    }
+    deserialize(format) {
+        this.url.set(super.unpack(format).url);
+        return this;
+    }
+    serialize() {
+        return super.pack({ url: this.url.get() });
+    }
+}
+export class Convolver extends DefaultComposite {
+    constructor(context, format) {
+        super();
+        this.context = context;
+        this.ready = false;
+        this.url = null;
+        this.convolverNode = context.createConvolver();
+        this.setInputOutput(this.convolverNode, this.convolverNode);
+        if (undefined !== format) {
+            this.deserialize(format);
+        }
+    }
+    watchSettings(settings) {
+        return settings.url.addObserver(url => this.setURL(url));
+    }
+    setURL(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                this.ready = false;
+                this.convolverNode.buffer = null === url ? null : yield readAudio(this.context, url);
+                this.ready = true;
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        });
+    }
+    getURL() {
+        return this.url;
+    }
+    isReady() {
+        return this.ready;
+    }
+    deserialize(data) {
+        this.ready = false;
+        this.setURL(data.url).then(() => this.ready = true);
+        return this;
+    }
+    serialize() {
+        return { url: this.getURL() };
+    }
+}
+export class PulsarDelaySettings extends CompositeSettings {
+    constructor() {
+        super(...arguments);
+        this.preDelayTimeL = new BoundNumericValue(Linear.Identity, 0.125);
+        this.preDelayTimeR = new BoundNumericValue(Linear.Identity, 0.500);
+        this.feedbackDelayTime = new BoundNumericValue(Linear.Identity, 0.250);
+        this.feedbackGain = new BoundNumericValue(Linear.Identity, 0.6);
+        this.feedbackLowpass = new BoundNumericValue(new Linear(20.0, 20000.0), 12000.0);
+        this.feedbackHighpass = new BoundNumericValue(new Linear(20.0, 20000.0), 480.0);
+    }
+    serialize() {
+        return super.pack({
+            preDelayTimeL: this.preDelayTimeL.get(),
+            preDelayTimeR: this.preDelayTimeR.get(),
+            feedbackDelayTime: this.feedbackDelayTime.get(),
+            feedbackGain: this.feedbackGain.get(),
+            feedbackLowpass: this.feedbackLowpass.get(),
+            feedbackHighpass: this.feedbackHighpass.get()
+        });
+    }
+    deserialize(format) {
+        const data = super.unpack(format);
+        this.preDelayTimeL.set(data.preDelayTimeL);
+        this.preDelayTimeR.set(data.preDelayTimeR);
+        this.feedbackDelayTime.set(data.feedbackDelayTime);
+        this.feedbackGain.set(data.feedbackGain);
+        this.feedbackLowpass.set(data.feedbackLowpass);
+        this.feedbackHighpass.set(data.feedbackHighpass);
+        return this;
+    }
+}
+export class PulsarDelay extends DefaultComposite {
     constructor(context, format) {
         super();
         this.context = context;
@@ -232,7 +321,7 @@ export class PulsarDelay extends DefaultIO {
             .connect(this.feedbackSplitter);
         this.feedbackSplitter.connect(this.feedbackMerger, 0, 1);
         this.feedbackSplitter.connect(this.feedbackMerger, 1, 0);
-        this.setIO(this.preSplitter, this.feedbackGain);
+        this.setInputOutput(this.preSplitter, this.feedbackGain);
         if (format === undefined) {
             this.setPreDelayTimeL(0.125);
             this.setPreDelayTimeR(0.500);
@@ -247,12 +336,12 @@ export class PulsarDelay extends DefaultIO {
     }
     watchSettings(settings) {
         const terminator = new Terminator();
-        terminator.with(settings.preDelayTimeL.addObserver(seconds => this.setPreDelayTimeL(seconds)));
-        terminator.with(settings.preDelayTimeR.addObserver(seconds => this.setPreDelayTimeR(seconds)));
-        terminator.with(settings.feedbackDelayTime.addObserver(seconds => this.setFeedbackDelayTime(seconds)));
-        terminator.with(settings.feedbackGain.addObserver(gain => this.setFeedbackGain(gain)));
-        terminator.with(settings.feedbackLowpass.addObserver(frequency => this.setFeedbackLowpass(frequency)));
-        terminator.with(settings.feedbackHighpass.addObserver(frequency => this.setFeedbackHighpass(frequency)));
+        terminator.with(settings.preDelayTimeL.addObserver(seconds => this.setPreDelayTimeL(seconds), true));
+        terminator.with(settings.preDelayTimeR.addObserver(seconds => this.setPreDelayTimeR(seconds), true));
+        terminator.with(settings.feedbackDelayTime.addObserver(seconds => this.setFeedbackDelayTime(seconds), true));
+        terminator.with(settings.feedbackGain.addObserver(gain => this.setFeedbackGain(gain), true));
+        terminator.with(settings.feedbackLowpass.addObserver(frequency => this.setFeedbackLowpass(frequency), true));
+        terminator.with(settings.feedbackHighpass.addObserver(frequency => this.setFeedbackHighpass(frequency), true));
         return terminator;
     }
     setPreDelayTimeL(seconds) {
@@ -326,30 +415,32 @@ export class PulsarDelay extends DefaultIO {
         interpolateParameterValueIfRunning(this.context, audioParam, value);
     }
 }
-export class FlangerSettings {
+export class FlangerSettings extends CompositeSettings {
     constructor() {
+        super(...arguments);
         this.delayTime = new BoundNumericValue(new Linear(0.005, 0.200), 0.007);
         this.feedback = new BoundNumericValue(Linear.Identity, 0.9);
         this.rate = new BoundNumericValue(new Exp(0.01, 10.0), 0.1);
         this.depth = new BoundNumericValue(Linear.Identity, 0.1);
     }
     deserialize(format) {
-        this.delayTime.set(format.delayTime);
-        this.feedback.set(format.feedback);
-        this.rate.set(format.rate);
-        this.depth.set(format.depth);
+        const data = super.unpack(format);
+        this.delayTime.set(data.delayTime);
+        this.feedback.set(data.feedback);
+        this.rate.set(data.rate);
+        this.depth.set(data.depth);
         return this;
     }
     serialize() {
-        return {
+        return super.pack({
             delayTime: this.delayTime.get(),
             feedback: this.feedback.get(),
             rate: this.rate.get(),
             depth: this.depth.get()
-        };
+        });
     }
 }
-export class Flanger extends DefaultIO {
+export class Flanger extends DefaultComposite {
     constructor(context, format) {
         super();
         this.context = context;
@@ -369,7 +460,15 @@ export class Flanger extends DefaultIO {
             this.deserialize(format);
         }
         this.delayNode.connect(this.feedbackGainNode).connect(this.delayNode);
-        this.setIO(this.delayNode, this.feedbackGainNode);
+        this.setInputOutput(this.delayNode, this.feedbackGainNode);
+    }
+    watchSettings(settings) {
+        const terminator = new Terminator();
+        terminator.with(settings.delayTime.addObserver(seconds => this.setDelayTime(seconds)));
+        terminator.with(settings.feedback.addObserver(gain => this.setFeedback(gain)));
+        terminator.with(settings.rate.addObserver(frequency => this.setLfoRate(frequency)));
+        terminator.with(settings.depth.addObserver(value => this.setDepth(value)));
+        return terminator;
     }
     setDelayTime(seconds) {
         this.setParameterValue(this.delayNode.delayTime, seconds);
@@ -409,14 +508,6 @@ export class Flanger extends DefaultIO {
             rate: this.getLfoRate(),
             depth: this.getDepth(),
         };
-    }
-    watchSettings(settings) {
-        const terminator = new Terminator();
-        terminator.with(settings.delayTime.addObserver(seconds => this.setDelayTime(seconds)));
-        terminator.with(settings.feedback.addObserver(gain => this.setFeedback(gain)));
-        terminator.with(settings.rate.addObserver(frequency => this.setLfoRate(frequency)));
-        terminator.with(settings.depth.addObserver(value => this.setDepth(value)));
-        return terminator;
     }
     terminate() {
         super.terminate();

@@ -1,9 +1,26 @@
-import {Boot, CollectionEvent, CollectionEventType, readAudio, Terminable, Terminator} from "../lib/common.js"
+import {
+    Boot,
+    CollectionEvent,
+    CollectionEventType,
+    ObservableValue,
+    readAudio,
+    Terminable,
+    Terminator
+} from "../lib/common.js"
 import {AudioScene, AudioSceneController} from "./audio.js"
 import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
-import {Flanger, Mixer, PulsarDelay} from "../dsp/composite.js"
+import {
+    CompositeSettings,
+    Convolver,
+    ConvolverSettings,
+    Flanger,
+    FlangerSettings,
+    Mixer,
+    PulsarDelay,
+    PulsarDelaySettings
+} from "../dsp/composite.js"
 import {WorkletModules} from "../dsp/waa.js"
 
 export const initAudioScene = (): AudioScene => {
@@ -71,23 +88,23 @@ export const initAudioScene = (): AudioScene => {
                 }
             }, true))
 
-            // AUX 0
-            const pulsarDelay = new PulsarDelay(context)
-            pulsarDelay.connectToInput(mixer.auxSend(0), 0)
-            pulsarDelay.connectToOutput(mixer.auxReturn(0), 0)
-            terminator.with(pulsarDelay.watchSettings(model.aux.sendPulsarDelay))
-
-            // AUX 1
-            const convolverNode = context.createConvolver()
-            convolverNode.buffer = await loadSample(model.aux.sendConvolver.get())
-            terminator.with(model.aux.sendConvolver.addObserver(async path => convolverNode.buffer = await readAudio(context, path)))
-            mixer.auxSend(1).connect(convolverNode).connect(mixer.auxReturn(1))
-
-            // AUX 2
-            const flanger: Flanger = new Flanger(context)
-            terminator.with(flanger.watchSettings(model.aux.sendFlanger))
-            flanger.connectToInput(mixer.auxSend(2), 0)
-            flanger.connectToOutput(mixer.auxReturn(2), 0)
+            model.aux.forEach((value: ObservableValue<CompositeSettings<any>>, index: number) => {
+                const settings = value.get()
+                let composite = null
+                if (settings instanceof PulsarDelaySettings) {
+                    composite = new PulsarDelay(context)
+                } else if (settings instanceof ConvolverSettings) {
+                    composite = new Convolver(context)
+                } else if (settings instanceof FlangerSettings) {
+                    composite = new Flanger(context)
+                }
+                if (null === composite) {
+                    throw new Error(`Unknown composite for aux ${settings}`)
+                }
+                terminator.with(composite.watchSettings(settings))
+                composite.connectToInput(mixer.auxSend(index))
+                composite.connectToOutput(mixer.auxReturn(index))
+            })
 
             mixer.masterOutput().connect(limiterWorklet)
             limiterWorklet.connect(output)

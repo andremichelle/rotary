@@ -2,7 +2,7 @@ import { ArrayUtils, BoundNumericValue, EmptyIterator, GeneratorIterator, Observ
 import { Colors } from "../lib/colors.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
-import { Channelstrip, FlangerSettings, PulsarDelaySettings } from "../dsp/composite.js";
+import { Channelstrip, CompositeSettings, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../dsp/composite.js";
 import { CShapeInjective, IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
 export class RotaryExportSetting {
     constructor() {
@@ -27,13 +27,6 @@ export class RotaryExportSetting {
         this.terminator.terminate();
     }
 }
-export class Aux {
-    constructor() {
-        this.sendPulsarDelay = new PulsarDelaySettings();
-        this.sendConvolver = new ObservableValueImpl("impulse/DeepSpace.ogg");
-        this.sendFlanger = new FlangerSettings();
-    }
-}
 export class RotaryModel {
     constructor() {
         this.terminator = new Terminator();
@@ -44,7 +37,11 @@ export class RotaryModel {
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
         this.loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
         this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4));
-        this.aux = new Aux();
+        this.aux = [
+            new ObservableValueImpl(new PulsarDelaySettings()),
+            new ObservableValueImpl(new ConvolverSettings()),
+            new ObservableValueImpl(new FlangerSettings())
+        ];
         ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this));
     }
     addObserver(observer) {
@@ -138,11 +135,13 @@ export class RotaryModel {
             phaseOffset: this.phaseOffset.get(),
             loopDuration: this.loopDuration.get(),
             tracks: this.tracks.map(track => track.serialize()),
-            aux: {
-                sendPulsarDelay: this.aux.sendPulsarDelay.serialize(),
-                sendConvolver: this.aux.sendConvolver.get(),
-                sendFlanger: this.aux.sendFlanger.serialize()
-            }
+            aux: this.aux.map((value) => {
+                const settings = value.get();
+                return ({
+                    class: settings.constructor.name,
+                    data: settings.serialize()
+                });
+            })
         };
     }
     deserialize(format) {
@@ -152,9 +151,9 @@ export class RotaryModel {
         this.loopDuration.set(format.loopDuration);
         this.tracks.clear();
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)));
-        this.aux.sendPulsarDelay.deserialize(format.aux.sendPulsarDelay);
-        this.aux.sendConvolver.set(format.aux.sendConvolver);
-        this.aux.sendFlanger.deserialize(format.aux.sendFlanger);
+        this.aux.forEach((value, index) => {
+            value.set(CompositeSettings.from(format.aux[index]));
+        });
         return this;
     }
     bindValue(property) {

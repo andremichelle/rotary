@@ -19,7 +19,14 @@ import {Colors} from "../lib/colors.js"
 import {Func, Random} from "../lib/math.js"
 import {RenderConfiguration} from "./render.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
-import {Channelstrip, FlangerFormat, FlangerSettings, PulsarDelayFormat, PulsarDelaySettings} from "../dsp/composite.js"
+import {
+    Channelstrip,
+    CompositeSettings,
+    CompositeSettingsFormat,
+    ConvolverSettings,
+    FlangerSettings,
+    PulsarDelaySettings
+} from "../dsp/composite.js"
 import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
 
 export declare interface RotaryExportFormat {
@@ -34,11 +41,7 @@ export declare interface RotaryFormat {
     loopDuration: number
     exportSettings: RotaryExportFormat
     tracks: RotaryTrackFormat[],
-    aux: {
-        sendPulsarDelay: PulsarDelayFormat,
-        sendConvolver: string,
-        sendFlanger: FlangerFormat
-    }
+    aux: CompositeSettingsFormat<any>[]
 }
 
 export declare interface RotaryTrackFormat {
@@ -93,12 +96,6 @@ export class RotaryExportSetting implements Terminable, Serializer<RotaryExportF
     }
 }
 
-export class Aux {
-    readonly sendPulsarDelay: PulsarDelaySettings = new PulsarDelaySettings()
-    readonly sendConvolver: ObservableValueImpl<string> = new ObservableValueImpl<string>("impulse/DeepSpace.ogg")
-    readonly sendFlanger: FlangerSettings = new FlangerSettings()
-}
-
 export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS = 24
     static NUM_AUX = 4
@@ -113,7 +110,11 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     readonly loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0))
     readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4))
 
-    readonly aux: Aux = new Aux()
+    readonly aux: ObservableValue<CompositeSettings<any>>[] = [
+        new ObservableValueImpl(new PulsarDelaySettings()),
+        new ObservableValueImpl(new ConvolverSettings()),
+        new ObservableValueImpl(new FlangerSettings())
+    ]
 
     constructor() {
         ObservableCollection.observeNested(this.tracks, () => this.observable.notify(this))
@@ -226,11 +227,13 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
             phaseOffset: this.phaseOffset.get(),
             loopDuration: this.loopDuration.get(),
             tracks: this.tracks.map(track => track.serialize()),
-            aux: {
-                sendPulsarDelay: this.aux.sendPulsarDelay.serialize(),
-                sendConvolver: this.aux.sendConvolver.get(),
-                sendFlanger: this.aux.sendFlanger.serialize()
-            }
+            aux: this.aux.map((value: ObservableValue<CompositeSettings<any>>): CompositeSettingsFormat<any> => {
+                const settings: CompositeSettings<any> = value.get()
+                return ({
+                    class: settings.constructor.name,
+                    data: settings.serialize()
+                })
+            })
         }
     }
 
@@ -241,9 +244,9 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         this.loopDuration.set(format.loopDuration)
         this.tracks.clear()
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)))
-        this.aux.sendPulsarDelay.deserialize(format.aux.sendPulsarDelay)
-        this.aux.sendConvolver.set(format.aux.sendConvolver)
-        this.aux.sendFlanger.deserialize(format.aux.sendFlanger)
+        this.aux.forEach((value: ObservableValue<CompositeSettings<any>>, index: number) => {
+            value.set(CompositeSettings.from(format.aux[index]))
+        })
         return this
     }
 
