@@ -23,8 +23,8 @@ export declare abstract class Injective<DATA extends Data> implements Observable
     removeObserver(observer: Observer<Injective<DATA>>): boolean;
     pack(data?: DATA): InjectiveFormat<DATA>;
     unpack(format: InjectiveFormat<DATA>): DATA;
-    bindValue(property: ObservableValue<any>): ObservableValue<any>;
     terminate(): void;
+    protected bindValue<T>(property: ObservableValue<T>): ObservableValue<T>;
 }
 export declare class IdentityInjective extends Injective<never> {
     fx(x: number): number;
@@ -39,7 +39,7 @@ declare interface PowData {
 }
 export declare class PowInjective extends Injective<PowData> {
     private readonly range;
-    readonly exponent: ObservableValue<any>;
+    readonly exponent: ObservableValue<number>;
     fx(x: number): number;
     fy(y: number): number;
     serialize(): InjectiveFormat<PowData>;
@@ -52,7 +52,7 @@ declare interface CShapeData {
 }
 export declare class CShapeInjective extends Injective<CShapeData> {
     private readonly range;
-    readonly slope: ObservableValue<any>;
+    readonly slope: ObservableValue<number>;
     private o;
     private c;
     constructor();
@@ -69,7 +69,7 @@ declare interface TShapeData {
 }
 export declare class TShapeInjective extends Injective<TShapeData> {
     private readonly range;
-    readonly shape: ObservableValue<any>;
+    readonly shape: ObservableValue<number>;
     constructor();
     fx(x: number): number;
     fy(y: number): number;
@@ -83,8 +83,8 @@ declare interface SmoothStepData {
     edge1: number;
 }
 export declare class SmoothStepInjective extends Injective<SmoothStepData> {
-    readonly edge0: ObservableValue<any>;
-    readonly edge1: ObservableValue<any>;
+    readonly edge0: ObservableValue<number>;
+    readonly edge1: ObservableValue<number>;
     constructor();
     fx(x: number): number;
     fy(y: number): number;

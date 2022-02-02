@@ -12,7 +12,7 @@ export class WorkletModules {
         console.assert(!WorkletModules.FILES.has(type));
         WorkletModules.FILES.set(type, path);
     }
-    static create(context, type) {
+    static create(context, type, factory) {
         return __awaiter(this, void 0, void 0, function* () {
             let cache = WorkletModules.CACHE.get(context);
             if (cache === undefined) {
@@ -28,7 +28,7 @@ export class WorkletModules {
                 cache.set(type, promise);
             }
             yield promise;
-            return new type(context);
+            return undefined === factory ? new type(context) : factory.create();
         });
     }
 }

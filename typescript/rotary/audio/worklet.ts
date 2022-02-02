@@ -1,14 +1,19 @@
 import {RotaryModel} from "../model.js"
 import {RewindMessage, TransportMessage, UpdateFormatMessage, UploadSampleMessage} from "./messages-to-processor.js"
 import {MessageToWorklet} from "./messages-to-worklet.js"
-import {ObservableValueImpl} from "../../lib/common.js"
+import {ObservableValueImpl, Terminator} from "../../lib/common.js"
 
 export class RotaryWorkletNode extends AudioWorkletNode {
+    private readonly terminator: Terminator = new Terminator()
+
     readonly transport: ObservableValueImpl<boolean> = new ObservableValueImpl<boolean>(false)
+
+    private version: number = 0
+    private updatingFormat: boolean = false
 
     private $phase: number = 0.0
 
-    constructor(context: BaseAudioContext) {
+    constructor(context: BaseAudioContext, model: RotaryModel) {
         super(context, "rotary", {
             numberOfInputs: 0,
             numberOfOutputs: RotaryModel.MAX_TRACKS,
@@ -18,21 +23,34 @@ export class RotaryWorkletNode extends AudioWorkletNode {
             channelInterpretation: "speakers"
         })
 
-        this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving)))
-
+        const sendFormat = () => this.port.postMessage(new UpdateFormatMessage(model.serialize(), this.version))
+        this.terminator.with(this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving))))
         this.port.onmessage = event => {
             const msg = event.data as MessageToWorklet
             if (msg.type === "phase") {
                 this.$phase = msg.phase
             } else if (msg.type === "transport") {
                 this.transport.set(msg.moving)
+            } else if (msg.type === "format-updated") {
+                if (this.version === msg.version) {
+                    this.updatingFormat = false
+                } else {
+                    sendFormat()
+                }
             }
         }
-
         this.onprocessorerror = (event: ErrorEvent) => {
             console.warn(event.message)
             document.querySelector("button.error").classList.remove("hidden")
         }
+
+        this.terminator.with(model.addObserver(() => {
+            this.version++
+            if (!this.updatingFormat) {
+                this.updatingFormat = true
+                setTimeout(sendFormat, 1)
+            }
+        }, true))
     }
 
     phase() {
@@ -41,10 +59,6 @@ export class RotaryWorkletNode extends AudioWorkletNode {
 
     rewind() {
         this.port.postMessage(new RewindMessage())
-    }
-
-    updateFormat(model: RotaryModel): void {
-        this.port.postMessage(new UpdateFormatMessage(model.serialize()))
     }
 
     uploadSample(key: number, sample: Promise<AudioBuffer> | AudioBuffer | Float32Array | Float32Array[], loop: boolean = false) {

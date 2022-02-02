@@ -58,7 +58,7 @@ export declare class Options {
 }
 export declare type Observer<VALUE> = (value: VALUE) => void;
 export interface Observable<VALUE> extends Terminable {
-    addObserver(observer: Observer<VALUE>): Terminable;
+    addObserver(observer: Observer<VALUE>, notify: boolean): Terminable;
     removeObserver(observer: Observer<VALUE>): boolean;
 }
 export declare class ObservableImpl<T> implements Observable<T> {

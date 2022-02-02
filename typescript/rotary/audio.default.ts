@@ -33,11 +33,10 @@ export const initAudioScene = (): AudioScene => {
                     boot: Boot): Promise<AudioSceneController> {
             const terminator = new Terminator()
 
-            const rotaryNode = await WorkletModules.create(context, RotaryWorkletNode)
+            const rotaryNode = await WorkletModules.create(context, RotaryWorkletNode,
+                {create: () => new RotaryWorkletNode(context, model)})
+
             const limiterWorklet = await WorkletModules.create(context, LimiterWorklet)
-            const updateFormat = () => rotaryNode.updateFormat(model)
-            terminator.with(model.addObserver(updateFormat))
-            updateFormat()
 
             const loadSample = (url: string): Promise<AudioBuffer> => {
                 return boot.registerProcess(readAudio(context, url))

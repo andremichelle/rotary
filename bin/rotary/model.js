@@ -53,7 +53,9 @@ export class RotaryModel {
             }, false));
         });
     }
-    addObserver(observer) {
+    addObserver(observer, notify) {
+        if (notify)
+            observer(this);
         return this.observable.addObserver(observer);
     }
     removeObserver(observer) {

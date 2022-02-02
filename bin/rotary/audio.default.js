@@ -18,11 +18,8 @@ export const initAudioScene = () => {
         build(context, output, model, boot) {
             return __awaiter(this, void 0, void 0, function* () {
                 const terminator = new Terminator();
-                const rotaryNode = yield WorkletModules.create(context, RotaryWorkletNode);
+                const rotaryNode = yield WorkletModules.create(context, RotaryWorkletNode, { create: () => new RotaryWorkletNode(context, model) });
                 const limiterWorklet = yield WorkletModules.create(context, LimiterWorklet);
-                const updateFormat = () => rotaryNode.updateFormat(model);
-                terminator.with(model.addObserver(updateFormat));
-                updateFormat();
                 const loadSample = (url) => {
                     return boot.registerProcess(readAudio(context, url));
                 };

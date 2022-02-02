@@ -35,7 +35,7 @@ export declare interface RotaryTrackFormat {
     gain: number;
     volume: number;
     panning: number;
-    auxSends: number[];
+    aux: number[];
     mute: boolean;
     solo: boolean;
 }
@@ -56,13 +56,13 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     private readonly observable;
     readonly tracks: ObservableCollection<RotaryTrackModel>;
     readonly exportSettings: RotaryExportSetting;
-    readonly radiusMin: ObservableValue<any>;
-    readonly phaseOffset: ObservableValue<any>;
-    readonly loopDuration: ObservableValue<any>;
-    readonly motion: ObservableValue<any>;
+    readonly radiusMin: ObservableValue<number>;
+    readonly phaseOffset: ObservableValue<number>;
+    readonly loopDuration: ObservableValue<number>;
+    readonly motion: ObservableValue<number>;
     readonly aux: ObservableValue<CompositeSettings<any>>[];
     constructor();
-    addObserver(observer: Observer<RotaryModel>): Terminable;
+    addObserver(observer: Observer<RotaryModel>, notify: boolean): Terminable;
     removeObserver(observer: Observer<RotaryModel>): boolean;
     randomize(random: Random): RotaryModel;
     randomizeTracks(random: Random): RotaryModel;
@@ -119,11 +119,10 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly gain: BoundNumericValue;
     readonly volume: BoundNumericValue;
     readonly panning: BoundNumericValue;
-    readonly auxSends: BoundNumericValue[];
+    readonly aux: BoundNumericValue[];
     readonly mute: ObservableValueImpl<boolean>;
     readonly solo: ObservableValueImpl<boolean>;
     constructor(root: RotaryModel);
-    observeValue<T extends Observable<any>>(property: T): T;
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;
     test(): void;
@@ -139,5 +138,6 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     querySections(p0: number, p1: number): Iterator<QueryResult>;
     private branchQuerySection;
     private seekSection;
+    private bindValue;
     private updateGradient;
 }

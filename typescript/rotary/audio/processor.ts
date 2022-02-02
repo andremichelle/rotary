@@ -1,6 +1,6 @@
 import {Edge, QueryResult, RotaryModel} from "../model.js"
 import {MessageToProcessor} from "./messages-to-processor.js"
-import {TransportMessage, UpdateCursorMessage} from "./messages-to-worklet.js"
+import {FormatUpdatedMessage, TransportMessage, UpdateCursorMessage} from "./messages-to-worklet.js"
 import {RENDER_QUANTUM} from "../../dsp/common.js"
 import {ObservableValueImpl} from "../../lib/common.js"
 
@@ -46,6 +46,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                 const msg = event.data as MessageToProcessor
                 if (msg.type === "format") {
                     this.model.deserialize(msg.format)
+                    this.port.postMessage(new FormatUpdatedMessage(msg.version))
                 } else if (msg.type === "sample") {
                     this.samples.set(msg.key, new Sample(msg.sample, msg.loop))
                     this.maxKey = Math.max(msg.key, this.maxKey)

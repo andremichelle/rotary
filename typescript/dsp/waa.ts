@@ -1,4 +1,8 @@
-export type WorkletType<T extends AudioWorkletNode> = { new(context: BaseAudioContext): T }
+export type WorkletType<T extends AudioWorkletNode> = { new(context: BaseAudioContext, _?): T }
+
+export interface WorkletFactory<T extends AudioWorkletNode> {
+    create(): T
+}
 
 export class WorkletModules {
     private static FILES: Map<WorkletType<any>, string> = new Map<WorkletType<any>, string>()
@@ -9,7 +13,7 @@ export class WorkletModules {
         WorkletModules.FILES.set(type, path)
     }
 
-    static async create<T extends AudioWorkletNode>(context: BaseAudioContext, type: WorkletType<T>): Promise<T> {
+    static async create<T extends AudioWorkletNode>(context: BaseAudioContext, type: WorkletType<T>, factory?: WorkletFactory<T>): Promise<T> {
         let cache = WorkletModules.CACHE.get(context)
         if (cache === undefined) {
             cache = new Map<WorkletType<any>, Promise<void>>()
@@ -24,6 +28,6 @@ export class WorkletModules {
             cache.set(type, promise)
         }
         await promise
-        return new type(context)
+        return undefined === factory ? new type(context) : factory.create()
     }
 }

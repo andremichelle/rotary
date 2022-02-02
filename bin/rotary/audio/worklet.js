@@ -1,8 +1,8 @@
 import { RotaryModel } from "../model.js";
 import { RewindMessage, TransportMessage, UpdateFormatMessage, UploadSampleMessage } from "./messages-to-processor.js";
-import { ObservableValueImpl } from "../../lib/common.js";
+import { ObservableValueImpl, Terminator } from "../../lib/common.js";
 export class RotaryWorkletNode extends AudioWorkletNode {
-    constructor(context) {
+    constructor(context, model) {
         super(context, "rotary", {
             numberOfInputs: 0,
             numberOfOutputs: RotaryModel.MAX_TRACKS,
@@ -11,9 +11,13 @@ export class RotaryWorkletNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
+        this.terminator = new Terminator();
         this.transport = new ObservableValueImpl(false);
+        this.version = 0;
+        this.updatingFormat = false;
         this.$phase = 0.0;
-        this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving)));
+        const sendFormat = () => this.port.postMessage(new UpdateFormatMessage(model.serialize(), this.version));
+        this.terminator.with(this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving))));
         this.port.onmessage = event => {
             const msg = event.data;
             if (msg.type === "phase") {
@@ -22,20 +26,32 @@ export class RotaryWorkletNode extends AudioWorkletNode {
             else if (msg.type === "transport") {
                 this.transport.set(msg.moving);
             }
+            else if (msg.type === "format-updated") {
+                if (this.version === msg.version) {
+                    this.updatingFormat = false;
+                }
+                else {
+                    sendFormat();
+                }
+            }
         };
         this.onprocessorerror = (event) => {
             console.warn(event.message);
             document.querySelector("button.error").classList.remove("hidden");
         };
+        this.terminator.with(model.addObserver(() => {
+            this.version++;
+            if (!this.updatingFormat) {
+                this.updatingFormat = true;
+                setTimeout(sendFormat, 1);
+            }
+        }, true));
     }
     phase() {
         return this.$phase;
     }
     rewind() {
         this.port.postMessage(new RewindMessage());
-    }
-    updateFormat(model) {
-        this.port.postMessage(new UpdateFormatMessage(model.serialize()));
     }
     uploadSample(key, sample, loop = false) {
         if (sample instanceof AudioBuffer) {

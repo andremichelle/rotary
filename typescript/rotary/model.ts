@@ -129,7 +129,8 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         })
     }
 
-    addObserver(observer: Observer<RotaryModel>): Terminable {
+    addObserver(observer: Observer<RotaryModel>, notify: boolean): Terminable {
+        if(notify) observer(this)
         return this.observable.addObserver(observer)
     }
 

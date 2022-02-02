@@ -19,7 +19,7 @@ export class TransportMessage {
 export class UpdateFormatMessage {
     readonly type = 'format'
 
-    constructor(readonly format: RotaryFormat) {
+    constructor(readonly format: RotaryFormat, readonly version: number) {
     }
 }
 

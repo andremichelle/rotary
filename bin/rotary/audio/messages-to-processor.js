@@ -10,8 +10,9 @@ export class TransportMessage {
     }
 }
 export class UpdateFormatMessage {
-    constructor(format) {
+    constructor(format, version) {
         this.format = format;
+        this.version = version;
         this.type = 'format';
     }
 }
