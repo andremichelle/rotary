@@ -352,7 +352,6 @@ export class PulsarDelay extends DefaultComposite {
         }
     }
     watchSettings(settings) {
-        console.log(settings);
         const terminator = new Terminator();
         terminator.with(settings.preDelayTimeL.addObserver(seconds => this.setPreDelayTimeL(seconds), true));
         terminator.with(settings.preDelayTimeR.addObserver(seconds => this.setPreDelayTimeR(seconds), true));
