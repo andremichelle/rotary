@@ -1,6 +1,8 @@
 import {BitArray, Bits, Random} from "./math.js"
 import {Linear, Range, ValueMapping} from "./mapping.js"
 
+export type NoArgType<T> = { new(): T }
+
 export interface Terminable {
     terminate(): void
 }

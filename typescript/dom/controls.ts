@@ -1,5 +1,15 @@
-import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "./inputs.js"
-import {NumericStepper, PrintMapping, Terminable, Terminator} from "../lib/common.js"
+import {Checkbox, Editor, NumericInput, NumericStepperInput, SelectInput} from "./inputs.js"
+import {
+    NoArgType,
+    NumericStepper,
+    ObservableValue,
+    ObservableValueImpl,
+    Option,
+    Options,
+    PrintMapping,
+    Terminable,
+    Terminator
+} from "../lib/common.js"
 
 class NumericInputFactory {
     static create(printMapping: PrintMapping<number>): [HTMLInputElement, NumericInput] {
@@ -146,5 +156,60 @@ export class UIControllerLayout implements Terminable {
         labelElement.classList.add("name")
         labelElement.textContent = labelText
         return labelElement
+    }
+}
+
+export interface ControlBuilder<T> {
+    build(layout: UIControllerLayout, value: T): void
+
+    availableTypes(): Map<string, NoArgType<T>>
+}
+
+export class TypeValueEditor<T> implements Editor<ObservableValue<T>> {
+    private readonly terminator: Terminator = new Terminator()
+
+    private readonly selectLayout: UIControllerLayout
+    private readonly controllerLayout: UIControllerLayout
+
+    private readonly typeValue: ObservableValue<NoArgType<T>>
+    private readonly typeSelectInput: SelectInput<NoArgType<T>>
+
+    private editable: Option<ObservableValue<T>> = Options.None
+    private subscription: Option<Terminable> = Options.None
+
+    constructor(private readonly parentElement: HTMLElement,
+                private readonly controlBuilder: ControlBuilder<T>,
+                name: string) {
+        this.selectLayout = this.terminator.with(new UIControllerLayout(parentElement))
+        this.controllerLayout = this.terminator.with(new UIControllerLayout(parentElement))
+
+        this.typeValue = this.terminator.with(new ObservableValueImpl(controlBuilder.availableTypes()[0]))
+        this.typeSelectInput = this.selectLayout.createSelect(name, controlBuilder.availableTypes())
+        this.typeSelectInput.with(this.typeValue)
+        this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => value.set(new type())), false))
+    }
+
+    with(value: ObservableValue<T>): void {
+        this.editable = Options.None
+        this.subscription.ifPresent(_ => _.terminate())
+        this.subscription = Options.valueOf(value.addObserver(value => this.updateType(value), true))
+        this.editable = Options.valueOf(value)
+    }
+
+    clear(): void {
+        this.subscription.ifPresent(_ => _.terminate())
+        this.subscription = Options.None
+        this.editable = Options.None
+        this.controllerLayout.terminate()
+    }
+
+    terminate(): void {
+        this.terminator.terminate()
+    }
+
+    private updateType(value: T): void {
+        this.controllerLayout.terminate()
+        this.typeValue.set(value.constructor as NoArgType<T>)
+        this.controlBuilder.build(this.controllerLayout, value)
     }
 }

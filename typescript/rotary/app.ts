@@ -16,7 +16,7 @@ import {Mulberry32, Random, TAU} from "../lib/math.js"
 import {ListItem, MenuBar} from "../dom/menu.js"
 import {open, renderGIF, renderVideo, renderWebM, save} from "./file.js"
 import {Audio, AudioSceneController} from "./audio.js"
-import {ConvolverSettings, FlangerSettings, PulsarDelaySettings} from "../dsp/composite"
+import {ConvolverSettings, FlangerSettings, PulsarDelaySettings} from "../dsp/composite.js"
 
 const zoomLevel: Map<string, number> = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]

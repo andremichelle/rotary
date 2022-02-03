@@ -1,9 +1,63 @@
-import {ArrayUtils, NumericStepper, Option, Options, PrintMapping, Terminable, Terminator} from "../lib/common.js"
+import {
+    ArrayUtils,
+    NoArgType,
+    NumericStepper,
+    Option,
+    Options,
+    PrintMapping,
+    Terminable,
+    Terminator
+} from "../lib/common.js"
 import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, RotaryModel, RotaryTrackModel} from "./model.js"
-import {InjectiveEditor} from "../dom/injective.js"
-import {UIControllerLayout} from "../dom/controls.js"
+import {ControlBuilder, TypeValueEditor, UIControllerLayout} from "../dom/controls.js"
 import {Dom} from "../dom/common.js"
+import {
+    CShapeInjective,
+    IdentityInjective,
+    Injective,
+    InjectiveType,
+    PowInjective, SmoothStepInjective,
+    TShapeInjective
+} from "../lib/injective.js"
+
+export const InjectiveTypes = new Map<string, InjectiveType>([
+    ["Linear", IdentityInjective],
+    ["Power", PowInjective],
+    ["CShape", CShapeInjective],
+    ["TShape", TShapeInjective],
+    ["SmoothStep", SmoothStepInjective]
+])
+
+export class InjectiveControlBuilder implements ControlBuilder<Injective<any>> {
+    static instance: InjectiveControlBuilder = new InjectiveControlBuilder()
+
+    build(layout: UIControllerLayout, value: Injective<any>): void {
+        if (value instanceof IdentityInjective) {
+        } else if (value instanceof PowInjective) {
+            layout.createNumericStepper("exponent",
+                PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth)
+                .with(value.exponent)
+        } else if (value instanceof CShapeInjective) {
+            layout.createNumericStepper("slope",
+                PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
+                .with(value.slope)
+        } else if (value instanceof TShapeInjective) {
+            layout.createNumericStepper("shape",
+                PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
+                .with(value.shape)
+        } else if (value instanceof SmoothStepInjective) {
+            layout.createNumericStepper("edge 0", PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
+                .with(value.edge0)
+            layout.createNumericStepper("edge 1", PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
+                .with(value.edge1)
+        }
+    }
+
+    availableTypes(): Map<string, NoArgType<Injective<any>>> {
+        return InjectiveTypes
+    }
+}
 
 export interface RotaryTrackEditorExecutor {
     deleteTrack(trackModel: RotaryTrackModel): void
@@ -22,10 +76,10 @@ export class RotaryTrackEditor implements Terminable {
     private readonly lengthRatio: NumericStepperInput
     private readonly outline: NumericStepperInput
     private readonly fill: SelectInput<Fill>
-    private readonly motion: InjectiveEditor
+    private readonly motion: TypeValueEditor<Injective<any>>
     private readonly rgb: NumericInput
     private readonly phaseOffset: NumericStepperInput
-    private readonly bend: InjectiveEditor
+    private readonly bend: TypeValueEditor<Injective<any>>
     private readonly frequency: NumericStepperInput
     private readonly fragments: NumericStepperInput
     private readonly reverse: Checkbox
@@ -55,8 +109,8 @@ export class RotaryTrackEditor implements Terminable {
         this.fragments = layoutR.createNumericStepper("fragments", PrintMapping.integer("x"), NumericStepper.Integer)
         this.reverse = layoutR.createCheckbox("reverse")
 
-        this.motion = new InjectiveEditor(parentNode.querySelector(".motion"), "motion")
-        this.bend = this.terminator.with(new InjectiveEditor(parentNode.querySelector(".bend"), "bend"))
+        this.motion = this.terminator.with(new TypeValueEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder.instance, "motion"))
+        this.bend = this.terminator.with(new TypeValueEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder.instance, "bend"))
 
         this.volume = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='volume']"),
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth))
