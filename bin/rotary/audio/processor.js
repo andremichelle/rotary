@@ -125,19 +125,18 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                 const running = this.activeVoices.get(trackIndex);
                 running.forEach(v => v.stop());
                 if (result.edge === Edge.Start) {
-                    let frameIndex;
-                    if (Math.abs(t1 - t0) < 1e-11) {
-                        console.warn(`clamp frameIndex while abs(t1 - t0) = ${Math.abs(t1 - t0)} < 1e-11`);
-                        frameIndex = 0 | 0;
-                    }
-                    else {
-                        frameIndex = ((track.localToGlobal(result.position) * loopFrames - this.phase)) | 0;
-                    }
+                    let frameIndex = ((track.localToGlobal(result.position) * loopFrames - this.phase)) | 0;
                     if (0 > frameIndex || frameIndex >= RENDER_QUANTUM) {
-                        throw new Error(`frameIndex(${frameIndex}), 
+                        if (Math.abs(t1 - t0) < 1e-10) {
+                            console.warn(`clamp frameIndex(${frameIndex}) while abs(t1 - t0) = ${Math.abs(t1 - t0)} < 1e-10`);
+                            frameIndex = 0 | 0;
+                        }
+                        else {
+                            throw new Error(`frameIndex(${frameIndex}), 
                             t0: ${t0}, t1: ${t1}, t0*: ${t0 + 1e-7 - 1e-7}, t1*: ${t1 + 1e-7 - 1e-7}, 
                             td: ${t1 - t0}, p: ${result.position}, 
                                 frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopFrames - this.phase)}`);
+                        }
                     }
                     const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1);
                     const voice = new Voice(-frameIndex, trackIndex, sampleKey, 0);
