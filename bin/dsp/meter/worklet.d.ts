@@ -1,0 +1,33 @@
+export declare class MeterWorklet extends AudioWorkletNode {
+    private readonly meterHPadding;
+    private readonly meterSegmentWidth;
+    private readonly meterSegmentHeight;
+    private readonly meterSegmentHGap;
+    private readonly meterSegmentVGap;
+    private readonly meterSegmentCount;
+    private readonly meterWidth;
+    private readonly width;
+    private readonly height;
+    private readonly labelStepsDb;
+    private readonly maxDb;
+    private readonly minDb;
+    private readonly maxPeaks;
+    private readonly maxSquares;
+    private readonly maxPeakHoldValue;
+    private readonly releasePeakHoldTime;
+    private readonly peakHoldDuration;
+    private readonly clipHoldDuration;
+    private readonly canvas;
+    private readonly graphics;
+    private readonly gradient;
+    private readonly updater;
+    private scale;
+    constructor(context: AudioContext);
+    readonly domElement: HTMLElement;
+    update(): void;
+    renderScale(): void;
+    renderMeter(gain: number, y: number, h: number): void;
+    dbToX(db: number): number;
+    dbToIndex(db: number): number;
+    dbToNorm(db: number): number;
+}
