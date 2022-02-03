@@ -1,5 +1,4 @@
 import { ArrayUtils, NumericStepper, Options, PrintMapping, Terminator } from "../lib/common.js";
-import { NumericStepperInput } from "../dom/inputs.js";
 import { Fills, RotaryModel } from "./model.js";
 import { TypeControlEditor, UIControllerLayout } from "../dom/controls.js";
 import { Dom } from "../dom/common.js";
@@ -43,24 +42,25 @@ export class RotaryTrackEditor {
         this.terminator = new Terminator();
         this.subject = Options.None;
         const layoutL = this.terminator.with(new UIControllerLayout(parentNode.querySelector(".visuals-left")));
-        const layoutR = this.terminator.with(new UIControllerLayout(parentNode.querySelector(".visuals-right")));
         this.segments = layoutL.createNumericStepper("segments", PrintMapping.integer(""), NumericStepper.Integer);
         this.width = layoutL.createNumericStepper("width", PrintMapping.integer("px"), NumericStepper.Integer);
         this.widthPadding = layoutL.createNumericStepper("padding", PrintMapping.integer("px"), NumericStepper.Integer);
-        this.length = layoutR.createNumericStepper("length", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
-        this.lengthRatio = layoutR.createNumericStepper("thickness", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
         this.outline = layoutL.createNumericStepper("outline", PrintMapping.integer("px"), NumericStepper.Integer);
         this.fill = layoutL.createSelect("fill", Fills);
         this.rgb = layoutL.createNumericInput("rgb", PrintMapping.RGB);
+        const layoutR = this.terminator.with(new UIControllerLayout(parentNode.querySelector(".visuals-right")));
+        this.length = layoutR.createNumericStepper("length", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
+        this.lengthRatio = layoutR.createNumericStepper("thickness", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
         this.phaseOffset = layoutR.createNumericStepper("phase offset", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
         this.frequency = layoutR.createNumericStepper("frequency", PrintMapping.integer("x"), NumericStepper.Integer);
         this.fragments = layoutR.createNumericStepper("fragments", PrintMapping.integer("x"), NumericStepper.Integer);
         this.reverse = layoutR.createCheckbox("reverse");
         this.motion = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder, "motion"));
         this.bend = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder, "bend"));
-        this.volume = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='volume']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
-        this.panning = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='panning']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
-        this.auxSends = ArrayUtils.fill(RotaryModel.NUM_AUX, (index) => this.terminator.with(new NumericStepperInput(parentNode.querySelector(`fieldset[data-parameter='aux-${index}']`), PrintMapping.UnipolarPercent, NumericStepper.Hundredth)));
+        const audioLayout = this.terminator.with(new UIControllerLayout(document.querySelector(".two-columns.audio")));
+        this.volume = audioLayout.createNumericStepper("volume", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
+        this.panning = audioLayout.createNumericStepper("panning", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
+        this.auxSends = ArrayUtils.fill(RotaryModel.NUM_AUX, (index) => audioLayout.createNumericStepper(`aux ${index + 1}`, PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
         this.terminator.with(Dom.bindEventListener(parentNode.querySelector("button.delete"), "click", event => {
             event.preventDefault();
             this.subject.ifPresent((trackModel) => executor.deleteTrack(trackModel));

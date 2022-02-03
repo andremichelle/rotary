@@ -1,18 +1,13 @@
 import {ControlBuilder, UIControllerLayout} from "../dom/controls.js"
-import {CompositeSettings, ConvolverSettings, FlangerSettings, PulsarDelay, PulsarDelaySettings} from "./composite.js"
+import {
+    CompositeSettings,
+    ConvolverFiles,
+    ConvolverSettings,
+    FlangerSettings,
+    PulsarDelay,
+    PulsarDelaySettings
+} from "./composite.js"
 import {NoArgType, NumericStepper, PrintMapping} from "../lib/common.js"
-
-const Impulses = new Map<string, string>([
-    ["None", null],
-    ["Church", "impulse/Church.ogg"],
-    ["Deep Space", "impulse/DeepSpace.ogg"],
-    ["Hangar", "impulse/Hangar.ogg"],
-    ["Large Echo Hall", "impulse/LargeWideEchoHall.ogg"],
-    ["Plate Small", "impulse/PlateSmall.ogg"],
-    ["Plate Medium", "impulse/PlateMedium.ogg"],
-    ["Plate Large", "impulse/PlateLarge.ogg"],
-    ["Prime Long", "impulse/PrimeLong.ogg"],
-])
 
 export const SettingsControlBuilder = new class implements ControlBuilder<CompositeSettings<any>> {
     availableTypes = new Map<string, NoArgType<CompositeSettings<any>>>([
@@ -36,7 +31,7 @@ export const SettingsControlBuilder = new class implements ControlBuilder<Compos
             layout.createNumericStepper("Highpass ⟳", PrintMapping.integer("Hz"),
                 new NumericStepper(1)).with(settings.feedbackHighpass)
         } else if (settings instanceof ConvolverSettings) {
-            layout.createSelect("Impulse", Impulses).with(settings.url)
+            layout.createSelect("Impulse", ConvolverFiles).with(settings.url)
         } else if (settings instanceof FlangerSettings) {
             layout.createNumericStepper("delay", PrintMapping.float(3, "", "s"),
                 new NumericStepper(0.001)).with(settings.delayTime)

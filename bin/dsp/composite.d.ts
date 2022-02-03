@@ -77,6 +77,7 @@ export declare abstract class DefaultComposite<SETTINGS extends CompositeSetting
     connectToOutput(input: AudioNode, inputIndex?: number): void;
     terminate(): void;
 }
+export declare const ConvolverFiles: Map<string, string>;
 export interface ConvolverData {
     url: string;
 }

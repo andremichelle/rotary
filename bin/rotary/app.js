@@ -8,14 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { CollectionEventType, NumericStepper, ObservableValueImpl, PrintMapping, Terminator } from "../lib/common.js";
-import { Checkbox, NumericStepperInput } from "../dom/inputs.js";
+import { Checkbox } from "../dom/inputs.js";
 import { RotaryTrackEditor } from "./editor.js";
 import { Dom } from "../dom/common.js";
 import { RotaryRenderer } from "./render.js";
 import { Mulberry32, TAU } from "../lib/math.js";
 import { ListItem, MenuBar } from "../dom/menu.js";
 import { open, renderGIF, renderVideo, renderWebM, save } from "./file.js";
-import { TypeControlEditor } from "../dom/controls.js";
+import { TypeControlEditor, UIControllerLayout } from "../dom/controls.js";
 import { SettingsControlBuilder } from "../dsp/ui.js";
 const zoomLevel = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
@@ -33,13 +33,15 @@ export class RotaryApp {
         this.rawContext = this.rawCanvas.getContext("2d", { alpha: true });
         this.zoom = new ObservableValueImpl(0.5);
         this.elements.template.remove();
-        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='start-radius']"), PrintMapping.integer("px"), new NumericStepper(1))).with(model.radiusMin);
-        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='phase-offset']"), PrintMapping.UnipolarPercent, new NumericStepper(0.01))).with(model.phaseOffset);
-        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='loop-duration']"), PrintMapping.integer("s"), new NumericStepper(1))).with(model.loopDuration);
-        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='live-sub-frames']"), PrintMapping.integer(""), new NumericStepper(1))).with(model.motion);
-        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='export-size']"), PrintMapping.integer("px"), new NumericStepper(1))).with(model.exportSettings.size);
-        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='export-fps']"), PrintMapping.integer(""), new NumericStepper(1))).with(model.exportSettings.fps);
-        this.terminator.with(new NumericStepperInput(document.querySelector("[data-parameter='export-sub-frames']"), PrintMapping.integer(""), new NumericStepper(1))).with(model.exportSettings.subFrames);
+        const globalLayout = this.terminator.with(new UIControllerLayout(document.querySelector(".two-columns.global")));
+        globalLayout.createNumericStepper("start radius", PrintMapping.integer("px"), new NumericStepper(1)).with(model.radiusMin);
+        globalLayout.createNumericStepper("phase offset", PrintMapping.UnipolarPercent, new NumericStepper(0.01)).with(model.phaseOffset);
+        globalLayout.createNumericStepper("loop duration", PrintMapping.integer("s"), new NumericStepper(1)).with(model.loopDuration);
+        globalLayout.createNumericStepper("motion blur", PrintMapping.integer(""), new NumericStepper(1)).with(model.motion);
+        const exportLayout = this.terminator.with(new UIControllerLayout(document.querySelector(".two-columns.export")));
+        exportLayout.createNumericStepper("size", PrintMapping.integer("px"), new NumericStepper(1)).with(model.exportSettings.size);
+        exportLayout.createNumericStepper("fps", PrintMapping.integer(""), new NumericStepper(1)).with(model.exportSettings.fps);
+        exportLayout.createNumericStepper("motion blur", PrintMapping.integer(""), new NumericStepper(1)).with(model.exportSettings.subFrames);
         this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-a"), SettingsControlBuilder, "Effect")).with(model.aux[0]);
         this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-b"), SettingsControlBuilder, "Effect")).with(model.aux[1]);
         this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-c"), SettingsControlBuilder, "Effect")).with(model.aux[2]);

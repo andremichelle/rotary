@@ -18,7 +18,6 @@ import {
 import {Exp, Linear, Volume} from "../lib/mapping.js"
 import {dbToGain, gainToDb, VALUE_INTERPOLATION_TIME} from "./common.js"
 
-
 export const interpolateParameterValueIfRunning = (context: BaseAudioContext, audioParam: AudioParam, value: number): void => {
     if (context.state === "running") {
         audioParam.value = value
@@ -295,6 +294,18 @@ export abstract class DefaultComposite<SETTINGS extends CompositeSettings<Data>>
         this.outgoing = Options.None
     }
 }
+
+export const ConvolverFiles = new Map<string, string>([
+    ["None", null],
+    ["Church", "impulse/Church.ogg"],
+    ["Deep Space", "impulse/DeepSpace.ogg"],
+    ["Hangar", "impulse/Hangar.ogg"],
+    ["Large Echo Hall", "impulse/LargeWideEchoHall.ogg"],
+    ["Plate Small", "impulse/PlateSmall.ogg"],
+    ["Plate Medium", "impulse/PlateMedium.ogg"],
+    ["Plate Large", "impulse/PlateLarge.ogg"],
+    ["Prime Long", "impulse/PrimeLong.ogg"],
+])
 
 export interface ConvolverData {
     url: string

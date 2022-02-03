@@ -223,6 +223,17 @@ export class DefaultComposite {
         this.outgoing = Options.None;
     }
 }
+export const ConvolverFiles = new Map([
+    ["None", null],
+    ["Church", "impulse/Church.ogg"],
+    ["Deep Space", "impulse/DeepSpace.ogg"],
+    ["Hangar", "impulse/Hangar.ogg"],
+    ["Large Echo Hall", "impulse/LargeWideEchoHall.ogg"],
+    ["Plate Small", "impulse/PlateSmall.ogg"],
+    ["Plate Medium", "impulse/PlateMedium.ogg"],
+    ["Plate Large", "impulse/PlateLarge.ogg"],
+    ["Prime Long", "impulse/PrimeLong.ogg"],
+]);
 export class ConvolverSettings extends CompositeSettings {
     constructor() {
         super(...arguments);

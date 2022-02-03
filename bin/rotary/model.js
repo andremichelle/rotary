@@ -2,7 +2,7 @@ import { ArrayUtils, BoundNumericValue, EmptyIterator, GeneratorIterator, Observ
 import { Colors } from "../lib/colors.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
-import { Channelstrip, CompositeSettings, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../dsp/composite.js";
+import { Channelstrip, CompositeSettings, ConvolverFiles, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../dsp/composite.js";
 import { CShapeInjective, IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
 export class RotaryExportSetting {
     constructor() {
@@ -27,6 +27,11 @@ export class RotaryExportSetting {
         this.terminator.terminate();
     }
 }
+const convolverSettingsA = new ConvolverSettings();
+const convolverSettingsB = new ConvolverSettings();
+const paths = Array.from(ConvolverFiles.values());
+convolverSettingsA.url.set(paths[1]);
+convolverSettingsB.url.set(paths[3]);
 export class RotaryModel {
     constructor() {
         this.terminator = new Terminator();
@@ -39,9 +44,9 @@ export class RotaryModel {
         this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4));
         this.aux = [
             new ObservableValueImpl(new PulsarDelaySettings()),
-            new ObservableValueImpl(new ConvolverSettings()),
+            new ObservableValueImpl(convolverSettingsA),
             new ObservableValueImpl(new FlangerSettings()),
-            new ObservableValueImpl(new ConvolverSettings())
+            new ObservableValueImpl(convolverSettingsB)
         ];
         const notify = () => this.observable.notify(this);
         ObservableCollection.observeNested(this.tracks, notify);

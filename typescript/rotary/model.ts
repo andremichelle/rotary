@@ -23,6 +23,7 @@ import {
     Channelstrip,
     CompositeSettings,
     CompositeSettingsFormat,
+    ConvolverFiles,
     ConvolverSettings,
     FlangerSettings,
     PulsarDelaySettings
@@ -96,6 +97,12 @@ export class RotaryExportSetting implements Terminable, Serializer<RotaryExportF
     }
 }
 
+const convolverSettingsA = new ConvolverSettings()
+const convolverSettingsB = new ConvolverSettings()
+const paths = Array.from(ConvolverFiles.values())
+convolverSettingsA.url.set(paths[1])
+convolverSettingsB.url.set(paths[3])
+
 export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFormat>, Terminable {
     static MAX_TRACKS = 24
     static NUM_AUX = 4
@@ -112,9 +119,9 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
 
     readonly aux: ObservableValue<CompositeSettings<any>>[] = [
         new ObservableValueImpl(new PulsarDelaySettings()),
-        new ObservableValueImpl(new ConvolverSettings()),
+        new ObservableValueImpl(convolverSettingsA),
         new ObservableValueImpl(new FlangerSettings()),
-        new ObservableValueImpl(new ConvolverSettings())
+        new ObservableValueImpl(convolverSettingsB)
     ]
 
     constructor() {
