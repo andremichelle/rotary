@@ -127,8 +127,8 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                     running.forEach(v => v.stop())
                     if (result.edge === Edge.Start) {
                         let frameIndex: number
-                        if (Math.abs(t1 - t0) < 1e-11) {
-                            console.warn(`clamp frameIndex while abs(t1 - t0) = ${Math.abs(t1 - t0)} < 1e-11`)
+                        if (Math.abs(t1 - t0) < 1e-10) {
+                            console.warn(`clamp frameIndex while abs(t1 - t0) = ${Math.abs(t1 - t0)} < 1e-10`)
                             frameIndex = 0 | 0
                         } else {
                             frameIndex = ((track.localToGlobal(result.position) * loopFrames - this.phase)) | 0
