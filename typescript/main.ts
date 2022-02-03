@@ -7,7 +7,7 @@ import {WorkletModules} from "./dsp/waa.js"
 import {MeterWorklet} from "./dsp/meter/worklet.js"
 import {LimiterWorklet} from "./dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./rotary/audio/worklet.js"
-import {TwoColumnBuilder} from "./dom/controls.js"
+import {UIControllerLayout} from "./dom/controls.js"
 import {BoundNumericValue, NumericStepper, ObservableValueImpl, PrintMapping} from "./lib/common.js"
 import {Linear} from "./lib/mapping.js"
 

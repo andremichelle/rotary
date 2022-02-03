@@ -531,18 +531,11 @@ body main > .editing > .v-split > .structure {
   column-gap: 4px;
 }
 body main > .editing > .v-split > .track-editor {
-  margin: 8px 0 0 0;
+  margin: 8px 0;
   display: grid;
-  grid-template-columns: min-content min-content min-content;
-  column-gap: 16px;
+  grid-template-columns: min-content min-content;
+  row-gap: 16px;
   border-radius: 2px;
-  min-height: 208px;
-}
-body main > .editing > .v-split > .track-editor[data-motion=linear] [data-group=motion]:not([data-injective=linear]), body main > .editing > .v-split > .track-editor[data-motion=pow] [data-group=motion]:not([data-injective=pow]), body main > .editing > .v-split > .track-editor[data-motion=cshape] [data-group=motion]:not([data-injective=cshape]), body main > .editing > .v-split > .track-editor[data-motion=tshape] [data-group=motion]:not([data-injective=tshape]), body main > .editing > .v-split > .track-editor[data-motion=smoothstep] [data-group=motion]:not([data-injective=smoothstep]) {
-  display: none;
-}
-body main > .editing > .v-split > .track-editor[data-bend=linear] [data-group=bend]:not([data-injective=linear]), body main > .editing > .v-split > .track-editor[data-bend=pow] [data-group=bend]:not([data-injective=pow]), body main > .editing > .v-split > .track-editor[data-bend=cshape] [data-group=bend]:not([data-injective=cshape]), body main > .editing > .v-split > .track-editor[data-bend=tshape] [data-group=bend]:not([data-injective=tshape]), body main > .editing > .v-split > .track-editor[data-bend=smoothstep] [data-group=bend]:not([data-injective=smoothstep]) {
-  display: none;
 }
 body main > .editing > .v-split > .sound {
   flex: 1 0 0;

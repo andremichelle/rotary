@@ -1,6 +1,6 @@
-import { NumericStepperInput, SelectInput } from "./inputs.js";
 import { CShapeInjective, IdentityInjective, PowInjective, SmoothStepInjective, TShapeInjective } from "../lib/injective.js";
 import { NumericStepper, ObservableValueImpl, ObservableValueVoid, Options, PrintMapping, Terminator } from "../lib/common.js";
+import { UIControllerLayout } from "./controls.js";
 export const InjectiveTypes = new Map([
     ["Linear", IdentityInjective],
     ["Power", PowInjective],
@@ -9,25 +9,21 @@ export const InjectiveTypes = new Map([
     ["SmoothStep", SmoothStepInjective]
 ]);
 export class InjectiveEditor {
-    constructor(element, name) {
-        this.element = element;
-        this.name = name;
+    constructor(parentElement, name) {
+        this.parentElement = parentElement;
         this.terminator = new Terminator();
         this.typeValue = this.terminator.with(new ObservableValueImpl(InjectiveTypes[0]));
         this.editable = Options.None;
         this.subscription = Options.None;
-        this.typeSelectInput = this.terminator.with(new SelectInput(element
-            .querySelector(`select[data-parameter=${name}]`), InjectiveTypes));
+        this.editor = Options.None;
+        this.layout = new UIControllerLayout(parentElement);
+        this.typeSelectInput = this.layout.createSelect(name, InjectiveTypes);
         this.typeSelectInput.with(this.typeValue);
-        this.powInjectiveEditor = this.terminator.with(new PowInjectiveEditor(element, name));
-        this.cShapeInjectiveEditor = this.terminator.with(new CShapeInjectiveEditor(element, name));
-        this.tShapeInjectiveEditor = this.terminator.with(new TShapeInjectiveEditor(element, name));
-        this.smoothStepInjectiveEditor = this.terminator.with(new SmoothStepInjectiveEditor(element, name));
         this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => value.set(new type())), false));
     }
     with(value) {
-        this.subscription.ifPresent(_ => _.terminate());
         this.editable = Options.None;
+        this.subscription.ifPresent(_ => _.terminate());
         this.subscription = Options.valueOf(value.addObserver(value => this.updateType(value), true));
         this.editable = Options.valueOf(value);
     }
@@ -35,57 +31,39 @@ export class InjectiveEditor {
         this.subscription.ifPresent(_ => _.terminate());
         this.subscription = Options.None;
         this.editable = Options.None;
-        this.element.removeAttribute(`data-${this.name}`);
-        this.powInjectiveEditor.clear();
-        this.cShapeInjectiveEditor.clear();
-        this.smoothStepInjectiveEditor.clear();
+        this.editor.ifPresent(editor => editor.terminate());
+        this.editor = Options.None;
     }
     terminate() {
         this.terminator.terminate();
     }
     updateType(injective) {
+        this.editor.ifPresent(editor => editor.terminate());
+        this.editor = Options.None;
         const type = injective.constructor;
         this.typeValue.set(type);
         if (injective instanceof IdentityInjective) {
-            this.element.setAttribute(`data-${this.name}`, "linear");
-            this.powInjectiveEditor.clear();
-            this.cShapeInjectiveEditor.clear();
-            this.tShapeInjectiveEditor.clear();
-            this.smoothStepInjectiveEditor.clear();
         }
         else if (injective instanceof PowInjective) {
-            this.element.setAttribute(`data-${this.name}`, "pow");
-            this.powInjectiveEditor.with(injective);
-            this.cShapeInjectiveEditor.clear();
-            this.tShapeInjectiveEditor.clear();
-            this.smoothStepInjectiveEditor.clear();
+            this.editor = Options.valueOf(new PowInjectiveEditor(this.parentElement));
         }
         else if (injective instanceof CShapeInjective) {
-            this.element.setAttribute(`data-${this.name}`, "cshape");
-            this.powInjectiveEditor.clear();
-            this.cShapeInjectiveEditor.with(injective);
-            this.tShapeInjectiveEditor.clear();
-            this.smoothStepInjectiveEditor.clear();
+            this.editor = Options.valueOf(new CShapeInjectiveEditor(this.parentElement));
         }
         else if (injective instanceof TShapeInjective) {
-            this.element.setAttribute(`data-${this.name}`, "tshape");
-            this.powInjectiveEditor.clear();
-            this.tShapeInjectiveEditor.with(injective);
-            this.cShapeInjectiveEditor.clear();
-            this.smoothStepInjectiveEditor.clear();
+            this.editor = Options.valueOf(new TShapeInjectiveEditor(this.parentElement));
         }
         else if (injective instanceof SmoothStepInjective) {
-            this.element.setAttribute(`data-${this.name}`, "smoothstep");
-            this.powInjectiveEditor.clear();
-            this.tShapeInjectiveEditor.clear();
-            this.cShapeInjectiveEditor.clear();
-            this.smoothStepInjectiveEditor.with(injective);
+            this.editor = Options.valueOf(new SmoothStepInjectiveEditor(this.parentElement));
         }
+        this.editor.ifPresent(editor => editor.with(injective));
     }
 }
 export class PowInjectiveEditor {
-    constructor(element, group) {
-        this.input = new NumericStepperInput(element.querySelector(`fieldset[data-group='${group}'][data-injective='pow'][data-parameter='exponent']`), PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth);
+    constructor(parentElement) {
+        this.layout = new UIControllerLayout(parentElement);
+        this.input = this.layout
+            .createNumericStepper("exponent", PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth);
     }
     with(value) {
         this.input.with(value.exponent);
@@ -94,12 +72,14 @@ export class PowInjectiveEditor {
         this.input.with(ObservableValueVoid.Instance);
     }
     terminate() {
-        this.input.terminate();
+        this.layout.terminate();
     }
 }
 export class CShapeInjectiveEditor {
-    constructor(element, name) {
-        this.input = new NumericStepperInput(element.querySelector(`fieldset[data-group='${name}'][data-injective='cshape'][data-parameter='shape']`), PrintMapping.float(2, "", ""), NumericStepper.Hundredth);
+    constructor(parentElement) {
+        this.layout = new UIControllerLayout(parentElement);
+        this.input = this.layout
+            .createNumericStepper("shape", PrintMapping.float(2, "", ""), NumericStepper.Hundredth);
     }
     with(value) {
         this.input.with(value.slope);
@@ -108,12 +88,14 @@ export class CShapeInjectiveEditor {
         this.input.with(ObservableValueVoid.Instance);
     }
     terminate() {
-        this.input.terminate();
+        this.layout.terminate();
     }
 }
 export class TShapeInjectiveEditor {
-    constructor(element, name) {
-        this.input = new NumericStepperInput(element.querySelector(`fieldset[data-group='${name}'][data-injective='tshape'][data-parameter='shape']`), PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
+    constructor(parentElement) {
+        this.layout = new UIControllerLayout(parentElement);
+        this.input = this.layout
+            .createNumericStepper("shape", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
     }
     with(value) {
         this.input.with(value.shape);
@@ -122,13 +104,14 @@ export class TShapeInjectiveEditor {
         this.input.with(ObservableValueVoid.Instance);
     }
     terminate() {
-        this.input.terminate();
+        this.layout.terminate();
     }
 }
 export class SmoothStepInjectiveEditor {
-    constructor(element, name) {
-        this.input0 = new NumericStepperInput(element.querySelector(`fieldset[data-group='${name}'][data-injective='smoothstep'][data-parameter='edge0']`), PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
-        this.input1 = new NumericStepperInput(element.querySelector(`fieldset[data-group='${name}'][data-injective='smoothstep'][data-parameter='edge1']`), PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
+    constructor(parentElement) {
+        this.layout = new UIControllerLayout(parentElement);
+        this.input0 = this.layout.createNumericStepper("edge0", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
+        this.input1 = this.layout.createNumericStepper("edge1", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
     }
     with(value) {
         this.input0.with(value.edge0);
@@ -139,8 +122,7 @@ export class SmoothStepInjectiveEditor {
         this.input1.with(ObservableValueVoid.Instance);
     }
     terminate() {
-        this.input0.terminate();
-        this.input1.terminate();
+        this.layout.terminate();
     }
 }
 //# sourceMappingURL=injective.js.map

@@ -198,29 +198,11 @@ body
           column-gap: 4px
 
         > .track-editor
-          margin: 8px 0 0 0
+          margin: 8px 0
           display: grid
-          grid-template-columns: min-content min-content min-content
-          column-gap: 16px
+          grid-template-columns: min-content min-content
+          row-gap: 16px
           border-radius: 2px
-          min-height: 208px
-
-          &[data-motion="linear"] [data-group="motion"]:not([data-injective="linear"]),
-          &[data-motion="pow"] [data-group="motion"]:not([data-injective="pow"]),
-          &[data-motion="cshape"] [data-group="motion"]:not([data-injective="cshape"]),
-          &[data-motion="tshape"] [data-group="motion"]:not([data-injective="tshape"]),
-          &[data-motion="smoothstep"] [data-group="motion"]:not([data-injective="smoothstep"])
-            display: none
-
-          &[data-bend="linear"] [data-group="bend"]:not([data-injective="linear"]),
-          &[data-bend="pow"] [data-group="bend"]:not([data-injective="pow"]),
-          &[data-bend="cshape"] [data-group="bend"]:not([data-injective="cshape"]),
-          &[data-bend="tshape"] [data-group="bend"]:not([data-injective="tshape"]),
-          &[data-bend="smoothstep"] [data-group="bend"]:not([data-injective="smoothstep"])
-            display: none
-
-          //> .actions
-          //  display: flex
 
         > .sound
           flex: 1 0 0
