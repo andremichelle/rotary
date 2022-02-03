@@ -1,23 +1,18 @@
 import { Checkbox, NumericInput, NumericStepperInput, SelectInput } from "./inputs.js";
 import { ObservableValueImpl, Options, Terminator } from "../lib/common.js";
 class NumericInputFactory {
-    constructor() {
-        this.template = new DOMParser().parseFromString(`
-                    <input type="text">`, "text/html")
-            .body.querySelectorAll("input").item(0);
-    }
     static create(printMapping) {
         const htmlElement = NumericInputFactory.createElement();
         return [htmlElement, new NumericInput(htmlElement, printMapping)];
     }
     static createElement() {
-        return NumericInputFactory.instance.template.cloneNode(true);
+        return NumericInputFactory.template.cloneNode(true);
     }
 }
-NumericInputFactory.instance = new NumericInputFactory();
+NumericInputFactory.template = new DOMParser().parseFromString(`
+                    <input type="text">`, "text/html")
+    .body.querySelectorAll("input").item(0);
 class NumericStepperInputFactory {
-    constructor() {
-    }
     static create(printMapping, stepper) {
         const htmlElement = NumericStepperInputFactory.createElement();
         return [htmlElement, new NumericStepperInput(htmlElement, printMapping, stepper)];
@@ -34,19 +29,16 @@ NumericStepperInputFactory.template = new DOMParser().parseFromString(`
                     </fieldset>`, "text/html")
     .body.querySelectorAll("fieldset").item(0);
 class SelectInputFactory {
-    constructor() {
-        this.template = new DOMParser().parseFromString(`<select></select>`, "text/html")
-            .body.querySelectorAll("select").item(0);
-    }
     static create(map) {
         const htmlElement = SelectInputFactory.createElement();
         return [htmlElement, new SelectInput(htmlElement, map)];
     }
     static createElement() {
-        return SelectInputFactory.instance.template.cloneNode(true);
+        return SelectInputFactory.template.cloneNode(true);
     }
 }
-SelectInputFactory.instance = new SelectInputFactory();
+SelectInputFactory.template = new DOMParser().parseFromString(`<select></select>`, "text/html")
+    .body.querySelectorAll("select").item(0);
 class CheckboxFactory {
     constructor() {
         this.template = new DOMParser().parseFromString(`
@@ -121,7 +113,7 @@ export class UIControllerLayout {
         return labelElement;
     }
 }
-export class TypeValueEditor {
+export class TypeControlEditor {
     constructor(parentElement, controlBuilder, name) {
         this.parentElement = parentElement;
         this.controlBuilder = controlBuilder;
@@ -130,8 +122,8 @@ export class TypeValueEditor {
         this.subscription = Options.None;
         this.selectLayout = this.terminator.with(new UIControllerLayout(parentElement));
         this.controllerLayout = this.terminator.with(new UIControllerLayout(parentElement));
-        this.typeValue = this.terminator.with(new ObservableValueImpl(controlBuilder.availableTypes()[0]));
-        this.typeSelectInput = this.selectLayout.createSelect(name, controlBuilder.availableTypes());
+        this.typeValue = this.terminator.with(new ObservableValueImpl(controlBuilder.availableTypes[0]));
+        this.typeSelectInput = this.selectLayout.createSelect(name, controlBuilder.availableTypes);
         this.typeSelectInput.with(this.typeValue);
         this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => value.set(new type())), false));
     }

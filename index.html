@@ -27,6 +27,29 @@
         <div id="meter"></div>
     </div>
     <main>
+        <form class="track-nav">
+            <button id="unshift-new-track">+</button>
+            <div id="track-selectors">
+                <article id="template-selector-track">
+                    <label class="radio big">
+                        <input type="radio" name="track">
+                        <canvas></canvas>
+                    </label>
+                    <button>+</button>
+                    <footer>
+                        <label class="checkbox mute">
+                            <input type="checkbox"/>
+                            <span>M</span>
+                        </label>
+                        <label class="checkbox solo">
+                            <input type="checkbox"/>
+                            <span>S</span>
+                        </label>
+                    </footer>
+                    <span></span>
+                </article>
+            </div>
+        </form>
         <div class="global-editor">
             <div class="columns">
                 <div class="column">
@@ -83,106 +106,22 @@
                 </div>
                 <div class="column">
                     <h5 class="aux">Aux A</h5>
-                    <div class="two-columns">
-                        <label class="name">Predelay time (L)</label>
-                        <fieldset class="stepper" data-parameter="pulsar-delay-delay-l">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">Predelay time (R)</label>
-                        <fieldset class="stepper" data-parameter="pulsar-delay-delay-r">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">Delay time ⟳</label>
-                        <fieldset class="stepper" data-parameter="pulsar-delay-feedback-delay">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">Gain ⟳</label>
-                        <fieldset class="stepper" data-parameter="pulsar-delay-feedback-gain">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">Lowpass ⟳</label>
-                        <fieldset class="stepper" data-parameter="pulsar-delay-feedback-lowpass">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">Highpass ⟳</label>
-                        <fieldset class="stepper" data-parameter="pulsar-delay-feedback-highpass">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                    </div>
+                    <div class="two-columns aux-a"></div>
                 </div>
                 <div class="column">
                     <h5 class="aux">Aux B</h5>
-                    <div class="two-columns">
-                        <label class="name">Impulse</label>
-                        <select data-parameter="convolver-impulse"></select>
-                    </div>
+                    <div class="two-columns aux-b"></div>
                 </div>
                 <div class="column">
                     <h5 class="aux">Aux C</h5>
-                    <div class="two-columns">
-                        <label class="name">Delay time</label>
-                        <fieldset class="stepper" data-parameter="flanger-delay">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">Feedback</label>
-                        <fieldset class="stepper" data-parameter="flanger-feedback">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">Depth</label>
-                        <fieldset class="stepper" data-parameter="flanger-depth">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                        <label class="name">Lfo Rate</label>
-                        <fieldset class="stepper" data-parameter="flanger-rate">
-                            <button>◀︎</button>
-                            <input type="text">
-                            <button>▶</button>
-                        </fieldset>
-                    </div>
+                    <div class="two-columns aux-c"></div>
+                </div>
+                <div class="column">
+                    <h5 class="aux">Aux D</h5>
+                    <div class="two-columns aux-d"></div>
                 </div>
             </div>
         </div>
-        <form class="track-nav">
-            <button id="unshift-new-track">+</button>
-            <div id="track-selectors">
-                <article id="template-selector-track">
-                    <label class="radio big">
-                        <input type="radio" name="track">
-                        <canvas></canvas>
-                    </label>
-                    <button>+</button>
-                    <footer>
-                        <label class="checkbox mute">
-                            <input type="checkbox"/>
-                            <span>M</span>
-                        </label>
-                        <label class="checkbox solo">
-                            <input type="checkbox"/>
-                            <span>S</span>
-                        </label>
-                    </footer>
-                    <span></span>
-                </article>
-            </div>
-        </form>
         <div class="editing">
             <div class="v-split">
                 <h5>Structure</h5>

@@ -15,9 +15,9 @@ export declare class UIControllerLayout implements Terminable {
 }
 export interface ControlBuilder<T> {
     build(layout: UIControllerLayout, value: T): void;
-    availableTypes(): Map<string, NoArgType<T>>;
+    availableTypes: Map<string, NoArgType<T>>;
 }
-export declare class TypeValueEditor<T> implements Editor<ObservableValue<T>> {
+export declare class TypeControlEditor<T> implements Editor<ObservableValue<T>> {
     private readonly parentElement;
     private readonly controlBuilder;
     private readonly terminator;

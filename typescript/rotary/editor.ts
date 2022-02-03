@@ -1,37 +1,19 @@
-import {
-    ArrayUtils,
-    NoArgType,
-    NumericStepper,
-    Option,
-    Options,
-    PrintMapping,
-    Terminable,
-    Terminator
-} from "../lib/common.js"
+import {ArrayUtils, NumericStepper, Option, Options, PrintMapping, Terminable, Terminator} from "../lib/common.js"
 import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, RotaryModel, RotaryTrackModel} from "./model.js"
-import {ControlBuilder, TypeValueEditor, UIControllerLayout} from "../dom/controls.js"
+import {ControlBuilder, TypeControlEditor, UIControllerLayout} from "../dom/controls.js"
 import {Dom} from "../dom/common.js"
 import {
     CShapeInjective,
     IdentityInjective,
     Injective,
     InjectiveType,
-    PowInjective, SmoothStepInjective,
+    PowInjective,
+    SmoothStepInjective,
     TShapeInjective
 } from "../lib/injective.js"
 
-export const InjectiveTypes = new Map<string, InjectiveType>([
-    ["Linear", IdentityInjective],
-    ["Power", PowInjective],
-    ["CShape", CShapeInjective],
-    ["TShape", TShapeInjective],
-    ["SmoothStep", SmoothStepInjective]
-])
-
-export class InjectiveControlBuilder implements ControlBuilder<Injective<any>> {
-    static instance: InjectiveControlBuilder = new InjectiveControlBuilder()
-
+const InjectiveControlBuilder = new class implements ControlBuilder<Injective<any>> {
     build(layout: UIControllerLayout, value: Injective<any>): void {
         if (value instanceof IdentityInjective) {
         } else if (value instanceof PowInjective) {
@@ -54,9 +36,13 @@ export class InjectiveControlBuilder implements ControlBuilder<Injective<any>> {
         }
     }
 
-    availableTypes(): Map<string, NoArgType<Injective<any>>> {
-        return InjectiveTypes
-    }
+    availableTypes = new Map<string, InjectiveType>([
+        ["Linear", IdentityInjective],
+        ["Power", PowInjective],
+        ["CShape", CShapeInjective],
+        ["TShape", TShapeInjective],
+        ["SmoothStep", SmoothStepInjective]
+    ])
 }
 
 export interface RotaryTrackEditorExecutor {
@@ -76,10 +62,10 @@ export class RotaryTrackEditor implements Terminable {
     private readonly lengthRatio: NumericStepperInput
     private readonly outline: NumericStepperInput
     private readonly fill: SelectInput<Fill>
-    private readonly motion: TypeValueEditor<Injective<any>>
+    private readonly motion: TypeControlEditor<Injective<any>>
     private readonly rgb: NumericInput
     private readonly phaseOffset: NumericStepperInput
-    private readonly bend: TypeValueEditor<Injective<any>>
+    private readonly bend: TypeControlEditor<Injective<any>>
     private readonly frequency: NumericStepperInput
     private readonly fragments: NumericStepperInput
     private readonly reverse: Checkbox
@@ -109,8 +95,8 @@ export class RotaryTrackEditor implements Terminable {
         this.fragments = layoutR.createNumericStepper("fragments", PrintMapping.integer("x"), NumericStepper.Integer)
         this.reverse = layoutR.createCheckbox("reverse")
 
-        this.motion = this.terminator.with(new TypeValueEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder.instance, "motion"))
-        this.bend = this.terminator.with(new TypeValueEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder.instance, "bend"))
+        this.motion = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder, "motion"))
+        this.bend = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder, "bend"))
 
         this.volume = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='volume']"),
             PrintMapping.UnipolarPercent, NumericStepper.Hundredth))

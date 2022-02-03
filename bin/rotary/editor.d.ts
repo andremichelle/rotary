@@ -1,13 +1,5 @@
-import { NoArgType, Option, Terminable } from "../lib/common.js";
+import { Option, Terminable } from "../lib/common.js";
 import { RotaryTrackModel } from "./model.js";
-import { ControlBuilder, UIControllerLayout } from "../dom/controls.js";
-import { Injective, InjectiveType } from "../lib/injective.js";
-export declare const InjectiveTypes: Map<string, InjectiveType>;
-export declare class InjectiveControlBuilder implements ControlBuilder<Injective<any>> {
-    static instance: InjectiveControlBuilder;
-    build(layout: UIControllerLayout, value: Injective<any>): void;
-    availableTypes(): Map<string, NoArgType<Injective<any>>>;
-}
 export interface RotaryTrackEditorExecutor {
     deleteTrack(trackModel: RotaryTrackModel): void;
     moveTrackLeft(trackModel: RotaryTrackModel): void;

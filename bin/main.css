@@ -375,7 +375,7 @@ body .center {
   flex-direction: column;
 }
 body .center > .top {
-  flex: 1 0 0;
+  flex: 1 0 40px;
   display: flex;
   flex-direction: row;
   align-items: center;

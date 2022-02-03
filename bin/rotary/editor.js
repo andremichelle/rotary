@@ -1,17 +1,19 @@
 import { ArrayUtils, NumericStepper, Options, PrintMapping, Terminator } from "../lib/common.js";
 import { NumericStepperInput } from "../dom/inputs.js";
 import { Fills, RotaryModel } from "./model.js";
-import { TypeValueEditor, UIControllerLayout } from "../dom/controls.js";
+import { TypeControlEditor, UIControllerLayout } from "../dom/controls.js";
 import { Dom } from "../dom/common.js";
 import { CShapeInjective, IdentityInjective, PowInjective, SmoothStepInjective, TShapeInjective } from "../lib/injective.js";
-export const InjectiveTypes = new Map([
-    ["Linear", IdentityInjective],
-    ["Power", PowInjective],
-    ["CShape", CShapeInjective],
-    ["TShape", TShapeInjective],
-    ["SmoothStep", SmoothStepInjective]
-]);
-export class InjectiveControlBuilder {
+const InjectiveControlBuilder = new class {
+    constructor() {
+        this.availableTypes = new Map([
+            ["Linear", IdentityInjective],
+            ["Power", PowInjective],
+            ["CShape", CShapeInjective],
+            ["TShape", TShapeInjective],
+            ["SmoothStep", SmoothStepInjective]
+        ]);
+    }
     build(layout, value) {
         if (value instanceof IdentityInjective) {
         }
@@ -34,11 +36,7 @@ export class InjectiveControlBuilder {
                 .with(value.edge1);
         }
     }
-    availableTypes() {
-        return InjectiveTypes;
-    }
-}
-InjectiveControlBuilder.instance = new InjectiveControlBuilder();
+};
 export class RotaryTrackEditor {
     constructor(executor, parentNode) {
         this.executor = executor;
@@ -58,8 +56,8 @@ export class RotaryTrackEditor {
         this.frequency = layoutR.createNumericStepper("frequency", PrintMapping.integer("x"), NumericStepper.Integer);
         this.fragments = layoutR.createNumericStepper("fragments", PrintMapping.integer("x"), NumericStepper.Integer);
         this.reverse = layoutR.createCheckbox("reverse");
-        this.motion = this.terminator.with(new TypeValueEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder.instance, "motion"));
-        this.bend = this.terminator.with(new TypeValueEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder.instance, "bend"));
+        this.motion = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder, "motion"));
+        this.bend = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder, "bend"));
         this.volume = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='volume']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
         this.panning = this.terminator.with(new NumericStepperInput(parentNode.querySelector("fieldset[data-parameter='panning']"), PrintMapping.UnipolarPercent, NumericStepper.Hundredth));
         this.auxSends = ArrayUtils.fill(RotaryModel.NUM_AUX, (index) => this.terminator.with(new NumericStepperInput(parentNode.querySelector(`fieldset[data-parameter='aux-${index}']`), PrintMapping.UnipolarPercent, NumericStepper.Hundredth)));

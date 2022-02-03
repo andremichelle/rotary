@@ -18,17 +18,12 @@ class NumericInputFactory {
     }
 
     private static createElement(): HTMLInputElement {
-        return NumericInputFactory.instance.template.cloneNode(true) as HTMLInputElement
+        return NumericInputFactory.template.cloneNode(true) as HTMLInputElement
     }
 
-    private static instance = new NumericInputFactory()
-
-    private readonly template: HTMLInputElement = new DOMParser().parseFromString(`
+    private static readonly template: HTMLInputElement = new DOMParser().parseFromString(`
                     <input type="text">`, "text/html")
         .body.querySelectorAll("input").item(0)
-
-    private constructor() {
-    }
 }
 
 class NumericStepperInputFactory {
@@ -48,9 +43,6 @@ class NumericStepperInputFactory {
                         <button>▶</button>
                     </fieldset>`, "text/html")
         .body.querySelectorAll("fieldset").item(0)
-
-    private constructor() {
-    }
 }
 
 class SelectInputFactory {
@@ -60,16 +52,11 @@ class SelectInputFactory {
     }
 
     private static createElement(): HTMLSelectElement {
-        return SelectInputFactory.instance.template.cloneNode(true) as HTMLSelectElement
+        return SelectInputFactory.template.cloneNode(true) as HTMLSelectElement
     }
 
-    private static instance = new SelectInputFactory()
-
-    private readonly template: HTMLSelectElement = new DOMParser().parseFromString(`<select></select>`, "text/html")
+    private static readonly template: HTMLSelectElement = new DOMParser().parseFromString(`<select></select>`, "text/html")
         .body.querySelectorAll("select").item(0)
-
-    private constructor() {
-    }
 }
 
 class CheckboxFactory {
@@ -162,10 +149,10 @@ export class UIControllerLayout implements Terminable {
 export interface ControlBuilder<T> {
     build(layout: UIControllerLayout, value: T): void
 
-    availableTypes(): Map<string, NoArgType<T>>
+    availableTypes: Map<string, NoArgType<T>>
 }
 
-export class TypeValueEditor<T> implements Editor<ObservableValue<T>> {
+export class TypeControlEditor<T> implements Editor<ObservableValue<T>> {
     private readonly terminator: Terminator = new Terminator()
 
     private readonly selectLayout: UIControllerLayout
@@ -183,8 +170,8 @@ export class TypeValueEditor<T> implements Editor<ObservableValue<T>> {
         this.selectLayout = this.terminator.with(new UIControllerLayout(parentElement))
         this.controllerLayout = this.terminator.with(new UIControllerLayout(parentElement))
 
-        this.typeValue = this.terminator.with(new ObservableValueImpl(controlBuilder.availableTypes()[0]))
-        this.typeSelectInput = this.selectLayout.createSelect(name, controlBuilder.availableTypes())
+        this.typeValue = this.terminator.with(new ObservableValueImpl(controlBuilder.availableTypes[0]))
+        this.typeSelectInput = this.selectLayout.createSelect(name, controlBuilder.availableTypes)
         this.typeSelectInput.with(this.typeValue)
         this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => value.set(new type())), false))
     }
