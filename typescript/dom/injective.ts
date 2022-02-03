@@ -1,4 +1,4 @@
-import {Editor, NumericStepperInput, SelectInput} from "./inputs.js"
+import {Editor, SelectInput} from "./inputs.js"
 import {
     CShapeInjective,
     IdentityInjective,
@@ -12,7 +12,6 @@ import {
     NumericStepper,
     ObservableValue,
     ObservableValueImpl,
-    ObservableValueVoid,
     Option,
     Options,
     PrintMapping,
@@ -30,7 +29,8 @@ export const InjectiveTypes = new Map<string, InjectiveType>([
 ])
 
 export class InjectiveEditor implements Editor<ObservableValue<Injective<any>>> {
-    private readonly layout: UIControllerLayout
+    private readonly selectLayout: UIControllerLayout
+    private readonly controllerLayout: UIControllerLayout
 
     private readonly terminator: Terminator = new Terminator()
     private readonly typeValue: ObservableValue<InjectiveType> = this.terminator.with(new ObservableValueImpl(InjectiveTypes[0]))
@@ -38,13 +38,12 @@ export class InjectiveEditor implements Editor<ObservableValue<Injective<any>>> 
 
     private editable: Option<ObservableValue<Injective<any>>> = Options.None
     private subscription: Option<Terminable> = Options.None
-    private editor: Option<Editor<any>> = Options.None
 
     constructor(private readonly parentElement: HTMLElement, name: string) {
+        this.selectLayout = this.terminator.with(new UIControllerLayout(parentElement))
+        this.controllerLayout = this.terminator.with(new UIControllerLayout(parentElement))
 
-        this.layout = new UIControllerLayout(parentElement)
-
-        this.typeSelectInput = this.layout.createSelect(name, InjectiveTypes)
+        this.typeSelectInput = this.selectLayout.createSelect(name, InjectiveTypes)
         this.typeSelectInput.with(this.typeValue)
         this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => value.set(new type())), false))
     }
@@ -60,9 +59,7 @@ export class InjectiveEditor implements Editor<ObservableValue<Injective<any>>> 
         this.subscription.ifPresent(_ => _.terminate())
         this.subscription = Options.None
         this.editable = Options.None
-
-        this.editor.ifPresent(editor => editor.terminate())
-        this.editor = Options.None
+        this.controllerLayout.terminate()
     }
 
     terminate(): void {
@@ -70,118 +67,27 @@ export class InjectiveEditor implements Editor<ObservableValue<Injective<any>>> 
     }
 
     private updateType(injective: Injective<any>): void {
-        this.editor.ifPresent(editor => editor.terminate())
-        this.editor = Options.None
+        this.controllerLayout.terminate()
         const type: InjectiveType = injective.constructor as InjectiveType
         this.typeValue.set(type)
         if (injective instanceof IdentityInjective) {
         } else if (injective instanceof PowInjective) {
-            this.editor = Options.valueOf(new PowInjectiveEditor(this.parentElement))
-        } else if (injective instanceof CShapeInjective) {
-            this.editor = Options.valueOf(new CShapeInjectiveEditor(this.parentElement))
-        } else if (injective instanceof TShapeInjective) {
-            this.editor = Options.valueOf(new TShapeInjectiveEditor(this.parentElement))
-        } else if (injective instanceof SmoothStepInjective) {
-            this.editor = Options.valueOf(new SmoothStepInjectiveEditor(this.parentElement))
-        }
-        this.editor.ifPresent(editor => editor.with(injective))
-    }
-}
-
-export class PowInjectiveEditor implements Editor<PowInjective> {
-    private readonly layout: UIControllerLayout
-    private readonly input: NumericStepperInput
-
-    constructor(parentElement: HTMLElement) {
-        this.layout = new UIControllerLayout(parentElement)
-        this.input = this.layout
-            .createNumericStepper("exponent",
+            this.controllerLayout.createNumericStepper("exponent",
                 PrintMapping.float(2, "x^", ""), NumericStepper.Hundredth)
-    }
-
-    with(value: PowInjective): void {
-        this.input.with(value.exponent)
-    }
-
-    clear(): void {
-        this.input.with(ObservableValueVoid.Instance)
-    }
-
-    terminate(): void {
-        this.layout.terminate()
-    }
-}
-
-export class CShapeInjectiveEditor implements Editor<CShapeInjective> {
-    private readonly layout: UIControllerLayout
-    private readonly input: NumericStepperInput
-
-    constructor(parentElement: HTMLElement) {
-        this.layout = new UIControllerLayout(parentElement)
-        this.input = this.layout
-            .createNumericStepper("shape",
-                PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
-    }
-
-    with(value: CShapeInjective): void {
-        this.input.with(value.slope)
-    }
-
-    clear(): void {
-        this.input.with(ObservableValueVoid.Instance)
-    }
-
-    terminate(): void {
-        this.layout.terminate()
-    }
-}
-
-export class TShapeInjectiveEditor implements Editor<TShapeInjective> {
-    private readonly layout: UIControllerLayout
-    private readonly input: NumericStepperInput
-
-    constructor(parentElement: HTMLElement) {
-        this.layout = new UIControllerLayout(parentElement)
-        this.input = this.layout
-            .createNumericStepper("shape",
+                .with(injective.exponent)
+        } else if (injective instanceof CShapeInjective) {
+            this.controllerLayout.createNumericStepper("slope",
                 PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
-    }
-
-    with(value: TShapeInjective): void {
-        this.input.with(value.shape)
-    }
-
-    clear(): void {
-        this.input.with(ObservableValueVoid.Instance)
-    }
-
-    terminate(): void {
-        this.layout.terminate()
-    }
-}
-
-export class SmoothStepInjectiveEditor implements Editor<SmoothStepInjective> {
-    private readonly layout: UIControllerLayout
-    private readonly input0: NumericStepperInput
-    private readonly input1: NumericStepperInput
-
-    constructor(parentElement: HTMLElement) {
-        this.layout = new UIControllerLayout(parentElement)
-        this.input0 = this.layout.createNumericStepper("edge0", PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
-        this.input1 = this.layout.createNumericStepper("edge1", PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
-    }
-
-    with(value: SmoothStepInjective): void {
-        this.input0.with(value.edge0)
-        this.input1.with(value.edge1)
-    }
-
-    clear(): void {
-        this.input0.with(ObservableValueVoid.Instance)
-        this.input1.with(ObservableValueVoid.Instance)
-    }
-
-    terminate(): void {
-        this.layout.terminate()
+                .with(injective.slope)
+        } else if (injective instanceof TShapeInjective) {
+            this.controllerLayout.createNumericStepper("shape",
+                PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
+                .with(injective.shape)
+        } else if (injective instanceof SmoothStepInjective) {
+            this.controllerLayout.createNumericStepper("edge 0", PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
+                .with(injective.edge0)
+            this.controllerLayout.createNumericStepper("edge 1", PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
+                .with(injective.edge1)
+        }
     }
 }

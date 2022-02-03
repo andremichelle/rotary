@@ -606,9 +606,9 @@ body main > .editing > .preview .rotary div.top-overlay label:after {
 div.two-columns {
   display: grid;
   align-items: center;
-  grid-template-columns: minmax(48px, 1fr) 76px;
+  grid-template-columns: minmax(60px, 1fr) 76px;
   row-gap: 3px;
-  column-gap: 6px;
+  column-gap: 4px;
   line-height: 17px;
   height: min-content;
 }
