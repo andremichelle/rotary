@@ -35,23 +35,27 @@ export declare class RotaryApp implements RotaryTrackEditorExecutor {
     render(phase: number): void;
     installShortcuts(audio: Audio, preview: AudioSceneController): RotaryApp;
     installApplicationMenu(audio: Audio): RotaryApp;
+    peak(model: RotaryTrackModel): Float32Array;
     private randomizeAll;
     private createSelector;
     private removeSelector;
     private reorderSelectors;
 }
 export declare class RotaryTrackSelector implements Terminable {
-    readonly ui: RotaryApp;
+    readonly app: RotaryApp;
     readonly model: RotaryTrackModel;
     readonly element: HTMLElement;
     readonly radio: HTMLInputElement;
     readonly button: HTMLButtonElement;
     private readonly terminator;
-    private readonly canvas;
-    private readonly context;
+    private readonly previewCanvas;
+    private readonly previewContext;
+    private readonly peaksCanvas;
+    private readonly peaksContext;
     private readonly mute;
     private readonly solo;
-    constructor(ui: RotaryApp, model: RotaryTrackModel, element: HTMLElement, radio: HTMLInputElement, button: HTMLButtonElement);
+    constructor(app: RotaryApp, model: RotaryTrackModel, element: HTMLElement, radio: HTMLInputElement, button: HTMLButtonElement);
     updatePreview(): void;
+    updatePeaks(): void;
     terminate(): void;
 }

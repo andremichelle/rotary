@@ -1,13 +1,13 @@
 export declare class NoUIMeterWorklet extends AudioWorkletNode {
-    readonly passCount: number;
+    readonly numLines: number;
     readonly channelCount: number;
     static readonly PEAK_HOLD_DURATION: number;
     static readonly CLIP_HOLD_DURATION: number;
-    protected readonly maxPeaks: Float32Array[];
-    protected readonly maxSquares: Float32Array[];
-    protected readonly maxPeakHoldValue: Float32Array[];
-    protected readonly releasePeakHoldTime: Float32Array[];
-    constructor(context: BaseAudioContext, passCount: number, channelCount: number);
+    readonly peaks: Float32Array[];
+    readonly squares: Float32Array[];
+    readonly peakHoldValue: Float32Array[];
+    readonly releasePeakHoldTime: Float32Array[];
+    constructor(context: BaseAudioContext, numLines: number, channelCount: number);
 }
 export declare class StereoMeterWorklet extends NoUIMeterWorklet {
     private readonly meterHPadding;

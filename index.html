@@ -27,29 +27,6 @@
         <div id="meter"></div>
     </div>
     <main>
-        <form class="track-nav">
-            <button id="unshift-new-track">+</button>
-            <div id="track-selectors">
-                <article id="template-selector-track">
-                    <label class="radio big">
-                        <input type="radio" name="track">
-                        <canvas></canvas>
-                    </label>
-                    <button>+</button>
-                    <footer>
-                        <label class="checkbox mute">
-                            <input type="checkbox"/>
-                            <span>M</span>
-                        </label>
-                        <label class="checkbox solo">
-                            <input type="checkbox"/>
-                            <span>S</span>
-                        </label>
-                    </footer>
-                    <span></span>
-                </article>
-            </div>
-        </form>
         <div class="global-editor">
             <div class="columns">
                 <div class="column">
@@ -78,6 +55,30 @@
                 </div>
             </div>
         </div>
+        <form class="track-nav">
+            <button id="unshift-new-track">+</button>
+            <div id="track-selectors">
+                <article id="template-selector-track">
+                    <label class="radio big">
+                        <input type="radio" name="track">
+                        <canvas preview></canvas>
+                    </label>
+                    <button>+</button>
+                    <footer>
+                        <label class="checkbox mute">
+                            <input type="checkbox"/>
+                            <span>M</span>
+                        </label>
+                        <canvas peaks></canvas>
+                        <label class="checkbox solo">
+                            <input type="checkbox"/>
+                            <span>S</span>
+                        </label>
+                    </footer>
+                    <span></span>
+                </article>
+            </div>
+        </form>
         <div class="editing">
             <div class="v-split">
                 <h5>Structure</h5>

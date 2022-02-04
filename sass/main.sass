@@ -135,6 +135,13 @@ body
             display: flex
             justify-content: space-between
 
+            > canvas[peaks]
+              width: 10px
+              height: 17px
+              border-radius: 1px
+              background-color: #161616
+              box-sizing: border-box
+
             > label
               display: flex
               color: #666
@@ -157,7 +164,7 @@ body
             cursor: pointer
             display: grid
 
-            > canvas
+            > canvas[preview]
               top: 0
               left: 0
               width: 48px
@@ -170,7 +177,7 @@ body
               display: none
               appearance: none
 
-              &:checked + canvas
+              &:checked + canvas[preview]
                 box-shadow: 0 0 1px 1px white inset
 
               &:not(:checked):hover + canvas

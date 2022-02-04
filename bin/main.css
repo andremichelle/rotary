@@ -468,6 +468,13 @@ body main > form.track-nav > #track-selectors > article > footer {
   display: flex;
   justify-content: space-between;
 }
+body main > form.track-nav > #track-selectors > article > footer > canvas[peaks] {
+  width: 10px;
+  height: 17px;
+  border-radius: 1px;
+  background-color: #161616;
+  box-sizing: border-box;
+}
 body main > form.track-nav > #track-selectors > article > footer > label {
   display: flex;
   color: #666;
@@ -490,7 +497,7 @@ body main > form.track-nav > #track-selectors > article > label.radio.big {
   cursor: pointer;
   display: grid;
 }
-body main > form.track-nav > #track-selectors > article > label.radio.big > canvas {
+body main > form.track-nav > #track-selectors > article > label.radio.big > canvas[preview] {
   top: 0;
   left: 0;
   width: 48px;
@@ -503,7 +510,7 @@ body main > form.track-nav > #track-selectors > article > label.radio.big > inpu
   display: none;
   appearance: none;
 }
-body main > form.track-nav > #track-selectors > article > label.radio.big > input[type=radio]:checked + canvas {
+body main > form.track-nav > #track-selectors > article > label.radio.big > input[type=radio]:checked + canvas[preview] {
   box-shadow: 0 0 1px 1px white inset;
 }
 body main > form.track-nav > #track-selectors > article > label.radio.big > input[type=radio]:not(:checked):hover + canvas {

@@ -50,12 +50,15 @@ export const initAudioScene = () => {
                 for (let i = 0; i <= 21; i++) {
                     rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`));
                 }
+                for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
+                    rotaryNode.connect(meterNode, lineIndex, lineIndex);
+                }
                 const mixer = new Mixer(context, RotaryModel.NUM_AUX);
                 const map = new Map();
                 const addTrack = (track, index) => {
                     const terminator = new Terminator();
                     const channelstrip = mixer.createChannelstrip();
-                    channelstrip.connectToInput(rotaryNode, index);
+                    channelstrip.connectToInput(meterNode, index);
                     terminator.with(track.mute.addObserver(mute => channelstrip.setMute(mute), true));
                     terminator.with(track.solo.addObserver(solo => channelstrip.setSolo(solo), true));
                     terminator.with(track.volume.addObserver(volume => channelstrip.setVolume(volume), true));
@@ -109,6 +112,7 @@ export const initAudioScene = () => {
                     rewind: () => rotaryNode.rewind(),
                     phase: () => rotaryNode.phase(),
                     latency: () => limiterWorklet.lookahead,
+                    meter: meterNode,
                     terminate: () => terminator.terminate()
                 });
             });

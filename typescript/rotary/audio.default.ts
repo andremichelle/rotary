@@ -34,10 +34,7 @@ export const initAudioScene = (): AudioScene => {
                 context.audioWorklet.addModule("bin/rotary/audio/processor.js")
             ])
         },
-        async build(context: BaseAudioContext,
-                    output: AudioNode,
-                    model: RotaryModel,
-                    boot: Boot): Promise<AudioSceneController> {
+        async build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, boot: Boot): Promise<AudioSceneController> {
             const terminator = new Terminator()
             const rotaryNode = new RotaryWorkletNode(context, model)
             const meterNode = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2)
@@ -66,14 +63,16 @@ export const initAudioScene = (): AudioScene => {
                 rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`))
             }
 
-            // rotaryNode.connect(meterNode)
+            for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
+                rotaryNode.connect(meterNode, lineIndex, lineIndex)
+            }
 
             const mixer: Mixer = new Mixer(context, RotaryModel.NUM_AUX)
             const map: Map<RotaryTrackModel, Terminable> = new Map()
             const addTrack = (track: RotaryTrackModel, index: number): Terminable => {
                 const terminator: Terminator = new Terminator()
                 const channelstrip = mixer.createChannelstrip()
-                channelstrip.connectToInput(rotaryNode, index)
+                channelstrip.connectToInput(meterNode, index)
                 terminator.with(track.mute.addObserver(mute => channelstrip.setMute(mute), true))
                 terminator.with(track.solo.addObserver(solo => channelstrip.setSolo(solo), true))
                 terminator.with(track.volume.addObserver(volume => channelstrip.setVolume(volume), true))
@@ -126,6 +125,7 @@ export const initAudioScene = (): AudioScene => {
                 rewind: () => rotaryNode.rewind(),
                 phase: () => rotaryNode.phase(),
                 latency: () => limiterWorklet.lookahead,
+                meter: meterNode,
                 terminate: () => terminator.terminate()
             })
         }

@@ -243,6 +243,9 @@ export class RotaryApp {
             .onTrigger(_ => window.open("https://github.com/andremichelle/rotary/wiki/TODOs"))));
         return this;
     }
+    peak(model) {
+        return this.preview.meter.squares[this.model.tracks.indexOf(model)];
+    }
     randomizeAll() {
         return this.model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())));
     }
@@ -272,34 +275,55 @@ export class RotaryApp {
 }
 RotaryApp.FPS = 60.0;
 export class RotaryTrackSelector {
-    constructor(ui, model, element, radio, button) {
-        this.ui = ui;
+    constructor(app, model, element, radio, button) {
+        this.app = app;
         this.model = model;
         this.element = element;
         this.radio = radio;
         this.button = button;
         this.terminator = new Terminator();
-        this.terminator.with(Dom.bindEventListener(this.radio, "change", () => this.ui.select(this.model)));
+        this.terminator.with(Dom.bindEventListener(this.radio, "change", () => this.app.select(this.model)));
         this.terminator.with(Dom.bindEventListener(this.button, "click", (event) => {
             event.preventDefault();
-            this.ui.createNew(this.model, event.shiftKey);
+            this.app.createNew(this.model, event.shiftKey);
         }));
-        this.canvas = this.element.querySelector("canvas");
-        this.context = this.canvas.getContext("2d");
+        this.previewCanvas = this.element.querySelector("canvas[preview]");
+        this.previewContext = this.previewCanvas.getContext("2d");
+        this.peaksCanvas = this.element.querySelector("canvas[peaks]");
+        this.peaksContext = this.peaksCanvas.getContext("2d");
         this.mute = this.terminator.with(new Checkbox(element.querySelector("label.checkbox.mute input")));
         this.mute.with(this.model.mute);
         this.solo = this.terminator.with(new Checkbox(element.querySelector("label.checkbox.solo input")));
         this.solo.with(this.model.solo);
         this.terminator.with(this.model.addObserver(() => this.updatePreview()));
         requestAnimationFrame(() => this.updatePreview());
+        requestAnimationFrame(() => this.updatePeaks());
     }
     updatePreview() {
         const ratio = Math.ceil(devicePixelRatio);
-        const w = this.canvas.width = this.canvas.clientWidth * ratio;
-        const h = this.canvas.height = this.canvas.clientHeight * ratio;
+        const w = this.previewCanvas.width = this.previewCanvas.clientWidth * ratio;
+        const h = this.previewCanvas.height = this.previewCanvas.clientHeight * ratio;
         if (w === 0 || h === 0)
             return;
-        RotaryRenderer.renderTrackPreview(this.context, this.model, Math.max(w, h));
+        RotaryRenderer.renderTrackPreview(this.previewContext, this.model, Math.max(w, h));
+    }
+    updatePeaks() {
+        const ratio = Math.ceil(devicePixelRatio);
+        const w = this.peaksCanvas.width = this.peaksCanvas.clientWidth * ratio;
+        const h = this.peaksCanvas.height = this.peaksCanvas.clientHeight * ratio;
+        if (w === 0 || h === 0)
+            return;
+        const [p0, p1] = this.app.peak(this.model);
+        this.peaksContext.save();
+        this.peaksContext.scale(ratio, ratio);
+        this.peaksContext.clearRect(0, 0, w, h);
+        this.peaksContext.fillStyle = this.model.opaque();
+        this.peaksContext.fillRect(1, 16 - p0 * 15, 3, p0 * 15);
+        this.peaksContext.fillRect(6, 16 - p1 * 15, 3, p1 * 15);
+        this.peaksContext.restore();
+        if (this.element.parentElement) {
+            requestAnimationFrame(() => this.updatePeaks());
+        }
     }
     terminate() {
         this.element.remove();

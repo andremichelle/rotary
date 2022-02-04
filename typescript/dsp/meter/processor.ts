@@ -31,26 +31,26 @@ registerProcessor("dsp-meter", class extends AudioWorkletProcessor {
 
     // noinspection JSUnusedGlobalSymbols
     process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
-        for (let i = 0; i < this.numberOfLines; i++) {
-            const input: Float32Array[] = inputs[i]
-            const output: Float32Array[] = outputs[i]
-            for (let channel: number = 0 | 0; channel < output.length; ++channel) {
+        for (let lineIndex = 0; lineIndex < this.numberOfLines; lineIndex++) {
+            const input: Float32Array[] = inputs[lineIndex]
+            const output: Float32Array[] = outputs[lineIndex]
+            for (let channel: number = 0; channel < this.channelCount; ++channel) {
                 const inputChannel: Float32Array = input[channel]
                 const outputChannel: Float32Array = output[channel]
-                const rms: RMS = this.rmsChannels[i][channel]
-                let maxPeak: number = this.maxPeaks[i][channel]
-                let maxSquare: number = this.maxSquares[i][channel]
+                const rms: RMS = this.rmsChannels[lineIndex][channel]
                 if (undefined === inputChannel) {
-                    this.maxPeaks[i][channel] = 0.0
-                    this.maxSquares[i][channel] = 0.0
+                    this.maxPeaks[lineIndex][channel] = 0.0
+                    this.maxSquares[lineIndex][channel] = 0.0
                 } else {
-                    for (let i: number = 0 | 0; i < RENDER_QUANTUM; ++i) {
+                    let maxPeak: number = this.maxPeaks[lineIndex][channel]
+                    let maxSquare: number = this.maxSquares[lineIndex][channel]
+                    for (let i: number = 0; i < RENDER_QUANTUM; ++i) {
                         const inp: number = outputChannel[i] = inputChannel[i] // we pass the signal
                         maxPeak = Math.max(maxPeak, Math.abs(inp))
                         maxSquare = Math.max(maxSquare, rms.pushPop(inp * inp))
                     }
-                    this.maxPeaks[i][channel] = maxPeak
-                    this.maxSquares[i][channel] = maxSquare
+                    this.maxPeaks[lineIndex][channel] = maxPeak
+                    this.maxSquares[lineIndex][channel] = maxSquare
                 }
             }
         }
@@ -58,9 +58,9 @@ registerProcessor("dsp-meter", class extends AudioWorkletProcessor {
         if (this.updateCount >= this.updateRate) {
             this.updateCount -= this.updateRate
             this.port.postMessage(new UpdateMeterMessage(this.maxSquares, this.maxPeaks))
-            for (let i = 0; i < this.numberOfLines; i++) {
-                this.maxPeaks[i].fill(0.0)
-                this.maxSquares[i].fill(0.0)
+            for (let lineIndex = 0; lineIndex < this.numberOfLines; lineIndex++) {
+                this.maxPeaks[lineIndex].fill(0.0)
+                this.maxSquares[lineIndex].fill(0.0)
             }
         }
         return true

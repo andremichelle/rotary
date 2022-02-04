@@ -1,12 +1,15 @@
 import { RotaryModel } from "./model.js";
+import { NoUIMeterWorklet } from "../dsp/meter/worklet.js";
 import { Boot, ObservableValue, Terminable } from "../lib/common.js";
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>;
     rewind(): void;
     phase(): number;
     latency(): number;
+    meter: NoUIMeterWorklet;
 }
 export interface AudioScene {
+    loadModules(context: BaseAudioContext): Promise<void>;
     build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, boot: Boot): Promise<AudioSceneController>;
 }
 export declare class Audio {

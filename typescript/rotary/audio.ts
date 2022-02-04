@@ -1,7 +1,7 @@
 // noinspection JSUnusedGlobalSymbols
 
 import {RotaryModel} from "./model.js"
-import {StereoMeterWorklet} from "../dsp/meter/worklet.js"
+import {NoUIMeterWorklet, StereoMeterWorklet} from "../dsp/meter/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, ObservableValue, Terminable} from "../lib/common.js"
 import {encodeWavFloat} from "../dsp/common.js"
@@ -14,6 +14,8 @@ export interface AudioSceneController extends Terminable {
     phase(): number
 
     latency(): number
+
+    meter: NoUIMeterWorklet
 }
 
 export interface AudioScene {

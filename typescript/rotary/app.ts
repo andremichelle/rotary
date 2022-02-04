@@ -285,6 +285,10 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         return this
     }
 
+    peak(model: RotaryTrackModel): Float32Array {
+        return this.preview.meter.squares[this.model.tracks.indexOf(model)]
+    }
+
     private randomizeAll() {
         return this.model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())))
     }
@@ -317,40 +321,66 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
 
 export class RotaryTrackSelector implements Terminable {
     private readonly terminator = new Terminator()
-    private readonly canvas: HTMLCanvasElement
-    private readonly context: CanvasRenderingContext2D
+    private readonly previewCanvas: HTMLCanvasElement
+    private readonly previewContext: CanvasRenderingContext2D
+    private readonly peaksCanvas: HTMLCanvasElement
+    private readonly peaksContext: CanvasRenderingContext2D
 
     private readonly mute: Checkbox
     private readonly solo: Checkbox
 
-    constructor(readonly ui: RotaryApp,
+    constructor(readonly app: RotaryApp,
                 readonly model: RotaryTrackModel,
                 readonly element: HTMLElement,
                 readonly radio: HTMLInputElement,
                 readonly button: HTMLButtonElement) {
         this.terminator.with(Dom.bindEventListener(this.radio, "change",
-            () => this.ui.select(this.model)))
+            () => this.app.select(this.model)))
         this.terminator.with(Dom.bindEventListener(this.button, "click",
             (event: MouseEvent) => {
                 event.preventDefault()
-                this.ui.createNew(this.model, event.shiftKey)
+                this.app.createNew(this.model, event.shiftKey)
             }))
-        this.canvas = this.element.querySelector("canvas")
-        this.context = this.canvas.getContext("2d")
+        this.previewCanvas = this.element.querySelector("canvas[preview]")
+        this.previewContext = this.previewCanvas.getContext("2d")
+        this.peaksCanvas = this.element.querySelector("canvas[peaks]")
+        this.peaksContext = this.peaksCanvas.getContext("2d")
         this.mute = this.terminator.with(new Checkbox(element.querySelector("label.checkbox.mute input")))
         this.mute.with(this.model.mute)
         this.solo = this.terminator.with(new Checkbox(element.querySelector("label.checkbox.solo input")))
         this.solo.with(this.model.solo)
         this.terminator.with(this.model.addObserver(() => this.updatePreview()))
         requestAnimationFrame(() => this.updatePreview())
+        requestAnimationFrame(() => this.updatePeaks())
     }
 
     updatePreview(): void {
         const ratio = Math.ceil(devicePixelRatio)
-        const w = this.canvas.width = this.canvas.clientWidth * ratio
-        const h = this.canvas.height = this.canvas.clientHeight * ratio
+        const w = this.previewCanvas.width = this.previewCanvas.clientWidth * ratio
+        const h = this.previewCanvas.height = this.previewCanvas.clientHeight * ratio
         if (w === 0 || h === 0) return
-        RotaryRenderer.renderTrackPreview(this.context, this.model, Math.max(w, h))
+        RotaryRenderer.renderTrackPreview(this.previewContext, this.model, Math.max(w, h))
+    }
+
+    updatePeaks(): void {
+        const ratio = Math.ceil(devicePixelRatio)
+        const w = this.peaksCanvas.width = this.peaksCanvas.clientWidth * ratio
+        const h = this.peaksCanvas.height = this.peaksCanvas.clientHeight * ratio
+        if (w === 0 || h === 0) return
+
+        const [p0, p1] = this.app.peak(this.model)
+
+        this.peaksContext.save()
+        this.peaksContext.scale(ratio, ratio)
+        this.peaksContext.clearRect(0, 0, w, h)
+        this.peaksContext.fillStyle = this.model.opaque()
+        this.peaksContext.fillRect(1, 16 - p0 * 15, 3, p0 * 15)
+        this.peaksContext.fillRect(6, 16 - p1 * 15, 3, p1 * 15)
+        this.peaksContext.restore()
+
+        if (this.element.parentElement) {
+            requestAnimationFrame(() => this.updatePeaks())
+        }
     }
 
     terminate(): void {

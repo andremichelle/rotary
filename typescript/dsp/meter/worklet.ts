@@ -6,39 +6,39 @@ export class NoUIMeterWorklet extends AudioWorkletNode {
     static readonly PEAK_HOLD_DURATION: number = 1000.0
     static readonly CLIP_HOLD_DURATION: number = 2000.0
 
-    protected readonly maxPeaks: Float32Array[]
-    protected readonly maxSquares: Float32Array[]
-    protected readonly maxPeakHoldValue: Float32Array[]
-    protected readonly releasePeakHoldTime: Float32Array[]
+    readonly peaks: Float32Array[]
+    readonly squares: Float32Array[]
+    readonly peakHoldValue: Float32Array[]
+    readonly releasePeakHoldTime: Float32Array[]
 
     constructor(context: BaseAudioContext,
-                readonly passCount: number,
+                readonly numLines: number,
                 readonly channelCount: number) {
         super(context, "dsp-meter", {
-            numberOfInputs: passCount,
-            numberOfOutputs: passCount,
-            outputChannelCount: new Array(passCount).fill(channelCount),
+            numberOfInputs: numLines,
+            numberOfOutputs: numLines,
+            outputChannelCount: new Array(numLines).fill(channelCount),
             channelCount: channelCount,
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         })
 
-        this.maxPeaks = ArrayUtils.fill(passCount, () => new Float32Array(channelCount))
-        this.maxSquares = ArrayUtils.fill(passCount, () => new Float32Array(channelCount))
-        this.maxPeakHoldValue = ArrayUtils.fill(passCount, () => new Float32Array(channelCount))
-        this.releasePeakHoldTime = ArrayUtils.fill(passCount, () => new Float32Array(channelCount))
+        this.peaks = ArrayUtils.fill(numLines, () => new Float32Array(channelCount))
+        this.squares = ArrayUtils.fill(numLines, () => new Float32Array(channelCount))
+        this.peakHoldValue = ArrayUtils.fill(numLines, () => new Float32Array(channelCount))
+        this.releasePeakHoldTime = ArrayUtils.fill(numLines, () => new Float32Array(channelCount))
 
         this.port.onmessage = event => {
             const now = performance.now()
             const message: UpdateMeterMessage = event.data as UpdateMeterMessage
-            message.maxPeaks.forEach(value => this.maxPeaks.fill(value))
-            message.maxSquares.forEach(value => this.maxSquares.fill(value))
-            for (let i = 0; i < passCount; i++) {
-                for (let channel = 0; channel < channelCount; ++channel) {
-                    const maxPeak = this.maxPeaks[i][channel]
-                    if (this.maxPeakHoldValue[i][channel] <= maxPeak) {
-                        this.maxPeakHoldValue[i][channel] = maxPeak
-                        this.releasePeakHoldTime[i][channel] = now + (1.0 < maxPeak
+            for (let lineIndex = 0; lineIndex < numLines; lineIndex++) {
+                this.peaks[lineIndex] = message.maxPeaks[lineIndex]
+                this.squares[lineIndex] = message.maxSquares[lineIndex]
+                for (let channelIndex = 0; channelIndex < channelCount; ++channelIndex) {
+                    const maxPeak = this.peaks[lineIndex][channelIndex]
+                    if (this.peakHoldValue[lineIndex][channelIndex] <= maxPeak) {
+                        this.peakHoldValue[lineIndex][channelIndex] = maxPeak
+                        this.releasePeakHoldTime[lineIndex][channelIndex] = now + (1.0 < maxPeak
                             ? NoUIMeterWorklet.CLIP_HOLD_DURATION
                             : NoUIMeterWorklet.PEAK_HOLD_DURATION)
                     }
@@ -119,19 +119,19 @@ export class StereoMeterWorklet extends NoUIMeterWorklet {
         this.renderMeter(maxGain, this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
         graphics.fillStyle = this.gradient
         graphics.globalAlpha = 0.8
-        this.renderMeter(this.maxPeaks[0][0], 0, this.meterSegmentHeight)
-        this.renderMeter(this.maxPeaks[0][1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
+        this.renderMeter(this.peaks[0][0], 0, this.meterSegmentHeight)
+        this.renderMeter(this.peaks[0][1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
         graphics.globalAlpha = 1.0
-        this.renderMeter(this.maxSquares[0][0], 0, this.meterSegmentHeight)
-        this.renderMeter(this.maxSquares[0][1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
+        this.renderMeter(this.squares[0][0], 0, this.meterSegmentHeight)
+        this.renderMeter(this.squares[0][1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
         const now = performance.now()
         for (let i = 0; i < 2; ++i) {
-            this.maxPeaks[0][i] *= 0.97
-            this.maxSquares[0][i] *= 0.97
+            this.peaks[0][i] *= 0.97
+            this.squares[0][i] *= 0.97
             if (0.0 <= now - this.releasePeakHoldTime[0][i]) {
-                this.maxPeakHoldValue[0][i] = 0.0
+                this.peakHoldValue[0][i] = 0.0
             } else {
-                const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[0][i]))
+                const db = Math.min(this.maxDb, gainToDb(this.peakHoldValue[0][i]))
                 if (db >= this.minDb) {
                     graphics.fillStyle = 0.0 < db ? "rgb(160,16,0)" : "rgb(100,100,100)"
                     graphics.fillRect(this.dbToX(db) - 1, i * (this.meterSegmentHeight + this.meterSegmentVGap), 1, this.meterSegmentHeight)
