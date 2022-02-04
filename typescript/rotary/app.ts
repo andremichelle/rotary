@@ -36,8 +36,8 @@ export interface DomElements {
 export class RotaryApp implements RotaryTrackEditorExecutor {
     static FPS: number = 60.0
 
-    static create(rotary: RotaryModel): RotaryApp {
-        return new RotaryApp(rotary, {
+    static create(rotary: RotaryModel, preview: AudioSceneController): RotaryApp {
+        return new RotaryApp(rotary, preview, {
             form: document.querySelector("form.track-nav") as HTMLFormElement,
             selectors: document.querySelector("#track-selectors"),
             template: document.querySelector("#template-selector-track"),
@@ -60,6 +60,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     readonly zoom = new ObservableValueImpl<number>(0.5)
 
     private constructor(private readonly model: RotaryModel,
+                        private readonly preview: AudioSceneController,
                         private readonly elements: DomElements) {
         this.elements.template.remove()
 

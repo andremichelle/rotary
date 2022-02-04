@@ -21,8 +21,9 @@ const zoomLevel = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
 ]);
 export class RotaryApp {
-    constructor(model, elements) {
+    constructor(model, preview, elements) {
         this.model = model;
+        this.preview = preview;
         this.elements = elements;
         this.terminator = new Terminator();
         this.editor = new RotaryTrackEditor(this, document.querySelector(".editing"));
@@ -77,8 +78,8 @@ export class RotaryApp {
         this.reorderSelectors();
         this.model.tracks.first().ifPresent(track => this.select(track));
     }
-    static create(rotary) {
-        return new RotaryApp(rotary, {
+    static create(rotary, preview) {
+        return new RotaryApp(rotary, preview, {
             form: document.querySelector("form.track-nav"),
             selectors: document.querySelector("#track-selectors"),
             template: document.querySelector("#template-selector-track"),

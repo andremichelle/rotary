@@ -1,7 +1,54 @@
 import {dbToGain, gainToDb} from "../common.js"
 import {UpdateMeterMessage} from "./message.js"
+import {ArrayUtils} from "../../lib/common.js"
 
-export class MeterWorklet extends AudioWorkletNode {
+export class NoUIMeterWorklet extends AudioWorkletNode {
+    static readonly PEAK_HOLD_DURATION: number = 1000.0
+    static readonly CLIP_HOLD_DURATION: number = 2000.0
+
+    protected readonly maxPeaks: Float32Array[]
+    protected readonly maxSquares: Float32Array[]
+    protected readonly maxPeakHoldValue: Float32Array[]
+    protected readonly releasePeakHoldTime: Float32Array[]
+
+    constructor(context: BaseAudioContext,
+                readonly passCount: number,
+                readonly channelCount: number) {
+        super(context, "dsp-meter", {
+            numberOfInputs: passCount,
+            numberOfOutputs: passCount,
+            outputChannelCount: new Array(passCount).fill(channelCount),
+            channelCount: channelCount,
+            channelCountMode: "explicit",
+            channelInterpretation: "speakers"
+        })
+
+        this.maxPeaks = ArrayUtils.fill(passCount, () => new Float32Array(channelCount))
+        this.maxSquares = ArrayUtils.fill(passCount, () => new Float32Array(channelCount))
+        this.maxPeakHoldValue = ArrayUtils.fill(passCount, () => new Float32Array(channelCount))
+        this.releasePeakHoldTime = ArrayUtils.fill(passCount, () => new Float32Array(channelCount))
+
+        this.port.onmessage = event => {
+            const now = performance.now()
+            const message: UpdateMeterMessage = event.data as UpdateMeterMessage
+            message.maxPeaks.forEach(value => this.maxPeaks.fill(value))
+            message.maxSquares.forEach(value => this.maxSquares.fill(value))
+            for (let i = 0; i < passCount; i++) {
+                for (let channel = 0; channel < channelCount; ++channel) {
+                    const maxPeak = this.maxPeaks[i][channel]
+                    if (this.maxPeakHoldValue[i][channel] <= maxPeak) {
+                        this.maxPeakHoldValue[i][channel] = maxPeak
+                        this.releasePeakHoldTime[i][channel] = now + (1.0 < maxPeak
+                            ? NoUIMeterWorklet.CLIP_HOLD_DURATION
+                            : NoUIMeterWorklet.PEAK_HOLD_DURATION)
+                    }
+                }
+            }
+        }
+    }
+}
+
+export class StereoMeterWorklet extends NoUIMeterWorklet {
     private readonly meterHPadding: number = 5
     private readonly meterSegmentWidth: number = 12
     private readonly meterSegmentHeight: number = 3
@@ -15,12 +62,6 @@ export class MeterWorklet extends AudioWorkletNode {
     private readonly labelStepsDb: number = 3.0
     private readonly maxDb: number = 3.0
     private readonly minDb: number = this.maxDb - this.labelStepsDb * (this.meterSegmentCount - 1)
-    private readonly maxPeaks: Float32Array = new Float32Array(2)
-    private readonly maxSquares: Float32Array = new Float32Array(2)
-    private readonly maxPeakHoldValue: Float32Array = new Float32Array(2)
-    private readonly releasePeakHoldTime: Float32Array = new Float32Array(2)
-    private readonly peakHoldDuration: number = 1000.0
-    private readonly clipHoldDuration: number = 2000.0
 
     private readonly canvas: HTMLCanvasElement
     private readonly graphics: CanvasRenderingContext2D
@@ -30,14 +71,7 @@ export class MeterWorklet extends AudioWorkletNode {
     private scale: number = NaN
 
     constructor(context: AudioContext) {
-        super(context, "dsp-meter", {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            outputChannelCount: [2],
-            channelCount: 2,
-            channelCountMode: "explicit",
-            channelInterpretation: "speakers"
-        })
+        super(context, 1, 2)
 
         this.canvas = document.createElement("canvas")
         this.canvas.style.width = this.width + "px"
@@ -55,19 +89,6 @@ export class MeterWorklet extends AudioWorkletNode {
         this.gradient.addColorStop(this.dbToNorm(0.0), clipGain)
         this.gradient.addColorStop(1.0, clipGain)
 
-        this.port.onmessage = event => {
-            const now = performance.now()
-            const message: UpdateMeterMessage = event.data as UpdateMeterMessage
-            this.maxPeaks.set(message.maxPeaks, 0)
-            this.maxSquares.set(message.maxSquares, 0)
-            for (let i = 0; i < 2; ++i) {
-                const maxPeak = this.maxPeaks[i]
-                if (this.maxPeakHoldValue[i] <= maxPeak) {
-                    this.maxPeakHoldValue[i] = maxPeak
-                    this.releasePeakHoldTime[i] = now + (1.0 < maxPeak ? this.clipHoldDuration : this.peakHoldDuration)
-                }
-            }
-        }
         this.updater = () => this.update()
         this.update()
     }
@@ -98,19 +119,19 @@ export class MeterWorklet extends AudioWorkletNode {
         this.renderMeter(maxGain, this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
         graphics.fillStyle = this.gradient
         graphics.globalAlpha = 0.8
-        this.renderMeter(this.maxPeaks[0], 0, this.meterSegmentHeight)
-        this.renderMeter(this.maxPeaks[1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
+        this.renderMeter(this.maxPeaks[0][0], 0, this.meterSegmentHeight)
+        this.renderMeter(this.maxPeaks[0][1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
         graphics.globalAlpha = 1.0
-        this.renderMeter(this.maxSquares[0], 0, this.meterSegmentHeight)
-        this.renderMeter(this.maxSquares[1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
+        this.renderMeter(this.maxSquares[0][0], 0, this.meterSegmentHeight)
+        this.renderMeter(this.maxSquares[0][1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight)
         const now = performance.now()
         for (let i = 0; i < 2; ++i) {
-            this.maxPeaks[i] *= 0.97
-            this.maxSquares[i] *= 0.97
-            if (0.0 <= now - this.releasePeakHoldTime[i]) {
-                this.maxPeakHoldValue[i] = 0.0
+            this.maxPeaks[0][i] *= 0.97
+            this.maxSquares[0][i] *= 0.97
+            if (0.0 <= now - this.releasePeakHoldTime[0][i]) {
+                this.maxPeakHoldValue[0][i] = 0.0
             } else {
-                const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[i]))
+                const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[0][i]))
                 if (db >= this.minDb) {
                     graphics.fillStyle = 0.0 < db ? "rgb(160,16,0)" : "rgb(100,100,100)"
                     graphics.fillRect(this.dbToX(db) - 1, i * (this.meterSegmentHeight + this.meterSegmentVGap), 1, this.meterSegmentHeight)

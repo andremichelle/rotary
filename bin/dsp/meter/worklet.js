@@ -1,14 +1,45 @@
 import { dbToGain, gainToDb } from "../common.js";
-export class MeterWorklet extends AudioWorkletNode {
-    constructor(context) {
+import { ArrayUtils } from "../../lib/common.js";
+export class NoUIMeterWorklet extends AudioWorkletNode {
+    constructor(context, passCount, channelCount) {
         super(context, "dsp-meter", {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            outputChannelCount: [2],
-            channelCount: 2,
+            numberOfInputs: passCount,
+            numberOfOutputs: passCount,
+            outputChannelCount: new Array(passCount).fill(channelCount),
+            channelCount: channelCount,
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
+        this.passCount = passCount;
+        this.channelCount = channelCount;
+        this.maxPeaks = ArrayUtils.fill(passCount, () => new Float32Array(channelCount));
+        this.maxSquares = ArrayUtils.fill(passCount, () => new Float32Array(channelCount));
+        this.maxPeakHoldValue = ArrayUtils.fill(passCount, () => new Float32Array(channelCount));
+        this.releasePeakHoldTime = ArrayUtils.fill(passCount, () => new Float32Array(channelCount));
+        this.port.onmessage = event => {
+            const now = performance.now();
+            const message = event.data;
+            message.maxPeaks.forEach(value => this.maxPeaks.fill(value));
+            message.maxSquares.forEach(value => this.maxSquares.fill(value));
+            for (let i = 0; i < passCount; i++) {
+                for (let channel = 0; channel < channelCount; ++channel) {
+                    const maxPeak = this.maxPeaks[i][channel];
+                    if (this.maxPeakHoldValue[i][channel] <= maxPeak) {
+                        this.maxPeakHoldValue[i][channel] = maxPeak;
+                        this.releasePeakHoldTime[i][channel] = now + (1.0 < maxPeak
+                            ? NoUIMeterWorklet.CLIP_HOLD_DURATION
+                            : NoUIMeterWorklet.PEAK_HOLD_DURATION);
+                    }
+                }
+            }
+        };
+    }
+}
+NoUIMeterWorklet.PEAK_HOLD_DURATION = 1000.0;
+NoUIMeterWorklet.CLIP_HOLD_DURATION = 2000.0;
+export class StereoMeterWorklet extends NoUIMeterWorklet {
+    constructor(context) {
+        super(context, 1, 2);
         this.meterHPadding = 5;
         this.meterSegmentWidth = 12;
         this.meterSegmentHeight = 3;
@@ -21,12 +52,6 @@ export class MeterWorklet extends AudioWorkletNode {
         this.labelStepsDb = 3.0;
         this.maxDb = 3.0;
         this.minDb = this.maxDb - this.labelStepsDb * (this.meterSegmentCount - 1);
-        this.maxPeaks = new Float32Array(2);
-        this.maxSquares = new Float32Array(2);
-        this.maxPeakHoldValue = new Float32Array(2);
-        this.releasePeakHoldTime = new Float32Array(2);
-        this.peakHoldDuration = 1000.0;
-        this.clipHoldDuration = 2000.0;
         this.scale = NaN;
         this.canvas = document.createElement("canvas");
         this.canvas.style.width = this.width + "px";
@@ -42,19 +67,6 @@ export class MeterWorklet extends AudioWorkletNode {
         this.gradient.addColorStop(this.dbToNorm(0.0), highGain);
         this.gradient.addColorStop(this.dbToNorm(0.0), clipGain);
         this.gradient.addColorStop(1.0, clipGain);
-        this.port.onmessage = event => {
-            const now = performance.now();
-            const message = event.data;
-            this.maxPeaks.set(message.maxPeaks, 0);
-            this.maxSquares.set(message.maxSquares, 0);
-            for (let i = 0; i < 2; ++i) {
-                const maxPeak = this.maxPeaks[i];
-                if (this.maxPeakHoldValue[i] <= maxPeak) {
-                    this.maxPeakHoldValue[i] = maxPeak;
-                    this.releasePeakHoldTime[i] = now + (1.0 < maxPeak ? this.clipHoldDuration : this.peakHoldDuration);
-                }
-            }
-        };
         this.updater = () => this.update();
         this.update();
     }
@@ -82,20 +94,20 @@ export class MeterWorklet extends AudioWorkletNode {
         this.renderMeter(maxGain, this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight);
         graphics.fillStyle = this.gradient;
         graphics.globalAlpha = 0.8;
-        this.renderMeter(this.maxPeaks[0], 0, this.meterSegmentHeight);
-        this.renderMeter(this.maxPeaks[1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight);
+        this.renderMeter(this.maxPeaks[0][0], 0, this.meterSegmentHeight);
+        this.renderMeter(this.maxPeaks[0][1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight);
         graphics.globalAlpha = 1.0;
-        this.renderMeter(this.maxSquares[0], 0, this.meterSegmentHeight);
-        this.renderMeter(this.maxSquares[1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight);
+        this.renderMeter(this.maxSquares[0][0], 0, this.meterSegmentHeight);
+        this.renderMeter(this.maxSquares[0][1], this.meterSegmentHeight + this.meterSegmentVGap, this.meterSegmentHeight);
         const now = performance.now();
         for (let i = 0; i < 2; ++i) {
-            this.maxPeaks[i] *= 0.97;
-            this.maxSquares[i] *= 0.97;
-            if (0.0 <= now - this.releasePeakHoldTime[i]) {
-                this.maxPeakHoldValue[i] = 0.0;
+            this.maxPeaks[0][i] *= 0.97;
+            this.maxSquares[0][i] *= 0.97;
+            if (0.0 <= now - this.releasePeakHoldTime[0][i]) {
+                this.maxPeakHoldValue[0][i] = 0.0;
             }
             else {
-                const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[i]));
+                const db = Math.min(this.maxDb, gainToDb(this.maxPeakHoldValue[0][i]));
                 if (db >= this.minDb) {
                     graphics.fillStyle = 0.0 < db ? "rgb(160,16,0)" : "rgb(100,100,100)";
                     graphics.fillRect(this.dbToX(db) - 1, i * (this.meterSegmentHeight + this.meterSegmentVGap), 1, this.meterSegmentHeight);

@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { MeterWorklet } from "../dsp/meter/worklet.js";
+import { StereoMeterWorklet } from "../dsp/meter/worklet.js";
 import { ProgressIndicator } from "../dom/common.js";
 import { Boot } from "../lib/common.js";
 import { encodeWavFloat } from "../dsp/common.js";
@@ -27,8 +27,8 @@ export class Audio {
     }
     initPreview() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield WorkletModules.create(this.context, MeterWorklet);
-            const meter = new MeterWorklet(this.context);
+            yield WorkletModules.create(this.context, StereoMeterWorklet);
+            const meter = new StereoMeterWorklet(this.context);
             document.getElementById("meter").appendChild(meter.domElement);
             meter.connect(this.context.destination);
             const boot = new Boot();

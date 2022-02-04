@@ -1,7 +1,7 @@
 // noinspection JSUnusedGlobalSymbols
 
 import {RotaryModel} from "./model.js"
-import {MeterWorklet} from "../dsp/meter/worklet.js"
+import {StereoMeterWorklet} from "../dsp/meter/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, ObservableValue, Terminable} from "../lib/common.js"
 import {encodeWavFloat} from "../dsp/common.js"
@@ -39,8 +39,8 @@ export class Audio {
     }
 
     async initPreview(): Promise<AudioSceneController> {
-        await WorkletModules.create(this.context, MeterWorklet)
-        const meter = new MeterWorklet(this.context)
+        await WorkletModules.create(this.context, StereoMeterWorklet)
+        const meter = new StereoMeterWorklet(this.context)
         document.getElementById("meter").appendChild(meter.domElement)
         meter.connect(this.context.destination)
         const boot: Boot = new Boot()
