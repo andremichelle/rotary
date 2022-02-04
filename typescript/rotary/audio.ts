@@ -5,7 +5,6 @@ import {StereoMeterWorklet} from "../dsp/meter/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, ObservableValue, Terminable} from "../lib/common.js"
 import {encodeWavFloat} from "../dsp/common.js"
-import {WorkletModules} from "../dsp/waa.js"
 
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>
@@ -18,6 +17,8 @@ export interface AudioSceneController extends Terminable {
 }
 
 export interface AudioScene {
+    loadModules(context: BaseAudioContext): Promise<void>
+
     build(context: BaseAudioContext,
           output: AudioNode,
           model: RotaryModel,
@@ -39,10 +40,10 @@ export class Audio {
     }
 
     async initPreview(): Promise<AudioSceneController> {
-        await WorkletModules.create(this.context, StereoMeterWorklet)
-        const meter = new StereoMeterWorklet(this.context)
-        document.getElementById("meter").appendChild(meter.domElement)
-        meter.connect(this.context.destination)
+        await this.scene.loadModules(this.context)
+        const masterMeter = new StereoMeterWorklet(this.context)
+        document.getElementById("meter").appendChild(masterMeter.domElement)
+        masterMeter.connect(this.context.destination)
         const boot: Boot = new Boot()
         boot.addObserver(boot => {
             const element = document.getElementById("preloader-message")
@@ -50,7 +51,7 @@ export class Audio {
                 element.textContent = `${boot.percentage()}% loaded`
             }
         })
-        const preview: AudioSceneController = await this.scene.build(this.context, meter, this.model, boot)
+        const preview: AudioSceneController = await this.scene.build(this.context, masterMeter, this.model, boot)
         const playButton = document.querySelector("[data-parameter='transport']") as HTMLInputElement
         preview.transport.addObserver(async moving => {
             if (moving && this.context.state !== "running") {
@@ -105,6 +106,7 @@ export class Audio {
         const offlineAudioContext = new OfflineAudioContext(2,
             length + Audio.RENDER_SAMPLE_RATE /* A SECOND EXTRA FOR LATENCY COMPENSATION */, Audio.RENDER_SAMPLE_RATE)
         const loadingIndicator = new ProgressIndicator("Preparing Export...")
+        await this.scene.loadModules(offlineAudioContext)
         const boot: Boot = new Boot()
         boot.addObserver(boot => loadingIndicator.onProgress(boot.normalizedPercentage()))
         const controller: AudioSceneController = await loadingIndicator.completeWith(
@@ -123,7 +125,7 @@ export class Audio {
         controller.terminate()
         const totalFrames = this.totalFrames
         const target: Float32Array[] = []
-        const bufferOffset = buffer.length - totalFrames + latencyFrames
+        const bufferOffset = buffer.length - buffer.sampleRate - totalFrames + latencyFrames
         for (let i = 0; i < buffer.numberOfChannels; i++) {
             target[i] = new Float32Array(totalFrames)
             buffer.copyFromChannel(target[i], i, bufferOffset)

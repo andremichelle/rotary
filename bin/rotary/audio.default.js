@@ -12,14 +12,22 @@ import { RotaryModel } from "./model.js";
 import { LimiterWorklet } from "../dsp/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
 import { Convolver, ConvolverSettings, Flanger, FlangerSettings, Mixer, PulsarDelay, PulsarDelaySettings } from "../dsp/composite.js";
-import { WorkletModules } from "../dsp/waa.js";
+import { NoUIMeterWorklet } from "../dsp/meter/worklet.js";
 export const initAudioScene = () => {
     return {
+        loadModules(context) {
+            return Promise.all([
+                context.audioWorklet.addModule("bin/dsp/meter/processor.js"),
+                context.audioWorklet.addModule("bin/dsp/limiter/processor.js"),
+                context.audioWorklet.addModule("bin/rotary/audio/processor.js")
+            ]);
+        },
         build(context, output, model, boot) {
             return __awaiter(this, void 0, void 0, function* () {
                 const terminator = new Terminator();
-                const rotaryNode = yield WorkletModules.create(context, RotaryWorkletNode, { create: () => new RotaryWorkletNode(context, model) });
-                const limiterWorklet = yield WorkletModules.create(context, LimiterWorklet);
+                const rotaryNode = new RotaryWorkletNode(context, model);
+                const meterNode = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2);
+                const limiterWorklet = new LimiterWorklet(context);
                 const loadSample = (url) => {
                     return boot.registerProcess(readAudio(context, url));
                 };

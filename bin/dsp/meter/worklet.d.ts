@@ -1,4 +1,15 @@
-export declare class MeterWorklet extends AudioWorkletNode {
+export declare class NoUIMeterWorklet extends AudioWorkletNode {
+    readonly passCount: number;
+    readonly channelCount: number;
+    static readonly PEAK_HOLD_DURATION: number;
+    static readonly CLIP_HOLD_DURATION: number;
+    protected readonly maxPeaks: Float32Array[];
+    protected readonly maxSquares: Float32Array[];
+    protected readonly maxPeakHoldValue: Float32Array[];
+    protected readonly releasePeakHoldTime: Float32Array[];
+    constructor(context: BaseAudioContext, passCount: number, channelCount: number);
+}
+export declare class StereoMeterWorklet extends NoUIMeterWorklet {
     private readonly meterHPadding;
     private readonly meterSegmentWidth;
     private readonly meterSegmentHeight;
@@ -11,12 +22,6 @@ export declare class MeterWorklet extends AudioWorkletNode {
     private readonly labelStepsDb;
     private readonly maxDb;
     private readonly minDb;
-    private readonly maxPeaks;
-    private readonly maxSquares;
-    private readonly maxPeakHoldValue;
-    private readonly releasePeakHoldTime;
-    private readonly peakHoldDuration;
-    private readonly clipHoldDuration;
     private readonly canvas;
     private readonly graphics;
     private readonly gradient;

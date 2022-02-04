@@ -23,25 +23,29 @@ import {
     PulsarDelay,
     PulsarDelaySettings
 } from "../dsp/composite.js"
-import {WorkletModules} from "../dsp/waa.js"
+import {NoUIMeterWorklet} from "../dsp/meter/worklet.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
+        loadModules(context: BaseAudioContext): Promise<any> {
+            return Promise.all([
+                context.audioWorklet.addModule("bin/dsp/meter/processor.js"),
+                context.audioWorklet.addModule("bin/dsp/limiter/processor.js"),
+                context.audioWorklet.addModule("bin/rotary/audio/processor.js")
+            ])
+        },
         async build(context: BaseAudioContext,
                     output: AudioNode,
                     model: RotaryModel,
                     boot: Boot): Promise<AudioSceneController> {
             const terminator = new Terminator()
-
-            const rotaryNode = await WorkletModules.create(context, RotaryWorkletNode,
-                {create: () => new RotaryWorkletNode(context, model)})
-
-            const limiterWorklet = await WorkletModules.create(context, LimiterWorklet)
+            const rotaryNode = new RotaryWorkletNode(context, model)
+            const meterNode = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2)
+            const limiterWorklet = new LimiterWorklet(context)
 
             const loadSample = (url: string): Promise<AudioBuffer> => {
                 return boot.registerProcess(readAudio(context, url))
             }
-
             let index = 0
             for (let i = 0; i <= 19; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/kicks/${i}.wav`))
@@ -61,6 +65,8 @@ export const initAudioScene = (): AudioScene => {
             for (let i = 0; i <= 21; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`))
             }
+
+            // rotaryNode.connect(meterNode)
 
             const mixer: Mixer = new Mixer(context, RotaryModel.NUM_AUX)
             const map: Map<RotaryTrackModel, Terminable> = new Map()
