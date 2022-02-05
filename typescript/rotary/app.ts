@@ -18,6 +18,7 @@ import {open, renderGIF, renderVideo, renderWebM, save} from "./file.js"
 import {Audio, AudioSceneController} from "./audio.js"
 import {TypeControlEditor, UIControllerLayout} from "../dom/controls.js"
 import {SettingsControlBuilder} from "../dsp/ui.js"
+import {gainToDb} from "../dsp/common"
 
 const zoomLevel: Map<string, number> = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
@@ -286,7 +287,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     }
 
     peak(model: RotaryTrackModel): Float32Array {
-        return this.preview.meter.squares[this.model.tracks.indexOf(model)]
+        return this.preview.meter.peaks[this.model.tracks.indexOf(model)]
     }
 
     private randomizeAll() {
@@ -373,7 +374,7 @@ export class RotaryTrackSelector implements Terminable {
         this.peaksContext.save()
         this.peaksContext.scale(ratio, ratio)
         this.peaksContext.clearRect(0, 0, w, h)
-        this.peaksContext.fillStyle = this.model.opaque()
+        this.peaksContext.fillStyle = "#999"
         this.peaksContext.fillRect(1, 16 - p0 * 15, 3, p0 * 15)
         this.peaksContext.fillRect(6, 16 - p1 * 15, 3, p1 * 15)
         this.peaksContext.restore()

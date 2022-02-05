@@ -244,7 +244,7 @@ export class RotaryApp {
         return this;
     }
     peak(model) {
-        return this.preview.meter.squares[this.model.tracks.indexOf(model)];
+        return this.preview.meter.peaks[this.model.tracks.indexOf(model)];
     }
     randomizeAll() {
         return this.model.randomize(new Mulberry32(Math.floor(0x987123F * Math.random())));
@@ -317,7 +317,7 @@ export class RotaryTrackSelector {
         this.peaksContext.save();
         this.peaksContext.scale(ratio, ratio);
         this.peaksContext.clearRect(0, 0, w, h);
-        this.peaksContext.fillStyle = this.model.opaque();
+        this.peaksContext.fillStyle = "#999";
         this.peaksContext.fillRect(1, 16 - p0 * 15, 3, p0 * 15);
         this.peaksContext.fillRect(6, 16 - p1 * 15, 3, p1 * 15);
         this.peaksContext.restore();

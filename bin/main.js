@@ -12,6 +12,7 @@ import { RotaryModel } from "./rotary/model.js";
 import { RotaryApp } from "./rotary/app.js";
 import { Audio } from "./rotary/audio.js";
 import { initAudioScene } from "./rotary/audio.default.js";
+import { getChromeVersion } from "./dom/common.js";
 const showError = (message) => {
     const preloader = document.getElementById("preloader");
     if (null === preloader) {
@@ -34,6 +35,10 @@ window.onunhandledrejection = (event) => {
     }
 };
 (() => __awaiter(void 0, void 0, void 0, function* () {
+    const chromeVersion = getChromeVersion();
+    if (!chromeVersion || chromeVersion < 97) {
+        throw new Error("Use latest Chrome browser.");
+    }
     const random = new Mulberry32(0xFFFFFFFF * Math.random());
     const model = new RotaryModel().randomize(random);
     const audio = yield Audio.config(initAudioScene(), model);

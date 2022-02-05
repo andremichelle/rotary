@@ -554,15 +554,6 @@ export const binarySearch = (values: Float32Array, key: number): number => {
 }
 
 export class UniformRandomMapping implements ValueMapping<number> {
-    private readonly values: Float32Array
-
-    constructor(private readonly random: Random,
-                private readonly resolution: number = 1024,
-                private readonly roughness: number = 4.0,
-                private readonly strength: number = 0.2) {
-        this.values = UniformRandomMapping.monotoneRandom(random, resolution, roughness, strength)
-    }
-
     // http://gamedev.stackexchange.com/questions/26391/is-there-a-family-of-monotonically-non-decreasing-noise-functions/26424#26424
     static monotoneRandom(random: Random, n: number, roughness: number, strength: number): Float32Array {
         const sequence = new Float32Array(n + 1)
@@ -578,6 +569,15 @@ export class UniformRandomMapping implements ValueMapping<number> {
             sequence[i] = (nominator / sum) * strength + (1.0 - strength) * i / n
         }
         return sequence
+    }
+
+    private readonly values: Float32Array
+
+    constructor(private readonly random: Random,
+                private readonly resolution: number = 1024,
+                private readonly roughness: number = 4.0,
+                private readonly strength: number = 0.2) {
+        this.values = UniformRandomMapping.monotoneRandom(random, resolution, roughness, strength)
     }
 
     clamp(y: number): number {

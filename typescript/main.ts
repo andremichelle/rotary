@@ -3,6 +3,7 @@ import {RotaryModel} from "./rotary/model.js"
 import {RotaryApp} from "./rotary/app.js"
 import {Audio} from "./rotary/audio.js"
 import {initAudioScene} from "./rotary/audio.default.js"
+import {getChromeVersion} from "./dom/common.js"
 
 const showError = (message: string) => {
     const preloader = document.getElementById("preloader")
@@ -25,6 +26,10 @@ window.onunhandledrejection = (event) => {
 }
 
 (async () => {
+    const chromeVersion = getChromeVersion()
+    if(!chromeVersion || chromeVersion < 97) {
+        throw new Error("Use latest Chrome browser.")
+    }
     const random: Random = new Mulberry32(0xFFFFFFFF * Math.random())
     const model = new RotaryModel().randomize(random)
     const audio: Audio = await Audio.config(initAudioScene(), model)

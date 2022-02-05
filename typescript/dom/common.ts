@@ -1,5 +1,10 @@
 import {Estimation, Terminable} from "../lib/common.js"
 
+export const getChromeVersion = (): boolean | number => {
+    const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./)
+    return raw ? parseInt(raw[2], 10) : false
+}
+
 export class Dom {
     static bindEventListener(target: EventTarget,
                              type: string, listener: EventListenerOrEventListenerObject,

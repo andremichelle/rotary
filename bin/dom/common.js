@@ -1,4 +1,8 @@
 import { Estimation } from "../lib/common.js";
+export const getChromeVersion = () => {
+    const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+    return raw ? parseInt(raw[2], 10) : false;
+};
 export class Dom {
     static bindEventListener(target, type, listener, options) {
         target.addEventListener(type, listener, options);
