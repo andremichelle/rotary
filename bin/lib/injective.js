@@ -286,5 +286,4 @@ InjectiveTypes.push(PowInjective);
 InjectiveTypes.push(CShapeInjective);
 InjectiveTypes.push(TShapeInjective);
 InjectiveTypes.push(SmoothStepInjective);
-InjectiveTypes.push(MonoNoiseInjective);
 //# sourceMappingURL=injective.js.map

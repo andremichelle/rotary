@@ -11,7 +11,6 @@ const InjectiveControlBuilder = new class {
             ["CShape", CShapeInjective],
             ["TShape", TShapeInjective],
             ["SmoothStep", SmoothStepInjective],
-            ["Noise", MonoNoiseInjective]
         ]);
     }
     build(layout, value) {

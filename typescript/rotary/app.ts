@@ -108,7 +108,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         }))
         this.terminator.with(Dom.bindEventListener(elements.form.querySelector("#unshift-new-track"), "click", event => {
             event.preventDefault()
-            this.select(this.model.createTrack(0).randomize(this.random))
+            this.select(this.model.createTrack(0))
         }))
         const zoomObserver = () => this.elements.labelZoom.textContent = `${Math.floor(this.zoom.get() * 100.0)}`
         this.terminator.with(this.zoom.addObserver(zoomObserver))
