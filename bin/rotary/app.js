@@ -77,6 +77,11 @@ export class RotaryApp {
         this.model.tracks.forEach(track => this.createSelector(track));
         this.reorderSelectors();
         this.model.tracks.first().ifPresent(track => this.select(track));
+        document.onvisibilitychange = () => {
+            if (!document.hidden) {
+                this.map.forEach(selector => selector.updatePreview());
+            }
+        };
     }
     static create(rotary, preview) {
         return new RotaryApp(rotary, preview, {
@@ -99,7 +104,7 @@ export class RotaryApp {
         console.assert(-1 !== index, "Could not find model");
         const newModel = copy
             ? this.model.copyTrack(model, index + 1)
-            : this.model.createTrack(index + 1).randomize(this.random);
+            : this.model.createTrack(index + 1);
         this.select(newModel);
     }
     deleteTrack(trackModel) {

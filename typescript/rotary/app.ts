@@ -18,7 +18,6 @@ import {open, renderGIF, renderVideo, renderWebM, save} from "./file.js"
 import {Audio, AudioSceneController} from "./audio.js"
 import {TypeControlEditor, UIControllerLayout} from "../dom/controls.js"
 import {SettingsControlBuilder} from "../dsp/ui.js"
-import {gainToDb} from "../dsp/common"
 
 const zoomLevel: Map<string, number> = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
@@ -117,6 +116,12 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.model.tracks.forEach(track => this.createSelector(track))
         this.reorderSelectors()
         this.model.tracks.first().ifPresent(track => this.select(track))
+
+        document.onvisibilitychange = () => {
+            if (!document.hidden) {
+                this.map.forEach(selector => selector.updatePreview())
+            }
+        }
     }
 
     createNew(model: RotaryTrackModel | null, copy: boolean) {
@@ -129,7 +134,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         console.assert(-1 !== index, "Could not find model")
         const newModel = copy
             ? this.model.copyTrack(model, index + 1)
-            : this.model.createTrack(index + 1).randomize(this.random)
+            : this.model.createTrack(index + 1)
         this.select(newModel)
     }
 

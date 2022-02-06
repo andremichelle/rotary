@@ -46,6 +46,9 @@ export const initAudioScene = (): AudioScene => {
                 return boot.registerProcess(readAudio(context, url))
             }
             let index = 0
+            /*for (let i = 0; i <= 24; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/toypiano/${i}.wav`))
+            }*/
             for (let i = 0; i <= 19; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/kicks/${i}.wav`))
             }

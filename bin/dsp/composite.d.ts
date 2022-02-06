@@ -26,6 +26,7 @@ export declare class Channelstrip implements Terminable {
     getSolo(): boolean;
     setAuxSend(index: number, volume: number): void;
     updateVolume(): void;
+    disconnect(): void;
     terminate(): void;
     private computeVolume;
 }
