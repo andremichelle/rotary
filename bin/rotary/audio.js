@@ -61,10 +61,10 @@ export class Audio {
         return this.context.currentTime;
     }
     get totalTime() {
-        return this.model.loopDuration.get();
+        return this.model.duration();
     }
     get totalFrames() {
-        return Math.floor(this.model.loopDuration.get() * Audio.RENDER_SAMPLE_RATE) | 0;
+        return Math.floor(this.model.duration() * Audio.RENDER_SAMPLE_RATE) | 0;
     }
     exportWav(passes = 2 | 0) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -88,7 +88,8 @@ export class Audio {
     render(passes) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.context.suspend();
-            const duration = this.model.loopDuration.get() * passes;
+            const duration = this.model.duration() * passes;
+            console.log(`duration: ${duration}s`);
             const length = Math.floor(Audio.RENDER_SAMPLE_RATE * duration) | 0;
             const offlineAudioContext = new OfflineAudioContext(2, length + Audio.RENDER_SAMPLE_RATE, Audio.RENDER_SAMPLE_RATE);
             const loadingIndicator = new ProgressIndicator("Preparing Export...");

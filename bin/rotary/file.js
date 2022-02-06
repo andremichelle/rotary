@@ -51,7 +51,7 @@ export const save = (model) => __awaiter(void 0, void 0, void 0, function* () {
 });
 export const renderWebM = (model) => __awaiter(void 0, void 0, void 0, function* () {
     const fps = model.exportSettings.fps.get();
-    const numFrames = Math.floor(fps * model.loopDuration.get());
+    const numFrames = Math.floor(fps * model.duration());
     console.log(`numFrames: ${numFrames}`);
     const writer = new WebMWriter({
         quality: 0.99,
@@ -78,7 +78,7 @@ export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* 
         copy: true,
         delay: 1000 / fps
     };
-    const numFrames = Math.floor(fps * model.loopDuration.get());
+    const numFrames = Math.floor(fps * model.duration());
     const progressIndicator = new ProgressIndicator("Export GIF");
     yield RotaryRenderer.renderFrames(model, model.exportSettings.getConfiguration(numFrames), context => gif.addFrame(context.canvas, option), progress => progressIndicator.onProgress(progress * 0.5));
     gif.once("finished", (blob) => {

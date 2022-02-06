@@ -29,6 +29,7 @@ import {
     PulsarDelaySettings
 } from "../dsp/composite.js"
 import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
+import {barsToSeconds} from "../dsp/common.js"
 
 export declare interface RotaryExportFormat {
     fps: number
@@ -39,7 +40,8 @@ export declare interface RotaryExportFormat {
 export declare interface RotaryFormat {
     radiusMin: number
     phaseOffset: number
-    loopDuration: number
+    bpm: number
+    bars: number
     exportSettings: RotaryExportFormat
     tracks: RotaryTrackFormat[],
     aux: CompositeSettingsFormat<any>[]
@@ -114,7 +116,8 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     readonly exportSettings: RotaryExportSetting = this.terminator.with(new RotaryExportSetting())
     readonly radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20))
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75))
-    readonly loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0))
+    readonly bpm = this.bindValue(new BoundNumericValue(new Linear(60.0, 180.0), 120.0))
+    readonly bars = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0))
     readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4))
 
     readonly aux: ObservableValue<CompositeSettings<any>>[] = [
@@ -210,6 +213,10 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         return this.tracks.remove(track)
     }
 
+    duration(): number {
+        return barsToSeconds(this.bars.get(), this.bpm.get())
+    }
+
     clear() {
         this.radiusMin.set(20.0)
         this.tracks.clear()
@@ -241,7 +248,8 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
             radiusMin: this.radiusMin.get(),
             exportSettings: this.exportSettings.serialize(),
             phaseOffset: this.phaseOffset.get(),
-            loopDuration: this.loopDuration.get(),
+            bpm: this.bpm.get(),
+            bars: this.bars.get(),
             tracks: this.tracks.map(track => track.serialize()),
             aux: this.aux.map((value: ObservableValue<CompositeSettings<any>>): CompositeSettingsFormat<any> => value.get().serialize())
         }
@@ -251,7 +259,8 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         this.radiusMin.set(format.radiusMin)
         this.exportSettings.deserialize(format.exportSettings)
         this.phaseOffset.set(format.phaseOffset)
-        this.loopDuration.set(format.loopDuration)
+        this.bpm.set(format.bpm)
+        this.bars.set(format.bars)
         this.tracks.clear()
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)))
         this.aux.forEach((value: ObservableValue<CompositeSettings<any>>, index: number) => value.set(CompositeSettings.from(format.aux[index])))

@@ -172,7 +172,7 @@ export class RotaryRenderer {
             context.scale(scale, scale)
             const phase: number = i / numFrames
             const alphaMultiplier = 1.0 / subFrames
-            const offset = 1.0 / (model.loopDuration.get() * configuration.fps * subFrames)
+            const offset = 1.0 / (model.duration() * configuration.fps * subFrames)
             for (let i = 0; i < subFrames; i++) {
                 RotaryRenderer.render(context, model, phase + offset * i, alphaMultiplier)
             }

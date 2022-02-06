@@ -77,11 +77,11 @@ export class Audio {
     }
 
     get totalTime(): number {
-        return this.model.loopDuration.get()
+        return this.model.duration()
     }
 
     get totalFrames(): number {
-        return Math.floor(this.model.loopDuration.get() * Audio.RENDER_SAMPLE_RATE) | 0
+        return Math.floor(this.model.duration() * Audio.RENDER_SAMPLE_RATE) | 0
     }
 
     async exportWav(passes: number = 2 | 0): Promise<void> {
@@ -103,7 +103,8 @@ export class Audio {
 
     async render(passes: number): Promise<Float32Array[]> {
         await this.context.suspend()
-        const duration = this.model.loopDuration.get() * passes
+        const duration = this.model.duration() * passes
+        console.log(`duration: ${duration}s`)
         const length = Math.floor(Audio.RENDER_SAMPLE_RATE * duration) | 0
         const offlineAudioContext = new OfflineAudioContext(2,
             length + Audio.RENDER_SAMPLE_RATE /* A SECOND EXTRA FOR LATENCY COMPENSATION */, Audio.RENDER_SAMPLE_RATE)

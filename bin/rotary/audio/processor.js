@@ -148,7 +148,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         this.phase %= loopFrames;
     }
     loopFrames() {
-        return (sampleRate * this.model.loopDuration.get()) | 0;
+        return (sampleRate * this.model.duration()) | 0;
     }
 });
 //# sourceMappingURL=processor.js.map

@@ -69,8 +69,10 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             new NumericStepper(1)).with(model.radiusMin)
         globalLayout.createNumericStepper("phase offset", PrintMapping.UnipolarPercent,
             new NumericStepper(0.01)).with(model.phaseOffset)
-        globalLayout.createNumericStepper("loop duration", PrintMapping.integer("s"),
-            new NumericStepper(1)).with(model.loopDuration)
+        globalLayout.createNumericStepper("bpm", PrintMapping.integer(""),
+            new NumericStepper(1)).with(model.bpm)
+        globalLayout.createNumericStepper("bars", PrintMapping.integer(""),
+            new NumericStepper(1)).with(model.bars)
         globalLayout.createNumericStepper("motion blur", PrintMapping.integer(""),
             new NumericStepper(1)).with(model.motion)
 
@@ -203,7 +205,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
 
         const subFrames = this.model.motion.get()
         const alphaMultiplier = 1.0 / subFrames
-        const offset = 1.0 / (this.model.loopDuration.get() * RotaryApp.FPS * subFrames)
+        const offset = 1.0 / (this.model.duration() * RotaryApp.FPS * subFrames)
         for (let i = 0; i < subFrames; i++) {
             RotaryRenderer.render(this.rawContext, this.model, phase + offset * i, alphaMultiplier)
         }

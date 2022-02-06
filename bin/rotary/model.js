@@ -4,6 +4,7 @@ import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { Channelstrip, CompositeSettings, ConvolverFiles, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../dsp/composite.js";
 import { CShapeInjective, IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
+import { barsToSeconds } from "../dsp/common.js";
 export class RotaryExportSetting {
     constructor() {
         this.terminator = new Terminator();
@@ -40,7 +41,8 @@ export class RotaryModel {
         this.exportSettings = this.terminator.with(new RotaryExportSetting());
         this.radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20));
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
-        this.loopDuration = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 8.0));
+        this.bpm = this.bindValue(new BoundNumericValue(new Linear(60.0, 180.0), 120.0));
+        this.bars = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0));
         this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4));
         this.aux = [
             new ObservableValueImpl(new PulsarDelaySettings()),
@@ -123,6 +125,9 @@ export class RotaryModel {
     removeTrack(track) {
         return this.tracks.remove(track);
     }
+    duration() {
+        return barsToSeconds(this.bars.get(), this.bpm.get());
+    }
     clear() {
         this.radiusMin.set(20.0);
         this.tracks.clear();
@@ -149,7 +154,8 @@ export class RotaryModel {
             radiusMin: this.radiusMin.get(),
             exportSettings: this.exportSettings.serialize(),
             phaseOffset: this.phaseOffset.get(),
-            loopDuration: this.loopDuration.get(),
+            bpm: this.bpm.get(),
+            bars: this.bars.get(),
             tracks: this.tracks.map(track => track.serialize()),
             aux: this.aux.map((value) => value.get().serialize())
         };
@@ -158,7 +164,8 @@ export class RotaryModel {
         this.radiusMin.set(format.radiusMin);
         this.exportSettings.deserialize(format.exportSettings);
         this.phaseOffset.set(format.phaseOffset);
-        this.loopDuration.set(format.loopDuration);
+        this.bpm.set(format.bpm);
+        this.bars.set(format.bars);
         this.tracks.clear();
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)));
         this.aux.forEach((value, index) => value.set(CompositeSettings.from(format.aux[index])));

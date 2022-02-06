@@ -44,7 +44,7 @@ export const save = async (model: RotaryModel) => {
 
 export const renderWebM = async (model: RotaryModel) => {
     const fps = model.exportSettings.fps.get()
-    const numFrames = Math.floor(fps * model.loopDuration.get())
+    const numFrames = Math.floor(fps * model.duration())
     console.log(`numFrames: ${numFrames}`)
     const writer = new WebMWriter({
         quality: 0.99,
@@ -74,7 +74,7 @@ export const renderGIF = async (model: RotaryModel) => {
         copy: true,
         delay: 1000 / fps
     }
-    const numFrames = Math.floor(fps * model.loopDuration.get())
+    const numFrames = Math.floor(fps * model.duration())
     const progressIndicator = new ProgressIndicator("Export GIF")
     await RotaryRenderer.renderFrames(model,
         model.exportSettings.getConfiguration(numFrames),

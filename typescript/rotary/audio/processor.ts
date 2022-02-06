@@ -149,7 +149,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         }
 
         private loopFrames(): number {
-            return (sampleRate * this.model.loopDuration.get()) | 0
+            return (sampleRate * this.model.duration()) | 0
         }
     }
 )
