@@ -59,8 +59,10 @@ registerProcessor("dsp-meter", class extends AudioWorkletProcessor {
             this.updateCount -= this.updateRate
             this.port.postMessage(new UpdateMeterMessage(this.maxSquares, this.maxPeaks))
             for (let lineIndex = 0; lineIndex < this.numberOfLines; lineIndex++) {
-                this.maxPeaks[lineIndex].fill(0.0)
-                this.maxSquares[lineIndex].fill(0.0)
+                for (let channelIndex: number = 0; channelIndex < this.channelCount; ++channelIndex) {
+                    this.maxPeaks[lineIndex][channelIndex] *= 0.93
+                    this.maxSquares[lineIndex][channelIndex] *= 0.93
+                }
             }
         }
         return true
