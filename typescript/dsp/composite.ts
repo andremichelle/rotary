@@ -121,9 +121,13 @@ export class Channelstrip implements Terminable {
         this.mixer.setParameterValue(this.volumeNode.gain, this.computeVolume())
     }
 
-    terminate(): void {
+    disconnect(): void {
         this.connected.ifPresent(pair => pair[0].disconnect(this.inputNode, pair[1]))
         this.connected = Options.None
+    }
+
+    terminate(): void {
+        this.disconnect()
         this.volumeNode.disconnect()
         this.panningNode.disconnect()
         this.auxSendNodes.forEach(gainNode => gainNode.disconnect())
@@ -139,7 +143,7 @@ export class Channelstrip implements Terminable {
 }
 
 export class Mixer {
-    private readonly channelstrips: Channelstrip[] = []
+    private readonly channelstrips: Set<Channelstrip> = new Set<Channelstrip>()
     private readonly auxSendNodes: GainNode[]
     private readonly auxReturnNodes: GainNode[]
 
@@ -158,16 +162,13 @@ export class Mixer {
 
     public createChannelstrip(): Channelstrip {
         const channelstrip = new Channelstrip(this, this.numAux)
-        this.channelstrips.push(channelstrip)
+        this.channelstrips.add(channelstrip)
         return channelstrip
     }
 
     public removeChannelstrip(channelstrip: Channelstrip): void {
-        const index = this.channelstrips.indexOf(channelstrip)
-        if (-1 === index) {
-            throw new Error("Unknown Channelstrip")
-        }
-        this.channelstrips.splice(index, 1)
+        const deleted = this.channelstrips.delete(channelstrip)
+        console.assert(deleted)
         channelstrip.terminate()
     }
 
@@ -193,7 +194,7 @@ export class Mixer {
     }
 
     isAnyChannelSolo(): boolean {
-        return this.channelstrips.some(strip => strip.solo, this.channelstrips)
+        return Array.from(this.channelstrips).some(strip => strip.solo, this.channelstrips)
     }
 
     setParameterValue(audioParam: AudioParam, value: number) {

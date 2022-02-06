@@ -1,4 +1,12 @@
 import { Terminable } from "../lib/common.js";
+export declare const getChromeVersion: () => number | boolean;
+export declare class Updater {
+    private readonly callback;
+    private needsUpdate;
+    constructor(callback: () => void);
+    private updater;
+    requestUpdate(): void;
+}
 export declare class Dom {
     static bindEventListener(target: EventTarget, type: string, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): Terminable;
     static insertElement(parent: Element, child: Element, index?: number): void;

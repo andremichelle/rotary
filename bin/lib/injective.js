@@ -1,6 +1,6 @@
-import { BoundNumericValue, ObservableImpl, Terminator } from "./common.js";
-import { Linear } from "./mapping.js";
-import { Func } from "./math.js";
+import { binarySearch, BoundNumericValue, ObservableImpl, ObservableValueImpl, Terminator } from "./common.js";
+import { Linear, LinearInteger } from "./mapping.js";
+import { Func, Mulberry32 } from "./math.js";
 const InjectiveTypes = [];
 export class Injective {
     constructor() {
@@ -19,6 +19,8 @@ export class Injective {
                 return new CShapeInjective().deserialize(format);
             case SmoothStepInjective.name:
                 return new SmoothStepInjective().deserialize(format);
+            case MonoNoiseInjective.name:
+                return new MonoNoiseInjective().deserialize(format);
         }
         throw new Error("Unknown movement format");
     }
@@ -196,9 +198,93 @@ export class SmoothStepInjective extends Injective {
         return this;
     }
 }
+export class MonoNoiseInjective extends Injective {
+    constructor() {
+        super();
+        this.seed = this.bindValue(new ObservableValueImpl(0xFFFFFF));
+        this.resolution = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 512));
+        this.roughness = this.bindValue(new BoundNumericValue(new Linear(0.0, 8.0), 4.0));
+        this.strength = this.bindValue(new BoundNumericValue(new Linear(0.0, 8.0), 0.2));
+        this.values = new Float32Array([0.0, 1.0]);
+        this.terminator.with(this.seed.addObserver(() => this.update(), false));
+        this.terminator.with(this.resolution.addObserver(() => this.update(), false));
+        this.terminator.with(this.roughness.addObserver(() => this.update(), false));
+        this.terminator.with(this.strength.addObserver(() => this.update(), false));
+        this.update();
+    }
+    static monotoneRandom(random, n, roughness, strength) {
+        const sequence = new Float32Array(n + 1);
+        let sum = 0.0;
+        for (let i = 1; i <= n; ++i) {
+            const x = Math.floor(random.nextDouble(0.0, roughness)) + 1.0;
+            sum += x;
+            sequence[i] = x;
+        }
+        let nominator = 0.0;
+        for (let i = 1; i <= n; ++i) {
+            nominator += sequence[i];
+            sequence[i] = (nominator / sum) * strength + (1.0 - strength) * i / n;
+        }
+        return sequence;
+    }
+    fx(y) {
+        if (y <= 0.0)
+            return 0.0;
+        if (y >= 1.0)
+            return 1.0;
+        const index = binarySearch(this.values, y);
+        const a = this.values[index];
+        const b = this.values[index + 1];
+        const nInverse = 1.0 / this.resolution.get();
+        return index * nInverse + nInverse / (b - a) * (y - a);
+    }
+    fy(x) {
+        if (x <= 0.0)
+            return 0.0;
+        if (x >= 1.0)
+            return 1.0;
+        const xd = x * this.resolution.get();
+        const xi = xd | 0;
+        const a = xd - xi;
+        const q = this.values[xi];
+        return q + a * (this.values[xi + 1] - q);
+    }
+    deserialize(format) {
+        const data = super.unpack(format);
+        this.seed.set(data.seed);
+        this.resolution.set(data.resolution);
+        this.roughness.set(data.roughness);
+        this.strength.set(data.strength);
+        return this;
+    }
+    serialize() {
+        return super.pack({
+            seed: this.seed.get(),
+            resolution: this.resolution.get(),
+            roughness: this.roughness.get(),
+            strength: this.strength.get()
+        });
+    }
+    copy() {
+        const injective = new MonoNoiseInjective();
+        injective.seed.set(this.seed.get());
+        injective.resolution.set(this.resolution.get());
+        injective.roughness.set(this.roughness.get());
+        injective.strength.set(this.strength.get());
+        return injective;
+    }
+    randomize(random) {
+        this.seed.set(random.nextInt(0, 0xFFFFFFFF));
+        return this;
+    }
+    update() {
+        this.values = MonoNoiseInjective.monotoneRandom(new Mulberry32(this.seed.get()), this.resolution.get(), this.roughness.get(), this.strength.get());
+    }
+}
 InjectiveTypes.push(IdentityInjective);
 InjectiveTypes.push(PowInjective);
 InjectiveTypes.push(CShapeInjective);
 InjectiveTypes.push(TShapeInjective);
 InjectiveTypes.push(SmoothStepInjective);
+InjectiveTypes.push(MonoNoiseInjective);
 //# sourceMappingURL=injective.js.map

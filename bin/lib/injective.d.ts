@@ -1,6 +1,6 @@
 import { Observable, ObservableImpl, ObservableValue, Observer, Serializer, Terminable, Terminator } from "./common.js";
 import { Random } from "./math.js";
-declare type Data = PowData | CShapeData | TShapeData | SmoothStepData;
+declare type Data = PowData | CShapeData | TShapeData | SmoothStepData | MonoNoiseData;
 export declare type InjectiveType = {
     new (): Injective<any>;
 };
@@ -92,5 +92,27 @@ export declare class SmoothStepInjective extends Injective<SmoothStepData> {
     serialize(): InjectiveFormat<SmoothStepData>;
     copy(): SmoothStepInjective;
     randomize(random: Random): SmoothStepInjective;
+}
+declare interface MonoNoiseData {
+    seed: number;
+    resolution: number;
+    roughness: number;
+    strength: number;
+}
+export declare class MonoNoiseInjective extends Injective<MonoNoiseData> {
+    static monotoneRandom(random: Random, n: number, roughness: number, strength: number): Float32Array;
+    readonly seed: ObservableValue<number>;
+    readonly resolution: ObservableValue<number>;
+    readonly roughness: ObservableValue<number>;
+    readonly strength: ObservableValue<number>;
+    private values;
+    constructor();
+    fx(y: number): number;
+    fy(x: number): number;
+    deserialize(format: InjectiveFormat<MonoNoiseData>): MonoNoiseInjective;
+    serialize(): InjectiveFormat<MonoNoiseData>;
+    copy(): MonoNoiseInjective;
+    randomize(random: Random): MonoNoiseInjective;
+    private update;
 }
 export {};

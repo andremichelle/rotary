@@ -13,6 +13,7 @@ import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../dsp/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
 import {
+    Channelstrip,
     CompositeSettings,
     Convolver,
     ConvolverSettings,
@@ -24,6 +25,7 @@ import {
     PulsarDelaySettings
 } from "../dsp/composite.js"
 import {NoUIMeterWorklet} from "../dsp/meter/worklet.js"
+import {Updater} from "../dom/common.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -69,29 +71,39 @@ export const initAudioScene = (): AudioScene => {
 
             const mixer: Mixer = new Mixer(context, RotaryModel.NUM_AUX)
             const map: Map<RotaryTrackModel, Terminable> = new Map()
-            const addTrack = (track: RotaryTrackModel, index: number): Terminable => {
+            const channelstrips: Map<RotaryTrackModel, Channelstrip> = new Map<RotaryTrackModel, Channelstrip>()
+            const addTrack = (track: RotaryTrackModel): Terminable => {
                 const terminator: Terminator = new Terminator()
-                const channelstrip = mixer.createChannelstrip()
-                channelstrip.connectToInput(meterNode, index)
+                const channelstrip: Channelstrip = mixer.createChannelstrip()
+                channelstrips.set(track, channelstrip)
                 terminator.with(track.mute.addObserver(mute => channelstrip.setMute(mute), true))
                 terminator.with(track.solo.addObserver(solo => channelstrip.setSolo(solo), true))
                 terminator.with(track.volume.addObserver(volume => channelstrip.setVolume(volume), true))
                 terminator.with(track.panning.addObserver(panning => channelstrip.setPanning(panning), true))
-                for (let index = 0; index < RotaryModel.NUM_AUX; index++) {
-                    terminator.with(track.aux[index]
-                        .addObserver(volume => channelstrip.setAuxSend(index, volume), true))
+                for (let auxIndex = 0; auxIndex < RotaryModel.NUM_AUX; auxIndex++) {
+                    terminator.with(track.aux[auxIndex]
+                        .addObserver(volume => channelstrip.setAuxSend(auxIndex, volume), true))
                 }
                 terminator.with({terminate: () => mixer.removeChannelstrip(channelstrip)})
                 return terminator
             }
+            const connectionUpdater = new Updater(() => {
+                for (const channelstrip of channelstrips.values()) {
+                    channelstrip.disconnect()
+                }
+                model.tracks.forEach((item, index) =>
+                    channelstrips.get(item).connectToInput(rotaryNode, index))
+            })
             terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
                 const track = event.item
                 if (event.type === CollectionEventType.Add) {
-                    map.set(track, addTrack(track, event.index))
+                    map.set(track, addTrack(track))
                 } else if (event.type === CollectionEventType.Remove) {
+                    channelstrips.delete(track)
                     map.get(track).terminate()
                     map.delete(track)
                 }
+                connectionUpdater.requestUpdate()
             }, true))
 
             const auxTerminators: Terminator[] = ArrayUtils.fill(model.aux.length, () => terminator.with(new Terminator()))

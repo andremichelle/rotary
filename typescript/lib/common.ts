@@ -1,5 +1,5 @@
-import {BitArray, Bits, Random} from "./math.js"
-import {Linear, Range, ValueMapping} from "./mapping.js"
+import {BitArray, Bits} from "./math.js"
+import {Linear, Range} from "./mapping.js"
 
 export type NoArgType<T> = { new(): T }
 
@@ -551,58 +551,6 @@ export const binarySearch = (values: Float32Array, key: number): number => {
         }
     }
     return high
-}
-
-export class UniformRandomMapping implements ValueMapping<number> {
-    // http://gamedev.stackexchange.com/questions/26391/is-there-a-family-of-monotonically-non-decreasing-noise-functions/26424#26424
-    static monotoneRandom(random: Random, n: number, roughness: number, strength: number): Float32Array {
-        const sequence = new Float32Array(n + 1)
-        let sum = 0.0
-        for (let i = 1; i <= n; ++i) {
-            const x = Math.floor(random.nextDouble(0.0, roughness)) + 1.0
-            sum += x
-            sequence[i] = x
-        }
-        let nominator = 0.0
-        for (let i = 1; i <= n; ++i) {
-            nominator += sequence[i]
-            sequence[i] = (nominator / sum) * strength + (1.0 - strength) * i / n
-        }
-        return sequence
-    }
-
-    private readonly values: Float32Array
-
-    constructor(private readonly random: Random,
-                private readonly resolution: number = 1024,
-                private readonly roughness: number = 4.0,
-                private readonly strength: number = 0.2) {
-        this.values = UniformRandomMapping.monotoneRandom(random, resolution, roughness, strength)
-    }
-
-    clamp(y: number): number {
-        return Math.max(0.0, Math.min(1.0, y))
-    }
-
-    x(y: number): number {
-        if (y <= 0.0) return 0.0
-        if (y >= 1.0) return 1.0
-        const index = binarySearch(this.values, y)
-        const a = this.values[index]
-        const b = this.values[index + 1]
-        const nInverse = 1.0 / this.resolution
-        return index * nInverse + nInverse / (b - a) * (y - a)
-    }
-
-    y(x: number): number {
-        if (x <= 0.0) return 0.0
-        if (x >= 1.0) return 1.0
-        const xd = x * this.resolution
-        const xi = xd | 0
-        const a = xd - xi
-        const q = this.values[xi]
-        return q + a * (this.values[xi + 1] - q)
-    }
 }
 
 export const readBinary = (url: string): Promise<ArrayBuffer> => {

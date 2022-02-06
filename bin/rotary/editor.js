@@ -2,7 +2,7 @@ import { ArrayUtils, NumericStepper, Options, PrintMapping, Terminator } from ".
 import { Fills, RotaryModel } from "./model.js";
 import { TypeControlEditor, UIControllerLayout } from "../dom/controls.js";
 import { Dom } from "../dom/common.js";
-import { CShapeInjective, IdentityInjective, PowInjective, SmoothStepInjective, TShapeInjective } from "../lib/injective.js";
+import { CShapeInjective, IdentityInjective, MonoNoiseInjective, PowInjective, SmoothStepInjective, TShapeInjective } from "../lib/injective.js";
 const InjectiveControlBuilder = new class {
     constructor() {
         this.availableTypes = new Map([
@@ -10,7 +10,8 @@ const InjectiveControlBuilder = new class {
             ["Power", PowInjective],
             ["CShape", CShapeInjective],
             ["TShape", TShapeInjective],
-            ["SmoothStep", SmoothStepInjective]
+            ["SmoothStep", SmoothStepInjective],
+            ["Noise", MonoNoiseInjective]
         ]);
     }
     build(layout, value) {
@@ -33,6 +34,16 @@ const InjectiveControlBuilder = new class {
                 .with(value.edge0);
             layout.createNumericStepper("edge 1", PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
                 .with(value.edge1);
+        }
+        else if (value instanceof MonoNoiseInjective) {
+            layout.createNumericInput("seed", PrintMapping.integer(""))
+                .with(value.seed);
+            layout.createNumericInput("resolution", PrintMapping.integer(""))
+                .with(value.resolution);
+            layout.createNumericStepper("roughness", PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
+                .with(value.roughness);
+            layout.createNumericStepper("strength", PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
+                .with(value.strength);
         }
     }
 };

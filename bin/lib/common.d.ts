@@ -1,5 +1,5 @@
-import { Bits, Random } from "./math.js";
-import { Range, ValueMapping } from "./mapping.js";
+import { Bits } from "./math.js";
+import { Range } from "./mapping.js";
 export declare type NoArgType<T> = {
     new (): T;
 };
@@ -184,18 +184,6 @@ export declare class PrintMapping<Y> {
     print(value: Y): string;
 }
 export declare const binarySearch: (values: Float32Array, key: number) => number;
-export declare class UniformRandomMapping implements ValueMapping<number> {
-    private readonly random;
-    private readonly resolution;
-    private readonly roughness;
-    private readonly strength;
-    private readonly values;
-    constructor(random: Random, resolution?: number, roughness?: number, strength?: number);
-    static monotoneRandom(random: Random, n: number, roughness: number, strength: number): Float32Array;
-    clamp(y: number): number;
-    x(y: number): number;
-    y(x: number): number;
-}
 export declare const readBinary: (url: string) => Promise<ArrayBuffer>;
 export declare const readAudio: (context: BaseAudioContext, url: string) => Promise<AudioBuffer>;
 export declare const decodeAudioData: (context: BaseAudioContext, buffer: ArrayBuffer) => Promise<AudioBuffer>;

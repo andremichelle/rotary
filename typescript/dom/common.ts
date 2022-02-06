@@ -5,6 +5,25 @@ export const getChromeVersion = (): boolean | number => {
     return raw ? parseInt(raw[2], 10) : false
 }
 
+export class Updater {
+    private needsUpdate: boolean = false
+
+    constructor(private readonly callback: () => void) {
+    }
+
+    private updater = () => {
+        this.needsUpdate = false
+        this.callback()
+    }
+
+    requestUpdate(): void {
+        if (!this.needsUpdate) {
+            this.needsUpdate = true
+            requestAnimationFrame(this.updater)
+        }
+    }
+}
+
 export class Dom {
     static bindEventListener(target: EventTarget,
                              type: string, listener: EventListenerOrEventListenerObject,

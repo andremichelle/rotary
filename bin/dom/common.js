@@ -3,6 +3,22 @@ export const getChromeVersion = () => {
     const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
     return raw ? parseInt(raw[2], 10) : false;
 };
+export class Updater {
+    constructor(callback) {
+        this.callback = callback;
+        this.needsUpdate = false;
+        this.updater = () => {
+            this.needsUpdate = false;
+            this.callback();
+        };
+    }
+    requestUpdate() {
+        if (!this.needsUpdate) {
+            this.needsUpdate = true;
+            requestAnimationFrame(this.updater);
+        }
+    }
+}
 export class Dom {
     static bindEventListener(target, type, listener, options) {
         target.addEventListener(type, listener, options);

@@ -1,17 +1,19 @@
 import {
+    binarySearch,
     BoundNumericValue,
     Observable,
     ObservableImpl,
     ObservableValue,
+    ObservableValueImpl,
     Observer,
     Serializer,
     Terminable,
     Terminator
 } from "./common.js"
-import {Linear} from "./mapping.js"
-import {Func, Random} from "./math.js"
+import {Linear, LinearInteger} from "./mapping.js"
+import {Func, Mulberry32, Random} from "./math.js"
 
-type Data = PowData | CShapeData | TShapeData | SmoothStepData
+type Data = PowData | CShapeData | TShapeData | SmoothStepData | MonoNoiseData
 
 export type InjectiveType = { new(): Injective<any> }
 
@@ -36,6 +38,8 @@ export abstract class Injective<DATA extends Data> implements Observable<Injecti
                 return new CShapeInjective().deserialize(format)
             case SmoothStepInjective.name:
                 return new SmoothStepInjective().deserialize(format)
+            case MonoNoiseInjective.name:
+                return new MonoNoiseInjective().deserialize(format)
         }
         throw new Error("Unknown movement format")
     }
@@ -296,8 +300,108 @@ export class SmoothStepInjective extends Injective<SmoothStepData> {
     }
 }
 
+declare interface MonoNoiseData {
+    seed: number
+    resolution: number
+    roughness: number
+    strength: number
+}
+
+export class MonoNoiseInjective extends Injective<MonoNoiseData> {
+    // http://gamedev.stackexchange.com/questions/26391/is-there-a-family-of-monotonically-non-decreasing-noise-functions/26424#26424
+    static monotoneRandom(random: Random, n: number, roughness: number, strength: number): Float32Array {
+        const sequence = new Float32Array(n + 1)
+        let sum = 0.0
+        for (let i = 1; i <= n; ++i) {
+            const x = Math.floor(random.nextDouble(0.0, roughness)) + 1.0
+            sum += x
+            sequence[i] = x
+        }
+        let nominator = 0.0
+        for (let i = 1; i <= n; ++i) {
+            nominator += sequence[i]
+            sequence[i] = (nominator / sum) * strength + (1.0 - strength) * i / n
+        }
+        return sequence
+    }
+
+    readonly seed = this.bindValue(new ObservableValueImpl<number>(0xFFFFFF))
+    readonly resolution = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 512))
+    readonly roughness = this.bindValue(new BoundNumericValue(new Linear(0.0, 8.0), 4.0))
+    readonly strength = this.bindValue(new BoundNumericValue(new Linear(0.0, 8.0), 0.2))
+
+    private values: Float32Array = new Float32Array([0.0, 1.0])
+
+    constructor() {
+        super()
+
+        this.terminator.with(this.seed.addObserver(() => this.update(), false))
+        this.terminator.with(this.resolution.addObserver(() => this.update(), false))
+        this.terminator.with(this.roughness.addObserver(() => this.update(), false))
+        this.terminator.with(this.strength.addObserver(() => this.update(), false))
+        this.update()
+    }
+
+    fx(y: number): number {
+        if (y <= 0.0) return 0.0
+        if (y >= 1.0) return 1.0
+        const index = binarySearch(this.values, y)
+        const a = this.values[index]
+        const b = this.values[index + 1]
+        const nInverse = 1.0 / this.resolution.get()
+        return index * nInverse + nInverse / (b - a) * (y - a)
+    }
+
+    fy(x: number): number {
+        if (x <= 0.0) return 0.0
+        if (x >= 1.0) return 1.0
+        const xd = x * this.resolution.get()
+        const xi = xd | 0
+        const a = xd - xi
+        const q = this.values[xi]
+        return q + a * (this.values[xi + 1] - q)
+    }
+
+    deserialize(format: InjectiveFormat<MonoNoiseData>): MonoNoiseInjective {
+        const data = super.unpack(format)
+        this.seed.set(data.seed)
+        this.resolution.set(data.resolution)
+        this.roughness.set(data.roughness)
+        this.strength.set(data.strength)
+        return this
+    }
+
+    serialize(): InjectiveFormat<MonoNoiseData> {
+        return super.pack({
+            seed: this.seed.get(),
+            resolution: this.resolution.get(),
+            roughness: this.roughness.get(),
+            strength: this.strength.get()
+        })
+    }
+
+    copy(): MonoNoiseInjective {
+        const injective = new MonoNoiseInjective()
+        injective.seed.set(this.seed.get())
+        injective.resolution.set(this.resolution.get())
+        injective.roughness.set(this.roughness.get())
+        injective.strength.set(this.strength.get())
+        return injective
+    }
+
+    randomize(random: Random): MonoNoiseInjective {
+        this.seed.set(random.nextInt(0, 0xFFFFFFFF))
+        return this
+    }
+
+    private update(): void {
+        this.values = MonoNoiseInjective.monotoneRandom(new Mulberry32(this.seed.get()), this.resolution.get(), this.roughness.get(), this.strength.get())
+    }
+}
+
 InjectiveTypes.push(IdentityInjective)
 InjectiveTypes.push(PowInjective)
 InjectiveTypes.push(CShapeInjective)
 InjectiveTypes.push(TShapeInjective)
 InjectiveTypes.push(SmoothStepInjective)
+InjectiveTypes.push(MonoNoiseInjective)

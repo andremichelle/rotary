@@ -8,6 +8,7 @@ import {
     IdentityInjective,
     Injective,
     InjectiveType,
+    MonoNoiseInjective,
     PowInjective,
     SmoothStepInjective,
     TShapeInjective
@@ -33,6 +34,15 @@ const InjectiveControlBuilder = new class implements ControlBuilder<Injective<an
                 .with(value.edge0)
             layout.createNumericStepper("edge 1", PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
                 .with(value.edge1)
+        } else if (value instanceof MonoNoiseInjective) {
+            layout.createNumericInput("seed", PrintMapping.integer(""))
+                .with(value.seed)
+            layout.createNumericInput("resolution", PrintMapping.integer(""))
+                .with(value.resolution)
+            layout.createNumericStepper("roughness", PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
+                .with(value.roughness)
+            layout.createNumericStepper("strength", PrintMapping.float(2, "", ""), NumericStepper.Hundredth)
+                .with(value.strength)
         }
     }
 
@@ -41,7 +51,8 @@ const InjectiveControlBuilder = new class implements ControlBuilder<Injective<an
         ["Power", PowInjective],
         ["CShape", CShapeInjective],
         ["TShape", TShapeInjective],
-        ["SmoothStep", SmoothStepInjective]
+        ["SmoothStep", SmoothStepInjective],
+        ["Noise", MonoNoiseInjective]
     ])
 }
 

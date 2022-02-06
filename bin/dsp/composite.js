@@ -90,9 +90,12 @@ export class Channelstrip {
     updateVolume() {
         this.mixer.setParameterValue(this.volumeNode.gain, this.computeVolume());
     }
-    terminate() {
+    disconnect() {
         this.connected.ifPresent(pair => pair[0].disconnect(this.inputNode, pair[1]));
         this.connected = Options.None;
+    }
+    terminate() {
+        this.disconnect();
         this.volumeNode.disconnect();
         this.panningNode.disconnect();
         this.auxSendNodes.forEach(gainNode => gainNode.disconnect());
@@ -110,7 +113,7 @@ export class Mixer {
     constructor(context, numAux = 0) {
         this.context = context;
         this.numAux = numAux;
-        this.channelstrips = [];
+        this.channelstrips = new Set();
         this.outputNode = context.createGain();
         this.auxSendNodes = ArrayUtils.fill(numAux, () => context.createGain());
         this.auxReturnNodes = ArrayUtils.fill(numAux, () => {
@@ -121,15 +124,12 @@ export class Mixer {
     }
     createChannelstrip() {
         const channelstrip = new Channelstrip(this, this.numAux);
-        this.channelstrips.push(channelstrip);
+        this.channelstrips.add(channelstrip);
         return channelstrip;
     }
     removeChannelstrip(channelstrip) {
-        const index = this.channelstrips.indexOf(channelstrip);
-        if (-1 === index) {
-            throw new Error("Unknown Channelstrip");
-        }
-        this.channelstrips.splice(index, 1);
+        const deleted = this.channelstrips.delete(channelstrip);
+        console.assert(deleted);
         channelstrip.terminate();
     }
     masterOutput() {
@@ -149,7 +149,7 @@ export class Mixer {
         this.channelstrips.forEach(strip => strip.updateVolume());
     }
     isAnyChannelSolo() {
-        return this.channelstrips.some(strip => strip.solo, this.channelstrips);
+        return Array.from(this.channelstrips).some(strip => strip.solo, this.channelstrips);
     }
     setParameterValue(audioParam, value) {
         interpolateParameterValueIfRunning(this.context, audioParam, value);
