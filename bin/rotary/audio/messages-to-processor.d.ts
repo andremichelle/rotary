@@ -1,14 +1,6 @@
 import { RotaryFormat } from "../model.js";
+import { RewindMessage, TransportMessage } from "../../dsp/messages.js";
 export declare type MessageToProcessor = TransportMessage | RewindMessage | UpdateFormatMessage | UploadSampleMessage;
-export declare class RewindMessage {
-    readonly type = "rewind";
-    constructor();
-}
-export declare class TransportMessage {
-    readonly moving: boolean;
-    readonly type = "transport";
-    constructor(moving: boolean);
-}
 export declare class UpdateFormatMessage {
     readonly format: RotaryFormat;
     readonly version: number;

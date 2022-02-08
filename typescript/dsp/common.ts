@@ -1,5 +1,7 @@
 // noinspection JSUnusedGlobalSymbols
 
+import {Observable, ObservableImpl, Observer, Terminable} from "../lib/common"
+
 const LogDb = Math.log(10.0) / 20.0
 
 export const RENDER_QUANTUM: number = 128 | 0
@@ -159,7 +161,7 @@ export class FFT {
             const ts = this.n / size
             for (i = 0 | 0; i < this.n; i += size) {
                 const m = i + hs
-                for (j = i, k = 0 ; j < m ; j++, k = (k + ts) | 0) {
+                for (j = i, k = 0; j < m; j++, k = (k + ts) | 0) {
                     const idx = (j + hs) | 0
                     const cos = cosTable[k]
                     const sin = sinTable[k]

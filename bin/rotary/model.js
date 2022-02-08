@@ -3,7 +3,7 @@ import { Colors } from "../lib/colors.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { Channelstrip, CompositeSettings, ConvolverFiles, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../dsp/composite.js";
-import { CShapeInjective, IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
+import { IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
 import { barsToSeconds } from "../dsp/common.js";
 export class RotaryExportSetting {
     constructor() {
@@ -42,7 +42,7 @@ export class RotaryModel {
         this.radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20));
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
         this.bpm = this.bindValue(new BoundNumericValue(new Linear(60.0, 180.0), 120.0));
-        this.bars = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0));
+        this.stretch = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0));
         this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4));
         this.aux = [
             new ObservableValueImpl(new PulsarDelaySettings()),
@@ -126,7 +126,7 @@ export class RotaryModel {
         return this.tracks.remove(track);
     }
     duration() {
-        return barsToSeconds(this.bars.get(), this.bpm.get());
+        return barsToSeconds(this.stretch.get(), this.bpm.get());
     }
     clear() {
         this.radiusMin.set(20.0);
@@ -155,7 +155,7 @@ export class RotaryModel {
             exportSettings: this.exportSettings.serialize(),
             phaseOffset: this.phaseOffset.get(),
             bpm: this.bpm.get(),
-            bars: this.bars.get(),
+            stretch: this.stretch.get(),
             tracks: this.tracks.map(track => track.serialize()),
             aux: this.aux.map((value) => value.get().serialize())
         };
@@ -165,7 +165,7 @@ export class RotaryModel {
         this.exportSettings.deserialize(format.exportSettings);
         this.phaseOffset.set(format.phaseOffset);
         this.bpm.set(format.bpm);
-        this.bars.set(format.bars);
+        this.stretch.set(format.stretch);
         this.tracks.clear();
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)));
         this.aux.forEach((value, index) => value.set(CompositeSettings.from(format.aux[index])));
@@ -246,16 +246,13 @@ export class RotaryTrackModel {
     }
     test() {
         this.phaseOffset.set(0.0);
-        this.bend.set(new CShapeInjective());
         this.frequency.set(1.0);
         this.fragments.set(1.0);
         this.reverse.set(false);
         this.length.set(1.0);
         this.lengthRatio.set(0.125);
         this.outline.set(0.0);
-        this.segments.set(16);
-        this.exclude.setBit(0, true);
-        this.motion.set(new CShapeInjective());
+        this.segments.set(4);
         this.width.set(128);
         this.fill.set(Fill.Flat);
     }

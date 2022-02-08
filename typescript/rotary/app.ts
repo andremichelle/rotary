@@ -71,8 +71,8 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             new NumericStepper(0.01)).with(model.phaseOffset)
         globalLayout.createNumericStepper("bpm", PrintMapping.integer(""),
             new NumericStepper(1)).with(model.bpm)
-        globalLayout.createNumericStepper("bars", PrintMapping.integer(""),
-            new NumericStepper(1)).with(model.bars)
+        globalLayout.createNumericStepper("stretch", PrintMapping.integer("x"),
+            new NumericStepper(1)).with(model.stretch)
         globalLayout.createNumericStepper("motion blur", PrintMapping.integer(""),
             new NumericStepper(1)).with(model.motion)
 

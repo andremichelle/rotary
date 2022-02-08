@@ -20,7 +20,7 @@ export const initAudioScene = () => {
             return Promise.all([
                 context.audioWorklet.addModule("bin/dsp/meter/processor.js"),
                 context.audioWorklet.addModule("bin/dsp/limiter/processor.js"),
-                context.audioWorklet.addModule("bin/rotary/audio/processor.js")
+                context.audioWorklet.addModule("bin/rotary/audio/processor.js"),
             ]);
         },
         build(context, output, model, boot) {

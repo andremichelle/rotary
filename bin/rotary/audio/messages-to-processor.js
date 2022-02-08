@@ -1,14 +1,3 @@
-export class RewindMessage {
-    constructor() {
-        this.type = 'rewind';
-    }
-}
-export class TransportMessage {
-    constructor(moving) {
-        this.moving = moving;
-        this.type = 'transport';
-    }
-}
 export class UpdateFormatMessage {
     constructor(format, version) {
         this.format = format;

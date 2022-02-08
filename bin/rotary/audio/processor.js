@@ -1,6 +1,6 @@
 import { Edge, RotaryModel } from "../model.js";
 import { FormatUpdatedMessage, TransportMessage, UpdateCursorMessage } from "./messages-to-worklet.js";
-import { RENDER_QUANTUM } from "../../dsp/common.js";
+import { barsToNumFrames, numFramesToBars, RENDER_QUANTUM } from "../../dsp/common.js";
 import { ObservableValueImpl } from "../../lib/common.js";
 class Voice {
     constructor(delayFrames, output, sampleKey, position = 0 | 0) {
@@ -33,7 +33,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         this.transport = new ObservableValueImpl(false);
         this.updateCount = 0 | 0;
         this.maxKey = 0 | 0;
-        this.phase = 0 | 0;
+        this.barPosition = +0.0;
         const fps = 60.0;
         this.updateRate = (sampleRate / fps) | 0;
         this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving)));
@@ -48,7 +48,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                 this.maxKey = Math.max(msg.key, this.maxKey);
             }
             else if (msg.type === "rewind") {
-                this.phase = 0.0;
+                this.barPosition = 0.0;
                 this.transport.set(false);
                 this.activeVoices.forEach(voices => voices.forEach(voice => voice.stop()));
             }
@@ -106,26 +106,26 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         this.updateCount += RENDER_QUANTUM;
         if (this.updateCount >= this.updateRate) {
             this.updateCount -= this.updateRate;
-            this.port.postMessage(new UpdateCursorMessage(this.phase / this.loopFrames()));
+            this.port.postMessage(new UpdateCursorMessage(this.barPosition));
         }
         return true;
     }
     schedule() {
         const tracks = this.model.tracks;
-        const loopFrames = this.loopFrames();
-        const x0 = this.phase / loopFrames;
-        const x1 = (this.phase + RENDER_QUANTUM) / loopFrames;
+        const bpm = this.model.bpm.get();
+        const p0 = this.barPosition;
+        const p1 = p0 + numFramesToBars(RENDER_QUANTUM, bpm, sampleRate) / this.model.stretch.get();
         for (let trackIndex = 0; trackIndex < tracks.size(); trackIndex++) {
             const track = tracks.get(trackIndex);
-            const t0 = track.globalToLocal(x0);
-            const t1 = track.globalToLocal(x1);
+            const t0 = track.globalToLocal(p0);
+            const t1 = track.globalToLocal(p1);
             const iterator = track.querySections(t0, t1);
             while (iterator.hasNext()) {
                 const result = iterator.next();
                 const running = this.activeVoices.get(trackIndex);
                 running.forEach(v => v.stop());
                 if (result.edge === Edge.Start) {
-                    let frameIndex = ((track.localToGlobal(result.position) * loopFrames - this.phase)) | 0;
+                    let frameIndex = barsToNumFrames(track.localToGlobal(result.position) - p0, bpm, sampleRate) | 0;
                     if (0 > frameIndex || frameIndex >= RENDER_QUANTUM) {
                         if (Math.abs(t1 - t0) < 1e-10) {
                             console.warn(`clamp frameIndex(${frameIndex}) while abs(t1 - t0) = ${Math.abs(t1 - t0)} < 1e-10`);
@@ -135,7 +135,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                             throw new Error(`frameIndex(${frameIndex}), 
                             t0: ${t0}, t1: ${t1}, t0*: ${t0 + 1e-7 - 1e-7}, t1*: ${t1 + 1e-7 - 1e-7}, 
                             td: ${t1 - t0}, p: ${result.position}, 
-                                frameIndexAsNumber: ${(track.localToGlobal(result.position) * loopFrames - this.phase)}`);
+                                frameIndexAsNumber: ${(track.localToGlobal(result.position) - p0)}`);
                         }
                     }
                     const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1);
@@ -144,11 +144,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                 }
             }
         }
-        this.phase += RENDER_QUANTUM;
-        this.phase %= loopFrames;
-    }
-    loopFrames() {
-        return (sampleRate * this.model.duration()) | 0;
+        this.barPosition = p1;
     }
 });
 //# sourceMappingURL=processor.js.map

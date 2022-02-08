@@ -11,7 +11,8 @@ export declare interface RotaryExportFormat {
 export declare interface RotaryFormat {
     radiusMin: number;
     phaseOffset: number;
-    loopDuration: number;
+    bpm: number;
+    stretch: number;
     exportSettings: RotaryExportFormat;
     tracks: RotaryTrackFormat[];
     aux: CompositeSettingsFormat<any>[];
@@ -58,7 +59,8 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     readonly exportSettings: RotaryExportSetting;
     readonly radiusMin: ObservableValue<number>;
     readonly phaseOffset: ObservableValue<number>;
-    readonly loopDuration: ObservableValue<number>;
+    readonly bpm: ObservableValue<number>;
+    readonly stretch: ObservableValue<number>;
     readonly motion: ObservableValue<number>;
     readonly aux: ObservableValue<CompositeSettings<any>>[];
     constructor();
@@ -71,6 +73,7 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     createTrack(index?: number): RotaryTrackModel | null;
     copyTrack(source: RotaryTrackModel, insertIndex?: number): RotaryTrackModel;
     removeTrack(track: RotaryTrackModel): boolean;
+    duration(): number;
     clear(): void;
     measureRadius(): number;
     intersects(phase: number): boolean;

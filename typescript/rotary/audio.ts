@@ -2,6 +2,7 @@
 
 import {RotaryModel} from "./model.js"
 import {NoUIMeterWorklet, StereoMeterWorklet} from "../dsp/meter/worklet.js"
+import {Metronome} from "../dsp/metronome/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, ObservableValue, Terminable} from "../lib/common.js"
 import {encodeWavFloat} from "../dsp/common.js"
@@ -43,8 +44,13 @@ export class Audio {
 
     async initPreview(): Promise<AudioSceneController> {
         await this.scene.loadModules(this.context)
+        await this.context.audioWorklet.addModule("bin/dsp/metronome/processor.js")
+
+        // const metronome: Metronome = new Metronome(this.context)
         const masterMeter = new StereoMeterWorklet(this.context)
         document.getElementById("meter").appendChild(masterMeter.domElement)
+        // this.model.bpm.addObserver(value => metronome.setBpm(value), true)
+        // metronome.connect(this.context.destination)
         masterMeter.connect(this.context.destination)
         const boot: Boot = new Boot()
         boot.addObserver(boot => {
