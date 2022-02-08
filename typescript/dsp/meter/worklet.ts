@@ -146,9 +146,9 @@ export class StereoMeterWorklet extends NoUIMeterWorklet {
         const graphics = this.graphics
         graphics.clearRect(0, 0, this.height, this.width)
         graphics.font = "7px IBM Plex Sans"
-        graphics.textBaseline = "middle"
+        graphics.textBaseline = "top"
         graphics.textAlign = "center"
-        const y = this.meterSegmentHeight + (this.meterSegmentVGap >> 1)
+        const y = this.meterSegmentHeight + this.meterSegmentVGap * 0.5 - 3
         for (let i = 0; i < this.meterSegmentCount; i++) {
             const db = this.maxDb - this.labelStepsDb * i
             const x = this.meterHPadding + (this.meterSegmentWidth + this.meterSegmentHGap) * (this.meterSegmentCount - i - 1) + (this.meterSegmentWidth >> 1)
