@@ -1,8 +1,8 @@
 import {Shape} from "./messages.js"
 
 export class LfoWorklet extends AudioWorkletNode {
-    private $shape: Shape = null
-    private $frequency: number = NaN
+    private $shape: Shape = Shape.Sine
+    private $frequency: number = 1.0
 
     constructor(context) {
         super(context, "lfo", {

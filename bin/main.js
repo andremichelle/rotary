@@ -47,7 +47,7 @@ window.onunhandledrejection = (event) => {
         .installShortcuts(audio, preview)
         .installApplicationMenu(audio);
     const exec = () => {
-        const progress = preview.phase();
+        const progress = preview.position();
         app.render(progress);
         requestAnimationFrame(exec);
     };

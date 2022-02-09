@@ -4,7 +4,7 @@ import { Boot, Terminable } from "../lib/common.js";
 import { Transport } from "../audio/sequencing.js";
 import { Metronome } from "../audio/metronome/worklet.js";
 export interface AudioSceneController extends Terminable {
-    phase(): number;
+    position(): number;
     latency(): number;
     metronome: Metronome;
     transport: Transport;

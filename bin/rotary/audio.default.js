@@ -20,6 +20,7 @@ export const initAudioScene = () => {
     return {
         loadModules(context) {
             return Promise.all([
+                context.audioWorklet.addModule("bin/audio/lfo/processor.js"),
                 context.audioWorklet.addModule("bin/audio/meter/processor.js"),
                 context.audioWorklet.addModule("bin/audio/limiter/processor.js"),
                 context.audioWorklet.addModule("bin/audio/metronome/processor.js"),
@@ -125,7 +126,7 @@ export const initAudioScene = () => {
                 limiterWorklet.connect(output);
                 yield boot.waitForCompletion();
                 return Promise.resolve({
-                    phase: () => rotaryNode.position(),
+                    position: () => rotaryNode.position(),
                     latency: () => limiterWorklet.lookahead,
                     meter: meter,
                     metronome: metronome,

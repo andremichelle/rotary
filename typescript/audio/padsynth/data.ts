@@ -1,17 +1,17 @@
 export class Harmonic {
-    static make(root: number,
+    static make(hz: number,
                 bandWidth: number = 0.5,
                 bandWidthScale: number = 1.01,
                 brightness: number = -0.5,
                 distance: number = 1.0,
-                numHarmonics: number = 64
+                numHarmonics: number = 128
     ): Harmonic[] {
         const result = []
         for (let i = 0; i < numHarmonics; i++) {
-            const position = i * distance + 1
+            const position = i * distance + 1.0
             const level = Math.pow(position, brightness)
             const bw = (Math.pow(2.0, bandWidth / 1200.0) - 1.0) * Math.pow(position, bandWidthScale)
-            result[i] = new Harmonic(position * root, level, bw)
+            result[i] = new Harmonic(position * hz, level, bw)
         }
         return result
     }

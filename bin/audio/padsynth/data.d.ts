@@ -2,7 +2,7 @@ export declare class Harmonic {
     position: number;
     level: number;
     bandWidth: number;
-    static make(root: number, bandWidth?: number, bandWidthScale?: number, brightness?: number, distance?: number, numHarmonics?: number): Harmonic[];
+    static make(hz: number, bandWidth?: number, bandWidthScale?: number, brightness?: number, distance?: number, numHarmonics?: number): Harmonic[];
     constructor(position: number, level: number, bandWidth: number);
 }
 export declare type Message = {

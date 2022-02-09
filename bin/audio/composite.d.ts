@@ -19,6 +19,7 @@ export declare class Channelstrip implements Terminable {
     getInputDecibel(): number;
     setPanning(bipolar: number): void;
     getPanning(): number;
+    getPanningParam(): AudioParam;
     setVolume(unipolar: number): void;
     getVolume(): number;
     setMute(value: boolean): void;

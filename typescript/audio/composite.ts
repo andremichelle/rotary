@@ -80,6 +80,10 @@ export class Channelstrip implements Terminable {
         return this.panningNode.pan.value
     }
 
+    public getPanningParam(): AudioParam {
+        return this.panningNode.pan
+    }
+
     public setVolume(unipolar: number): void {
         if (this.volume === unipolar) {
             return

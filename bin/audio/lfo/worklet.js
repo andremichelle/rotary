@@ -1,3 +1,4 @@
+import { Shape } from "./messages.js";
 export class LfoWorklet extends AudioWorkletNode {
     constructor(context) {
         super(context, "lfo", {
@@ -8,8 +9,8 @@ export class LfoWorklet extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
-        this.$shape = null;
-        this.$frequency = NaN;
+        this.$shape = Shape.Sine;
+        this.$frequency = 1.0;
     }
     set shape(value) {
         if (this.$shape == value) {

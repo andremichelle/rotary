@@ -53,6 +53,9 @@ export class Channelstrip {
     getPanning() {
         return this.panningNode.pan.value;
     }
+    getPanningParam() {
+        return this.panningNode.pan;
+    }
     setVolume(unipolar) {
         if (this.volume === unipolar) {
             return;

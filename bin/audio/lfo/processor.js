@@ -1,6 +1,6 @@
 import { RENDER_QUANTUM } from "../common.js";
-import { Mulberry32, TAU } from "../../lib/math.js";
 import { Shape } from "./messages.js";
+import { Mulberry32, TAU } from "../../lib/math.js";
 registerProcessor("lfo", class extends AudioWorkletProcessor {
     constructor() {
         super();
@@ -24,36 +24,44 @@ registerProcessor("lfo", class extends AudioWorkletProcessor {
             case Shape.Sine: {
                 for (let i = 0; i < RENDER_QUANTUM; i++) {
                     output[i] = 0.5 * (1.0 - Math.cos(this.phase * TAU));
+                    this.phase += this.increment;
+                    this.phase -= Math.floor(this.phase);
                 }
                 break;
             }
             case Shape.Triangle: {
                 for (let i = 0; i < RENDER_QUANTUM; i++) {
                     output[i] = 1.0 - 2.0 * Math.abs(Math.floor(this.phase) - this.phase + 0.5);
+                    this.phase += this.increment;
+                    this.phase -= Math.floor(this.phase);
                 }
                 break;
             }
             case Shape.SawtoothUp: {
                 for (let i = 0; i < RENDER_QUANTUM; i++) {
                     output[i] = this.phase;
+                    this.phase += this.increment;
+                    this.phase -= Math.floor(this.phase);
                 }
                 break;
             }
             case Shape.SawtoothDown: {
                 for (let i = 0; i < RENDER_QUANTUM; i++) {
                     output[i] = 1.0 - this.phase;
+                    this.phase += this.increment;
+                    this.phase -= Math.floor(this.phase);
                 }
                 break;
             }
             case Shape.Random: {
                 for (let i = 0; i < RENDER_QUANTUM; i++) {
                     output[i] = this.random.nextDouble(0.0, 1.0);
+                    this.phase += this.increment;
+                    this.phase -= Math.floor(this.phase);
                 }
                 break;
             }
         }
-        this.phase += this.increment;
-        this.phase -= Math.floor(this.phase);
         return true;
     }
 });

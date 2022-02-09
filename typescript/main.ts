@@ -39,7 +39,7 @@ window.onunhandledrejection = (event) => {
         .installApplicationMenu(audio)
 
     const exec = () => {
-        const progress = preview.phase()
+        const progress = preview.position()
         app.render(progress)
         requestAnimationFrame(exec)
     }

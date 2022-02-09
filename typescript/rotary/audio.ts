@@ -9,7 +9,7 @@ import {Transport} from "../audio/sequencing.js"
 import {Metronome} from "../audio/metronome/worklet.js"
 
 export interface AudioSceneController extends Terminable {
-    phase(): number
+    position(): number
 
     latency(): number
 
@@ -45,8 +45,6 @@ export class Audio {
 
     async initPreview(): Promise<AudioSceneController> {
         await this.scene.loadModules(this.context)
-        await this.context.audioWorklet.addModule("bin/audio/metronome/processor.js")
-
         const masterMeter = new StereoMeterWorklet(this.context)
         document.getElementById("meter").appendChild(masterMeter.domElement)
         masterMeter.connect(this.context.destination)

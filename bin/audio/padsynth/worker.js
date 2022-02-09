@@ -41,7 +41,7 @@ export class WavetableCreator {
         const fftSizeInverse = 1.0 / fftSize;
         for (let i = 0; i < harmonics.length; i++) {
             const harmonic = harmonics[i];
-            const fh = harmonic.position;
+            const fh = harmonic.position / this.sampleRate;
             const bwi = harmonic.bandWidth * 0.5;
             const temp = bwi * WavetableCreator.BOUND;
             const jMin = Math.max(1, -Math.floor((temp - fh) * fftSize)) | 0;

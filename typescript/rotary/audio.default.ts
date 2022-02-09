@@ -28,11 +28,14 @@ import {NoUIMeterWorklet} from "../audio/meter/worklet.js"
 import {Updater} from "../dom/common.js"
 import {Transport} from "../audio/sequencing.js"
 import {Metronome} from "../audio/metronome/worklet.js"
+import {Generator} from "../audio/padsynth/generator.js"
+import {Harmonic} from "../audio/padsynth/data.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
         loadModules(context: BaseAudioContext): Promise<any> {
             return Promise.all([
+                context.audioWorklet.addModule("bin/audio/lfo/processor.js"),
                 context.audioWorklet.addModule("bin/audio/meter/processor.js"),
                 context.audioWorklet.addModule("bin/audio/limiter/processor.js"),
                 context.audioWorklet.addModule("bin/audio/metronome/processor.js"),
@@ -50,7 +53,20 @@ export const initAudioScene = (): AudioScene => {
             const meter = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2)
             const limiterWorklet = new LimiterWorklet(context)
             const loadSample = (url: string): Promise<AudioBuffer> => boot.registerProcess(readAudio(context, url))
+            // const gen = new Generator(1 << 16, context.sampleRate)
+            // const wavetable = await gen.render(Harmonic.make(120 / context.sampleRate))
+            // const buffer = context.createBuffer(1, wavetable.length, context.sampleRate)
+            // buffer.copyToChannel(wavetable, 0)
+            // const source = context.createBufferSource()
+            // source.loop = true
+            // source.buffer = buffer
+            // source.start()
+
+
             let index = 0
+            // for (let i = 1; i <= 8; i++) {
+            //     rotaryNode.uploadSample(index++, await gen.render(Harmonic.make(60 * i)))
+            // }
             /*for (let i = 0; i <= 24; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/toypiano/${i}.wav`))
             }*/
@@ -137,12 +153,13 @@ export const initAudioScene = (): AudioScene => {
                 }, true))
             })
 
+            // source.connect(limiterWorklet)
             mixer.masterOutput().connect(limiterWorklet)
             metronome.connect(output)
             limiterWorklet.connect(output)
             await boot.waitForCompletion()
             return Promise.resolve({
-                phase: () => rotaryNode.position(),
+                position: () => rotaryNode.position(),
                 latency: () => limiterWorklet.lookahead,
                 meter: meter,
                 metronome: metronome,

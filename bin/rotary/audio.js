@@ -27,7 +27,6 @@ export class Audio {
     initPreview() {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.scene.loadModules(this.context);
-            yield this.context.audioWorklet.addModule("bin/audio/metronome/processor.js");
             const masterMeter = new StereoMeterWorklet(this.context);
             document.getElementById("meter").appendChild(masterMeter.domElement);
             masterMeter.connect(this.context.destination);

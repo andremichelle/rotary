@@ -1,5 +1,4 @@
 import { Observable, Observer, Terminable } from "../lib/common.js";
-export declare type TransportMessageType = "transport-play" | "transport-pause" | "transport-move";
 export declare type TransportMessage = {
     type: "transport-play";
 } | {
