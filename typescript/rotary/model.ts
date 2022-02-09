@@ -28,14 +28,7 @@ import {
     FlangerSettings,
     PulsarDelaySettings
 } from "../dsp/composite.js"
-import {
-    CShapeInjective,
-    IdentityInjective,
-    Injective,
-    InjectiveFormat,
-    MonoNoiseInjective,
-    TShapeInjective
-} from "../lib/injective.js"
+import {IdentityInjective, Injective, InjectiveFormat, MonoNoiseInjective, TShapeInjective} from "../lib/injective.js"
 import {barsToSeconds} from "../dsp/common.js"
 
 export declare interface RotaryExportFormat {

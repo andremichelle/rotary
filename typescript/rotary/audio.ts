@@ -2,7 +2,6 @@
 
 import {RotaryModel} from "./model.js"
 import {NoUIMeterWorklet, StereoMeterWorklet} from "../dsp/meter/worklet.js"
-import {Metronome} from "../dsp/metronome/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, ObservableValue, Terminable} from "../lib/common.js"
 import {encodeWavFloat} from "../dsp/common.js"

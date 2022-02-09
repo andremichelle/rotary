@@ -5,13 +5,14 @@
     "outDir": "../bin/",
     "sourceMap": true,
     "lib": [
-      "es2020", "DOM"
+      "es2020",
+      "DOM"
     ],
     "alwaysStrict": true,
     "declaration": true
   },
   "include": [
-    "**/*.ts",
+    "**/*.ts"
   ],
   "exclude": []
 }

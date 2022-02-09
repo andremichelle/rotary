@@ -4,7 +4,6 @@ import {RotaryApp} from "./rotary/app.js"
 import {Audio} from "./rotary/audio.js"
 import {initAudioScene} from "./rotary/audio.default.js"
 import {getChromeVersion} from "./dom/common.js"
-import {MonoNoiseInjective} from "./lib/injective.js"
 
 const showError = (message: string) => {
     const preloader = document.getElementById("preloader")
