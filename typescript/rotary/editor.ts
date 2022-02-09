@@ -52,7 +52,7 @@ const InjectiveControlBuilder = new class implements ControlBuilder<Injective<an
         ["CShape", CShapeInjective],
         ["TShape", TShapeInjective],
         ["SmoothStep", SmoothStepInjective],
-        // ["Noise", MonoNoiseInjective]
+        ["Noise", MonoNoiseInjective]
     ])
 }
 

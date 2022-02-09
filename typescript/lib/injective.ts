@@ -326,9 +326,9 @@ export class MonoNoiseInjective extends Injective<MonoNoiseData> {
     }
 
     readonly seed = this.bindValue(new ObservableValueImpl<number>(0xFFFFFF))
-    readonly resolution = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 512))
-    readonly roughness = this.bindValue(new BoundNumericValue(new Linear(0.0, 8.0), 4.0))
-    readonly strength = this.bindValue(new BoundNumericValue(new Linear(0.0, 8.0), 0.2))
+    readonly resolution = this.bindValue(new BoundNumericValue(new LinearInteger(0, 64), 16))
+    readonly roughness = this.bindValue(new BoundNumericValue(new Linear(0.0, 16.0), 64.0))
+    readonly strength = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0))
 
     private values: Float32Array = new Float32Array([0.0, 1.0])
 
@@ -404,4 +404,4 @@ InjectiveTypes.push(PowInjective)
 InjectiveTypes.push(CShapeInjective)
 InjectiveTypes.push(TShapeInjective)
 InjectiveTypes.push(SmoothStepInjective)
-// InjectiveTypes.push(MonoNoiseInjective)
+InjectiveTypes.push(MonoNoiseInjective)

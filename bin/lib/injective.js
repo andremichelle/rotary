@@ -202,9 +202,9 @@ export class MonoNoiseInjective extends Injective {
     constructor() {
         super();
         this.seed = this.bindValue(new ObservableValueImpl(0xFFFFFF));
-        this.resolution = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 512));
-        this.roughness = this.bindValue(new BoundNumericValue(new Linear(0.0, 8.0), 4.0));
-        this.strength = this.bindValue(new BoundNumericValue(new Linear(0.0, 8.0), 0.2));
+        this.resolution = this.bindValue(new BoundNumericValue(new LinearInteger(0, 64), 16));
+        this.roughness = this.bindValue(new BoundNumericValue(new Linear(0.0, 16.0), 64.0));
+        this.strength = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0));
         this.values = new Float32Array([0.0, 1.0]);
         this.terminator.with(this.seed.addObserver(() => this.update(), false));
         this.terminator.with(this.resolution.addObserver(() => this.update(), false));
@@ -286,4 +286,5 @@ InjectiveTypes.push(PowInjective);
 InjectiveTypes.push(CShapeInjective);
 InjectiveTypes.push(TShapeInjective);
 InjectiveTypes.push(SmoothStepInjective);
+InjectiveTypes.push(MonoNoiseInjective);
 //# sourceMappingURL=injective.js.map

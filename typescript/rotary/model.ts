@@ -28,7 +28,14 @@ import {
     FlangerSettings,
     PulsarDelaySettings
 } from "../dsp/composite.js"
-import {CShapeInjective, IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
+import {
+    CShapeInjective,
+    IdentityInjective,
+    Injective,
+    InjectiveFormat,
+    MonoNoiseInjective,
+    TShapeInjective
+} from "../lib/injective.js"
 import {barsToSeconds} from "../dsp/common.js"
 
 export declare interface RotaryExportFormat {
@@ -350,9 +357,14 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.length.set(1.0)
         this.lengthRatio.set(0.125)
         this.outline.set(0.0)
-        this.segments.set(4)
+        this.segments.set(16)
         // this.exclude.setBit(0, true)
-        // this.motion.set(new CShapeInjective())
+        const noiseInjective = new MonoNoiseInjective()
+        noiseInjective.seed.set(16777215)
+        noiseInjective.roughness.set(64.0)
+        noiseInjective.strength.set(1.0)
+        noiseInjective.resolution.set(512)
+        this.bend.set(noiseInjective)
         this.width.set(128)
         this.fill.set(Fill.Flat)
     }
@@ -487,7 +499,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             p1 = tmp
         }
         if (p0 > p1) {
-            return EmptyIterator
+            throw new Error("Interval is negative")
         }
         const cycleIndex = Math.floor(p0)
         return GeneratorIterator.wrap(this.branchQuerySection(p0 - cycleIndex, p1 - cycleIndex, cycleIndex))

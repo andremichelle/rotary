@@ -4,6 +4,7 @@ import {RotaryApp} from "./rotary/app.js"
 import {Audio} from "./rotary/audio.js"
 import {initAudioScene} from "./rotary/audio.default.js"
 import {getChromeVersion} from "./dom/common.js"
+import {MonoNoiseInjective} from "./lib/injective.js"
 
 const showError = (message: string) => {
     const preloader = document.getElementById("preloader")
@@ -27,7 +28,7 @@ window.onunhandledrejection = (event) => {
 
 (async () => {
     const chromeVersion = getChromeVersion()
-    if(!chromeVersion || chromeVersion < 97) {
+    if (!chromeVersion || chromeVersion < 97) {
         throw new Error("Use latest Chrome browser.")
     }
     const random: Random = new Mulberry32(0xFFFFFFFF * Math.random())

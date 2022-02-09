@@ -3,7 +3,7 @@ import { Colors } from "../lib/colors.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { Channelstrip, CompositeSettings, ConvolverFiles, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../dsp/composite.js";
-import { IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
+import { IdentityInjective, Injective, MonoNoiseInjective, TShapeInjective } from "../lib/injective.js";
 import { barsToSeconds } from "../dsp/common.js";
 export class RotaryExportSetting {
     constructor() {
@@ -252,7 +252,13 @@ export class RotaryTrackModel {
         this.length.set(1.0);
         this.lengthRatio.set(0.125);
         this.outline.set(0.0);
-        this.segments.set(4);
+        this.segments.set(16);
+        const noiseInjective = new MonoNoiseInjective();
+        noiseInjective.seed.set(16777215);
+        noiseInjective.roughness.set(64.0);
+        noiseInjective.strength.set(1.0);
+        noiseInjective.resolution.set(512);
+        this.bend.set(noiseInjective);
         this.width.set(128);
         this.fill.set(Fill.Flat);
     }
@@ -374,7 +380,7 @@ export class RotaryTrackModel {
             p1 = tmp;
         }
         if (p0 > p1) {
-            return EmptyIterator;
+            throw new Error("Interval is negative");
         }
         const cycleIndex = Math.floor(p0);
         return GeneratorIterator.wrap(this.branchQuerySection(p0 - cycleIndex, p1 - cycleIndex, cycleIndex));
