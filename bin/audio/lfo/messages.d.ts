@@ -5,14 +5,10 @@ export declare enum Shape {
     SawtoothDown = 3,
     Random = 4
 }
-export declare type Message = SetShape | SetFrequency;
-export declare class SetShape {
-    readonly shape: Shape;
-    readonly type = "shape";
-    constructor(shape: Shape);
-}
-export declare class SetFrequency {
-    readonly hz: number;
-    readonly type = "frequency";
-    constructor(hz: number);
-}
+export declare type Message = {
+    type: "set-shape";
+    shape: Shape;
+} | {
+    type: "set-frequency";
+    hz: number;
+};
