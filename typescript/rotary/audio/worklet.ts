@@ -1,13 +1,11 @@
 import {RotaryModel} from "../model.js"
 import {UpdateFormatMessage, UploadSampleMessage} from "./messages-to-processor.js"
 import {MessageToWorklet} from "./messages-to-worklet.js"
-import {ObservableValueImpl, Terminator} from "../../lib/common.js"
-import {RewindMessage, TransportMessage} from "../../audio/messages.js"
+import {Terminable, Terminator} from "../../lib/common.js"
+import {Transport, TransportListener} from "../../audio/sequencing.js"
 
-export class RotaryWorkletNode extends AudioWorkletNode {
+export class RotaryWorkletNode extends AudioWorkletNode implements TransportListener {
     private readonly terminator: Terminator = new Terminator()
-
-    readonly transport: ObservableValueImpl<boolean> = new ObservableValueImpl<boolean>(false)
 
     private version: number = 0
     private updatingFormat: boolean = false
@@ -25,13 +23,10 @@ export class RotaryWorkletNode extends AudioWorkletNode {
         })
 
         const sendFormat = () => this.port.postMessage(new UpdateFormatMessage(model.serialize(), this.version))
-        this.terminator.with(this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving))))
         this.port.onmessage = event => {
             const msg = event.data as MessageToWorklet
             if (msg.type === "phase") {
                 this.$phase = msg.phase
-            } else if (msg.type === "transport") {
-                this.transport.set(msg.moving)
             } else if (msg.type === "format-updated") {
                 if (this.version === msg.version) {
                     this.updatingFormat = false
@@ -58,10 +53,6 @@ export class RotaryWorkletNode extends AudioWorkletNode {
         return this.$phase
     }
 
-    rewind() {
-        this.port.postMessage(new RewindMessage())
-    }
-
     uploadSample(key: number, sample: Promise<AudioBuffer> | AudioBuffer | Float32Array | Float32Array[], loop: boolean = false) {
         if (sample instanceof AudioBuffer) {
             this.port.postMessage(UploadSampleMessage.from(key, sample, loop))
@@ -72,5 +63,9 @@ export class RotaryWorkletNode extends AudioWorkletNode {
         } else if (Array.isArray(sample) && sample[0] instanceof Float32Array) {
             this.port.postMessage(new UploadSampleMessage(key, sample, loop))
         }
+    }
+
+    listenToTransport(transport: Transport): Terminable {
+        return transport.addObserver(message => this.port.postMessage(message), false)
     }
 }

@@ -1,8 +1,9 @@
 import {Edge, QueryResult, RotaryModel} from "../model.js"
 import {MessageToProcessor} from "./messages-to-processor.js"
-import {FormatUpdatedMessage, TransportMessage, UpdateCursorMessage} from "./messages-to-worklet.js"
+import {FormatUpdatedMessage, UpdateCursorMessage} from "./messages-to-worklet.js"
 import {barsToNumFrames, numFramesToBars, RENDER_QUANTUM} from "../../audio/common.js"
 import {ObservableValueImpl} from "../../lib/common.js"
+import {TransportMessage, TransportMessageType} from "../../audio/sequencing.js"
 
 class Voice {
     static ATTACK = (0.010 * sampleRate) | 0
@@ -41,21 +42,22 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
 
             const fps: number = 60.0
             this.updateRate = (sampleRate / fps) | 0
-            this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving)))
             this.port.onmessage = (event: MessageEvent) => {
-                const msg = event.data as MessageToProcessor
+                const msg = event.data as MessageToProcessor | TransportMessage
                 if (msg.type === "format") {
                     this.model.deserialize(msg.format)
                     this.port.postMessage(new FormatUpdatedMessage(msg.version))
                 } else if (msg.type === "sample") {
                     this.samples.set(msg.key, new Sample(msg.sample, msg.loop))
                     this.maxKey = Math.max(msg.key, this.maxKey)
-                } else if (msg.type === "rewind") {
-                    this.barPosition = 0.0
+                } else if (msg.type === TransportMessageType.Play) {
+                    this.transport.set(true)
+                } else if (msg.type === TransportMessageType.Pause) {
                     this.transport.set(false)
                     this.activeVoices.forEach(voices => voices.forEach(voice => voice.stop()))
-                } else if (msg.type === "transport") {
-                    this.transport.set(msg.moving)
+                } else if (msg.type === TransportMessageType.Move) {
+                    this.barPosition = msg.position
+                    this.transport.set(false)
                 }
             }
             for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {

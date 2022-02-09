@@ -4,4 +4,10 @@ export class SetBpm {
         this.type = 'bpm';
     }
 }
+export class SetEnabled {
+    constructor(value) {
+        this.value = value;
+        this.type = 'enabled';
+    }
+}
 //# sourceMappingURL=message.js.map

@@ -3,10 +3,9 @@ export class RewindMessage {
         this.type = 'rewind';
     }
 }
-export class TransportMessage {
-    constructor(moving) {
-        this.moving = moving;
-        this.type = 'transport';
+export class PlayMessage {
+    constructor() {
+        this.type = 'play';
     }
 }
 //# sourceMappingURL=messages.js.map

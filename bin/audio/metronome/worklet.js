@@ -1,5 +1,5 @@
-import { SetBpm } from "./message.js";
-import { RewindMessage, TransportMessage } from "../messages.js";
+import { SetBpm, SetEnabled } from "./message.js";
+import { ObservableValueImpl } from "../../lib/common.js";
 export class Metronome extends AudioWorkletNode {
     constructor(context) {
         super(context, "metronome", {
@@ -10,15 +10,14 @@ export class Metronome extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
-    }
-    rewind() {
-        this.port.postMessage(new RewindMessage());
-    }
-    transport(moving) {
-        this.port.postMessage(new TransportMessage(moving));
+        this.enabled = new ObservableValueImpl(false);
+        this.enabled.addObserver(value => this.port.postMessage(new SetEnabled(value)));
     }
     setBpm(value) {
         this.port.postMessage(new SetBpm(value));
+    }
+    listenToTransport(transport) {
+        return transport.addObserver(message => this.port.postMessage(message), false);
     }
 }
 //# sourceMappingURL=worklet.js.map

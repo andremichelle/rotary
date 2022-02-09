@@ -53,7 +53,6 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     private readonly map: Map<RotaryTrackModel, RotaryTrackSelector> = new Map()
     private readonly random: Random = new Mulberry32(0x123abc456)
     private readonly liveContext: CanvasRenderingContext2D = this.elements.canvas.getContext("2d", {alpha: true})
-
     private readonly rawCanvas: HTMLCanvasElement = document.createElement("canvas")
     private readonly rawContext: CanvasRenderingContext2D = this.rawCanvas.getContext("2d", {alpha: true})
 
@@ -75,6 +74,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             new NumericStepper(1)).with(model.stretch)
         globalLayout.createNumericStepper("motion blur", PrintMapping.integer(""),
             new NumericStepper(1)).with(model.motion)
+        globalLayout.createCheckbox("metronome").with(preview.metronome)
 
         const exportLayout = this.terminator.with(new UIControllerLayout(document.querySelector(".two-columns.export")))
         exportLayout.createNumericStepper("size", PrintMapping.integer("px"),
@@ -236,7 +236,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
                 await save(this.model)
             } else if (event.code === "Space" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
                 event.preventDefault()
-                preview.transport.set(!preview.transport.get())
+                preview.transport.togglePlayback()
             }
         })
         return this

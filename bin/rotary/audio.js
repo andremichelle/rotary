@@ -11,6 +11,8 @@ import { StereoMeterWorklet } from "../audio/meter/worklet.js";
 import { ProgressIndicator } from "../dom/common.js";
 import { Boot } from "../lib/common.js";
 import { encodeWavFloat } from "../audio/common.js";
+import { TransportMessageType } from "../audio/sequencing.js";
+import { Metronome } from "../audio/metronome/worklet.js";
 export class Audio {
     constructor(context, scene, model) {
         this.context = context;
@@ -28,8 +30,11 @@ export class Audio {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.scene.loadModules(this.context);
             yield this.context.audioWorklet.addModule("bin/audio/metronome/processor.js");
+            const metronome = new Metronome(this.context);
             const masterMeter = new StereoMeterWorklet(this.context);
             document.getElementById("meter").appendChild(masterMeter.domElement);
+            this.model.bpm.addObserver(value => metronome.setBpm(value), true);
+            metronome.connect(this.context.destination);
             masterMeter.connect(this.context.destination);
             const boot = new Boot();
             boot.addObserver(boot => {
@@ -39,22 +44,33 @@ export class Audio {
                 }
             });
             const preview = yield this.scene.build(this.context, masterMeter, this.model, boot);
+            preview.metronome = metronome.enabled;
             const playButton = document.querySelector("[data-parameter='transport']");
-            preview.transport.addObserver((moving) => __awaiter(this, void 0, void 0, function* () {
-                if (moving && this.context.state !== "running") {
-                    yield this.context.resume();
+            metronome.listenToTransport(preview.transport);
+            preview.transport.addObserver((message) => __awaiter(this, void 0, void 0, function* () {
+                switch (message.type) {
+                    case TransportMessageType.Play: {
+                        if (this.context.state !== "running") {
+                            yield this.context.resume();
+                        }
+                        playButton.checked = true;
+                        break;
+                    }
+                    case TransportMessageType.Pause: {
+                        playButton.checked = false;
+                        break;
+                    }
                 }
-                playButton.checked = moving;
             }), false);
             playButton.onchange = () => __awaiter(this, void 0, void 0, function* () {
                 if (playButton.checked) {
-                    preview.transport.set(true);
+                    preview.transport.play();
                 }
                 else {
-                    preview.transport.set(false);
+                    preview.transport.pause();
                 }
             });
-            document.querySelector("button.rewind").onclick = () => preview.rewind();
+            document.querySelector("button.rewind").onclick = () => preview.transport.stop();
             return preview;
         });
     }
@@ -98,7 +114,7 @@ export class Audio {
             const boot = new Boot();
             boot.addObserver(boot => loadingIndicator.onProgress(boot.normalizedPercentage()));
             const controller = yield loadingIndicator.completeWith(this.scene.build(offlineAudioContext, offlineAudioContext.destination, this.model, boot));
-            controller.transport.set(true);
+            controller.transport.play();
             const exportIndicator = new ProgressIndicator("Exporting Audio...");
             const watch = () => {
                 exportIndicator.onProgress(offlineAudioContext.currentTime / duration);

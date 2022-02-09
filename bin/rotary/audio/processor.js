@@ -1,7 +1,8 @@
 import { Edge, RotaryModel } from "../model.js";
-import { FormatUpdatedMessage, TransportMessage, UpdateCursorMessage } from "./messages-to-worklet.js";
+import { FormatUpdatedMessage, UpdateCursorMessage } from "./messages-to-worklet.js";
 import { barsToNumFrames, numFramesToBars, RENDER_QUANTUM } from "../../audio/common.js";
 import { ObservableValueImpl } from "../../lib/common.js";
+import { TransportMessageType } from "../../audio/sequencing.js";
 class Voice {
     constructor(delayFrames, output, sampleKey, position = 0 | 0) {
         this.delayFrames = delayFrames;
@@ -36,7 +37,6 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         this.barPosition = +0.0;
         const fps = 60.0;
         this.updateRate = (sampleRate / fps) | 0;
-        this.transport.addObserver(moving => this.port.postMessage(new TransportMessage(moving)));
         this.port.onmessage = (event) => {
             const msg = event.data;
             if (msg.type === "format") {
@@ -47,13 +47,16 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                 this.samples.set(msg.key, new Sample(msg.sample, msg.loop));
                 this.maxKey = Math.max(msg.key, this.maxKey);
             }
-            else if (msg.type === "rewind") {
-                this.barPosition = 0.0;
+            else if (msg.type === TransportMessageType.Play) {
+                this.transport.set(true);
+            }
+            else if (msg.type === TransportMessageType.Pause) {
                 this.transport.set(false);
                 this.activeVoices.forEach(voices => voices.forEach(voice => voice.stop()));
             }
-            else if (msg.type === "transport") {
-                this.transport.set(msg.moving);
+            else if (msg.type === TransportMessageType.Move) {
+                this.barPosition = msg.position;
+                this.transport.set(false);
             }
         };
         for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {

@@ -4,6 +4,7 @@ import {
     CollectionEvent,
     CollectionEventType,
     ObservableValue,
+    ObservableValueVoid,
     readAudio,
     Terminable,
     Terminator
@@ -26,6 +27,7 @@ import {
 } from "../audio/composite.js"
 import {NoUIMeterWorklet} from "../audio/meter/worklet.js"
 import {Updater} from "../dom/common.js"
+import {Transport} from "../audio/sequencing.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -38,7 +40,9 @@ export const initAudioScene = (): AudioScene => {
         },
         async build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, boot: Boot): Promise<AudioSceneController> {
             const terminator = new Terminator()
+            const transport: Transport = new Transport()
             const rotaryNode = new RotaryWorkletNode(context, model)
+            terminator.with(rotaryNode.listenToTransport(transport))
             const meterNode = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2)
             const limiterWorklet = new LimiterWorklet(context)
 
@@ -136,11 +140,11 @@ export const initAudioScene = (): AudioScene => {
             limiterWorklet.connect(output)
             await boot.waitForCompletion()
             return Promise.resolve({
-                transport: rotaryNode.transport,
-                rewind: () => rotaryNode.rewind(),
                 phase: () => rotaryNode.phase(),
                 latency: () => limiterWorklet.lookahead,
                 meter: meterNode,
+                metronome: ObservableValueVoid.Instance,
+                transport: transport,
                 terminate: () => terminator.terminate()
             })
         }

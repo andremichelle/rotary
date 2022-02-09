@@ -7,13 +7,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ArrayUtils, CollectionEventType, readAudio, Terminator } from "../lib/common.js";
+import { ArrayUtils, CollectionEventType, ObservableValueVoid, readAudio, Terminator } from "../lib/common.js";
 import { RotaryModel } from "./model.js";
 import { LimiterWorklet } from "../audio/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
 import { Convolver, ConvolverSettings, Flanger, FlangerSettings, Mixer, PulsarDelay, PulsarDelaySettings } from "../audio/composite.js";
 import { NoUIMeterWorklet } from "../audio/meter/worklet.js";
 import { Updater } from "../dom/common.js";
+import { Transport } from "../audio/sequencing.js";
 export const initAudioScene = () => {
     return {
         loadModules(context) {
@@ -26,7 +27,9 @@ export const initAudioScene = () => {
         build(context, output, model, boot) {
             return __awaiter(this, void 0, void 0, function* () {
                 const terminator = new Terminator();
+                const transport = new Transport();
                 const rotaryNode = new RotaryWorkletNode(context, model);
+                terminator.with(rotaryNode.listenToTransport(transport));
                 const meterNode = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2);
                 const limiterWorklet = new LimiterWorklet(context);
                 const loadSample = (url) => {
@@ -118,11 +121,11 @@ export const initAudioScene = () => {
                 limiterWorklet.connect(output);
                 yield boot.waitForCompletion();
                 return Promise.resolve({
-                    transport: rotaryNode.transport,
-                    rewind: () => rotaryNode.rewind(),
                     phase: () => rotaryNode.phase(),
                     latency: () => limiterWorklet.lookahead,
                     meter: meterNode,
+                    metronome: ObservableValueVoid.Instance,
+                    transport: transport,
                     terminate: () => terminator.terminate()
                 });
             });

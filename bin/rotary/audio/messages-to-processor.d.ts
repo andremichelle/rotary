@@ -1,6 +1,5 @@
 import { RotaryFormat } from "../model.js";
-import { RewindMessage, TransportMessage } from "../../audio/messages.js";
-export declare type MessageToProcessor = TransportMessage | RewindMessage | UpdateFormatMessage | UploadSampleMessage;
+export declare type MessageToProcessor = UpdateFormatMessage | UploadSampleMessage;
 export declare class UpdateFormatMessage {
     readonly format: RotaryFormat;
     readonly version: number;

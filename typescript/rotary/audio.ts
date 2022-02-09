@@ -5,15 +5,17 @@ import {NoUIMeterWorklet, StereoMeterWorklet} from "../audio/meter/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, ObservableValue, Terminable} from "../lib/common.js"
 import {encodeWavFloat} from "../audio/common.js"
+import {Transport, TransportMessageType} from "../audio/sequencing.js"
+import {Metronome} from "../audio/metronome/worklet.js"
 
 export interface AudioSceneController extends Terminable {
-    transport: ObservableValue<boolean>
-
-    rewind(): void
-
     phase(): number
 
     latency(): number
+
+    metronome: ObservableValue<boolean>
+
+    transport: Transport
 
     meter: NoUIMeterWorklet
 }
@@ -45,11 +47,11 @@ export class Audio {
         await this.scene.loadModules(this.context)
         await this.context.audioWorklet.addModule("bin/audio/metronome/processor.js")
 
-        // const metronome: Metronome = new Metronome(this.context)
+        const metronome: Metronome = new Metronome(this.context)
         const masterMeter = new StereoMeterWorklet(this.context)
         document.getElementById("meter").appendChild(masterMeter.domElement)
-        // this.model.bpm.addObserver(value => metronome.setBpm(value), true)
-        // metronome.connect(this.context.destination)
+        this.model.bpm.addObserver(value => metronome.setBpm(value), true)
+        metronome.connect(this.context.destination)
         masterMeter.connect(this.context.destination)
         const boot: Boot = new Boot()
         boot.addObserver(boot => {
@@ -59,21 +61,32 @@ export class Audio {
             }
         })
         const preview: AudioSceneController = await this.scene.build(this.context, masterMeter, this.model, boot)
+        preview.metronome = metronome.enabled
         const playButton = document.querySelector("[data-parameter='transport']") as HTMLInputElement
-        preview.transport.addObserver(async moving => {
-            if (moving && this.context.state !== "running") {
-                await this.context.resume()
+        metronome.listenToTransport(preview.transport)
+        preview.transport.addObserver(async message => {
+            switch (message.type) {
+                case TransportMessageType.Play: {
+                    if (this.context.state !== "running") {
+                        await this.context.resume()
+                    }
+                    playButton.checked = true
+                    break
+                }
+                case TransportMessageType.Pause: {
+                    playButton.checked = false
+                    break
+                }
             }
-            playButton.checked = moving
         }, false)
         playButton.onchange = async () => {
             if (playButton.checked) {
-                preview.transport.set(true)
+                preview.transport.play()
             } else {
-                preview.transport.set(false)
+                preview.transport.pause()
             }
         }
-        (document.querySelector("button.rewind") as HTMLButtonElement).onclick = () => preview.rewind()
+        (document.querySelector("button.rewind") as HTMLButtonElement).onclick = () => preview.transport.stop()
         return preview
     }
 
@@ -119,7 +132,7 @@ export class Audio {
         boot.addObserver(boot => loadingIndicator.onProgress(boot.normalizedPercentage()))
         const controller: AudioSceneController = await loadingIndicator.completeWith(
             this.scene.build(offlineAudioContext, offlineAudioContext.destination, this.model, boot))
-        controller.transport.set(true)
+        controller.transport.play()
         const exportIndicator = new ProgressIndicator("Exporting Audio...")
         const watch = () => {
             exportIndicator.onProgress(offlineAudioContext.currentTime / duration)

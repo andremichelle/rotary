@@ -40,6 +40,7 @@ export class RotaryApp {
         globalLayout.createNumericStepper("bpm", PrintMapping.integer(""), new NumericStepper(1)).with(model.bpm);
         globalLayout.createNumericStepper("stretch", PrintMapping.integer("x"), new NumericStepper(1)).with(model.stretch);
         globalLayout.createNumericStepper("motion blur", PrintMapping.integer(""), new NumericStepper(1)).with(model.motion);
+        globalLayout.createCheckbox("metronome").with(preview.metronome);
         const exportLayout = this.terminator.with(new UIControllerLayout(document.querySelector(".two-columns.export")));
         exportLayout.createNumericStepper("size", PrintMapping.integer("px"), new NumericStepper(1)).with(model.exportSettings.size);
         exportLayout.createNumericStepper("fps", PrintMapping.integer(""), new NumericStepper(1)).with(model.exportSettings.fps);
@@ -196,7 +197,7 @@ export class RotaryApp {
             }
             else if (event.code === "Space" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
                 event.preventDefault();
-                preview.transport.set(!preview.transport.get());
+                preview.transport.togglePlayback();
             }
         }));
         return this;
