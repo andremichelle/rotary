@@ -1,11 +1,12 @@
 import { RotaryModel } from "./model.js";
 import { NoUIMeterWorklet } from "../audio/meter/worklet.js";
-import { Boot, ObservableValue, Terminable } from "../lib/common.js";
+import { Boot, Terminable } from "../lib/common.js";
 import { Transport } from "../audio/sequencing.js";
+import { Metronome } from "../audio/metronome/worklet.js";
 export interface AudioSceneController extends Terminable {
     phase(): number;
     latency(): number;
-    metronome: ObservableValue<boolean>;
+    metronome: Metronome;
     transport: Transport;
     meter: NoUIMeterWorklet;
 }

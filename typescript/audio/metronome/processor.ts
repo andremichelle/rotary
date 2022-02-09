@@ -4,7 +4,7 @@ import {Message} from "./message.js"
 import {TransportMessage, TransportMessageType} from "../sequencing.js"
 
 registerProcessor("metronome", class extends AudioWorkletProcessor {
-    private readonly gain: number = dbToGain(-6.0)
+    private readonly gain: number = dbToGain(-3.0)
     private readonly scale: number = 1.0 / 4.0
     private readonly duration: number = 1.0 / (1.0 / 32.0)
 
@@ -49,7 +49,7 @@ registerProcessor("metronome", class extends AudioWorkletProcessor {
             while (position < b1) {
                 if (position >= b0) {
                     frame = this.advance(output, frame, barsToNumFrames(position - b0, this.bpm, sampleRate) | 0)
-                    this.frequency = index % 4 === 0 ? 880.0 : 440.0
+                    this.frequency = index % 4 === 0 ? 1760.0 : 880.0
                     this.phase = 0.0
                 }
                 position = ++index * this.scale

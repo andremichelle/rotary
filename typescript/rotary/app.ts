@@ -74,7 +74,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             new NumericStepper(1)).with(model.stretch)
         globalLayout.createNumericStepper("motion blur", PrintMapping.integer(""),
             new NumericStepper(1)).with(model.motion)
-        globalLayout.createCheckbox("metronome").with(preview.metronome)
+        globalLayout.createCheckbox("metronome").with(preview.metronome.enabled)
 
         const exportLayout = this.terminator.with(new UIControllerLayout(document.querySelector(".two-columns.export")))
         exportLayout.createNumericStepper("size", PrintMapping.integer("px"),

@@ -12,7 +12,6 @@ import { ProgressIndicator } from "../dom/common.js";
 import { Boot } from "../lib/common.js";
 import { encodeWavFloat } from "../audio/common.js";
 import { TransportMessageType } from "../audio/sequencing.js";
-import { Metronome } from "../audio/metronome/worklet.js";
 export class Audio {
     constructor(context, scene, model) {
         this.context = context;
@@ -30,11 +29,8 @@ export class Audio {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.scene.loadModules(this.context);
             yield this.context.audioWorklet.addModule("bin/audio/metronome/processor.js");
-            const metronome = new Metronome(this.context);
             const masterMeter = new StereoMeterWorklet(this.context);
             document.getElementById("meter").appendChild(masterMeter.domElement);
-            this.model.bpm.addObserver(value => metronome.setBpm(value), true);
-            metronome.connect(this.context.destination);
             masterMeter.connect(this.context.destination);
             const boot = new Boot();
             boot.addObserver(boot => {
@@ -44,9 +40,7 @@ export class Audio {
                 }
             });
             const preview = yield this.scene.build(this.context, masterMeter, this.model, boot);
-            preview.metronome = metronome.enabled;
             const playButton = document.querySelector("[data-parameter='transport']");
-            metronome.listenToTransport(preview.transport);
             preview.transport.addObserver((message) => __awaiter(this, void 0, void 0, function* () {
                 switch (message.type) {
                     case TransportMessageType.Play: {

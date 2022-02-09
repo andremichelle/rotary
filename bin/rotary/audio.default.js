@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ArrayUtils, CollectionEventType, ObservableValueVoid, readAudio, Terminator } from "../lib/common.js";
+import { ArrayUtils, CollectionEventType, readAudio, Terminator } from "../lib/common.js";
 import { RotaryModel } from "./model.js";
 import { LimiterWorklet } from "../audio/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
@@ -15,12 +15,14 @@ import { Convolver, ConvolverSettings, Flanger, FlangerSettings, Mixer, PulsarDe
 import { NoUIMeterWorklet } from "../audio/meter/worklet.js";
 import { Updater } from "../dom/common.js";
 import { Transport } from "../audio/sequencing.js";
+import { Metronome } from "../audio/metronome/worklet.js";
 export const initAudioScene = () => {
     return {
         loadModules(context) {
             return Promise.all([
                 context.audioWorklet.addModule("bin/audio/meter/processor.js"),
                 context.audioWorklet.addModule("bin/audio/limiter/processor.js"),
+                context.audioWorklet.addModule("bin/audio/metronome/processor.js"),
                 context.audioWorklet.addModule("bin/rotary/audio/processor.js"),
             ]);
         },
@@ -28,13 +30,14 @@ export const initAudioScene = () => {
             return __awaiter(this, void 0, void 0, function* () {
                 const terminator = new Terminator();
                 const transport = new Transport();
+                const metronome = new Metronome(context);
+                model.bpm.addObserver(value => metronome.setBpm(value), true);
+                metronome.listenToTransport(transport);
                 const rotaryNode = new RotaryWorkletNode(context, model);
                 terminator.with(rotaryNode.listenToTransport(transport));
-                const meterNode = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2);
+                const meter = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2);
                 const limiterWorklet = new LimiterWorklet(context);
-                const loadSample = (url) => {
-                    return boot.registerProcess(readAudio(context, url));
-                };
+                const loadSample = (url) => boot.registerProcess(readAudio(context, url));
                 let index = 0;
                 for (let i = 0; i <= 19; i++) {
                     rotaryNode.uploadSample(index++, loadSample(`samples/kicks/${i}.wav`));
@@ -55,7 +58,7 @@ export const initAudioScene = () => {
                     rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`));
                 }
                 for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
-                    rotaryNode.connect(meterNode, lineIndex, lineIndex);
+                    rotaryNode.connect(meter, lineIndex, lineIndex);
                 }
                 const mixer = new Mixer(context, RotaryModel.NUM_AUX);
                 const map = new Map();
@@ -118,13 +121,14 @@ export const initAudioScene = () => {
                     }, true));
                 });
                 mixer.masterOutput().connect(limiterWorklet);
+                metronome.connect(output);
                 limiterWorklet.connect(output);
                 yield boot.waitForCompletion();
                 return Promise.resolve({
                     phase: () => rotaryNode.phase(),
                     latency: () => limiterWorklet.lookahead,
-                    meter: meterNode,
-                    metronome: ObservableValueVoid.Instance,
+                    meter: meter,
+                    metronome: metronome,
                     transport: transport,
                     terminate: () => terminator.terminate()
                 });

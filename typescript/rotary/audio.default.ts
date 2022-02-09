@@ -4,7 +4,6 @@ import {
     CollectionEvent,
     CollectionEventType,
     ObservableValue,
-    ObservableValueVoid,
     readAudio,
     Terminable,
     Terminator
@@ -28,6 +27,7 @@ import {
 import {NoUIMeterWorklet} from "../audio/meter/worklet.js"
 import {Updater} from "../dom/common.js"
 import {Transport} from "../audio/sequencing.js"
+import {Metronome} from "../audio/metronome/worklet.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -35,20 +35,21 @@ export const initAudioScene = (): AudioScene => {
             return Promise.all([
                 context.audioWorklet.addModule("bin/audio/meter/processor.js"),
                 context.audioWorklet.addModule("bin/audio/limiter/processor.js"),
+                context.audioWorklet.addModule("bin/audio/metronome/processor.js"),
                 context.audioWorklet.addModule("bin/rotary/audio/processor.js"),
             ])
         },
         async build(context: BaseAudioContext, output: AudioNode, model: RotaryModel, boot: Boot): Promise<AudioSceneController> {
             const terminator = new Terminator()
             const transport: Transport = new Transport()
+            const metronome: Metronome = new Metronome(context)
+            model.bpm.addObserver(value => metronome.setBpm(value), true)
+            metronome.listenToTransport(transport)
             const rotaryNode = new RotaryWorkletNode(context, model)
             terminator.with(rotaryNode.listenToTransport(transport))
-            const meterNode = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2)
+            const meter = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2)
             const limiterWorklet = new LimiterWorklet(context)
-
-            const loadSample = (url: string): Promise<AudioBuffer> => {
-                return boot.registerProcess(readAudio(context, url))
-            }
+            const loadSample = (url: string): Promise<AudioBuffer> => boot.registerProcess(readAudio(context, url))
             let index = 0
             /*for (let i = 0; i <= 24; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/toypiano/${i}.wav`))
@@ -73,7 +74,7 @@ export const initAudioScene = (): AudioScene => {
             }
 
             for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
-                rotaryNode.connect(meterNode, lineIndex, lineIndex)
+                rotaryNode.connect(meter, lineIndex, lineIndex)
             }
 
             const mixer: Mixer = new Mixer(context, RotaryModel.NUM_AUX)
@@ -137,13 +138,14 @@ export const initAudioScene = (): AudioScene => {
             })
 
             mixer.masterOutput().connect(limiterWorklet)
+            metronome.connect(output)
             limiterWorklet.connect(output)
             await boot.waitForCompletion()
             return Promise.resolve({
                 phase: () => rotaryNode.phase(),
                 latency: () => limiterWorklet.lookahead,
-                meter: meterNode,
-                metronome: ObservableValueVoid.Instance,
+                meter: meter,
+                metronome: metronome,
                 transport: transport,
                 terminate: () => terminator.terminate()
             })
