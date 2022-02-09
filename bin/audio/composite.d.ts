@@ -1,5 +1,6 @@
-import { Observable, ObservableImpl, ObservableValue, Observer, Serializer, Terminable, Terminator } from "../lib/common.js";
+import { NoArgType, Observable, ObservableImpl, ObservableValue, Observer, Serializer, Terminable, Terminator } from "../lib/common.js";
 import { Linear } from "../lib/mapping.js";
+import { UIControllerLayout } from "../dom/controls.js";
 export declare const interpolateParameterValueIfRunning: (context: BaseAudioContext, audioParam: AudioParam, value: number) => void;
 export declare class Channelstrip implements Terminable {
     private readonly mixer;
@@ -183,4 +184,8 @@ export declare class Flanger extends DefaultComposite<FlangerSettings> {
     terminate(): void;
     private setParameterValue;
 }
+export declare const CompositeSettingsUIBuilder: {
+    availableTypes: Map<string, NoArgType<CompositeSettings<any>>>;
+    build(layout: UIControllerLayout, settings: CompositeSettings<any>): void;
+};
 export {};

@@ -17,7 +17,7 @@ import {ListItem, MenuBar} from "../dom/menu.js"
 import {open, renderGIF, renderVideo, renderWebM, save} from "./file.js"
 import {Audio, AudioSceneController} from "./audio.js"
 import {TypeControlEditor, UIControllerLayout} from "../dom/controls.js"
-import {SettingsControlBuilder} from "../audio/ui.js"
+import {CompositeSettingsUIBuilder} from "../audio/composite.js"
 
 const zoomLevel: Map<string, number> = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
@@ -84,10 +84,10 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         exportLayout.createNumericStepper("motion blur", PrintMapping.integer(""),
             new NumericStepper(1)).with(model.exportSettings.subFrames)
 
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-a"), SettingsControlBuilder, "Effect")).with(model.aux[0])
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-b"), SettingsControlBuilder, "Effect")).with(model.aux[1])
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-c"), SettingsControlBuilder, "Effect")).with(model.aux[2])
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-d"), SettingsControlBuilder, "Effect")).with(model.aux[3])
+        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-a"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[0])
+        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-b"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[1])
+        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-c"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[2])
+        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-d"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[3])
 
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
             switch (event.type) {

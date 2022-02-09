@@ -3,6 +3,8 @@
 import {
     ArrayUtils,
     BoundNumericValue,
+    NoArgType,
+    NumericStepper,
     Observable,
     ObservableImpl,
     ObservableValue,
@@ -10,6 +12,7 @@ import {
     Observer,
     Option,
     Options,
+    PrintMapping,
     readAudio,
     Serializer,
     Terminable,
@@ -17,6 +20,7 @@ import {
 } from "../lib/common.js"
 import {Exp, Linear, Volume} from "../lib/mapping.js"
 import {dbToGain, gainToDb, VALUE_INTERPOLATION_TIME} from "./common.js"
+import {ControlBuilder, UIControllerLayout} from "../dom/controls.js"
 
 export const interpolateParameterValueIfRunning = (context: BaseAudioContext, audioParam: AudioParam, value: number): void => {
     if (context.state === "running") {
@@ -688,5 +692,41 @@ export class Flanger extends DefaultComposite<FlangerSettings> {
 
     private setParameterValue(audioParam: AudioParam, value: number) {
         interpolateParameterValueIfRunning(this.context, audioParam, value)
+    }
+}
+
+export const CompositeSettingsUIBuilder = new class implements ControlBuilder<CompositeSettings<any>> {
+    availableTypes = new Map<string, NoArgType<CompositeSettings<any>>>([
+        ["PulsarDelay", PulsarDelaySettings],
+        ["Convolver", ConvolverSettings],
+        ["Flanger", FlangerSettings]
+    ])
+
+    build(layout: UIControllerLayout, settings: CompositeSettings<any>): void {
+        if (settings instanceof PulsarDelaySettings) {
+            layout.createNumericStepper("Pre-Delay L", PrintMapping.float(3, "", "s"),
+                new NumericStepper(0.001)).with(settings.preDelayTimeL)
+            layout.createNumericStepper("Pre-Delay R", PrintMapping.float(3, "", "s"),
+                new NumericStepper(0.001)).with(settings.preDelayTimeR)
+            layout.createNumericStepper("Delay ⟳", PrintMapping.float(3, "", "s"),
+                new NumericStepper(0.001)).with(settings.feedbackDelayTime)
+            layout.createNumericStepper("Feedback ⟳", PrintMapping.UnipolarPercent,
+                new NumericStepper(0.001)).with(settings.feedbackGain)
+            layout.createNumericStepper("Lowpass ⟳", PrintMapping.integer("Hz"),
+                new NumericStepper(1)).with(settings.feedbackLowpass)
+            layout.createNumericStepper("Highpass ⟳", PrintMapping.integer("Hz"),
+                new NumericStepper(1)).with(settings.feedbackHighpass)
+        } else if (settings instanceof ConvolverSettings) {
+            layout.createSelect("Impulse", ConvolverFiles).with(settings.url)
+        } else if (settings instanceof FlangerSettings) {
+            layout.createNumericStepper("delay", PrintMapping.float(3, "", "s"),
+                new NumericStepper(0.001)).with(settings.delayTime)
+            layout.createNumericStepper("feedback", PrintMapping.UnipolarPercent,
+                new NumericStepper(0.01)).with(settings.feedback)
+            layout.createNumericStepper("rate", PrintMapping.float(2, "", "Hz"),
+                new NumericStepper(0.01)).with(settings.rate)
+            layout.createNumericStepper("depth", PrintMapping.UnipolarPercent,
+                new NumericStepper(0.01)).with(settings.depth)
+        }
     }
 }
