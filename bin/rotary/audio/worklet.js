@@ -1,7 +1,7 @@
 import { RotaryModel } from "../model.js";
 import { UpdateFormatMessage, UploadSampleMessage } from "./messages-to-processor.js";
 import { ObservableValueImpl, Terminator } from "../../lib/common.js";
-import { RewindMessage, TransportMessage } from "../../dsp/messages.js";
+import { RewindMessage, TransportMessage } from "../../audio/messages.js";
 export class RotaryWorkletNode extends AudioWorkletNode {
     constructor(context, model) {
         super(context, "rotary", {

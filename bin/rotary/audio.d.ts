@@ -1,5 +1,5 @@
 import { RotaryModel } from "./model.js";
-import { NoUIMeterWorklet } from "../dsp/meter/worklet.js";
+import { NoUIMeterWorklet } from "../audio/meter/worklet.js";
 import { Boot, ObservableValue, Terminable } from "../lib/common.js";
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>;

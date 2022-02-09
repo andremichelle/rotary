@@ -1,7 +1,7 @@
 import {Edge, QueryResult, RotaryModel} from "../model.js"
 import {MessageToProcessor} from "./messages-to-processor.js"
 import {FormatUpdatedMessage, TransportMessage, UpdateCursorMessage} from "./messages-to-worklet.js"
-import {barsToNumFrames, numFramesToBars, RENDER_QUANTUM} from "../../dsp/common.js"
+import {barsToNumFrames, numFramesToBars, RENDER_QUANTUM} from "../../audio/common.js"
 import {ObservableValueImpl} from "../../lib/common.js"
 
 class Voice {

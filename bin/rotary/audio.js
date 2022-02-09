@@ -7,10 +7,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { StereoMeterWorklet } from "../dsp/meter/worklet.js";
+import { StereoMeterWorklet } from "../audio/meter/worklet.js";
 import { ProgressIndicator } from "../dom/common.js";
 import { Boot } from "../lib/common.js";
-import { encodeWavFloat } from "../dsp/common.js";
+import { encodeWavFloat } from "../audio/common.js";
 export class Audio {
     constructor(context, scene, model) {
         this.context = context;
@@ -27,7 +27,7 @@ export class Audio {
     initPreview() {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.scene.loadModules(this.context);
-            yield this.context.audioWorklet.addModule("bin/dsp/metronome/processor.js");
+            yield this.context.audioWorklet.addModule("bin/audio/metronome/processor.js");
             const masterMeter = new StereoMeterWorklet(this.context);
             document.getElementById("meter").appendChild(masterMeter.domElement);
             masterMeter.connect(this.context.destination);

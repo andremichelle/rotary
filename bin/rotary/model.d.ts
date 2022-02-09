@@ -1,7 +1,7 @@
 import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableCollection, ObservableValue, ObservableValueImpl, Observer, Serializer, Terminable } from "../lib/common.js";
 import { Random } from "../lib/math.js";
 import { RenderConfiguration } from "./render.js";
-import { CompositeSettings, CompositeSettingsFormat } from "../dsp/composite.js";
+import { CompositeSettings, CompositeSettingsFormat } from "../audio/composite.js";
 import { Injective, InjectiveFormat } from "../lib/injective.js";
 export declare interface RotaryExportFormat {
     fps: number;

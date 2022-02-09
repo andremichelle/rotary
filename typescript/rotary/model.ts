@@ -27,9 +27,9 @@ import {
     ConvolverSettings,
     FlangerSettings,
     PulsarDelaySettings
-} from "../dsp/composite.js"
+} from "../audio/composite.js"
 import {IdentityInjective, Injective, InjectiveFormat, MonoNoiseInjective, TShapeInjective} from "../lib/injective.js"
-import {barsToSeconds} from "../dsp/common.js"
+import {barsToSeconds} from "../audio/common.js"
 
 export declare interface RotaryExportFormat {
     fps: number

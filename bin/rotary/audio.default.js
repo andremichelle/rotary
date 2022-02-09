@@ -9,17 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { ArrayUtils, CollectionEventType, readAudio, Terminator } from "../lib/common.js";
 import { RotaryModel } from "./model.js";
-import { LimiterWorklet } from "../dsp/limiter/worklet.js";
+import { LimiterWorklet } from "../audio/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
-import { Convolver, ConvolverSettings, Flanger, FlangerSettings, Mixer, PulsarDelay, PulsarDelaySettings } from "../dsp/composite.js";
-import { NoUIMeterWorklet } from "../dsp/meter/worklet.js";
+import { Convolver, ConvolverSettings, Flanger, FlangerSettings, Mixer, PulsarDelay, PulsarDelaySettings } from "../audio/composite.js";
+import { NoUIMeterWorklet } from "../audio/meter/worklet.js";
 import { Updater } from "../dom/common.js";
 export const initAudioScene = () => {
     return {
         loadModules(context) {
             return Promise.all([
-                context.audioWorklet.addModule("bin/dsp/meter/processor.js"),
-                context.audioWorklet.addModule("bin/dsp/limiter/processor.js"),
+                context.audioWorklet.addModule("bin/audio/meter/processor.js"),
+                context.audioWorklet.addModule("bin/audio/limiter/processor.js"),
                 context.audioWorklet.addModule("bin/rotary/audio/processor.js"),
             ]);
         },

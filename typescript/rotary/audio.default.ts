@@ -10,7 +10,7 @@ import {
 } from "../lib/common.js"
 import {AudioScene, AudioSceneController} from "./audio.js"
 import {RotaryModel, RotaryTrackModel} from "./model.js"
-import {LimiterWorklet} from "../dsp/limiter/worklet.js"
+import {LimiterWorklet} from "../audio/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
 import {
     Channelstrip,
@@ -23,16 +23,16 @@ import {
     Mixer,
     PulsarDelay,
     PulsarDelaySettings
-} from "../dsp/composite.js"
-import {NoUIMeterWorklet} from "../dsp/meter/worklet.js"
+} from "../audio/composite.js"
+import {NoUIMeterWorklet} from "../audio/meter/worklet.js"
 import {Updater} from "../dom/common.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
         loadModules(context: BaseAudioContext): Promise<any> {
             return Promise.all([
-                context.audioWorklet.addModule("bin/dsp/meter/processor.js"),
-                context.audioWorklet.addModule("bin/dsp/limiter/processor.js"),
+                context.audioWorklet.addModule("bin/audio/meter/processor.js"),
+                context.audioWorklet.addModule("bin/audio/limiter/processor.js"),
                 context.audioWorklet.addModule("bin/rotary/audio/processor.js"),
             ])
         },

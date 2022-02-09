@@ -1,10 +1,10 @@
 // noinspection JSUnusedGlobalSymbols
 
 import {RotaryModel} from "./model.js"
-import {NoUIMeterWorklet, StereoMeterWorklet} from "../dsp/meter/worklet.js"
+import {NoUIMeterWorklet, StereoMeterWorklet} from "../audio/meter/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, ObservableValue, Terminable} from "../lib/common.js"
-import {encodeWavFloat} from "../dsp/common.js"
+import {encodeWavFloat} from "../audio/common.js"
 
 export interface AudioSceneController extends Terminable {
     transport: ObservableValue<boolean>
@@ -43,7 +43,7 @@ export class Audio {
 
     async initPreview(): Promise<AudioSceneController> {
         await this.scene.loadModules(this.context)
-        await this.context.audioWorklet.addModule("bin/dsp/metronome/processor.js")
+        await this.context.audioWorklet.addModule("bin/audio/metronome/processor.js")
 
         // const metronome: Metronome = new Metronome(this.context)
         const masterMeter = new StereoMeterWorklet(this.context)

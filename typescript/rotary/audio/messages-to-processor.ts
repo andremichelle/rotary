@@ -1,5 +1,5 @@
 import {RotaryFormat} from "../model.js"
-import {RewindMessage, TransportMessage} from "../../dsp/messages.js"
+import {RewindMessage, TransportMessage} from "../../audio/messages.js"
 
 export type MessageToProcessor = TransportMessage | RewindMessage | UpdateFormatMessage | UploadSampleMessage
 
