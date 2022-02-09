@@ -5,7 +5,7 @@ import {NoUIMeterWorklet, StereoMeterWorklet} from "../audio/meter/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, Terminable} from "../lib/common.js"
 import {encodeWavFloat} from "../audio/common.js"
-import {Transport, TransportMessageType} from "../audio/sequencing.js"
+import {Transport} from "../audio/sequencing.js"
 import {Metronome} from "../audio/metronome/worklet.js"
 
 export interface AudioSceneController extends Terminable {
@@ -61,14 +61,14 @@ export class Audio {
         const playButton = document.querySelector("[data-parameter='transport']") as HTMLInputElement
         preview.transport.addObserver(async message => {
             switch (message.type) {
-                case TransportMessageType.Play: {
+                case "transport-play": {
                     if (this.context.state !== "running") {
                         await this.context.resume()
                     }
                     playButton.checked = true
                     break
                 }
-                case TransportMessageType.Pause: {
+                case "transport-pause": {
                     playButton.checked = false
                     break
                 }

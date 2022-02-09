@@ -1,4 +1,3 @@
-import { CreatedMessage } from "./data.js";
 import { Mulberry32, TAU } from "../../lib/math.js";
 import { FFT } from "../common.js";
 export class WavetableCreator {
@@ -101,7 +100,7 @@ onmessage = event => {
         }
         case "create": {
             console.assert(null !== creator);
-            me.postMessage(new CreatedMessage(creator.update(msg.harmonics)));
+            me.postMessage({ type: "created", wavetable: creator.update(msg.harmonics) });
             break;
         }
     }

@@ -17,9 +17,9 @@ registerProcessor("limiter", class extends AudioWorkletProcessor {
 
         this.port.onmessage = event => {
             const data = event.data as Message
-            if (data.type === "lookahead") {
+            if (data.type === "set-lookahead") {
                 this.lookAhead = data.seconds
-            } else if (data.type === "threshold") {
+            } else if (data.type === "set-threshold") {
                 this.threshold = data.db
             }
         }

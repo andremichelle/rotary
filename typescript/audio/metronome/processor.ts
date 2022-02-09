@@ -1,7 +1,7 @@
 import {barsToNumFrames, dbToGain, numFramesToBars, RENDER_QUANTUM} from "../common.js"
 import {TAU} from "../../lib/math.js"
 import {Message} from "./message.js"
-import {TransportMessage, TransportMessageType} from "../sequencing.js"
+import {TransportMessage} from "../sequencing.js"
 
 registerProcessor("metronome", class extends AudioWorkletProcessor {
     private readonly gain: number = dbToGain(-3.0)
@@ -20,15 +20,15 @@ registerProcessor("metronome", class extends AudioWorkletProcessor {
 
         this.port.onmessage = event => {
             const msg = event.data as Message | TransportMessage
-            if (msg.type === "bpm") {
+            if (msg.type === "set-bpm") {
                 this.bpm = msg.value
-            } else if (msg.type === "enabled") {
+            } else if (msg.type === "set-enabled") {
                 this.enabled = msg.value
-            } else if (msg.type === TransportMessageType.Play) {
+            } else if (msg.type === "transport-play") {
                 this.moving = true
-            } else if (msg.type === TransportMessageType.Pause) {
+            } else if (msg.type === "transport-pause") {
                 this.moving = false
-            } else if (msg.type === TransportMessageType.Move) {
+            } else if (msg.type === "transport-move") {
                 this.barPosition = msg.position
             }
         }

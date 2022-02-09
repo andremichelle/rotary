@@ -1,4 +1,3 @@
-import { SetLookahead, SetThreshold } from "./message.js";
 export class LimiterWorklet extends AudioWorkletNode {
     constructor(context) {
         super(context, "limiter", {
@@ -18,7 +17,7 @@ export class LimiterWorklet extends AudioWorkletNode {
         if (this.$lookahead === seconds) {
             return;
         }
-        this.port.postMessage(new SetLookahead(seconds));
+        this.port.postMessage({ type: "set-lookahead", seconds: seconds });
         this.$lookahead = seconds;
     }
     get lookahead() {
@@ -28,7 +27,7 @@ export class LimiterWorklet extends AudioWorkletNode {
         if (this.$threshold === db) {
             return;
         }
-        this.port.postMessage(new SetThreshold(db));
+        this.port.postMessage({ type: "set-threshold", db: db });
         this.$threshold = db;
     }
     get threshold() {

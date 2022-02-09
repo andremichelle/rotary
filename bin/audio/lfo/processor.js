@@ -10,10 +10,10 @@ registerProcessor("lfo", class extends AudioWorkletProcessor {
         this.increment = 1.0 / sampleRate;
         this.port.onmessage = (event) => {
             const msg = event.data;
-            if (msg.type === "shape") {
+            if (msg.type === "set-shape") {
                 this.shape = msg.shape;
             }
-            else if (msg.type === "frequency") {
+            else if (msg.type === "set-frequency") {
                 this.increment = msg.hz / sampleRate;
             }
         };

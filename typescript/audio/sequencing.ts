@@ -1,13 +1,11 @@
 import {Observable, ObservableImpl, Observer, Terminable} from "../lib/common.js"
 
-export enum TransportMessageType {
-    Play, Pause, Move
-}
+export type TransportMessageType = "transport-play" | "transport-pause" | "transport-move"
 
 export type TransportMessage =
-    | { type: TransportMessageType.Play }
-    | { type: TransportMessageType.Pause }
-    | { type: TransportMessageType.Move, position: number };
+    | { type: "transport-play" }
+    | { type: "transport-pause" }
+    | { type: "transport-move", position: number }
 
 export interface TransportListener {
     listenToTransport(transport: Transport): Terminable
@@ -32,13 +30,13 @@ export class Transport implements Observable<TransportMessage> {
     play(): void {
         if (this.moving) return
         this.moving = true
-        this.observable.notify({type: TransportMessageType.Play})
+        this.observable.notify({type: "transport-play"})
     }
 
     pause(): void {
         if (!this.moving) return
         this.moving = false
-        this.observable.notify({type: TransportMessageType.Pause})
+        this.observable.notify({type: "transport-pause"})
     }
 
     togglePlayback(): void {
@@ -55,7 +53,7 @@ export class Transport implements Observable<TransportMessage> {
     }
 
     move(position: number): void {
-        this.observable.notify({type: TransportMessageType.Move, position: position})
+        this.observable.notify({type: "transport-move", position: position})
     }
 
     terminate(): void {

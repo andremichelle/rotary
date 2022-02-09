@@ -15,23 +15,4 @@ export class Harmonic {
         return result;
     }
 }
-export class InitMessage {
-    constructor(fftSize, sampleRate) {
-        this.fftSize = fftSize;
-        this.sampleRate = sampleRate;
-        this.type = 'init';
-    }
-}
-export class CreateMessage {
-    constructor(harmonics) {
-        this.harmonics = harmonics;
-        this.type = 'create';
-    }
-}
-export class CreatedMessage {
-    constructor(wavetable) {
-        this.wavetable = wavetable;
-        this.type = 'created';
-    }
-}
 //# sourceMappingURL=data.js.map

@@ -1,15 +1,11 @@
 import { Observable, Observer, Terminable } from "../lib/common.js";
-export declare enum TransportMessageType {
-    Play = 0,
-    Pause = 1,
-    Move = 2
-}
+export declare type TransportMessageType = "transport-play" | "transport-pause" | "transport-move";
 export declare type TransportMessage = {
-    type: TransportMessageType.Play;
+    type: "transport-play";
 } | {
-    type: TransportMessageType.Pause;
+    type: "transport-pause";
 } | {
-    type: TransportMessageType.Move;
+    type: "transport-move";
     position: number;
 };
 export interface TransportListener {

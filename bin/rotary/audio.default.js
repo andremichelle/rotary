@@ -125,7 +125,7 @@ export const initAudioScene = () => {
                 limiterWorklet.connect(output);
                 yield boot.waitForCompletion();
                 return Promise.resolve({
-                    phase: () => rotaryNode.phase(),
+                    phase: () => rotaryNode.position(),
                     latency: () => limiterWorklet.lookahead,
                     meter: meter,
                     metronome: metronome,

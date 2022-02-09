@@ -1,15 +1,3 @@
 export type Message = SetBpm | SetEnabled
-
-export class SetBpm {
-    readonly type = 'bpm'
-
-    constructor(readonly value: number) {
-    }
-}
-
-export class SetEnabled {
-    readonly type = 'enabled'
-
-    constructor(readonly value: boolean) {
-    }
-}
+export type SetBpm = { type: "set-bpm", value: number }
+export type SetEnabled = { type: "set-enabled", value: boolean }

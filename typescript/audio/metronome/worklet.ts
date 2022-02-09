@@ -1,4 +1,3 @@
-import {SetBpm, SetEnabled} from "./message.js"
 import {Transport, TransportListener} from "../sequencing.js"
 import {ObservableValueImpl, Terminable} from "../../lib/common.js"
 
@@ -14,12 +13,11 @@ export class Metronome extends AudioWorkletNode implements TransportListener {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         })
-
-        this.enabled.addObserver(value => this.port.postMessage(new SetEnabled(value)))
+        this.enabled.addObserver(value => this.port.postMessage({type: "set-enabled", value: value}))
     }
 
     setBpm(value: number): void {
-        this.port.postMessage(new SetBpm(value))
+        this.port.postMessage({type: "set-bpm", value: value})
     }
 
     listenToTransport(transport: Transport): Terminable {

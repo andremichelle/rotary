@@ -1,4 +1,4 @@
-import {SetFrequency, SetShape, Shape} from "./messages.js"
+import {Shape} from "./messages.js"
 
 export class LfoWorklet extends AudioWorkletNode {
     private $shape: Shape = null
@@ -20,7 +20,7 @@ export class LfoWorklet extends AudioWorkletNode {
             return
         }
         this.$shape = value
-        this.port.postMessage(new SetShape(value))
+        this.port.postMessage({type: "set-shape", shape: value})
     }
 
     get shape(): Shape {
@@ -32,7 +32,7 @@ export class LfoWorklet extends AudioWorkletNode {
             return
         }
         this.$frequency = value
-        this.port.postMessage(new SetFrequency(value))
+        this.port.postMessage({type: "set-frequency", hz: value})
     }
 
     get frequency(): number {

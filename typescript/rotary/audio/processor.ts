@@ -1,35 +1,59 @@
 import {Edge, QueryResult, RotaryModel} from "../model.js"
 import {MessageToProcessor} from "./messages-to-processor.js"
-import {FormatUpdatedMessage, UpdateCursorMessage} from "./messages-to-worklet.js"
 import {barsToNumFrames, numFramesToBars, RENDER_QUANTUM} from "../../audio/common.js"
 import {ObservableValueImpl} from "../../lib/common.js"
-import {TransportMessage, TransportMessageType} from "../../audio/sequencing.js"
+import {TransportMessage} from "../../audio/sequencing.js"
 
-class Voice {
+class Sample {
+    constructor(readonly frames: Float32Array[], readonly numFrames: number, readonly loop: boolean) {
+    }
+}
+
+class SampleVoice {
     static ATTACK = (0.010 * sampleRate) | 0
     static RELEASE = (0.050 * sampleRate) | 0
 
     duration: number = Number.MAX_SAFE_INTEGER
 
-    constructor(public delayFrames: number, readonly output: number, readonly sampleKey: number, public position: number = 0 | 0) {
+    constructor(public startIndex: number, readonly output: number, readonly sample: Sample, public position: number = 0 | 0) {
+    }
+
+    process(outL: Float32Array, outR: Float32Array): boolean {
+        const sample: Sample = this.sample
+        const ch0 = sample.frames[0]
+        const ch1 = sample.frames[1]
+        for (let frameIndex = this.startIndex; frameIndex < RENDER_QUANTUM; frameIndex++) {
+            const position = this.position++
+            const duration = this.duration--
+            const numFrames = sample.numFrames
+            if (0 === duration || (!sample.loop && position >= numFrames)) {
+                return true
+            } else {
+                const envelope = Math.min(1.0, duration / SampleVoice.RELEASE) * Math.min(1.0, position / SampleVoice.ATTACK)
+                if (sample.loop) {
+                    outL[frameIndex] += ch0[position % numFrames] * envelope
+                    outR[frameIndex] += ch1[position % numFrames] * envelope
+                } else {
+                    outL[frameIndex] += ch0[position] * envelope
+                    outR[frameIndex] += ch1[position] * envelope
+                }
+            }
+        }
+        this.startIndex = 0
+        return false
     }
 
     stop() {
-        if (this.duration > Voice.RELEASE) {
-            this.duration = Voice.RELEASE
+        if (this.duration > SampleVoice.RELEASE) {
+            this.duration = SampleVoice.RELEASE
         }
-    }
-}
-
-class Sample {
-    constructor(readonly frames: Float32Array[], readonly loop: boolean) {
     }
 }
 
 registerProcessor("rotary", class extends AudioWorkletProcessor {
         private readonly model: RotaryModel = new RotaryModel()
         private readonly samples: Map<number, Sample> = new Map()
-        private readonly activeVoices: Map<number, Voice[]> = new Map()
+        private readonly activeVoices: Map<number, SampleVoice[]> = new Map()
         private readonly transport: ObservableValueImpl<boolean> = new ObservableValueImpl<boolean>(false)
 
         private readonly updateRate: number
@@ -44,18 +68,18 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
             this.updateRate = (sampleRate / fps) | 0
             this.port.onmessage = (event: MessageEvent) => {
                 const msg = event.data as MessageToProcessor | TransportMessage
-                if (msg.type === "format") {
+                if (msg.type === "update-format") {
                     this.model.deserialize(msg.format)
-                    this.port.postMessage(new FormatUpdatedMessage(msg.version))
-                } else if (msg.type === "sample") {
-                    this.samples.set(msg.key, new Sample(msg.sample, msg.loop))
+                    this.port.postMessage({type: "format-updated", version: msg.version})
+                } else if (msg.type === "upload-sample") {
+                    this.samples.set(msg.key, new Sample(msg.frames, msg.numFrames, msg.loop))
                     this.maxKey = Math.max(msg.key, this.maxKey)
-                } else if (msg.type === TransportMessageType.Play) {
+                } else if (msg.type === "transport-play") {
                     this.transport.set(true)
-                } else if (msg.type === TransportMessageType.Pause) {
+                } else if (msg.type === "transport-pause") {
                     this.transport.set(false)
                     this.activeVoices.forEach(voices => voices.forEach(voice => voice.stop()))
-                } else if (msg.type === TransportMessageType.Move) {
+                } else if (msg.type === "transport-move") {
                     this.barPosition = msg.position
                     this.transport.set(false)
                 }
@@ -73,42 +97,18 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
             for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
                 const voices = this.activeVoices.get(index)
                 for (let voiceIndex = voices.length - 1; 0 <= voiceIndex; voiceIndex--) {
-                    const voice: Voice = voices[voiceIndex]
-                    const sample: Sample = this.samples.get(voice.sampleKey)
-                    if (sample === undefined) continue
-                    const frames: Float32Array[] = sample.frames
+                    const voice: SampleVoice = voices[voiceIndex]
                     const output = outputs[voice.output]
-                    const outL = output[0]
-                    const outR = output[1]
-                    for (let frameIndex = 0; frameIndex < RENDER_QUANTUM; frameIndex++) {
-                        if (0 <= voice.delayFrames) {
-                            const position = voice.position++
-                            const duration = voice.duration--
-                            const numFrames = frames[0].length
-                            const complete = 0 === duration || (!sample.loop && position >= numFrames)
-                            if (complete) {
-                                voices.splice(voiceIndex, 1)
-                                break
-                            } else {
-                                const envelope = Math.min(1.0, duration / Voice.RELEASE) * Math.min(1.0, position / Voice.ATTACK)
-                                if (sample.loop) {
-                                    outL[frameIndex] += frames[0][position % numFrames] * envelope
-                                    outR[frameIndex] += frames[1][position % numFrames] * envelope
-                                } else {
-                                    outL[frameIndex] += frames[0][position] * envelope
-                                    outR[frameIndex] += frames[1][position] * envelope
-                                }
-                            }
-                        } else {
-                            voice.delayFrames++
-                        }
+                    const complete = voice.process(output[0], output[1])
+                    if (complete) {
+                        voices.splice(voiceIndex, 1)
                     }
                 }
             }
             this.updateCount += RENDER_QUANTUM
             if (this.updateCount >= this.updateRate) {
                 this.updateCount -= this.updateRate
-                this.port.postMessage(new UpdateCursorMessage(this.barPosition))
+                this.port.postMessage({type: "update-cursor", position: this.barPosition})
             }
             return true
         }
@@ -141,7 +141,8 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                             }
                         }
                         const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1)
-                        const voice = new Voice(-frameIndex, trackIndex, sampleKey, 0)
+                        const sample = this.samples.get(sampleKey)
+                        const voice = new SampleVoice(frameIndex, trackIndex, sample, 0)
                         this.activeVoices.get(trackIndex).push(voice)
                     }
                 }

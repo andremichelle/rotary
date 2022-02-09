@@ -1,4 +1,4 @@
-import {CreatedMessage, Harmonic, Message} from "./data.js"
+import {Harmonic, Message} from "./data.js"
 import {Mulberry32, TAU} from "../../lib/math.js"
 import {FFT} from "../common.js"
 
@@ -117,7 +117,7 @@ onmessage = event => {
         }
         case "create": {
             console.assert(null !== creator)
-            me.postMessage(new CreatedMessage(creator.update(msg.harmonics)))
+            me.postMessage({type: "created", wavetable: creator.update(msg.harmonics)})
             break
         }
     }

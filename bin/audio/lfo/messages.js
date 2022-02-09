@@ -6,16 +6,4 @@ export var Shape;
     Shape[Shape["SawtoothDown"] = 3] = "SawtoothDown";
     Shape[Shape["Random"] = 4] = "Random";
 })(Shape || (Shape = {}));
-export class SetShape {
-    constructor(shape) {
-        this.shape = shape;
-        this.type = 'shape';
-    }
-}
-export class SetFrequency {
-    constructor(hz) {
-        this.hz = hz;
-        this.type = 'frequency';
-    }
-}
 //# sourceMappingURL=messages.js.map

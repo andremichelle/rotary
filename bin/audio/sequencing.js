@@ -1,10 +1,4 @@
 import { ObservableImpl } from "../lib/common.js";
-export var TransportMessageType;
-(function (TransportMessageType) {
-    TransportMessageType[TransportMessageType["Play"] = 0] = "Play";
-    TransportMessageType[TransportMessageType["Pause"] = 1] = "Pause";
-    TransportMessageType[TransportMessageType["Move"] = 2] = "Move";
-})(TransportMessageType || (TransportMessageType = {}));
 export class Transport {
     constructor() {
         this.observable = new ObservableImpl();
@@ -20,13 +14,13 @@ export class Transport {
         if (this.moving)
             return;
         this.moving = true;
-        this.observable.notify({ type: TransportMessageType.Play });
+        this.observable.notify({ type: "transport-play" });
     }
     pause() {
         if (!this.moving)
             return;
         this.moving = false;
-        this.observable.notify({ type: TransportMessageType.Pause });
+        this.observable.notify({ type: "transport-pause" });
     }
     togglePlayback() {
         if (this.moving) {
@@ -41,7 +35,7 @@ export class Transport {
         this.move(0.0);
     }
     move(position) {
-        this.observable.notify({ type: TransportMessageType.Move, position: position });
+        this.observable.notify({ type: "transport-move", position: position });
     }
     terminate() {
         this.observable.terminate();

@@ -27,25 +27,7 @@ export class Harmonic {
     }
 }
 
-export type Message = InitMessage | CreateMessage | CreatedMessage
-
-export class InitMessage {
-    readonly type = 'init'
-
-    constructor(readonly fftSize: number, readonly sampleRate: number) {
-    }
-}
-
-export class CreateMessage {
-    readonly type = 'create'
-
-    constructor(readonly harmonics: Harmonic[]) {
-    }
-}
-
-export class CreatedMessage {
-    readonly type = 'created'
-
-    constructor(readonly wavetable: Float32Array) {
-    }
-}
+export type Message =
+    | { type: "init", fftSize: number, sampleRate: number }
+    | { type: "create", harmonics: Harmonic[] }
+    | { type: "created", wavetable: Float32Array }

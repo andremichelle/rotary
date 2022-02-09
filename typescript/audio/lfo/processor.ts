@@ -14,9 +14,9 @@ registerProcessor("lfo", class extends AudioWorkletProcessor {
 
         this.port.onmessage = (event: MessageEvent) => {
             const msg = event.data as Message
-            if (msg.type === "shape") {
+            if (msg.type === "set-shape") {
                 this.shape = msg.shape
-            } else if (msg.type === "frequency") {
+            } else if (msg.type === "set-frequency") {
                 this.increment = msg.hz / sampleRate
             }
         }

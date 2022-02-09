@@ -1,5 +1,4 @@
 import { RotaryModel } from "../model.js";
-import { UpdateFormatMessage, UploadSampleMessage } from "./messages-to-processor.js";
 import { Terminator } from "../../lib/common.js";
 export class RotaryWorkletNode extends AudioWorkletNode {
     constructor(context, model) {
@@ -11,15 +10,16 @@ export class RotaryWorkletNode extends AudioWorkletNode {
             channelCountMode: "explicit",
             channelInterpretation: "speakers"
         });
+        this.model = model;
         this.terminator = new Terminator();
         this.version = 0;
         this.updatingFormat = false;
-        this.$phase = 0.0;
-        const sendFormat = () => this.port.postMessage(new UpdateFormatMessage(model.serialize(), this.version));
+        this.$position = 0.0;
+        const sendFormat = () => this.port.postMessage(this.createUpdateFormatMessage());
         this.port.onmessage = event => {
             const msg = event.data;
-            if (msg.type === "phase") {
-                this.$phase = msg.phase;
+            if (msg.type === "update-cursor") {
+                this.$position = msg.position;
             }
             else if (msg.type === "format-updated") {
                 if (this.version === msg.version) {
@@ -42,25 +42,40 @@ export class RotaryWorkletNode extends AudioWorkletNode {
             }
         }, true));
     }
-    phase() {
-        return this.$phase;
+    position() {
+        return this.$position;
     }
     uploadSample(key, sample, loop = false) {
         if (sample instanceof AudioBuffer) {
-            this.port.postMessage(UploadSampleMessage.from(key, sample, loop));
+            const frames = [];
+            for (let channelIndex = 0; channelIndex < 2; channelIndex++) {
+                sample.copyFromChannel(frames[channelIndex] =
+                    new Float32Array(sample.length), Math.min(channelIndex, sample.numberOfChannels - 1));
+            }
+            this.port.postMessage(RotaryWorkletNode.createUploadSampleMessage(key, frames, sample.length, loop));
         }
         else if (sample instanceof Promise) {
-            sample.then(buffer => this.port.postMessage(UploadSampleMessage.from(key, buffer, loop)));
+            sample.then(buffer => this.uploadSample(key, buffer, loop));
         }
         else if (sample instanceof Float32Array) {
-            this.port.postMessage(new UploadSampleMessage(key, [sample, sample], loop));
+            this.port.postMessage(RotaryWorkletNode.createUploadSampleMessage(key, [sample, sample], sample.length, loop));
         }
         else if (Array.isArray(sample) && sample[0] instanceof Float32Array) {
-            this.port.postMessage(new UploadSampleMessage(key, sample, loop));
+            this.port.postMessage(RotaryWorkletNode.createUploadSampleMessage(key, sample, sample[0].length, loop));
         }
     }
     listenToTransport(transport) {
         return transport.addObserver(message => this.port.postMessage(message), false);
+    }
+    createUpdateFormatMessage() {
+        return {
+            type: "update-format",
+            format: this.model.serialize(),
+            version: this.version
+        };
+    }
+    static createUploadSampleMessage(key, frames, numFrames, loop) {
+        return { type: "upload-sample", key: key, frames: frames, numFrames: numFrames, loop: loop };
     }
 }
 //# sourceMappingURL=worklet.js.map

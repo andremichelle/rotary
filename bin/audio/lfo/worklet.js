@@ -1,4 +1,3 @@
-import { SetFrequency, SetShape } from "./messages.js";
 export class LfoWorklet extends AudioWorkletNode {
     constructor(context) {
         super(context, "lfo", {
@@ -17,7 +16,7 @@ export class LfoWorklet extends AudioWorkletNode {
             return;
         }
         this.$shape = value;
-        this.port.postMessage(new SetShape(value));
+        this.port.postMessage({ type: "set-shape", shape: value });
     }
     get shape() {
         return this.$shape;
@@ -27,7 +26,7 @@ export class LfoWorklet extends AudioWorkletNode {
             return;
         }
         this.$frequency = value;
-        this.port.postMessage(new SetFrequency(value));
+        this.port.postMessage({ type: "set-frequency", hz: value });
     }
     get frequency() {
         return this.$frequency;

@@ -1,26 +1,5 @@
 import {RotaryFormat} from "../model.js"
 
 export type MessageToProcessor = UpdateFormatMessage | UploadSampleMessage
-
-export class UpdateFormatMessage {
-    readonly type = 'format'
-
-    constructor(readonly format: RotaryFormat, readonly version: number) {
-    }
-}
-
-export class UploadSampleMessage {
-    static from(key: number, buffer: AudioBuffer, loop: boolean): UploadSampleMessage {
-        const raw = []
-        for (let channelIndex = 0; channelIndex < 2; channelIndex++) {
-            buffer.copyFromChannel(raw[channelIndex] =
-                new Float32Array(buffer.length), Math.min(channelIndex, buffer.numberOfChannels - 1))
-        }
-        return new UploadSampleMessage(key, raw, loop)
-    }
-
-    readonly type = 'sample'
-
-    constructor(readonly key: number, readonly sample: Float32Array[], readonly loop: boolean) {
-    }
-}
+export type UpdateFormatMessage = { type: "update-format", format: RotaryFormat, version: number }
+export type UploadSampleMessage = { type: "upload-sample", key: number, frames: Float32Array[], numFrames: number, loop: boolean }

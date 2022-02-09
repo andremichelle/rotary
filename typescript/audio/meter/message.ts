@@ -1,4 +1,1 @@
-export class UpdateMeterMessage {
-    constructor(readonly maxSquares: Float32Array[], readonly maxPeaks: Float32Array[]) {
-    }
-}
+export type UpdateMeterMessage = { type: "update-meter", maxSquares: Float32Array[], maxPeaks: Float32Array[] }

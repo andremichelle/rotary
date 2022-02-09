@@ -11,7 +11,6 @@ import { StereoMeterWorklet } from "../audio/meter/worklet.js";
 import { ProgressIndicator } from "../dom/common.js";
 import { Boot } from "../lib/common.js";
 import { encodeWavFloat } from "../audio/common.js";
-import { TransportMessageType } from "../audio/sequencing.js";
 export class Audio {
     constructor(context, scene, model) {
         this.context = context;
@@ -43,14 +42,14 @@ export class Audio {
             const playButton = document.querySelector("[data-parameter='transport']");
             preview.transport.addObserver((message) => __awaiter(this, void 0, void 0, function* () {
                 switch (message.type) {
-                    case TransportMessageType.Play: {
+                    case "transport-play": {
                         if (this.context.state !== "running") {
                             yield this.context.resume();
                         }
                         playButton.checked = true;
                         break;
                     }
-                    case TransportMessageType.Pause: {
+                    case "transport-pause": {
                         playButton.checked = false;
                         break;
                     }

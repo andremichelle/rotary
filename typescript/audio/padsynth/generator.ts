@@ -1,7 +1,7 @@
-import {CreateMessage, Harmonic, InitMessage, Message} from "./data.js"
+import {Harmonic, Message} from "./data.js"
 
 export class Generator {
-    private readonly worker: Worker = new Worker("bin/dsp/padsynth/worker.js", {type: "module"})
+    private readonly worker: Worker = new Worker("bin/audio/padsynth/worker.js", {type: "module"})
     private readonly tasks: ((value: Float32Array) => void)[] = []
 
     constructor(fftSize: number, sampleRate: number) {
@@ -12,13 +12,13 @@ export class Generator {
                 this.tasks.shift()(data.wavetable)
             }
         }
-        this.worker.postMessage(new InitMessage(fftSize, sampleRate))
+        this.worker.postMessage({type: "init", fftSize: fftSize, sampleRate: sampleRate})
     }
 
     async render(harmonics: Harmonic[]): Promise<Float32Array> {
         return new Promise(((resolve: (value: Float32Array) => void) => {
             this.tasks.push(resolve)
-            this.worker.postMessage(new CreateMessage(harmonics))
+            this.worker.postMessage({type: "create", harmonics: harmonics})
         }))
     }
 }
