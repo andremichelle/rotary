@@ -152,7 +152,7 @@ export interface ControlBuilder<T> {
     availableTypes: Map<string, NoArgType<T>>
 }
 
-export class TypeControlEditor<T> implements Editor<ObservableValue<T>> {
+export class TypeSwitchEditor<T extends Terminable> implements Editor<ObservableValue<T>> {
     private readonly terminator: Terminator = new Terminator()
 
     private readonly selectLayout: UIControllerLayout
@@ -165,15 +165,17 @@ export class TypeControlEditor<T> implements Editor<ObservableValue<T>> {
     private subscription: Option<Terminable> = Options.None
 
     constructor(private readonly parentElement: HTMLElement,
-                private readonly controlBuilder: ControlBuilder<T>,
-                name: string) {
+                private readonly controlBuilder: ControlBuilder<T>, name: string) {
         this.selectLayout = this.terminator.with(new UIControllerLayout(parentElement))
         this.controllerLayout = this.terminator.with(new UIControllerLayout(parentElement))
 
         this.typeValue = this.terminator.with(new ObservableValueImpl(controlBuilder.availableTypes[0]))
         this.typeSelectInput = this.selectLayout.createSelect(name, controlBuilder.availableTypes)
         this.typeSelectInput.with(this.typeValue)
-        this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => value.set(new type())), false))
+        this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => {
+            value.get().terminate()
+            value.set(new type())
+        }), false))
     }
 
     with(value: ObservableValue<T>): void {

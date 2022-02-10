@@ -31,7 +31,7 @@ window.onunhandledrejection = (event) => {
         throw new Error("Use latest Chrome browser.")
     }
     const random: Random = new Mulberry32(0xFFFFFFFF * Math.random())
-    const model = new RotaryModel().randomize(random)
+    const model = new RotaryModel().test()//randomize(random)
     const audio: Audio = await Audio.config(initAudioScene(), model)
     const preview = await audio.initPreview()
     const app = RotaryApp.create(model, preview)

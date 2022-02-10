@@ -113,7 +113,7 @@ export class UIControllerLayout {
         return labelElement;
     }
 }
-export class TypeControlEditor {
+export class TypeSwitchEditor {
     constructor(parentElement, controlBuilder, name) {
         this.parentElement = parentElement;
         this.controlBuilder = controlBuilder;
@@ -125,7 +125,10 @@ export class TypeControlEditor {
         this.typeValue = this.terminator.with(new ObservableValueImpl(controlBuilder.availableTypes[0]));
         this.typeSelectInput = this.selectLayout.createSelect(name, controlBuilder.availableTypes);
         this.typeSelectInput.with(this.typeValue);
-        this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => value.set(new type())), false));
+        this.terminator.with(this.typeValue.addObserver(type => this.editable.ifPresent(value => {
+            value.get().terminate();
+            value.set(new type());
+        }), false));
     }
     with(value) {
         this.editable = Options.None;

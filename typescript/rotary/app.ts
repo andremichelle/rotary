@@ -16,7 +16,7 @@ import {Mulberry32, Random, TAU} from "../lib/math.js"
 import {ListItem, MenuBar} from "../dom/menu.js"
 import {open, renderGIF, renderVideo, renderWebM, save} from "./file.js"
 import {Audio, AudioSceneController} from "./audio.js"
-import {TypeControlEditor, UIControllerLayout} from "../dom/controls.js"
+import {TypeSwitchEditor, UIControllerLayout} from "../dom/controls.js"
 import {CompositeSettingsUIBuilder} from "../audio/composite.js"
 
 const zoomLevel: Map<string, number> = new Map([
@@ -86,10 +86,10 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         exportLayout.createNumericStepper("motion blur", PrintMapping.integer(""),
             new NumericStepper(1)).with(model.exportSettings.subFrames)
 
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-a"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[0])
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-b"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[1])
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-c"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[2])
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-d"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[3])
+        this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-a"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[0])
+        this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-b"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[1])
+        this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-c"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[2])
+        this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-d"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[3])
 
         this.terminator.with(model.tracks.addObserver((event: CollectionEvent<RotaryTrackModel>) => {
             switch (event.type) {

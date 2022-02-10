@@ -1,7 +1,7 @@
 import {ArrayUtils, NumericStepper, Option, Options, PrintMapping, Terminable, Terminator} from "../lib/common.js"
 import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
 import {Fill, Fills, RotaryModel, RotaryTrackModel} from "./model.js"
-import {ControlBuilder, TypeControlEditor, UIControllerLayout} from "../dom/controls.js"
+import {ControlBuilder, TypeSwitchEditor, UIControllerLayout} from "../dom/controls.js"
 import {Dom} from "../dom/common.js"
 import {
     CShapeInjective,
@@ -73,10 +73,10 @@ export class RotaryTrackEditor implements Terminable {
     private readonly lengthRatio: NumericStepperInput
     private readonly outline: NumericStepperInput
     private readonly fill: SelectInput<Fill>
-    private readonly motion: TypeControlEditor<Injective<any>>
+    private readonly motion: TypeSwitchEditor<Injective<any>>
     private readonly rgb: NumericInput
     private readonly phaseOffset: NumericStepperInput
-    private readonly bend: TypeControlEditor<Injective<any>>
+    private readonly bend: TypeSwitchEditor<Injective<any>>
     private readonly frequency: NumericStepperInput
     private readonly fragments: NumericStepperInput
     private readonly reverse: Checkbox
@@ -105,8 +105,8 @@ export class RotaryTrackEditor implements Terminable {
         this.fragments = layoutR.createNumericStepper("fragments", PrintMapping.integer("x"), NumericStepper.Integer)
         this.reverse = layoutR.createCheckbox("reverse")
 
-        this.motion = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder, "motion"))
-        this.bend = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder, "bend"))
+        this.motion = this.terminator.with(new TypeSwitchEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder, "motion"))
+        this.bend = this.terminator.with(new TypeSwitchEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder, "bend"))
 
         const audioLayout = this.terminator.with(new UIControllerLayout(document.querySelector(".two-columns.audio")))
         this.volume = audioLayout.createNumericStepper("volume", PrintMapping.UnipolarPercent, NumericStepper.Hundredth)
