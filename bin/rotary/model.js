@@ -2,9 +2,10 @@ import { ArrayUtils, BoundNumericValue, EmptyIterator, GeneratorIterator, Observ
 import { Colors } from "../lib/colors.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
-import { Channelstrip, CompositeSettings, ConvolverFiles, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../audio/composite.js";
+import { CompositeSettings, ConvolverFiles, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../audio/composite.js";
 import { IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
 import { barsToSeconds } from "../audio/common.js";
+import { Channelstrip } from "../audio/mixer.js";
 export class RotaryExportSetting {
     constructor() {
         this.terminator = new Terminator();

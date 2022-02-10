@@ -13,14 +13,12 @@ import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../audio/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
 import {
-    Channelstrip,
     CompositeSettings,
     Convolver,
     ConvolverSettings,
     DefaultComposite,
     Flanger,
     FlangerSettings,
-    Mixer,
     PulsarDelay,
     PulsarDelaySettings
 } from "../audio/composite.js"
@@ -28,8 +26,7 @@ import {NoUIMeterWorklet} from "../audio/meter/worklet.js"
 import {Updater} from "../dom/common.js"
 import {Transport} from "../audio/sequencing.js"
 import {Metronome} from "../audio/metronome/worklet.js"
-import {Generator} from "../audio/padsynth/generator.js"
-import {Harmonic} from "../audio/padsynth/data.js"
+import {Channelstrip, Mixer} from "../audio/mixer.js"
 
 export const initAudioScene = (): AudioScene => {
     return {

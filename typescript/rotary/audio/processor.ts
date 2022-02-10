@@ -80,12 +80,14 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                                 console.warn(`clamp frameIndex(${frameIndex}) while abs(t1 - t0) = ${Math.abs(t1 - t0)} < 1e-10`)
                                 frameIndex = 0 | 0
                             } else {
-                                throw new Error(`frameIndex(${frameIndex}), 
-                            t0: ${t0}, t1: ${t1}, t0*: ${t0 + 1e-7 - 1e-7}, t1*: ${t1 + 1e-7 - 1e-7}, 
-                            td: ${t1 - t0}, p: ${result.position}, 
-                                frameIndexAsNumber: ${(track.localToGlobal(result.position) - from)}`)
+                                throw new Error(`frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, td: ${t1 - t0}, 
+                                p: ${result.position}, frameIndexAsNum: ${(track.localToGlobal(result.position) - from)}`)
                             }
                         }
+
+                        // frameIndex, trackIndex, result.index, track
+
+
                         if (false) {
                             const key = this.sampleRepository.modulo(trackIndex * track.segments.get() + result.index)
                             const sample = this.sampleRepository.get(key)

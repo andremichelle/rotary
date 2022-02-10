@@ -1,5 +1,5 @@
 export declare const RENDER_QUANTUM: number;
-export declare const VALUE_INTERPOLATION_TIME: number;
+export declare const DEFAULT_INTERPOLATION_TIME: number;
 export declare const midiToHz: (note?: number, baseFrequency?: number) => number;
 export declare const dbToGain: (db: number) => number;
 export declare const gainToDb: (gain: number) => number;
@@ -7,6 +7,7 @@ export declare const numFramesToBars: (numFrames: number, bpm: number, samplingR
 export declare const barsToNumFrames: (bars: number, bpm: number, samplingRate: number) => number;
 export declare const barsToSeconds: (bars: number, bpm: number) => number;
 export declare const normalize: (channels: Float32Array[], threshold?: number) => Float32Array[];
+export declare const interpolateParameterValueIfRunning: (context: BaseAudioContext, audioParam: AudioParam, value: number) => void;
 export declare class RMS {
     private readonly n;
     private readonly values;

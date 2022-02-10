@@ -20,7 +20,6 @@ import {Func, Random} from "../lib/math.js"
 import {RenderConfiguration} from "./render.js"
 import {Linear, LinearInteger} from "../lib/mapping.js"
 import {
-    Channelstrip,
     CompositeSettings,
     CompositeSettingsFormat,
     ConvolverFiles,
@@ -28,8 +27,9 @@ import {
     FlangerSettings,
     PulsarDelaySettings
 } from "../audio/composite.js"
-import {IdentityInjective, Injective, InjectiveFormat, MonoNoiseInjective, TShapeInjective} from "../lib/injective.js"
+import {IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../lib/injective.js"
 import {barsToSeconds} from "../audio/common.js"
+import {Channelstrip} from "../audio/mixer.js"
 
 export declare interface RotaryExportFormat {
     fps: number

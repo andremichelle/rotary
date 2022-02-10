@@ -74,10 +74,8 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                             frameIndex = 0 | 0;
                         }
                         else {
-                            throw new Error(`frameIndex(${frameIndex}), 
-                            t0: ${t0}, t1: ${t1}, t0*: ${t0 + 1e-7 - 1e-7}, t1*: ${t1 + 1e-7 - 1e-7}, 
-                            td: ${t1 - t0}, p: ${result.position}, 
-                                frameIndexAsNumber: ${(track.localToGlobal(result.position) - from)}`);
+                            throw new Error(`frameIndex(${frameIndex}), t0: ${t0}, t1: ${t1}, td: ${t1 - t0}, 
+                                p: ${result.position}, frameIndexAsNum: ${(track.localToGlobal(result.position) - from)}`);
                         }
                     }
                     if (false) {

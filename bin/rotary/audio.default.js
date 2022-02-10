@@ -11,11 +11,12 @@ import { ArrayUtils, CollectionEventType, readAudio, Terminator } from "../lib/c
 import { RotaryModel } from "./model.js";
 import { LimiterWorklet } from "../audio/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
-import { Convolver, ConvolverSettings, Flanger, FlangerSettings, Mixer, PulsarDelay, PulsarDelaySettings } from "../audio/composite.js";
+import { Convolver, ConvolverSettings, Flanger, FlangerSettings, PulsarDelay, PulsarDelaySettings } from "../audio/composite.js";
 import { NoUIMeterWorklet } from "../audio/meter/worklet.js";
 import { Updater } from "../dom/common.js";
 import { Transport } from "../audio/sequencing.js";
 import { Metronome } from "../audio/metronome/worklet.js";
+import { Mixer } from "../audio/mixer.js";
 export const initAudioScene = () => {
     return {
         loadModules(context) {
