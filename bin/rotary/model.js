@@ -3,7 +3,7 @@ import { Colors } from "../lib/colors.js";
 import { Func } from "../lib/math.js";
 import { Linear, LinearInteger } from "../lib/mapping.js";
 import { Channelstrip, CompositeSettings, ConvolverFiles, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../audio/composite.js";
-import { IdentityInjective, Injective, MonoNoiseInjective, TShapeInjective } from "../lib/injective.js";
+import { IdentityInjective, Injective, TShapeInjective } from "../lib/injective.js";
 import { barsToSeconds } from "../audio/common.js";
 export class RotaryExportSetting {
     constructor() {
@@ -254,12 +254,6 @@ export class RotaryTrackModel {
         this.lengthRatio.set(0.125);
         this.outline.set(0.0);
         this.segments.set(16);
-        const noiseInjective = new MonoNoiseInjective();
-        noiseInjective.seed.set(16777215);
-        noiseInjective.roughness.set(64.0);
-        noiseInjective.strength.set(1.0);
-        noiseInjective.resolution.set(512);
-        this.bend.set(noiseInjective);
         this.width.set(128);
         this.fill.set(Fill.Flat);
     }

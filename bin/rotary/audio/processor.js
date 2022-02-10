@@ -1,64 +1,16 @@
+import { ObservableValueImpl } from "../../lib/common.js";
 import { Edge, RotaryModel } from "../model.js";
 import { barsToNumFrames, numFramesToBars, RENDER_QUANTUM } from "../../audio/common.js";
-import { ObservableValueImpl } from "../../lib/common.js";
-class Sample {
-    constructor(frames, numFrames, loop) {
-        this.frames = frames;
-        this.numFrames = numFrames;
-        this.loop = loop;
-    }
-}
-class SampleVoice {
-    constructor(startIndex, output, sample, position = 0 | 0) {
-        this.startIndex = startIndex;
-        this.output = output;
-        this.sample = sample;
-        this.position = position;
-        this.duration = Number.MAX_SAFE_INTEGER;
-    }
-    process(outL, outR) {
-        const sample = this.sample;
-        const ch0 = sample.frames[0];
-        const ch1 = sample.frames[1];
-        for (let frameIndex = this.startIndex; frameIndex < RENDER_QUANTUM; frameIndex++) {
-            const position = this.position++;
-            const duration = this.duration--;
-            const numFrames = sample.numFrames;
-            if (0 === duration || (!sample.loop && position >= numFrames)) {
-                return true;
-            }
-            else {
-                const envelope = Math.min(1.0, duration / SampleVoice.RELEASE) * Math.min(1.0, position / SampleVoice.ATTACK);
-                if (sample.loop) {
-                    outL[frameIndex] += ch0[position % numFrames] * envelope;
-                    outR[frameIndex] += ch1[position % numFrames] * envelope;
-                }
-                else {
-                    outL[frameIndex] += ch0[position] * envelope;
-                    outR[frameIndex] += ch1[position] * envelope;
-                }
-            }
-        }
-        this.startIndex = 0;
-        return false;
-    }
-    stop() {
-        if (this.duration > SampleVoice.RELEASE) {
-            this.duration = SampleVoice.RELEASE;
-        }
-    }
-}
-SampleVoice.ATTACK = (0.010 * sampleRate) | 0;
-SampleVoice.RELEASE = (0.050 * sampleRate) | 0;
+import { Sample, SampleRepository, SampleVoice } from "./samples.js";
+import { VoiceManager } from "./voices.js";
 registerProcessor("rotary", class extends AudioWorkletProcessor {
     constructor() {
         super();
         this.model = new RotaryModel();
-        this.samples = new Map();
-        this.activeVoices = new Map();
+        this.sampleRepository = new SampleRepository();
+        this.voiceManager = new VoiceManager();
         this.transport = new ObservableValueImpl(false);
         this.updateCount = 0 | 0;
-        this.maxKey = 0 | 0;
         this.barPosition = +0.0;
         const fps = 60.0;
         this.updateRate = (sampleRate / fps) | 0;
@@ -69,40 +21,26 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                 this.port.postMessage({ type: "format-updated", version: msg.version });
             }
             else if (msg.type === "upload-sample") {
-                this.samples.set(msg.key, new Sample(msg.frames, msg.numFrames, msg.loop));
-                this.maxKey = Math.max(msg.key, this.maxKey);
+                this.sampleRepository.set(msg.key, new Sample(msg.frames, msg.numFrames, msg.loop));
             }
             else if (msg.type === "transport-play") {
                 this.transport.set(true);
             }
             else if (msg.type === "transport-pause") {
                 this.transport.set(false);
-                this.activeVoices.forEach(voices => voices.forEach(voice => voice.stop()));
+                this.voiceManager.stopAll();
             }
             else if (msg.type === "transport-move") {
                 this.barPosition = msg.position;
                 this.transport.set(false);
             }
         };
-        for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
-            this.activeVoices.set(index, []);
-        }
     }
     process(inputs, outputs) {
         if (this.transport.get()) {
             this.schedule();
         }
-        for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
-            const voices = this.activeVoices.get(index);
-            for (let voiceIndex = voices.length - 1; 0 <= voiceIndex; voiceIndex--) {
-                const voice = voices[voiceIndex];
-                const output = outputs[voice.output];
-                const complete = voice.process(output[0], output[1]);
-                if (complete) {
-                    voices.splice(voiceIndex, 1);
-                }
-            }
-        }
+        this.voiceManager.process(outputs);
         this.updateCount += RENDER_QUANTUM;
         if (this.updateCount >= this.updateRate) {
             this.updateCount -= this.updateRate;
@@ -122,8 +60,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
             const iterator = track.querySections(t0, t1);
             while (iterator.hasNext()) {
                 const result = iterator.next();
-                const running = this.activeVoices.get(trackIndex);
-                running.forEach(v => v.stop());
+                this.voiceManager.stopByIndex(trackIndex);
                 if (result.edge === Edge.Start) {
                     let frameIndex = barsToNumFrames(track.localToGlobal(result.position) - p0, bpm, sampleRate) | 0;
                     if (0 > frameIndex || frameIndex >= RENDER_QUANTUM) {
@@ -138,10 +75,14 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                                 frameIndexAsNumber: ${(track.localToGlobal(result.position) - p0)}`);
                         }
                     }
-                    const sampleKey = (trackIndex * track.segments.get() + result.index) % (this.maxKey + 1);
-                    const sample = this.samples.get(sampleKey);
-                    const voice = new SampleVoice(frameIndex, trackIndex, sample, 0);
-                    this.activeVoices.get(trackIndex).push(voice);
+                    if (true) {
+                        const key = this.sampleRepository.modulo(trackIndex * track.segments.get() + result.index);
+                        const sample = this.sampleRepository.get(key);
+                        const voice = new SampleVoice(frameIndex, trackIndex, track, sample, 0);
+                        this.voiceManager.add(trackIndex, voice);
+                    }
+                    else {
+                    }
                 }
             }
         }

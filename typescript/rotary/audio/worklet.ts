@@ -1,8 +1,7 @@
 import {RotaryModel} from "../model.js"
-import {UpdateFormatMessage, UploadSampleMessage} from "./messages-to-processor.js"
-import {MessageToWorklet} from "./messages-to-worklet.js"
 import {Terminable, Terminator} from "../../lib/common.js"
 import {Transport, TransportListener} from "../../audio/sequencing.js"
+import {MessageToWorklet, UpdateFormatMessage, UploadSampleMessage} from "./messages.js"
 
 export class RotaryWorkletNode extends AudioWorkletNode implements TransportListener {
     private readonly terminator: Terminator = new Terminator()
