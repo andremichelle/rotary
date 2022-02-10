@@ -89,7 +89,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                         // frameIndex, trackIndex, result.index, track
 
 
-                        if (false) {
+                        if (true) {
                             const key = this.sampleRepository.modulo(trackIndex * track.segments.get() + result.index)
                             const sample = this.sampleRepository.get(key)
                             const voice = new SampleVoice(frameIndex, trackIndex, result.index, track, sample, 0)
