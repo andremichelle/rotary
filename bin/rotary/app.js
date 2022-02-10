@@ -245,7 +245,17 @@ export class RotaryApp {
                 parent.addListItem(ListItem.default(level[0], "", this.zoom.get() === level[1])
                     .onTrigger(() => this.zoom.set(level[1])));
             }
-        })))
+        }))
+            .addListItem(ListItem.default("Enter Full Screen", "", null !== document.fullscreenElement)
+            .isSelectable(document.fullscreenEnabled)
+            .onTrigger(() => __awaiter(this, void 0, void 0, function* () {
+            if (null === document.fullscreenElement) {
+                yield this.elements.canvas.requestFullscreen();
+            }
+            else {
+                yield document.exitFullscreen();
+            }
+        }))))
             .addButton(element.querySelector("[data-menu='help']"), ListItem.root()
             .addListItem(ListItem.default("Open TODOs in Github (protected)", "", false)
             .onTrigger(_ => window.open("https://github.com/andremichelle/rotary/wiki/TODOs"))));

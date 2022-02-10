@@ -289,6 +289,15 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
                             parent.addListItem(ListItem.default(level[0], "", this.zoom.get() === level[1])
                                 .onTrigger(() => this.zoom.set(level[1])))
                         }
+                    }))
+                .addListItem(ListItem.default("Enter Full Screen", "", null !== document.fullscreenElement)
+                    .isSelectable(document.fullscreenEnabled)
+                    .onTrigger(async () => {
+                        if (null === document.fullscreenElement) {
+                            await this.elements.canvas.requestFullscreen()
+                        } else {
+                            await document.exitFullscreen()
+                        }
                     })))
             .addButton(element.querySelector("[data-menu='help']"), ListItem.root()
                 .addListItem(ListItem.default("Open TODOs in Github (protected)", "", false)

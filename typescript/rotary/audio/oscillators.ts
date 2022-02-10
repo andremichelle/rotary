@@ -36,7 +36,8 @@ export class OscillatorVoice extends Voice {
             const envelope =
                 Math.min(OscillatorVoice.ENVELOPE_TIME, Math.min(position, duration)) * OscillatorVoice.ENVELOPE_TIME_INV * 0.2
 
-            const out = Math.sin(position * sampleRateInv * this.frequency * TAU) * envelope
+            const x = position * sampleRateInv
+            const out = Math.sin(x * this.frequency * TAU + Math.sin(x * TAU * 3.0) * 3.0) * envelope
                 * Math.sin(Func.mod(this.track.globalToSegment(positions[frameIndex])) * Math.PI)
             outL[frameIndex] += out
             outR[frameIndex] += out
