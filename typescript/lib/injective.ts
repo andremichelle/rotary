@@ -1,32 +1,16 @@
-import {
-    binarySearch,
-    BoundNumericValue,
-    Observable,
-    ObservableImpl,
-    ObservableValue,
-    ObservableValueImpl,
-    Observer,
-    Serializer,
-    Terminable,
-    Terminator
-} from "./common.js"
+import {binarySearch, BoundNumericValue, ObservableValueImpl, Settings, SettingsFormat} from "./common.js"
 import {Linear, LinearInteger} from "./mapping.js"
 import {Func, Mulberry32, Random} from "./math.js"
 
-type InjectiveData = PowData | CShapeData | TShapeData | SmoothStepData | MonoNoiseData
+export type InjectiveData = PowData | CShapeData | TShapeData | SmoothStepData | MonoNoiseData
 
 export type InjectiveType = { new(): Injective<any> }
-
-export declare interface InjectiveFormat<DATA extends InjectiveData> {
-    class: string
-    data: DATA
-}
 
 const InjectiveTypes: InjectiveType[] = []
 
 // noinspection JSUnusedGlobalSymbols
-export abstract class Injective<DATA extends InjectiveData> implements Observable<Injective<DATA>>, Serializer<InjectiveFormat<DATA>>, Terminable {
-    static from(format: InjectiveFormat<any>): Injective<any> {
+export abstract class Injective<DATA extends InjectiveData> extends Settings<DATA> {
+    static from(format: SettingsFormat<any>): Injective<any> {
         switch (format.class) {
             case IdentityInjective.name:
                 return new IdentityInjective()
@@ -48,49 +32,13 @@ export abstract class Injective<DATA extends InjectiveData> implements Observabl
         return new InjectiveTypes[Math.floor(random.nextDouble(0.0, InjectiveTypes.length))]().randomize(random)
     }
 
-    protected readonly terminator: Terminator = new Terminator()
-    protected readonly observable: ObservableImpl<Injective<DATA>> = new ObservableImpl<Injective<DATA>>()
-
     abstract fx(x: number): number
 
     abstract fy(y: number): number
 
-    abstract deserialize(format: InjectiveFormat<DATA>): Injective<DATA>
-
-    abstract serialize(): InjectiveFormat<DATA>
-
     abstract copy(): Injective<DATA>
 
     abstract randomize(random: Random): Injective<DATA>
-
-    addObserver(observer: Observer<Injective<DATA>>): Terminable {
-        return this.observable.addObserver(observer)
-    }
-
-    removeObserver(observer: Observer<Injective<DATA>>): boolean {
-        return this.observable.removeObserver(observer)
-    }
-
-    pack(data?: DATA): InjectiveFormat<DATA> {
-        return {
-            class: this.constructor.name,
-            data: data
-        }
-    }
-
-    unpack(format: InjectiveFormat<DATA>): DATA {
-        console.assert(this.constructor.name === format.class)
-        return format.data
-    }
-
-    terminate(): void {
-        this.terminator.terminate()
-    }
-
-    protected bindValue<T>(property: ObservableValue<T>): ObservableValue<T> {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this), false))
-        return this.terminator.with(property)
-    }
 }
 
 export class IdentityInjective extends Injective<never> {
@@ -102,11 +50,11 @@ export class IdentityInjective extends Injective<never> {
         return y
     }
 
-    serialize(): InjectiveFormat<never> {
+    serialize(): SettingsFormat<never> {
         return super.pack()
     }
 
-    deserialize(format: InjectiveFormat<never>): IdentityInjective {
+    deserialize(format: SettingsFormat<never>): IdentityInjective {
         super.unpack(format)
         return this
     }
@@ -137,11 +85,11 @@ export class PowInjective extends Injective<PowData> {
         return Math.pow(y, 1.0 / this.exponent.get())
     }
 
-    serialize(): InjectiveFormat<PowData> {
+    serialize(): SettingsFormat<PowData> {
         return super.pack({exponent: this.exponent.get()})
     }
 
-    deserialize(format: InjectiveFormat<PowData>): PowInjective {
+    deserialize(format: SettingsFormat<PowData>): PowInjective {
         this.exponent.set(super.unpack(format).exponent)
         return this
     }
@@ -184,11 +132,11 @@ export class CShapeInjective extends Injective<CShapeData> {
         return Math.sign(y - 0.5) * Math.pow(Math.abs(y - 0.5) / this.c, 1.0 / this.o) + 0.5
     }
 
-    serialize(): InjectiveFormat<CShapeData> {
+    serialize(): SettingsFormat<CShapeData> {
         return super.pack({slope: this.slope.get()})
     }
 
-    deserialize(format: InjectiveFormat<CShapeData>): CShapeInjective {
+    deserialize(format: SettingsFormat<CShapeData>): CShapeInjective {
         this.slope.set(super.unpack(format).slope)
         return this
     }
@@ -232,11 +180,11 @@ export class TShapeInjective extends Injective<TShapeData> {
         return Func.ty(y, this.shape.get())
     }
 
-    serialize(): InjectiveFormat<TShapeData> {
+    serialize(): SettingsFormat<TShapeData> {
         return super.pack({shape: this.shape.get()})
     }
 
-    deserialize(format: InjectiveFormat<TShapeData>): TShapeInjective {
+    deserialize(format: SettingsFormat<TShapeData>): TShapeInjective {
         this.shape.set(super.unpack(format).shape)
         return this
     }
@@ -275,14 +223,14 @@ export class SmoothStepInjective extends Injective<SmoothStepData> {
             + Func.smoothStepInverse(y) * (this.edge1.get() - this.edge0.get())))
     }
 
-    deserialize(format: InjectiveFormat<SmoothStepData>): SmoothStepInjective {
+    deserialize(format: SettingsFormat<SmoothStepData>): SmoothStepInjective {
         const data = this.unpack(format)
         this.edge0.set(data.edge0)
         this.edge1.set(data.edge1)
         return this
     }
 
-    serialize(): InjectiveFormat<SmoothStepData> {
+    serialize(): SettingsFormat<SmoothStepData> {
         return super.pack({edge0: this.edge0.get(), edge1: this.edge1.get()})
     }
 
@@ -362,7 +310,7 @@ export class MonoNoiseInjective extends Injective<MonoNoiseData> {
         return q + a * (this.values[xi + 1] - q)
     }
 
-    deserialize(format: InjectiveFormat<MonoNoiseData>): MonoNoiseInjective {
+    deserialize(format: SettingsFormat<MonoNoiseData>): MonoNoiseInjective {
         const data = super.unpack(format)
         this.seed.set(data.seed)
         this.resolution.set(data.resolution)
@@ -371,7 +319,7 @@ export class MonoNoiseInjective extends Injective<MonoNoiseData> {
         return this
     }
 
-    serialize(): InjectiveFormat<MonoNoiseData> {
+    serialize(): SettingsFormat<MonoNoiseData> {
         return super.pack({
             seed: this.seed.get(),
             resolution: this.resolution.get(),

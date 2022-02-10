@@ -4,16 +4,13 @@ import {
     BoundNumericValue,
     NoArgType,
     NumericStepper,
-    Observable,
-    ObservableImpl,
     ObservableValue,
     ObservableValueImpl,
-    Observer,
     Option,
     Options,
     PrintMapping,
     readAudio,
-    Serializer,
+    Settings,
     Terminable,
     Terminator
 } from "../lib/common.js"
@@ -21,14 +18,14 @@ import {Exp, Linear} from "../lib/mapping.js"
 import {ControlBuilder, UIControllerLayout} from "../dom/controls.js"
 import {interpolateParameterValueIfRunning} from "./common.js"
 
-type Data = PulsarDelayData | ConvolverData | FlangerData
+type CompositeSettingsData = PulsarDelayData | ConvolverData | FlangerData
 
-export interface CompositeSettingsFormat<DATA extends Data> {
+export interface CompositeSettingsFormat<DATA extends CompositeSettingsData> {
     class: string
     data: DATA
 }
 
-export abstract class CompositeSettings<DATA extends Data> implements Observable<CompositeSettings<DATA>>, Serializer<CompositeSettingsFormat<DATA>>, Terminable {
+export abstract class CompositeSettings<DATA extends CompositeSettingsData> extends Settings<DATA> {
     static from(format: CompositeSettingsFormat<any>): CompositeSettings<any> {
         switch (format.class) {
             case PulsarDelaySettings.name:
@@ -40,45 +37,9 @@ export abstract class CompositeSettings<DATA extends Data> implements Observable
         }
         throw new Error("Unknown movement format")
     }
-
-    protected readonly terminator: Terminator = new Terminator()
-    protected readonly observable: ObservableImpl<CompositeSettings<DATA>> = new ObservableImpl<CompositeSettings<DATA>>()
-
-    abstract deserialize(format: CompositeSettingsFormat<DATA>): CompositeSettings<DATA>
-
-    abstract serialize(): CompositeSettingsFormat<DATA>
-
-    protected pack(data?: DATA): CompositeSettingsFormat<DATA> {
-        return {
-            class: this.constructor.name,
-            data: data
-        }
-    }
-
-    protected unpack(format: CompositeSettingsFormat<DATA>): DATA {
-        console.assert(this.constructor.name === format.class)
-        return format.data
-    }
-
-    protected bindValue<T>(property: ObservableValue<T>): ObservableValue<T> {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this), false))
-        return this.terminator.with(property)
-    }
-
-    addObserver(observer: Observer<CompositeSettings<DATA>>): Terminable {
-        return this.observable.addObserver(observer)
-    }
-
-    removeObserver(observer: Observer<CompositeSettings<DATA>>): boolean {
-        return this.observable.removeObserver(observer)
-    }
-
-    terminate(): void {
-        this.terminator.terminate()
-    }
 }
 
-export abstract class DefaultComposite<SETTINGS extends CompositeSettings<Data>> implements Terminable {
+export abstract class DefaultComposite<SETTINGS extends CompositeSettings<CompositeSettingsData>> implements Terminable {
     private incoming: Option<[AudioNode, number]> = Options.None
     private outgoing: Option<[AudioNode, number]> = Options.None
 

@@ -25,6 +25,7 @@ export declare class RotaryTrackEditor implements Terminable {
     private readonly volume;
     private readonly panning;
     private readonly auxSends;
+    private readonly sound;
     subject: Option<RotaryTrackModel>;
     constructor(executor: RotaryTrackEditorExecutor, parentNode: HTMLElement);
     edit(model: RotaryTrackModel): void;

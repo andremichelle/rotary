@@ -14,6 +14,7 @@ import {
     TShapeInjective
 } from "../lib/injective.js"
 import {Fill, Fills, RotaryTrackModel} from "./model/track.js"
+import {OscillatorSettings, SamplePlayerSettings, SoundSettings, SoundType} from "./model/sound.js"
 
 const InjectiveControlBuilder = new class implements ControlBuilder<Injective<any>> {
     build(layout: UIControllerLayout, value: Injective<any>): void {
@@ -57,6 +58,16 @@ const InjectiveControlBuilder = new class implements ControlBuilder<Injective<an
     ])
 }
 
+const SoundControlBuilder = new class implements ControlBuilder<SoundSettings<any>> {
+    build(layout: UIControllerLayout, value: SoundSettings<any>): void {
+    }
+
+    availableTypes = new Map<string, SoundType>([
+        ["Samples", SamplePlayerSettings],
+        ["Oscillator", OscillatorSettings],
+    ])
+}
+
 export interface RotaryTrackEditorExecutor {
     deleteTrack(trackModel: RotaryTrackModel): void
 
@@ -85,6 +96,7 @@ export class RotaryTrackEditor implements Terminable {
     private readonly volume: NumericStepperInput
     private readonly panning: NumericStepperInput
     private readonly auxSends: NumericStepperInput[]
+    private readonly sound: TypeSwitchEditor<SoundSettings<any>>
 
     subject: Option<RotaryTrackModel> = Options.None
 
@@ -127,6 +139,7 @@ export class RotaryTrackEditor implements Terminable {
             event.preventDefault()
             this.subject.ifPresent((trackModel: RotaryTrackModel) => executor.moveTrackRight(trackModel))
         }))
+        this.sound = this.terminator.with(new TypeSwitchEditor(parentNode.querySelector(".sound"), SoundControlBuilder, "sound"))
     }
 
     edit(model: RotaryTrackModel): void {
@@ -151,6 +164,8 @@ export class RotaryTrackEditor implements Terminable {
         this.auxSends[1].with(model.aux[1])
         this.auxSends[2].with(model.aux[2])
         this.auxSends[3].with(model.aux[3])
+
+        this.sound.with(model.sound)
 
         this.subject = Options.valueOf(model)
     }
@@ -178,6 +193,8 @@ export class RotaryTrackEditor implements Terminable {
         this.auxSends[1].clear()
         this.auxSends[2].clear()
         this.auxSends[3].clear()
+
+        this.sound.clear()
     }
 
     terminate() {

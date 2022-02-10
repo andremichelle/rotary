@@ -4,6 +4,7 @@ import { TypeSwitchEditor, UIControllerLayout } from "../dom/controls.js";
 import { Dom } from "../dom/common.js";
 import { CShapeInjective, IdentityInjective, MonoNoiseInjective, PowInjective, SmoothStepInjective, TShapeInjective } from "../lib/injective.js";
 import { Fills } from "./model/track.js";
+import { OscillatorSettings, SamplePlayerSettings } from "./model/sound.js";
 const InjectiveControlBuilder = new class {
     constructor() {
         this.availableTypes = new Map([
@@ -48,6 +49,16 @@ const InjectiveControlBuilder = new class {
         }
     }
 };
+const SoundControlBuilder = new class {
+    constructor() {
+        this.availableTypes = new Map([
+            ["Samples", SamplePlayerSettings],
+            ["Oscillator", OscillatorSettings],
+        ]);
+    }
+    build(layout, value) {
+    }
+};
 export class RotaryTrackEditor {
     constructor(executor, parentNode) {
         this.executor = executor;
@@ -85,6 +96,7 @@ export class RotaryTrackEditor {
             event.preventDefault();
             this.subject.ifPresent((trackModel) => executor.moveTrackRight(trackModel));
         }));
+        this.sound = this.terminator.with(new TypeSwitchEditor(parentNode.querySelector(".sound"), SoundControlBuilder, "sound"));
     }
     edit(model) {
         this.segments.with(model.segments);
@@ -107,6 +119,7 @@ export class RotaryTrackEditor {
         this.auxSends[1].with(model.aux[1]);
         this.auxSends[2].with(model.aux[2]);
         this.auxSends[3].with(model.aux[3]);
+        this.sound.with(model.sound);
         this.subject = Options.valueOf(model);
     }
     clear() {
@@ -131,6 +144,7 @@ export class RotaryTrackEditor {
         this.auxSends[1].clear();
         this.auxSends[2].clear();
         this.auxSends[3].clear();
+        this.sound.clear();
     }
     terminate() {
         this.clear();

@@ -7,14 +7,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { BoundNumericValue, NumericStepper, ObservableImpl, ObservableValueImpl, Options, PrintMapping, readAudio, Terminator } from "../lib/common.js";
+import { BoundNumericValue, NumericStepper, ObservableValueImpl, Options, PrintMapping, readAudio, Settings, Terminator } from "../lib/common.js";
 import { Exp, Linear } from "../lib/mapping.js";
 import { interpolateParameterValueIfRunning } from "./common.js";
-export class CompositeSettings {
-    constructor() {
-        this.terminator = new Terminator();
-        this.observable = new ObservableImpl();
-    }
+export class CompositeSettings extends Settings {
     static from(format) {
         switch (format.class) {
             case PulsarDelaySettings.name:
@@ -25,29 +21,6 @@ export class CompositeSettings {
                 return new FlangerSettings().deserialize(format);
         }
         throw new Error("Unknown movement format");
-    }
-    pack(data) {
-        return {
-            class: this.constructor.name,
-            data: data
-        };
-    }
-    unpack(format) {
-        console.assert(this.constructor.name === format.class);
-        return format.data;
-    }
-    bindValue(property) {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this), false));
-        return this.terminator.with(property);
-    }
-    addObserver(observer) {
-        return this.observable.addObserver(observer);
-    }
-    removeObserver(observer) {
-        return this.observable.removeObserver(observer);
-    }
-    terminate() {
-        this.terminator.terminate();
     }
 }
 export class DefaultComposite {

@@ -1,12 +1,8 @@
-import { binarySearch, BoundNumericValue, ObservableImpl, ObservableValueImpl, Terminator } from "./common.js";
+import { binarySearch, BoundNumericValue, ObservableValueImpl, Settings } from "./common.js";
 import { Linear, LinearInteger } from "./mapping.js";
 import { Func, Mulberry32 } from "./math.js";
 const InjectiveTypes = [];
-export class Injective {
-    constructor() {
-        this.terminator = new Terminator();
-        this.observable = new ObservableImpl();
-    }
+export class Injective extends Settings {
     static from(format) {
         switch (format.class) {
             case IdentityInjective.name:
@@ -26,29 +22,6 @@ export class Injective {
     }
     static random(random) {
         return new InjectiveTypes[Math.floor(random.nextDouble(0.0, InjectiveTypes.length))]().randomize(random);
-    }
-    addObserver(observer) {
-        return this.observable.addObserver(observer);
-    }
-    removeObserver(observer) {
-        return this.observable.removeObserver(observer);
-    }
-    pack(data) {
-        return {
-            class: this.constructor.name,
-            data: data
-        };
-    }
-    unpack(format) {
-        console.assert(this.constructor.name === format.class);
-        return format.data;
-    }
-    terminate() {
-        this.terminator.terminate();
-    }
-    bindValue(property) {
-        this.terminator.with(property.addObserver(() => this.observable.notify(this), false));
-        return this.terminator.with(property);
     }
 }
 export class IdentityInjective extends Injective {

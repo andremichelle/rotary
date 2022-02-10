@@ -1,11 +1,18 @@
-import {IdentityInjective, Injective, InjectiveFormat, TShapeInjective} from "../../lib/injective.js"
+import {IdentityInjective, Injective, InjectiveData, TShapeInjective} from "../../lib/injective.js"
 import {
     ArrayUtils,
-    BoundNumericValue, EmptyIterator, GeneratorIterator, Iterator,
+    BoundNumericValue,
+    EmptyIterator,
+    GeneratorIterator,
+    Iterator,
     Observable,
     ObservableBits,
-    ObservableImpl, ObservableValue, ObservableValueImpl, Observer,
+    ObservableImpl,
+    ObservableValue,
+    ObservableValueImpl,
+    Observer,
     Serializer,
+    SettingsFormat,
     Terminable,
     Terminator
 } from "../../lib/common.js"
@@ -13,6 +20,7 @@ import {Linear, LinearInteger} from "../../lib/mapping.js"
 import {Channelstrip} from "../../audio/mixer.js"
 import {Func, Random} from "../../lib/math.js"
 import {RotaryModel} from "./rotary.js"
+import {OscillatorSettings, SamplePlayerSettings, SoundSettings, SoundSettingsData} from "./sound.js"
 
 export enum Fill {
     Flat, Stroke, Line, Gradient
@@ -40,9 +48,9 @@ export declare interface RotaryTrackFormat {
     outline: number
     fill: number
     rgb: number
-    motion: InjectiveFormat<any>
+    motion: SettingsFormat<InjectiveData>
     phaseOffset: number
-    bend: InjectiveFormat<any>
+    bend: SettingsFormat<InjectiveData>
     fragments: number
     frequency: number
     reverse: boolean
@@ -53,6 +61,8 @@ export declare interface RotaryTrackFormat {
     aux: number[]
     mute: boolean
     solo: boolean
+
+    sound: SettingsFormat<SoundSettingsData>
 }
 
 export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
@@ -82,6 +92,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         () => new BoundNumericValue(Linear.Identity, 0.0))
     readonly mute = new ObservableValueImpl<boolean>(false)
     readonly solo = new ObservableValueImpl<boolean>(false)
+
+    readonly sound: ObservableValue<SoundSettings<any>> = this.bindValue(new ObservableValueImpl<SoundSettings<any>>(new SamplePlayerSettings()))
 
     constructor(readonly root: RotaryModel) {
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
@@ -163,6 +175,10 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
 
         this.panning.set(random.nextDouble(-1.0, 1.0))
         this.aux.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0)
+
+        if(random.nextDouble(0.0, 1.0) < 0.1) {
+            this.sound.set(new OscillatorSettings())
+        }
         return this
     }
 
@@ -194,6 +210,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             aux: this.aux.map(value => value.get()),
             mute: this.mute.get(),
             solo: this.solo.get(),
+
+            sound: this.sound.get().serialize()
         }
     }
 
@@ -220,6 +238,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.aux.forEach((value: BoundNumericValue, index: number) => value.set(format.aux[index]))
         this.mute.set(format.mute)
         this.solo.set(format.solo)
+
+        this.sound.set(SoundSettings.from(format.sound))
         return this
     }
 

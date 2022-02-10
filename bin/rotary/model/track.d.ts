@@ -1,7 +1,8 @@
-import { Injective, InjectiveFormat } from "../../lib/injective.js";
-import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableValue, ObservableValueImpl, Observer, Serializer, Terminable } from "../../lib/common.js";
+import { Injective, InjectiveData } from "../../lib/injective.js";
+import { BoundNumericValue, Iterator, Observable, ObservableBits, ObservableValue, ObservableValueImpl, Observer, Serializer, SettingsFormat, Terminable } from "../../lib/common.js";
 import { Random } from "../../lib/math.js";
 import { RotaryModel } from "./rotary.js";
+import { SoundSettings, SoundSettingsData } from "./sound.js";
 export declare enum Fill {
     Flat = 0,
     Stroke = 1,
@@ -29,9 +30,9 @@ export declare interface RotaryTrackFormat {
     outline: number;
     fill: number;
     rgb: number;
-    motion: InjectiveFormat<any>;
+    motion: SettingsFormat<InjectiveData>;
     phaseOffset: number;
-    bend: InjectiveFormat<any>;
+    bend: SettingsFormat<InjectiveData>;
     fragments: number;
     frequency: number;
     reverse: boolean;
@@ -41,6 +42,7 @@ export declare interface RotaryTrackFormat {
     aux: number[];
     mute: boolean;
     solo: boolean;
+    sound: SettingsFormat<SoundSettingsData>;
 }
 export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
     readonly root: RotaryModel;
@@ -68,6 +70,7 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     readonly aux: BoundNumericValue[];
     readonly mute: ObservableValueImpl<boolean>;
     readonly solo: ObservableValueImpl<boolean>;
+    readonly sound: ObservableValue<SoundSettings<any>>;
     constructor(root: RotaryModel);
     addObserver(observer: Observer<RotaryTrackModel>): Terminable;
     removeObserver(observer: Observer<RotaryTrackModel>): boolean;

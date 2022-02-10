@@ -213,3 +213,19 @@ export declare class ArrayUtils {
     static fill<T>(n: number, factory: (index: number) => T): T[];
     private constructor();
 }
+export interface SettingsFormat<DATA> {
+    class: string;
+    data: DATA;
+}
+export declare abstract class Settings<DATA> implements Observable<Settings<DATA>>, Serializer<SettingsFormat<DATA>>, Terminable {
+    protected readonly terminator: Terminator;
+    protected readonly observable: ObservableImpl<Settings<DATA>>;
+    abstract deserialize(format: SettingsFormat<DATA>): Settings<DATA>;
+    abstract serialize(): SettingsFormat<DATA>;
+    protected pack(data?: DATA): SettingsFormat<DATA>;
+    protected unpack(format: SettingsFormat<DATA>): DATA;
+    protected bindValue<T>(property: ObservableValue<T>): ObservableValue<T>;
+    addObserver(observer: Observer<Settings<DATA>>): Terminable;
+    removeObserver(observer: Observer<Settings<DATA>>): boolean;
+    terminate(): void;
+}

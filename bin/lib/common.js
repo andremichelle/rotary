@@ -532,4 +532,33 @@ export class ArrayUtils {
     constructor() {
     }
 }
+export class Settings {
+    constructor() {
+        this.terminator = new Terminator();
+        this.observable = new ObservableImpl();
+    }
+    pack(data) {
+        return {
+            class: this.constructor.name,
+            data: data
+        };
+    }
+    unpack(format) {
+        console.assert(this.constructor.name === format.class);
+        return format.data;
+    }
+    bindValue(property) {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false));
+        return this.terminator.with(property);
+    }
+    addObserver(observer) {
+        return this.observable.addObserver(observer);
+    }
+    removeObserver(observer) {
+        return this.observable.removeObserver(observer);
+    }
+    terminate() {
+        this.terminator.terminate();
+    }
+}
 //# sourceMappingURL=common.js.map

@@ -4,9 +4,10 @@ import {ObservableValueImpl} from "../../lib/common.js"
 import {RotaryModel} from "../model/rotary.js"
 import {Edge, QueryResult} from "../model/track.js"
 import {barsToNumFrames, numFramesToBars, RENDER_QUANTUM} from "../../audio/common.js"
-import {VoiceManager} from "./voices.js"
+import {Voice, VoiceManager} from "./voices.js"
 import {Sample, SampleRepository, SampleVoice} from "./samples.js"
 import {OscillatorVoice} from "./oscillators.js"
+import {OscillatorSettings, SamplePlayerSettings} from "../model/sound.js"
 
 registerProcessor("rotary", class extends AudioWorkletProcessor {
         private readonly model: RotaryModel = new RotaryModel()
@@ -85,18 +86,18 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                                 p: ${result.position}, frameIndexAsNum: ${(track.localToGlobal(result.position) - from)}`)
                             }
                         }
-
-                        // frameIndex, trackIndex, result.index, track
-
-
-                        if (true) {
+                        const sound = track.sound.get()
+                        let voice: Voice
+                        if (sound instanceof SamplePlayerSettings) {
                             const key = this.sampleRepository.modulo(trackIndex * track.segments.get() + result.index)
                             const sample = this.sampleRepository.get(key)
-                            const voice = new SampleVoice(frameIndex, trackIndex, result.index, track, sample, 0)
-                            this.voiceManager.add(trackIndex, voice)
+                            voice = new SampleVoice(frameIndex, trackIndex, result.index, track, sample, 0)
+                        } else if (sound instanceof OscillatorSettings) {
+                            voice = new OscillatorVoice(frameIndex, trackIndex, result.index, track)
                         } else {
-                            this.voiceManager.add(trackIndex, new OscillatorVoice(frameIndex, trackIndex, result.index, track))
+                            throw new Error("Unknown SoundSettings")
                         }
+                        this.voiceManager.add(trackIndex, voice)
                     }
                 }
             }

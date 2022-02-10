@@ -4,6 +4,7 @@ import { Linear, LinearInteger } from "../../lib/mapping.js";
 import { Channelstrip } from "../../audio/mixer.js";
 import { Func } from "../../lib/math.js";
 import { RotaryModel } from "./rotary.js";
+import { OscillatorSettings, SamplePlayerSettings, SoundSettings } from "./sound.js";
 export var Fill;
 (function (Fill) {
     Fill[Fill["Flat"] = 0] = "Flat";
@@ -51,6 +52,7 @@ export class RotaryTrackModel {
         this.aux = ArrayUtils.fill(RotaryModel.NUM_AUX, () => new BoundNumericValue(Linear.Identity, 0.0));
         this.mute = new ObservableValueImpl(false);
         this.solo = new ObservableValueImpl(false);
+        this.sound = this.bindValue(new ObservableValueImpl(new SamplePlayerSettings()));
         this.terminator.with(this.rgb.addObserver(() => this.updateGradient()));
         const motionTerminator = this.terminator.with(new Terminator());
         this.terminator.with(this.motion.addObserver((motion) => {
@@ -114,6 +116,9 @@ export class RotaryTrackModel {
         this.reverse.set(random.nextBoolean());
         this.panning.set(random.nextDouble(-1.0, 1.0));
         this.aux.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0);
+        if (random.nextDouble(0.0, 1.0) < 0.1) {
+            this.sound.set(new OscillatorSettings());
+        }
         return this;
     }
     terminate() {
@@ -142,6 +147,7 @@ export class RotaryTrackModel {
             aux: this.aux.map(value => value.get()),
             mute: this.mute.get(),
             solo: this.solo.get(),
+            sound: this.sound.get().serialize()
         };
     }
     deserialize(format) {
@@ -166,6 +172,7 @@ export class RotaryTrackModel {
         this.aux.forEach((value, index) => value.set(format.aux[index]));
         this.mute.set(format.mute);
         this.solo.set(format.solo);
+        this.sound.set(SoundSettings.from(format.sound));
         return this;
     }
     globalToLocal(x) {

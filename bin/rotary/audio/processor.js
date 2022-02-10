@@ -5,6 +5,7 @@ import { barsToNumFrames, numFramesToBars, RENDER_QUANTUM } from "../../audio/co
 import { VoiceManager } from "./voices.js";
 import { Sample, SampleRepository, SampleVoice } from "./samples.js";
 import { OscillatorVoice } from "./oscillators.js";
+import { OscillatorSettings, SamplePlayerSettings } from "../model/sound.js";
 registerProcessor("rotary", class extends AudioWorkletProcessor {
     constructor() {
         super();
@@ -79,15 +80,20 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                                 p: ${result.position}, frameIndexAsNum: ${(track.localToGlobal(result.position) - from)}`);
                         }
                     }
-                    if (true) {
+                    const sound = track.sound.get();
+                    let voice;
+                    if (sound instanceof SamplePlayerSettings) {
                         const key = this.sampleRepository.modulo(trackIndex * track.segments.get() + result.index);
                         const sample = this.sampleRepository.get(key);
-                        const voice = new SampleVoice(frameIndex, trackIndex, result.index, track, sample, 0);
-                        this.voiceManager.add(trackIndex, voice);
+                        voice = new SampleVoice(frameIndex, trackIndex, result.index, track, sample, 0);
+                    }
+                    else if (sound instanceof OscillatorSettings) {
+                        voice = new OscillatorVoice(frameIndex, trackIndex, result.index, track);
                     }
                     else {
-                        this.voiceManager.add(trackIndex, new OscillatorVoice(frameIndex, trackIndex, result.index, track));
+                        throw new Error("Unknown SoundSettings");
                     }
+                    this.voiceManager.add(trackIndex, voice);
                 }
             }
         }

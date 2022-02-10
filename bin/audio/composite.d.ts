@@ -1,24 +1,14 @@
-import { NoArgType, Observable, ObservableImpl, ObservableValue, Observer, Serializer, Terminable, Terminator } from "../lib/common.js";
+import { NoArgType, ObservableValue, Settings, Terminable } from "../lib/common.js";
 import { UIControllerLayout } from "../dom/controls.js";
-declare type Data = PulsarDelayData | ConvolverData | FlangerData;
-export interface CompositeSettingsFormat<DATA extends Data> {
+declare type CompositeSettingsData = PulsarDelayData | ConvolverData | FlangerData;
+export interface CompositeSettingsFormat<DATA extends CompositeSettingsData> {
     class: string;
     data: DATA;
 }
-export declare abstract class CompositeSettings<DATA extends Data> implements Observable<CompositeSettings<DATA>>, Serializer<CompositeSettingsFormat<DATA>>, Terminable {
+export declare abstract class CompositeSettings<DATA extends CompositeSettingsData> extends Settings<DATA> {
     static from(format: CompositeSettingsFormat<any>): CompositeSettings<any>;
-    protected readonly terminator: Terminator;
-    protected readonly observable: ObservableImpl<CompositeSettings<DATA>>;
-    abstract deserialize(format: CompositeSettingsFormat<DATA>): CompositeSettings<DATA>;
-    abstract serialize(): CompositeSettingsFormat<DATA>;
-    protected pack(data?: DATA): CompositeSettingsFormat<DATA>;
-    protected unpack(format: CompositeSettingsFormat<DATA>): DATA;
-    protected bindValue<T>(property: ObservableValue<T>): ObservableValue<T>;
-    addObserver(observer: Observer<CompositeSettings<DATA>>): Terminable;
-    removeObserver(observer: Observer<CompositeSettings<DATA>>): boolean;
-    terminate(): void;
 }
-export declare abstract class DefaultComposite<SETTINGS extends CompositeSettings<Data>> implements Terminable {
+export declare abstract class DefaultComposite<SETTINGS extends CompositeSettings<CompositeSettingsData>> implements Terminable {
     private incoming;
     private outgoing;
     private input;

@@ -657,3 +657,46 @@ export class ArrayUtils {
     private constructor() {
     }
 }
+
+export interface SettingsFormat<DATA> {
+    class: string
+    data: DATA
+}
+
+export abstract class Settings<DATA> implements Observable<Settings<DATA>>, Serializer<SettingsFormat<DATA>>, Terminable {
+    protected readonly terminator: Terminator = new Terminator()
+    protected readonly observable: ObservableImpl<Settings<DATA>> = new ObservableImpl<Settings<DATA>>()
+
+    abstract deserialize(format: SettingsFormat<DATA>): Settings<DATA>
+
+    abstract serialize(): SettingsFormat<DATA>
+
+    protected pack(data?: DATA): SettingsFormat<DATA> {
+        return {
+            class: this.constructor.name,
+            data: data
+        }
+    }
+
+    protected unpack(format: SettingsFormat<DATA>): DATA {
+        console.assert(this.constructor.name === format.class)
+        return format.data
+    }
+
+    protected bindValue<T>(property: ObservableValue<T>): ObservableValue<T> {
+        this.terminator.with(property.addObserver(() => this.observable.notify(this), false))
+        return this.terminator.with(property)
+    }
+
+    addObserver(observer: Observer<Settings<DATA>>): Terminable {
+        return this.observable.addObserver(observer)
+    }
+
+    removeObserver(observer: Observer<Settings<DATA>>): boolean {
+        return this.observable.removeObserver(observer)
+    }
+
+    terminate(): void {
+        this.terminator.terminate()
+    }
+}
