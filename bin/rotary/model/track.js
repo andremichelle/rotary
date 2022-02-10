@@ -53,7 +53,7 @@ export class RotaryTrackModel {
         this.mute = new ObservableValueImpl(false);
         this.solo = new ObservableValueImpl(false);
         this.sound = this.bindValue(new ObservableValueImpl(new SamplePlayerSettings()));
-        this.terminator.with(this.rgb.addObserver(() => this.updateGradient()));
+        this.terminator.with(this.rgb.addObserver(() => this.updateGradient(), true));
         const motionTerminator = this.terminator.with(new Terminator());
         this.terminator.with(this.motion.addObserver((motion) => {
             motionTerminator.terminate();
@@ -64,7 +64,6 @@ export class RotaryTrackModel {
             bendTerminator.terminate();
             bendTerminator.with(bend.addObserver(() => this.observable.notify(this)));
         }, false));
-        this.updateGradient();
     }
     addObserver(observer) {
         return this.observable.addObserver(observer);

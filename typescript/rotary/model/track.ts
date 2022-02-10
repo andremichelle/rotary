@@ -96,8 +96,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     readonly sound: ObservableValue<SoundSettings<any>> = this.bindValue(new ObservableValueImpl<SoundSettings<any>>(new SamplePlayerSettings()))
 
     constructor(readonly root: RotaryModel) {
-        this.terminator.with(this.rgb.addObserver(() => this.updateGradient()))
-
+        this.terminator.with(this.rgb.addObserver(() => this.updateGradient(), true))
         const motionTerminator: Terminator = this.terminator.with(new Terminator())
         this.terminator.with(this.motion.addObserver((motion: Injective<any>) => {
             motionTerminator.terminate()
@@ -108,7 +107,6 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             bendTerminator.terminate()
             bendTerminator.with(bend.addObserver(() => this.observable.notify(this)))
         }, false))
-        this.updateGradient()
     }
 
     addObserver(observer: Observer<RotaryTrackModel>): Terminable {

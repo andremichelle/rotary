@@ -369,7 +369,7 @@ export class RotaryTrackSelector implements Terminable {
         this.mute.with(this.model.mute)
         this.solo = this.terminator.with(new Checkbox(element.querySelector("label.checkbox.solo input")))
         this.solo.with(this.model.solo)
-        this.terminator.with(this.model.addObserver(() => this.updatePreview()))
+        this.terminator.with(this.model.addObserver(() => requestAnimationFrame(() => this.updatePreview())))
         requestAnimationFrame(() => this.updatePreview())
         requestAnimationFrame(() => this.updatePeaks())
     }
