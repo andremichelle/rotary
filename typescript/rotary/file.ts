@@ -1,4 +1,4 @@
-import {RotaryModel} from "./model.js"
+import {RotaryModel} from "./model/rotary.js"
 import {RotaryRenderer} from "./render.js"
 import {ProgressIndicator} from "../dom/common.js"
 

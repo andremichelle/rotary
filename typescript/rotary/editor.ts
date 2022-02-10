@@ -1,6 +1,6 @@
 import {ArrayUtils, NumericStepper, Option, Options, PrintMapping, Terminable, Terminator} from "../lib/common.js"
 import {Checkbox, NumericInput, NumericStepperInput, SelectInput} from "../dom/inputs.js"
-import {Fill, Fills, RotaryModel, RotaryTrackModel} from "./model.js"
+import {RotaryModel} from "./model/rotary.js"
 import {ControlBuilder, TypeSwitchEditor, UIControllerLayout} from "../dom/controls.js"
 import {Dom} from "../dom/common.js"
 import {
@@ -13,6 +13,7 @@ import {
     SmoothStepInjective,
     TShapeInjective
 } from "../lib/injective.js"
+import {Fill, Fills, RotaryTrackModel} from "./model/track.js"
 
 const InjectiveControlBuilder = new class implements ControlBuilder<Injective<any>> {
     build(layout: UIControllerLayout, value: Injective<any>): void {

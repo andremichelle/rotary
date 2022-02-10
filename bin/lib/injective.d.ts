@@ -1,14 +1,14 @@
 import { Observable, ObservableImpl, ObservableValue, Observer, Serializer, Terminable, Terminator } from "./common.js";
 import { Random } from "./math.js";
-declare type Data = PowData | CShapeData | TShapeData | SmoothStepData | MonoNoiseData;
+declare type InjectiveData = PowData | CShapeData | TShapeData | SmoothStepData | MonoNoiseData;
 export declare type InjectiveType = {
     new (): Injective<any>;
 };
-export declare interface InjectiveFormat<DATA extends Data> {
+export declare interface InjectiveFormat<DATA extends InjectiveData> {
     class: string;
     data: DATA;
 }
-export declare abstract class Injective<DATA extends Data> implements Observable<Injective<DATA>>, Serializer<InjectiveFormat<DATA>>, Terminable {
+export declare abstract class Injective<DATA extends InjectiveData> implements Observable<Injective<DATA>>, Serializer<InjectiveFormat<DATA>>, Terminable {
     static from(format: InjectiveFormat<any>): Injective<any>;
     static random(random: Random): Injective<any>;
     protected readonly terminator: Terminator;

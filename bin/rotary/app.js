@@ -15,7 +15,7 @@ import { RotaryRenderer } from "./render.js";
 import { Mulberry32, TAU } from "../lib/math.js";
 import { ListItem, MenuBar } from "../dom/menu.js";
 import { open, renderGIF, renderVideo, renderWebM, save } from "./file.js";
-import { TypeControlEditor, UIControllerLayout } from "../dom/controls.js";
+import { TypeSwitchEditor, UIControllerLayout } from "../dom/controls.js";
 import { CompositeSettingsUIBuilder } from "../audio/composite.js";
 const zoomLevel = new Map([
     ["100%", 1.0], ["75%", 0.75], ["66%", 2.0 / 3.0], ["50%", 0.5], ["33%", 1.0 / 3.0], ["25%", 0.25]
@@ -46,10 +46,10 @@ export class RotaryApp {
         exportLayout.createNumericStepper("size", PrintMapping.integer("px"), new NumericStepper(1)).with(model.exportSettings.size);
         exportLayout.createNumericStepper("fps", PrintMapping.integer(""), new NumericStepper(1)).with(model.exportSettings.fps);
         exportLayout.createNumericStepper("motion blur", PrintMapping.integer(""), new NumericStepper(1)).with(model.exportSettings.subFrames);
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-a"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[0]);
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-b"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[1]);
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-c"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[2]);
-        this.terminator.with(new TypeControlEditor(document.querySelector("div.two-columns.aux-d"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[3]);
+        this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-a"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[0]);
+        this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-b"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[1]);
+        this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-c"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[2]);
+        this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-d"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[3]);
         this.terminator.with(model.tracks.addObserver((event) => {
             switch (event.type) {
                 case CollectionEventType.Add: {

@@ -1,5 +1,5 @@
 import { Option, Terminable } from "../lib/common.js";
-import { RotaryTrackModel } from "./model.js";
+import { RotaryTrackModel } from "./model/track.js";
 export interface RotaryTrackEditorExecutor {
     deleteTrack(trackModel: RotaryTrackModel): void;
     moveTrackLeft(trackModel: RotaryTrackModel): void;

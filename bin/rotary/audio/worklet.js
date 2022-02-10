@@ -1,4 +1,4 @@
-import { RotaryModel } from "../model.js";
+import { RotaryModel } from "../model/rotary.js";
 import { Terminator } from "../../lib/common.js";
 export class RotaryWorkletNode extends AudioWorkletNode {
     constructor(context, model) {

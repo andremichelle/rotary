@@ -1,4 +1,4 @@
-import { RotaryFormat } from "../model.js";
+import { RotaryFormat } from "../model/rotary.js";
 export declare type MessageToProcessor = UpdateFormatMessage | UploadSampleMessage;
 export declare type UpdateFormatMessage = {
     type: "update-format";

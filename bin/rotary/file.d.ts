@@ -1,4 +1,4 @@
-import { RotaryModel } from "./model.js";
+import { RotaryModel } from "./model/rotary.js";
 export declare const open: (model: RotaryModel) => Promise<void>;
 export declare const save: (model: RotaryModel) => Promise<void>;
 export declare const renderWebM: (model: RotaryModel) => Promise<void>;

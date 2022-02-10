@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { RotaryModel } from "./model.js";
+import { RotaryModel } from "./model/rotary.js";
 import { RotaryRenderer } from "./render.js";
 import { ProgressIndicator } from "../dom/common.js";
 const pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };

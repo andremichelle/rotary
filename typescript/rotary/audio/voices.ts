@@ -1,4 +1,5 @@
-import {RotaryModel, RotaryTrackModel} from "../model.js"
+import {RotaryModel} from "../model/rotary.js"
+import {RotaryTrackModel} from "../model/track.js"
 
 export abstract class Voice {
     protected constructor(protected startFrame: number,

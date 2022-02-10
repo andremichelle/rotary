@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Mulberry32 } from "./lib/math.js";
-import { RotaryModel } from "./rotary/model.js";
+import { RotaryModel } from "./rotary/model/rotary.js";
 import { RotaryApp } from "./rotary/app.js";
 import { Audio } from "./rotary/audio.js";
 import { initAudioScene } from "./rotary/audio.default.js";

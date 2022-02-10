@@ -1,4 +1,4 @@
-import { RotaryModel } from "../model.js";
+import { RotaryModel } from "../model/rotary.js";
 import { Terminable } from "../../lib/common.js";
 import { Transport, TransportListener } from "../../audio/sequencing.js";
 export declare class RotaryWorkletNode extends AudioWorkletNode implements TransportListener {

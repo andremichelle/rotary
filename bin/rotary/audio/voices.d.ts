@@ -1,4 +1,4 @@
-import { RotaryTrackModel } from "../model.js";
+import { RotaryTrackModel } from "../model/track.js";
 export declare abstract class Voice {
     protected startFrame: number;
     protected readonly trackIndex: number;

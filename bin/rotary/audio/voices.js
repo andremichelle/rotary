@@ -1,4 +1,4 @@
-import { RotaryModel } from "../model.js";
+import { RotaryModel } from "../model/rotary.js";
 export class Voice {
     constructor(startFrame, trackIndex, segmentIndex, track) {
         this.startFrame = startFrame;

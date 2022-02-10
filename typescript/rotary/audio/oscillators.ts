@@ -1,5 +1,5 @@
 import {Voice} from "./voices.js"
-import {RotaryTrackModel} from "../model.js"
+import {RotaryTrackModel} from "../model/track.js"
 import {Chords, midiToHz, RENDER_QUANTUM} from "../../audio/common.js"
 import {Func, TAU} from "../../lib/math.js"
 

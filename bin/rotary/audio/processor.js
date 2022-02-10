@@ -1,5 +1,6 @@
 import { ObservableValueImpl } from "../../lib/common.js";
-import { Edge, RotaryModel } from "../model.js";
+import { RotaryModel } from "../model/rotary.js";
+import { Edge } from "../model/track.js";
 import { barsToNumFrames, numFramesToBars, RENDER_QUANTUM } from "../../audio/common.js";
 import { VoiceManager } from "./voices.js";
 import { Sample, SampleRepository, SampleVoice } from "./samples.js";

@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { ArrayUtils, CollectionEventType, readAudio, Terminator } from "../lib/common.js";
-import { RotaryModel } from "./model.js";
 import { LimiterWorklet } from "../audio/limiter/worklet.js";
 import { RotaryWorkletNode } from "./audio/worklet.js";
 import { Convolver, ConvolverSettings, Flanger, FlangerSettings, PulsarDelay, PulsarDelaySettings } from "../audio/composite.js";
@@ -17,6 +16,7 @@ import { Updater } from "../dom/common.js";
 import { Transport } from "../audio/sequencing.js";
 import { Metronome } from "../audio/metronome/worklet.js";
 import { Mixer } from "../audio/mixer.js";
+import { RotaryModel } from "./model/rotary.js";
 export const initAudioScene = () => {
     return {
         loadModules(context) {

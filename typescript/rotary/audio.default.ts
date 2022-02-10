@@ -9,7 +9,6 @@ import {
     Terminator
 } from "../lib/common.js"
 import {AudioScene, AudioSceneController} from "./audio.js"
-import {RotaryModel, RotaryTrackModel} from "./model.js"
 import {LimiterWorklet} from "../audio/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
 import {
@@ -27,6 +26,8 @@ import {Updater} from "../dom/common.js"
 import {Transport} from "../audio/sequencing.js"
 import {Metronome} from "../audio/metronome/worklet.js"
 import {Channelstrip, Mixer} from "../audio/mixer.js"
+import {RotaryModel} from "./model/rotary.js"
+import {RotaryTrackModel} from "./model/track.js"
 
 export const initAudioScene = (): AudioScene => {
     return {

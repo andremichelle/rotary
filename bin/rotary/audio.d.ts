@@ -1,4 +1,4 @@
-import { RotaryModel } from "./model.js";
+import { RotaryModel } from "./model/rotary.js";
 import { NoUIMeterWorklet } from "../audio/meter/worklet.js";
 import { Boot, Terminable } from "../lib/common.js";
 import { Transport } from "../audio/sequencing.js";

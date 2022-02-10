@@ -1,8 +1,9 @@
 import { ArrayUtils, NumericStepper, Options, PrintMapping, Terminator } from "../lib/common.js";
-import { Fills, RotaryModel } from "./model.js";
-import { TypeControlEditor, UIControllerLayout } from "../dom/controls.js";
+import { RotaryModel } from "./model/rotary.js";
+import { TypeSwitchEditor, UIControllerLayout } from "../dom/controls.js";
 import { Dom } from "../dom/common.js";
 import { CShapeInjective, IdentityInjective, MonoNoiseInjective, PowInjective, SmoothStepInjective, TShapeInjective } from "../lib/injective.js";
+import { Fills } from "./model/track.js";
 const InjectiveControlBuilder = new class {
     constructor() {
         this.availableTypes = new Map([
@@ -66,8 +67,8 @@ export class RotaryTrackEditor {
         this.frequency = layoutR.createNumericStepper("frequency", PrintMapping.integer("x"), NumericStepper.Integer);
         this.fragments = layoutR.createNumericStepper("fragments", PrintMapping.integer("x"), NumericStepper.Integer);
         this.reverse = layoutR.createCheckbox("reverse");
-        this.motion = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder, "motion"));
-        this.bend = this.terminator.with(new TypeControlEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder, "bend"));
+        this.motion = this.terminator.with(new TypeSwitchEditor(parentNode.querySelector(".motion"), InjectiveControlBuilder, "motion"));
+        this.bend = this.terminator.with(new TypeSwitchEditor(parentNode.querySelector(".bend"), InjectiveControlBuilder, "bend"));
         const audioLayout = this.terminator.with(new UIControllerLayout(document.querySelector(".two-columns.audio")));
         this.volume = audioLayout.createNumericStepper("volume", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);
         this.panning = audioLayout.createNumericStepper("panning", PrintMapping.UnipolarPercent, NumericStepper.Hundredth);

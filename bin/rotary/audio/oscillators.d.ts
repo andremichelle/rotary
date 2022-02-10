@@ -1,5 +1,5 @@
 import { Voice } from "./voices.js";
-import { RotaryTrackModel } from "../model.js";
+import { RotaryTrackModel } from "../model/track.js";
 export declare class OscillatorVoice extends Voice {
     private static ENVELOPE_TIME;
     private static ENVELOPE_TIME_INV;

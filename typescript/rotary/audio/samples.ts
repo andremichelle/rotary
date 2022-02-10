@@ -1,6 +1,6 @@
 import {Voice} from "./voices.js"
 import {RENDER_QUANTUM} from "../../audio/common.js"
-import {RotaryTrackModel} from "../model.js"
+import {RotaryTrackModel} from "../model/track.js"
 
 export class Sample {
     constructor(readonly frames: Float32Array[], readonly numFrames: number, readonly loop: boolean) {

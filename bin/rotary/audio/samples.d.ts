@@ -1,5 +1,5 @@
 import { Voice } from "./voices.js";
-import { RotaryTrackModel } from "../model.js";
+import { RotaryTrackModel } from "../model/track.js";
 export declare class Sample {
     readonly frames: Float32Array[];
     readonly numFrames: number;

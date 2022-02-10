@@ -1,4 +1,4 @@
-import {RotaryModel} from "../model.js"
+import {RotaryModel} from "../model/rotary.js"
 import {Terminable, Terminator} from "../../lib/common.js"
 import {Transport, TransportListener} from "../../audio/sequencing.js"
 import {MessageToWorklet, UpdateFormatMessage, UploadSampleMessage} from "./messages.js"

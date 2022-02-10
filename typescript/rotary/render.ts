@@ -1,5 +1,6 @@
-import {Fill, RotaryModel, RotaryTrackModel} from "./model.js"
 import {TAU} from "../lib/math.js"
+import {RotaryModel} from "./model/rotary.js"
+import {Fill, RotaryTrackModel} from "./model/track.js"
 
 export interface RenderConfiguration {
     fps: number

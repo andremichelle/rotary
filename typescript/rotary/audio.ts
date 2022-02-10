@@ -1,6 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
-import {RotaryModel} from "./model.js"
+import {RotaryModel} from "./model/rotary.js"
 import {NoUIMeterWorklet, StereoMeterWorklet} from "../audio/meter/worklet.js"
 import {ProgressIndicator} from "../dom/common.js"
 import {Boot, Terminable} from "../lib/common.js"

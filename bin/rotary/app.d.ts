@@ -1,7 +1,8 @@
 import { ObservableValueImpl, Terminable } from "../lib/common.js";
-import { RotaryModel, RotaryTrackModel } from "./model.js";
 import { RotaryTrackEditorExecutor } from "./editor.js";
 import { Audio, AudioSceneController } from "./audio.js";
+import { RotaryModel } from "./model/rotary";
+import { RotaryTrackModel } from "./model/track";
 export interface DomElements {
     form: HTMLFormElement;
     selectors: HTMLElement;

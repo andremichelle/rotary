@@ -13,11 +13,11 @@ import {
 import {Linear, LinearInteger} from "./mapping.js"
 import {Func, Mulberry32, Random} from "./math.js"
 
-type Data = PowData | CShapeData | TShapeData | SmoothStepData | MonoNoiseData
+type InjectiveData = PowData | CShapeData | TShapeData | SmoothStepData | MonoNoiseData
 
 export type InjectiveType = { new(): Injective<any> }
 
-export declare interface InjectiveFormat<DATA extends Data> {
+export declare interface InjectiveFormat<DATA extends InjectiveData> {
     class: string
     data: DATA
 }
@@ -25,7 +25,7 @@ export declare interface InjectiveFormat<DATA extends Data> {
 const InjectiveTypes: InjectiveType[] = []
 
 // noinspection JSUnusedGlobalSymbols
-export abstract class Injective<DATA extends Data> implements Observable<Injective<DATA>>, Serializer<InjectiveFormat<DATA>>, Terminable {
+export abstract class Injective<DATA extends InjectiveData> implements Observable<Injective<DATA>>, Serializer<InjectiveFormat<DATA>>, Terminable {
     static from(format: InjectiveFormat<any>): Injective<any> {
         switch (format.class) {
             case IdentityInjective.name:
