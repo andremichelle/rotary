@@ -41,6 +41,7 @@ export class RotaryModel {
         this.exportSettings = this.terminator.with(new RotaryExportSetting());
         this.radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20));
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
+        this.inactiveAlpha = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5));
         this.bpm = this.bindValue(new BoundNumericValue(new Linear(30.0, 999.0), 120.0));
         this.stretch = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0));
         this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4));

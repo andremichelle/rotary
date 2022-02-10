@@ -42,7 +42,10 @@ export class RotaryRenderer {
                 continue;
             }
             if (highlightCrossing) {
-                context.globalAlpha = alphaMultiplier * (index === Math.floor(crossingIndex) ? 0.4 + 0.6 * (crossingIndex - Math.floor(crossingIndex)) : 0.4);
+                const alpha = trackModel.root.inactiveAlpha.get();
+                context.globalAlpha = alphaMultiplier * (index === Math.floor(crossingIndex)
+                    ? alpha + (1.0 - alpha) * (crossingIndex - Math.floor(crossingIndex))
+                    : alpha);
             }
             const a0 = index / segments, a1 = a0 + lengthRatio / segments;
             RotaryRenderer.renderSection(context, trackModel, r0, r1, phase + bend.fx(a0) * length, phase + bend.fx(a1) * length);

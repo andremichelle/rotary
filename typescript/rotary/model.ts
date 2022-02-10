@@ -116,6 +116,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     readonly exportSettings: RotaryExportSetting = this.terminator.with(new RotaryExportSetting())
     readonly radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20))
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75))
+    readonly inactiveAlpha = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5))
     readonly bpm = this.bindValue(new BoundNumericValue(new Linear(30.0, 999.0), 120.0))
     readonly stretch = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0))
     readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4))
