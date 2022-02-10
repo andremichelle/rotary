@@ -29,24 +29,26 @@ export class SampleRepository {
     }
 }
 
-export class SampleVoice implements Voice {
-    static ATTACK = (0.010 * sampleRate) | 0
-    static RELEASE = (0.050 * sampleRate) | 0
+export class SampleVoice extends Voice {
+    private static ATTACK = (0.010 * sampleRate) | 0
+    private static RELEASE = (0.050 * sampleRate) | 0
 
-    duration: number = Number.MAX_SAFE_INTEGER
+    private duration: number = Number.MAX_SAFE_INTEGER
 
-    constructor(private startFrameIndex: number,
-                private readonly outputIndex: number,
-                private readonly track: RotaryTrackModel,
+    constructor(startFrame: number,
+                trackIndex: number,
+                segmentIndex: number,
+                track: RotaryTrackModel,
                 private readonly sample: Sample,
                 private position: number = 0 | 0) {
+        super(startFrame, trackIndex, segmentIndex, track)
     }
 
-    process(outputs: Float32Array[][]): boolean {
-        const [outL, outR] = outputs[this.outputIndex]
+    process(outputs: Float32Array[][], positions: Float32Array): boolean {
+        const [outL, outR] = outputs[this.trackIndex]
         const sample: Sample = this.sample
         const [ch0, ch1] = sample.frames
-        for (let frameIndex = this.startFrameIndex; frameIndex < RENDER_QUANTUM; frameIndex++) {
+        for (let frameIndex = this.startFrame; frameIndex < RENDER_QUANTUM; frameIndex++) {
             const position = this.position++
             const duration = this.duration--
             const numFrames = sample.numFrames
@@ -63,7 +65,7 @@ export class SampleVoice implements Voice {
                 }
             }
         }
-        this.startFrameIndex = 0
+        this.startFrame = 0
         return false
     }
 

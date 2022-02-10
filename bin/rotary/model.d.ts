@@ -138,7 +138,8 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;
     globalToLocal(x: number): number;
     localToGlobal(y: number): number;
-    localToSegment(phase: number): number;
+    globalToSegment(x: number): number;
+    localToSegment(x: number): number;
     querySections(p0: number, p1: number): Iterator<QueryResult>;
     private branchQuerySection;
     private seekSection;

@@ -251,9 +251,9 @@ export class RotaryTrackModel {
         this.fragments.set(1.0);
         this.reverse.set(false);
         this.length.set(1.0);
-        this.lengthRatio.set(0.125);
+        this.lengthRatio.set(0.5);
         this.outline.set(0.0);
-        this.segments.set(16);
+        this.segments.set(4);
         this.width.set(128);
         this.fill.set(Fill.Flat);
     }
@@ -356,8 +356,11 @@ export class RotaryTrackModel {
         const fwd = (this.motion.get().fy(my - ny) + ny) / fragments;
         return this.reverse.get() ? 1.0 - fwd : fwd;
     }
-    localToSegment(phase) {
-        const full = this.bend.get().fy(Func.clamp((phase - Math.floor(phase)) / this.length.get())) * this.segments.get();
+    globalToSegment(x) {
+        return this.localToSegment(this.globalToLocal(x));
+    }
+    localToSegment(x) {
+        const full = this.bend.get().fy(Func.clamp((x - Math.floor(x)) / this.length.get())) * this.segments.get();
         const index = Math.floor(full);
         if (this.exclude.getBit(index)) {
             return -1;

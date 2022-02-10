@@ -1,4 +1,12 @@
 import { RotaryModel } from "../model.js";
+export class Voice {
+    constructor(startFrame, trackIndex, segmentIndex, track) {
+        this.startFrame = startFrame;
+        this.trackIndex = trackIndex;
+        this.segmentIndex = segmentIndex;
+        this.track = track;
+    }
+}
 export class VoiceManager {
     constructor() {
         this.voices = new Map();
@@ -15,12 +23,12 @@ export class VoiceManager {
     stopByIndex(index) {
         this.voices.get(index).forEach(voice => voice.stop());
     }
-    process(outputs) {
+    process(outputs, positions) {
         for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
             const voices = this.voices.get(index);
             for (let voiceIndex = voices.length - 1; 0 <= voiceIndex; voiceIndex--) {
                 const voice = voices[voiceIndex];
-                const complete = voice.process(outputs);
+                const complete = voice.process(outputs, positions);
                 if (complete) {
                     voices.splice(voiceIndex, 1);
                 }

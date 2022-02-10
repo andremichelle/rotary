@@ -13,7 +13,7 @@ export class LimiterWorklet extends AudioWorkletNode {
         })
 
         this.lookahead = 0.005
-        this.threshold = -6.0
+        this.threshold = -3.0
     }
 
     set lookahead(seconds) {

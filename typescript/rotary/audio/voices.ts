@@ -1,9 +1,15 @@
-import {RotaryModel} from "../model.js"
+import {RotaryModel, RotaryTrackModel} from "../model.js"
 
-export interface Voice {
-    process(outputs: Float32Array[][]): boolean
+export abstract class Voice {
+    protected constructor(protected startFrame: number,
+                          protected readonly trackIndex: number,
+                          protected readonly segmentIndex: number,
+                          protected readonly track: RotaryTrackModel) {
+    }
 
-    stop()
+    abstract process(outputs: Float32Array[][], positions: Float32Array): boolean
+
+    abstract stop()
 }
 
 export class VoiceManager {
@@ -27,12 +33,12 @@ export class VoiceManager {
         this.voices.get(index).forEach(voice => voice.stop())
     }
 
-    process(outputs: Float32Array[][]) {
+    process(outputs: Float32Array[][], positions: Float32Array) {
         for (let index = 0; index < RotaryModel.MAX_TRACKS; index++) {
             const voices = this.voices.get(index)
             for (let voiceIndex = voices.length - 1; 0 <= voiceIndex; voiceIndex--) {
                 const voice: Voice = voices[voiceIndex]
-                const complete = voice.process(outputs)
+                const complete = voice.process(outputs, positions)
                 if (complete) {
                     voices.splice(voiceIndex, 1)
                 }

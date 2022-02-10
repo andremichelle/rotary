@@ -1,3 +1,4 @@
+import { Voice } from "./voices.js";
 import { RENDER_QUANTUM } from "../../audio/common.js";
 export class Sample {
     constructor(frames, numFrames, loop) {
@@ -22,20 +23,18 @@ export class SampleRepository {
         return index % this.maxKey;
     }
 }
-export class SampleVoice {
-    constructor(startFrameIndex, outputIndex, track, sample, position = 0 | 0) {
-        this.startFrameIndex = startFrameIndex;
-        this.outputIndex = outputIndex;
-        this.track = track;
+export class SampleVoice extends Voice {
+    constructor(startFrame, trackIndex, segmentIndex, track, sample, position = 0 | 0) {
+        super(startFrame, trackIndex, segmentIndex, track);
         this.sample = sample;
         this.position = position;
         this.duration = Number.MAX_SAFE_INTEGER;
     }
-    process(outputs) {
-        const [outL, outR] = outputs[this.outputIndex];
+    process(outputs, positions) {
+        const [outL, outR] = outputs[this.trackIndex];
         const sample = this.sample;
         const [ch0, ch1] = sample.frames;
-        for (let frameIndex = this.startFrameIndex; frameIndex < RENDER_QUANTUM; frameIndex++) {
+        for (let frameIndex = this.startFrame; frameIndex < RENDER_QUANTUM; frameIndex++) {
             const position = this.position++;
             const duration = this.duration--;
             const numFrames = sample.numFrames;
@@ -54,7 +53,7 @@ export class SampleVoice {
                 }
             }
         }
-        this.startFrameIndex = 0;
+        this.startFrame = 0;
         return false;
     }
     stop() {

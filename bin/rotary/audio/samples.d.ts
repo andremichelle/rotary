@@ -14,16 +14,13 @@ export declare class SampleRepository {
     get(key: number): Sample;
     modulo(index: number): number;
 }
-export declare class SampleVoice implements Voice {
-    private startFrameIndex;
-    private readonly outputIndex;
-    private readonly track;
+export declare class SampleVoice extends Voice {
     private readonly sample;
     private position;
-    static ATTACK: number;
-    static RELEASE: number;
-    duration: number;
-    constructor(startFrameIndex: number, outputIndex: number, track: RotaryTrackModel, sample: Sample, position?: number);
-    process(outputs: Float32Array[][]): boolean;
+    private static ATTACK;
+    private static RELEASE;
+    private duration;
+    constructor(startFrame: number, trackIndex: number, segmentIndex: number, track: RotaryTrackModel, sample: Sample, position?: number);
+    process(outputs: Float32Array[][], positions: Float32Array): boolean;
     stop(): void;
 }
