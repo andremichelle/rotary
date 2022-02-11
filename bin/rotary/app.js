@@ -200,6 +200,12 @@ export class RotaryApp {
                 event.preventDefault();
                 preview.transport.togglePlayback();
             }
+            else if (event.key === "f" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+                if (document.fullscreenEnabled) {
+                    event.preventDefault();
+                    yield this.toggleFullscreen();
+                }
+            }
         }));
         return this;
     }
@@ -246,20 +252,25 @@ export class RotaryApp {
                     .onTrigger(() => this.zoom.set(level[1])));
             }
         }))
-            .addListItem(ListItem.default("Enter Full Screen", "", null !== document.fullscreenElement)
+            .addListItem(ListItem.default("Enter Full Screen", "F", null !== document.fullscreenElement)
             .isSelectable(document.fullscreenEnabled)
-            .onTrigger(() => __awaiter(this, void 0, void 0, function* () {
-            if (null === document.fullscreenElement) {
-                yield this.elements.canvas.requestFullscreen();
-            }
-            else {
-                yield document.exitFullscreen();
-            }
-        }))))
+            .onTrigger(() => __awaiter(this, void 0, void 0, function* () { return this.toggleFullscreen(); }))))
             .addButton(element.querySelector("[data-menu='help']"), ListItem.root()
             .addListItem(ListItem.default("Open TODOs in Github (protected)", "", false)
             .onTrigger(_ => window.open("https://github.com/andremichelle/rotary/wiki/TODOs"))));
         return this;
+    }
+    toggleFullscreen() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!document.fullscreenEnabled)
+                return Promise.resolve();
+            if (null === document.fullscreenElement) {
+                return this.elements.canvas.requestFullscreen();
+            }
+            else {
+                return document.exitFullscreen();
+            }
+        });
     }
     peak(model) {
         return this.preview.meter.peaks[this.model.tracks.indexOf(model)];

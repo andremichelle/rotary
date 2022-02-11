@@ -281,17 +281,21 @@ nav.menu > div.container > div.default:not(.selectable) {
   color: #6d6d6d;
   pointer-events: none;
 }
-nav.menu > div.container > div.default > span.label {
+nav.menu > div.container > div.default > div.label {
   pointer-events: none;
   flex: 1;
-  padding: 0 20px 0 4px;
+  margin: 0 24px 0 4px;
 }
-nav.menu > div.container > div.default > span.shortcut {
-  width: 20px;
+nav.menu > div.container > div.default > div.shortcut {
+  display: flex;
   opacity: 0.3;
-  text-align: left;
   pointer-events: none;
   margin: 0;
+  justify-content: flex-end;
+}
+nav.menu > div.container > div.default > div.shortcut > span {
+  flex: 0 0 1em;
+  text-align: center;
 }
 nav.menu > div.container > hr {
   margin: 5px 12px;

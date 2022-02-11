@@ -240,6 +240,11 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
             } else if (event.code === "Space" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
                 event.preventDefault()
                 preview.transport.togglePlayback()
+            } else if (event.key === "f" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+                if (document.fullscreenEnabled) {
+                    event.preventDefault()
+                    await this.toggleFullscreen()
+                }
             }
         })
         return this
@@ -290,19 +295,22 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
                                 .onTrigger(() => this.zoom.set(level[1])))
                         }
                     }))
-                .addListItem(ListItem.default("Enter Full Screen", "", null !== document.fullscreenElement)
+                .addListItem(ListItem.default("Enter Full Screen", "F", null !== document.fullscreenElement)
                     .isSelectable(document.fullscreenEnabled)
-                    .onTrigger(async () => {
-                        if (null === document.fullscreenElement) {
-                            await this.elements.canvas.requestFullscreen()
-                        } else {
-                            await document.exitFullscreen()
-                        }
-                    })))
+                    .onTrigger(async () => this.toggleFullscreen())))
             .addButton(element.querySelector("[data-menu='help']"), ListItem.root()
                 .addListItem(ListItem.default("Open TODOs in Github (protected)", "", false)
                     .onTrigger(_ => window.open("https://github.com/andremichelle/rotary/wiki/TODOs"))))
         return this
+    }
+
+    async toggleFullscreen(): Promise<void> {
+        if (!document.fullscreenEnabled) return Promise.resolve()
+        if (null === document.fullscreenElement) {
+            return this.elements.canvas.requestFullscreen()
+        } else {
+            return document.exitFullscreen()
+        }
     }
 
     peak(model: RotaryTrackModel): Float32Array {

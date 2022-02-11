@@ -116,17 +116,21 @@ nav.menu
         color: #6d6d6d
         pointer-events: none
 
-      > span.label
+      > div.label
         pointer-events: none
         flex: 1
-        padding: 0 20px 0 4px
+        margin: 0 24px 0 4px
 
-      > span.shortcut
-        width: 20px
+      > div.shortcut
+        display: flex
         opacity: 0.3
-        text-align: left
         pointer-events: none
         margin: 0
+        justify-content: flex-end
+
+        > span
+          flex: 0 0 1em
+          text-align: center
 
     > hr
       margin: 5px 12px
