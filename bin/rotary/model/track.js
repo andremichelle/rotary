@@ -31,8 +31,9 @@ export class RotaryTrackModel {
         this.terminator = new Terminator();
         this.observable = new ObservableImpl();
         this.gradient = [];
-        this.segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 128), 8));
-        this.exclude = this.bindValue(new ObservableBits(128));
+        this.segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, RotaryTrackModel.MAX_SEGMENTS), 8));
+        this.exclude = this.bindValue(new ObservableBits(RotaryTrackModel.MAX_SEGMENTS));
+        this.connect = this.bindValue(new ObservableBits(RotaryTrackModel.MAX_SEGMENTS));
         this.width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12));
         this.widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0));
         this.length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0));
@@ -76,10 +77,19 @@ export class RotaryTrackModel {
         this.frequency.set(1.0);
         this.fragments.set(1.0);
         this.reverse.set(false);
-        this.length.set(1.0);
+        this.length.set(0.75);
         this.lengthRatio.set(0.5);
-        this.outline.set(0.0);
-        this.segments.set(4);
+        this.outline.set(1.0);
+        this.segments.set(8);
+        this.phaseOffset.set(0.75);
+        this.exclude.setBit(4, true);
+        this.connect.setBit(1, true);
+        this.connect.setBit(6, true);
+        {
+        }
+        {
+        }
+        this.sound.set(new OscillatorSettings());
         this.width.set(128);
         this.fill.set(Fill.Flat);
     }
@@ -113,11 +123,12 @@ export class RotaryTrackModel {
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)));
         this.fragments.set(Math.floor(random.nextDouble(1.0, 3.0)));
         this.reverse.set(random.nextBoolean());
+        if (segments > 3) {
+            this.exclude.randomise(random, 0.2);
+            this.connect.randomise(random, 0.2);
+        }
         this.panning.set(random.nextDouble(-1.0, 1.0));
         this.aux.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0);
-        if (random.nextDouble(0.0, 1.0) < 0.1) {
-            this.sound.set(new OscillatorSettings());
-        }
         return this;
     }
     terminate() {
@@ -127,6 +138,7 @@ export class RotaryTrackModel {
         return {
             segments: this.segments.get(),
             exclude: this.exclude.serialize(),
+            connect: this.connect.serialize(),
             width: this.width.get(),
             widthPadding: this.widthPadding.get(),
             length: this.length.get(),
@@ -152,6 +164,7 @@ export class RotaryTrackModel {
     deserialize(format) {
         this.segments.set(format.segments);
         this.exclude.deserialize(format.exclude);
+        this.connect.deserialize(format.connect);
         this.width.set(format.width);
         this.widthPadding.set(format.widthPadding);
         this.length.set(format.length);
@@ -191,13 +204,40 @@ export class RotaryTrackModel {
         return this.localToSegment(this.globalToLocal(x));
     }
     localToSegment(x) {
-        const full = this.bend.get().fy(Func.clamp((x - Math.floor(x)) / this.length.get())) * this.segments.get();
-        const index = Math.floor(full);
+        x -= Math.floor(x);
+        const length = this.length.get();
+        if (x > length)
+            return null;
+        const segments = this.segments.get();
+        const bend = this.bend.get();
+        const index = Math.floor(bend.fy(x / length) * segments) | 0;
         if (this.exclude.getBit(index)) {
-            return -1;
         }
-        const local = (full - index) / this.lengthRatio.get();
-        return 0.0 === local ? index : local <= 1.0 ? index + (this.reverse.get() ? local : 1.0 - local) : -1.0;
+        let i0 = index | 0;
+        let i1 = index | 0;
+        for (let i = 0; i < segments; i++) {
+            if (this.connect.getBit((i0 + segments) % segments)) {
+                i0--;
+            }
+            else {
+                break;
+            }
+        }
+        for (let i = 1; i < segments; i++) {
+            if (this.connect.getBit((i1 + 1) % segments)) {
+                i1++;
+            }
+            else {
+                break;
+            }
+        }
+        i0 = (i0 + segments) % segments;
+        const x0 = bend.fx(i0 / segments) * length;
+        const x1 = bend.fxi((i1 + this.lengthRatio.get()) / segments) * length;
+        if (x > x1)
+            return null;
+        const ratio = (x - x0) / (x1 - x0);
+        return { index: i0, ratio: this.reverse.get() ? ratio : 1.0 - ratio };
     }
     querySections(p0, p1) {
         if (p0 == p1) {
@@ -244,12 +284,14 @@ export class RotaryTrackModel {
         let seekMin = index * step;
         while (seekMin < t1) {
             if (!this.exclude.getBit(index)) {
-                if (seekMin >= t0) {
+                if (seekMin >= t0 && !this.connect.getBit(index)) {
                     yield new QueryResult(this.reverse.get() ? Edge.End : Edge.Start, index, bend.fx(Func.clamp(seekMin / length)) * length + offset);
                 }
-                const seekMax = (index + lengthRatio) * step;
-                if (seekMax >= t0 && seekMax < t1) {
-                    yield new QueryResult(this.reverse.get() ? Edge.Start : Edge.End, index, bend.fx(Func.clamp(seekMax / length)) * length + offset);
+                if (!this.connect.getBit((index + 1) % segments)) {
+                    const seekMax = (index + lengthRatio) * step;
+                    if (seekMax >= t0 && seekMax < t1) {
+                        yield new QueryResult(this.reverse.get() ? Edge.Start : Edge.End, index, bend.fx(Func.clamp(seekMax / length)) * length + offset);
+                    }
                 }
             }
             seekMin = ++index * step;
@@ -268,4 +310,5 @@ export class RotaryTrackModel {
         this.gradient[1] = `rgba(${r},${g},${b},0.0)`;
     }
 }
+RotaryTrackModel.MAX_SEGMENTS = 128 | 0;
 //# sourceMappingURL=track.js.map

@@ -32,6 +32,16 @@ export abstract class Injective<DATA extends InjectiveData> extends Settings<DAT
         return new InjectiveTypes[Math.floor(random.nextDouble(0.0, InjectiveTypes.length))]().randomize(random)
     }
 
+    fxi(x: number): number {
+        const xi = Math.floor(x)
+        return this.fx(x - xi) + xi
+    }
+
+    fyi(y: number): number {
+        const yi = Math.floor(y)
+        return this.fy(y - yi) + yi
+    }
+
     abstract fx(x: number): number
 
     abstract fy(y: number): number

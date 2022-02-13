@@ -1,3 +1,5 @@
+// noinspection JSSuspiciousNameCombination
+
 import {IdentityInjective, Injective, InjectiveData, TShapeInjective} from "../../lib/injective.js"
 import {
     ArrayUtils,
@@ -38,9 +40,15 @@ export class QueryResult {
     }
 }
 
+export interface Segment {
+    index: number,
+    ratio: number
+}
+
 export declare interface RotaryTrackFormat {
     segments: number
     exclude: number[]
+    connect: number[]
     width: number
     widthPadding: number
     length: number
@@ -66,11 +74,13 @@ export declare interface RotaryTrackFormat {
 }
 
 export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
+    static MAX_SEGMENTS: number = 128 | 0
     private readonly terminator: Terminator = new Terminator()
     private readonly observable: ObservableImpl<RotaryTrackModel> = new ObservableImpl<RotaryTrackModel>()
     private readonly gradient: string[] = [] // opaque[0], transparent[1]
-    readonly segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, 128), 8))
-    readonly exclude = this.bindValue(new ObservableBits(128))
+    readonly segments = this.bindValue(new BoundNumericValue(new LinearInteger(1, RotaryTrackModel.MAX_SEGMENTS), 8))
+    readonly exclude = this.bindValue(new ObservableBits(RotaryTrackModel.MAX_SEGMENTS))
+    readonly connect = this.bindValue(new ObservableBits(RotaryTrackModel.MAX_SEGMENTS))
     readonly width = this.bindValue(new BoundNumericValue(new LinearInteger(1, 1024), 12))
     readonly widthPadding = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 0))
     readonly length = this.bindValue(new BoundNumericValue(Linear.Identity, 1.0))
@@ -123,17 +133,25 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.frequency.set(1.0)
         this.fragments.set(1.0)
         this.reverse.set(false)
-        this.length.set(1.0)
+        this.length.set(0.75)
         this.lengthRatio.set(0.5)
-        this.outline.set(0.0)
-        this.segments.set(4)
-        // this.exclude.setBit(0, true)
-        // const noiseInjective = new MonoNoiseInjective()
-        // noiseInjective.seed.set(16777215)
-        // noiseInjective.roughness.set(64.0)
-        // noiseInjective.strength.set(1.0)
-        // noiseInjective.resolution.set(512)
-        // this.bend.set(noiseInjective)
+        this.outline.set(1.0)
+        this.segments.set(8)
+        this.phaseOffset.set(0.75)
+        this.exclude.setBit(4, true)
+        this.connect.setBit(1, true)
+        this.connect.setBit(6, true)
+        {
+            // const injective = new TShapeInjective()
+            // injective.shape.set(0.865111627150327)
+            // this.bend.set(injective)
+        }
+        {
+            // const injective = new CShapeInjective()
+            // injective.slope.set(1.53805523540359)
+            // this.motion.set(injective)
+        }
+        this.sound.set(new OscillatorSettings())
         this.width.set(128)
         this.fill.set(Fill.Flat)
     }
@@ -170,13 +188,17 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.frequency.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.fragments.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.reverse.set(random.nextBoolean())
+        if(segments > 3) {
+            this.exclude.randomise(random, 0.2)
+            this.connect.randomise(random, 0.2)
+        }
 
         this.panning.set(random.nextDouble(-1.0, 1.0))
         this.aux.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0)
 
-        if(random.nextDouble(0.0, 1.0) < 0.1) {
-            this.sound.set(new OscillatorSettings())
-        }
+        // if (random.nextDouble(0.0, 1.0) < 0.1) {
+        //     this.sound.set(new OscillatorSettings())
+        // }
         return this
     }
 
@@ -188,6 +210,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return {
             segments: this.segments.get(),
             exclude: this.exclude.serialize(),
+            connect: this.connect.serialize(),
             width: this.width.get(),
             widthPadding: this.widthPadding.get(),
             length: this.length.get(),
@@ -201,14 +224,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
             frequency: this.frequency.get(),
             fragments: this.fragments.get(),
             reverse: this.reverse.get(),
-
             gain: this.gain.get(),
             volume: this.volume.get(),
             panning: this.panning.get(),
             aux: this.aux.map(value => value.get()),
             mute: this.mute.get(),
             solo: this.solo.get(),
-
             sound: this.sound.get().serialize()
         }
     }
@@ -216,6 +237,7 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
     deserialize(format: RotaryTrackFormat): RotaryTrackModel {
         this.segments.set(format.segments)
         this.exclude.deserialize(format.exclude)
+        this.connect.deserialize(format.connect)
         this.width.set(format.width)
         this.widthPadding.set(format.widthPadding)
         this.length.set(format.length)
@@ -229,14 +251,12 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.frequency.set(format.frequency)
         this.fragments.set(format.fragments)
         this.reverse.set(format.reverse)
-
         this.gain.set(format.gain)
         this.volume.set(format.volume)
         this.panning.set(format.panning)
         this.aux.forEach((value: BoundNumericValue, index: number) => value.set(format.aux[index]))
         this.mute.set(format.mute)
         this.solo.set(format.solo)
-
         this.sound.set(SoundSettings.from(format.sound))
         return this
     }
@@ -256,18 +276,86 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         return this.reverse.get() ? 1.0 - fwd : fwd
     }
 
-    globalToSegment(x: number): number {
+    globalToSegment(x: number): Segment {
         return this.localToSegment(this.globalToLocal(x))
     }
 
-    localToSegment(x: number): number {
-        const full = this.bend.get().fy(Func.clamp((x - Math.floor(x)) / this.length.get())) * this.segments.get()
-        const index = Math.floor(full)
+    // localToSegment scenarios
+    //
+    //         n-1       0        1        2
+    //                   X        X            bit set
+    // |-----o--|-----o--|-----o--|-----o--|-----o--|
+    //                     P
+    //          [-----------------------]
+    //
+    //         n-1       0        1        2
+    //          E        X        X            bit set
+    // |-----o--|-----o--|-----o--|-----o--|-----o--|
+    //                     P
+    // [-----]                             [-----]
+    //
+    //         n-1       0        1        2
+    //                                         bit set
+    // |-----o--|-----o--|-----o--|-----o--|-----o--|
+    //                     P
+    //
+    //
+    //         n-1       0        1        2
+    //          X                              bit set
+    // |-----o--|-----o--|-----o--|-----o--|-----o--|
+    //                     P
+    // [--------------]
+    //
+    //         n-1       0        1        2
+    //                   X                     bit set
+    // |-----o--|-----o--|-----o--|-----o--|-----o--|
+    //                     P
+    //          [--------------]
+    //
+    //         n-1       0        1        2
+    //                            X            bit set
+    // |-----o--|-----o--|-----o--|-----o--|-----o--|
+    //                     P
+    //                   [--------------]
+    //
+    //         n-1       0        1        2
+    //                                     X   bit set
+    // |-----o--|-----o--|-----o--|-----o--|-----o--|
+    //                     P
+    //                            [--------------]
+
+    localToSegment(x: number): Segment | null {
+        x -= Math.floor(x)
+        const length = this.length.get()
+        if (x > length) return null
+        const segments = this.segments.get()
+        const bend = this.bend.get()
+        const index = Math.floor(bend.fy(x / length) * segments) | 0
         if (this.exclude.getBit(index)) {
-            return -1
+            // return null TODO?
         }
-        const local = (full - index) / this.lengthRatio.get()
-        return 0.0 === local ? index : local <= 1.0 ? index + (this.reverse.get() ? local : 1.0 - local) : -1.0
+        let i0 = index | 0
+        let i1 = index | 0
+        for (let i = 0; i < segments; i++) {
+            if (this.connect.getBit((i0 + segments) % segments)) {
+                i0--
+            } else {
+                break
+            }
+        }
+        for (let i = 1; i < segments; i++) {
+            if (this.connect.getBit((i1 + 1) % segments)) {
+                i1++
+            } else {
+                break
+            }
+        }
+        i0 = (i0 + segments) % segments
+        const x0 = bend.fx(i0 / segments) * length
+        const x1 = bend.fxi((i1 + this.lengthRatio.get()) / segments) * length
+        if (x > x1) return null
+        const ratio = (x - x0) / (x1 - x0)
+        return {index: i0, ratio: this.reverse.get() ? ratio : 1.0 - ratio}
     }
 
     querySections(p0: number, p1: number): Iterator<QueryResult> {
@@ -316,14 +404,16 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         let seekMin = index * step
         while (seekMin < t1) {
             if (!this.exclude.getBit(index)) {
-                if (seekMin >= t0) {
+                if (seekMin >= t0 && !this.connect.getBit(index)) {
                     yield new QueryResult(this.reverse.get() ? Edge.End : Edge.Start, index,
                         bend.fx(Func.clamp(seekMin / length)) * length + offset)
                 }
-                const seekMax = (index + lengthRatio) * step
-                if (seekMax >= t0 && seekMax < t1) {
-                    yield new QueryResult(this.reverse.get() ? Edge.Start : Edge.End, index,
-                        bend.fx(Func.clamp(seekMax / length)) * length + offset)
+                if (!this.connect.getBit((index + 1) % segments)) {
+                    const seekMax = (index + lengthRatio) * step
+                    if (seekMax >= t0 && seekMax < t1) {
+                        yield new QueryResult(this.reverse.get() ? Edge.Start : Edge.End, index,
+                            bend.fx(Func.clamp(seekMax / length)) * length + offset)
+                    }
                 }
             }
             seekMin = ++index * step

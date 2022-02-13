@@ -23,6 +23,14 @@ export class Injective extends Settings {
     static random(random) {
         return new InjectiveTypes[Math.floor(random.nextDouble(0.0, InjectiveTypes.length))]().randomize(random);
     }
+    fxi(x) {
+        const xi = Math.floor(x);
+        return this.fx(x - xi) + xi;
+    }
+    fyi(y) {
+        const yi = Math.floor(y);
+        return this.fy(y - yi) + yi;
+    }
 }
 export class IdentityInjective extends Injective {
     fx(x) {

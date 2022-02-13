@@ -1,4 +1,4 @@
-import {BitArray, Bits} from "./math.js"
+import {BitArray, Bits, Random} from "./math.js"
 import {Linear, Range} from "./mapping.js"
 
 export type NoArgType<T> = { new(): T }
@@ -193,6 +193,10 @@ export class ObservableBits implements Bits, Observable<ObservableBits>, Seriali
 
     getBit(index: number): boolean {
         return this.bits.getBit(index)
+    }
+
+    randomise(random: Random, chance: number = 1.0): void {
+        this.bits.randomise(random, chance)
     }
 
     clear(): void {

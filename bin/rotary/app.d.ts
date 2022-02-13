@@ -36,6 +36,7 @@ export declare class RotaryApp implements RotaryTrackEditorExecutor {
     render(phase: number): void;
     installShortcuts(audio: Audio, preview: AudioSceneController): RotaryApp;
     installApplicationMenu(audio: Audio): RotaryApp;
+    toggleFullscreen(): Promise<void>;
     peak(model: RotaryTrackModel): Float32Array;
     private randomizeAll;
     private createSelector;

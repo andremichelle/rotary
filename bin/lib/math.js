@@ -77,14 +77,20 @@ export class Func {
 }
 export class BitArray {
     constructor(numBits = 32 | 0) {
+        this.numBits = numBits;
         this.array = new Uint32Array((numBits >>> 5) + 1);
     }
     getBit(index) {
+        if (0 > index || index >= this.numBits)
+            return false;
         const aIndex = index >>> 5;
         const byte = 1 << (index - (aIndex << 3));
         return 0 !== (this.array[aIndex] & byte);
     }
     setBit(index, value) {
+        if (0 > index || index >= this.numBits) {
+            throw new Error("out of bounds");
+        }
         const aIndex = index >>> 5;
         const byte = 1 << (index - (aIndex << 5));
         const was = this.getBit(index);
@@ -95,6 +101,11 @@ export class BitArray {
             this.array[aIndex] &= ~byte;
         }
         return value !== was;
+    }
+    randomise(random, chance = 1.0) {
+        for (let i = 0; i < this.numBits; i++) {
+            this.setBit(i, random.nextDouble(0.0, 1.0) < chance);
+        }
     }
     clear() {
         this.array.fill(0);

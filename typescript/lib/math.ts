@@ -114,22 +114,28 @@ export interface Bits {
     getBit(index: number): boolean
 
     clear(): void
+
+    randomise(random: Random, chance: number): void
 }
 
 export class BitArray implements Bits, Serializer<number[]> {
     private array: Uint32Array
 
-    constructor(numBits: number = 32 | 0) {
+    constructor(private readonly numBits: number = 32 | 0) {
         this.array = new Uint32Array((numBits >>> 5) + 1)
     }
 
     getBit(index: number): boolean {
+        if (0 > index || index >= this.numBits) return false
         const aIndex = index >>> 5
         const byte = 1 << (index - (aIndex << 3))
         return 0 !== (this.array[aIndex] & byte)
     }
 
     setBit(index: number, value: boolean): boolean {
+        if (0 > index || index >= this.numBits) {
+            throw new Error("out of bounds")
+        }
         const aIndex = index >>> 5
         const byte = 1 << (index - (aIndex << 5))
         const was = this.getBit(index)
@@ -139,6 +145,12 @@ export class BitArray implements Bits, Serializer<number[]> {
             this.array[aIndex] &= ~byte
         }
         return value !== was
+    }
+
+    randomise(random: Random, chance: number = 1.0): void {
+        for (let i = 0; i < this.numBits; i++) {
+            this.setBit(i, random.nextDouble(0.0, 1.0) < chance)
+        }
     }
 
     clear(): void {

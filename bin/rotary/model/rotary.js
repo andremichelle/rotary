@@ -40,10 +40,10 @@ export class RotaryModel {
         this.exportSettings = this.terminator.with(new RotaryExportSetting());
         this.radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20));
         this.phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75));
-        this.inactiveAlpha = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5));
+        this.inactiveAlpha = this.bindValue(new BoundNumericValue(Linear.Identity, 0.1));
         this.bpm = this.bindValue(new BoundNumericValue(new Linear(30.0, 999.0), 120.0));
         this.stretch = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0));
-        this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4));
+        this.motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 1));
         this.aux = [
             new ObservableValueImpl(new PulsarDelaySettings()),
             new ObservableValueImpl(convolverSettingsA),
@@ -92,6 +92,7 @@ export class RotaryModel {
     test() {
         this.tracks.clear();
         this.radiusMin.set(160);
+        this.phaseOffset.set(0.0);
         this.createTrack().test();
         return this;
     }
@@ -139,8 +140,8 @@ export class RotaryModel {
     intersects(phase) {
         for (let i = 0; i < this.tracks.size(); i++) {
             const trackModel = this.tracks.get(i);
-            const crossingIndex = trackModel.localToSegment(trackModel.globalToLocal(phase));
-            if (-1 < crossingIndex && !trackModel.exclude.getBit(crossingIndex)) {
+            const crossing = trackModel.localToSegment(trackModel.globalToLocal(phase));
+            if (crossing !== null && !trackModel.exclude.getBit(crossing.index)) {
                 return true;
             }
         }

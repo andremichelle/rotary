@@ -1,6 +1,6 @@
 import { Voice } from "./voices.js";
 import { Chords, midiToHz, RENDER_QUANTUM } from "../../audio/common.js";
-import { Func, TAU } from "../../lib/math.js";
+import { TAU } from "../../lib/math.js";
 export class OscillatorVoice extends Voice {
     constructor(startFrame, trackIndex, segmentIndex, track) {
         super(startFrame, trackIndex, segmentIndex, track);
@@ -22,8 +22,7 @@ export class OscillatorVoice extends Voice {
             }
             const envelope = Math.min(OscillatorVoice.ENVELOPE_TIME, Math.min(position, duration)) * OscillatorVoice.ENVELOPE_TIME_INV * 0.2;
             const x = position * sampleRateInv;
-            const out = Math.sin(x * this.frequency * TAU + Math.sin(x * TAU * 3.0) * 3.0) * envelope
-                * Math.sin(Func.mod(this.track.globalToSegment(positions[frameIndex])) * Math.PI);
+            const out = Math.sin(x * (this.frequency * Math.pow(2.0, 0.0)) * TAU) * envelope;
             outL[frameIndex] += out;
             outR[frameIndex] += out;
         }

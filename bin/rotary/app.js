@@ -184,6 +184,8 @@ export class RotaryApp {
     }
     installShortcuts(audio, preview) {
         window.addEventListener("keydown", (event) => __awaiter(this, void 0, void 0, function* () {
+            if (event.target instanceof HTMLInputElement)
+                return;
             if (event.key === "r" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
                 event.preventDefault();
                 this.randomizeAll();

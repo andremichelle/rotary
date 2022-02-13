@@ -228,6 +228,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
 
     installShortcuts(audio: Audio, preview: AudioSceneController): RotaryApp {
         window.addEventListener("keydown", async (event: KeyboardEvent) => {
+            if (event.target instanceof HTMLInputElement) return
             if (event.key === "r" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
                 event.preventDefault()
                 this.randomizeAll()

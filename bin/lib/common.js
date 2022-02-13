@@ -145,6 +145,9 @@ export class ObservableBits {
     getBit(index) {
         return this.bits.getBit(index);
     }
+    randomise(random, chance = 1.0) {
+        this.bits.randomise(random, chance);
+    }
     clear() {
         this.bits.clear();
     }

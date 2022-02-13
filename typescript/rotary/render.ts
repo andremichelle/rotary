@@ -1,6 +1,6 @@
 import {TAU} from "../lib/math.js"
 import {RotaryModel} from "./model/rotary.js"
-import {Fill, RotaryTrackModel} from "./model/track.js"
+import {Fill, RotaryTrackModel, Segment} from "./model/track.js"
 
 export interface RenderConfiguration {
     fps: number
@@ -40,7 +40,7 @@ export class RotaryRenderer {
                                phase: number,
                                alphaMultiplier: number = 1.0,
                                highlightCrossing: boolean = false): void {
-        const crossingIndex = trackModel.localToSegment(phase)
+        const crossing: Segment = trackModel.localToSegment(phase)
         const segments = trackModel.segments.get()
         const length = trackModel.length.get()
         const width = trackModel.width.get()
@@ -49,37 +49,50 @@ export class RotaryRenderer {
         const bend = trackModel.bend.get()
         const lengthRatio = trackModel.lengthRatio.get()
         phase = trackModel.root.phaseOffset.get() - phase
-        for (let index = 0; index < segments; index++) {
+        let startIndex = 0
+        while (trackModel.connect.getBit(startIndex)) { // ignore leading connected segments (will be connected with last segment)
+            startIndex++
+        }
+        if (startIndex === segments) return // all segments connected > result is undefined > abort rendering
+        for (let index = startIndex; index < segments; index++) {
             if (trackModel.exclude.getBit(index)) {
+                while (trackModel.connect.getBit((index + 1) % segments)) index++ // exclude connected as well
                 continue
             }
             if (highlightCrossing) {
-                const alpha = trackModel.root.inactiveAlpha.get()
-                context.globalAlpha = alphaMultiplier * (index === Math.floor(crossingIndex)
-                    ? alpha + (1.0 - alpha) * (crossingIndex - Math.floor(crossingIndex))
-                    : alpha)
+                const inactiveAlpha = trackModel.root.inactiveAlpha.get()
+                context.globalAlpha = alphaMultiplier * (null !== crossing && crossing.index === index % segments
+                    ? inactiveAlpha + (1.0 - inactiveAlpha) * crossing.ratio
+                    : inactiveAlpha)
             }
-            const a0 = index / segments, a1 = a0 + lengthRatio / segments
+            const a0 = index / segments
+            while (trackModel.connect.getBit((index + 1) % segments)) index++ // skip connected
+            const a1 = (index + lengthRatio) / segments
             RotaryRenderer.renderSection(context, trackModel, r0, r1,
                 phase + bend.fx(a0) * length,
-                phase + bend.fx(a1) * length
+                phase + bend.fxi(a1) * length
             )
-            context.globalAlpha = alphaMultiplier
         }
         const outline = trackModel.outline.get()
         if (0.0 < outline) {
+            context.globalAlpha = trackModel.root.inactiveAlpha.get()
             context.strokeStyle = trackModel.opaque()
             context.lineWidth = outline
             const numArcs = length < 1.0 ? segments - 1 : segments
-            for (let i = 0; i < numArcs; i++) {
-                context.beginPath()
-                const a0 = (i + lengthRatio) / segments, a1 = (i + 1) / segments
+            for (let index = startIndex; index < numArcs; index++) {
+                if (trackModel.connect.getBit(index)) continue
+                if (trackModel.connect.getBit((index + 1) % segments)) continue
+                if (trackModel.exclude.getBit(index)) continue
+                if (trackModel.exclude.getBit((index + 1) % segments)) continue
+                const a0 = (index + lengthRatio) / segments
+                const a1 = (index + 1) / segments
                 const startAngle = (phase + bend.fx(a0) * length) * TAU
                 const endAngle = (phase + bend.fx(a1) * length) * TAU
                 const radius = r0 + width * 0.5
                 if ((endAngle - startAngle) * radius < 1.0) {
                     continue
                 }
+                context.beginPath()
                 context.arc(0, 0, radius, startAngle, endAngle, false)
                 context.stroke()
             }

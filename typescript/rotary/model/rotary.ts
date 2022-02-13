@@ -24,7 +24,7 @@ import {RenderConfiguration} from "../render.js"
 import {Random} from "../../lib/math.js"
 import {Colors} from "../../lib/colors.js"
 import {barsToSeconds} from "../../audio/common.js"
-import {RotaryTrackFormat, RotaryTrackModel} from "./track.js"
+import {RotaryTrackFormat, RotaryTrackModel, Segment} from "./track.js"
 
 export declare interface RotaryExportFormat {
     fps: number
@@ -86,10 +86,10 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     readonly exportSettings: RotaryExportSetting = this.terminator.with(new RotaryExportSetting())
     readonly radiusMin = this.bindValue(new BoundNumericValue(new LinearInteger(0, 1024), 20))
     readonly phaseOffset = this.bindValue(new BoundNumericValue(Linear.Identity, 0.75))
-    readonly inactiveAlpha = this.bindValue(new BoundNumericValue(Linear.Identity, 0.5))
+    readonly inactiveAlpha = this.bindValue(new BoundNumericValue(Linear.Identity, 0.1))
     readonly bpm = this.bindValue(new BoundNumericValue(new Linear(30.0, 999.0), 120.0))
     readonly stretch = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0))
-    readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 4))
+    readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 1))
 
     readonly aux: ObservableValue<CompositeSettings<any>>[] = [
         new ObservableValueImpl(new PulsarDelaySettings()),
@@ -147,6 +147,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     test(): RotaryModel {
         this.tracks.clear()
         this.radiusMin.set(160)
+        this.phaseOffset.set(0.0)
         this.createTrack().test()
         return this
     }
@@ -202,8 +203,8 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     intersects(phase: number): boolean {
         for (let i = 0; i < this.tracks.size(); i++) {
             const trackModel = this.tracks.get(i)
-            const crossingIndex = trackModel.localToSegment(trackModel.globalToLocal(phase))
-            if (-1 < crossingIndex && !trackModel.exclude.getBit(crossingIndex)) {
+            const crossing: Segment = trackModel.localToSegment(trackModel.globalToLocal(phase))
+            if (crossing !== null && !trackModel.exclude.getBit(crossing.index)) {
                 return true
             }
         }
