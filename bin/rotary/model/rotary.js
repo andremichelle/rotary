@@ -21,7 +21,7 @@ export class RotaryExportSetting {
         return { fps: this.fps.get(), subFrames: this.subFrames.get(), size: this.size.get() };
     }
     getConfiguration(numFrames) {
-        return { size: this.size.get(), subFrames: this.subFrames.get(), fps: this.fps.get(), numFrames: numFrames };
+        return { size: this.size.get(), subFrames: this.subFrames.get(), fps: this.fps.get(), numFrames: numFrames, alpha: true, padding: 2.0 };
     }
     terminate() {
         this.terminator.terminate();

@@ -61,7 +61,7 @@ export class RotaryExportSetting implements Terminable, Serializer<RotaryExportF
     }
 
     getConfiguration(numFrames: number): RenderConfiguration {
-        return {size: this.size.get(), subFrames: this.subFrames.get(), fps: this.fps.get(), numFrames: numFrames}
+        return {size: this.size.get(), subFrames: this.subFrames.get(), fps: this.fps.get(), numFrames: numFrames, alpha: true, padding: 2.0}
     }
 
     terminate(): void {

@@ -33,12 +33,15 @@ export interface Bits {
     setBit(index: number, value: boolean): boolean;
     getBit(index: number): boolean;
     clear(): void;
+    randomise(random: Random, chance: number): void;
 }
 export declare class BitArray implements Bits, Serializer<number[]> {
+    private readonly numBits;
     private array;
     constructor(numBits?: number);
     getBit(index: number): boolean;
     setBit(index: number, value: boolean): boolean;
+    randomise(random: Random, chance?: number): void;
     clear(): void;
     deserialize(format: number[]): BitArray;
     serialize(): number[];

@@ -1,4 +1,4 @@
-import { Bits } from "./math.js";
+import { Bits, Random } from "./math.js";
 import { Range } from "./mapping.js";
 export declare type NoArgType<T> = {
     new (): T;
@@ -79,6 +79,7 @@ export declare class ObservableBits implements Bits, Observable<ObservableBits>,
     removeObserver(observer: Observer<ObservableBits>): boolean;
     setBit(index: number, value: boolean): boolean;
     getBit(index: number): boolean;
+    randomise(random: Random, chance?: number): void;
     clear(): void;
     deserialize(format: number[]): ObservableBits;
     serialize(): number[];

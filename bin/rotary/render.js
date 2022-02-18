@@ -168,11 +168,11 @@ export class RotaryRenderer {
     }
     static *renderFrame(model, configuration) {
         const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d", { alpha: true });
+        const context = canvas.getContext("2d", { alpha: configuration.alpha });
         const size = configuration.size;
         const numFrames = configuration.numFrames;
         const subFrames = configuration.subFrames;
-        const scale = size / (model.measureRadius() + 2.0) * 0.5;
+        const scale = size / (model.measureRadius() + configuration.padding) * 0.5;
         canvas.width = size;
         canvas.height = size;
         for (let i = 0; i < numFrames; i++) {

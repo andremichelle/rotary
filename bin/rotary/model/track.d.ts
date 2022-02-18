@@ -20,9 +20,14 @@ export declare class QueryResult {
     readonly position: number;
     constructor(edge: Edge, index: number, position: number);
 }
+export interface Segment {
+    index: number;
+    ratio: number;
+}
 export declare interface RotaryTrackFormat {
     segments: number;
     exclude: number[];
+    connect: number[];
     width: number;
     widthPadding: number;
     length: number;
@@ -46,11 +51,13 @@ export declare interface RotaryTrackFormat {
 }
 export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, Serializer<RotaryTrackFormat>, Terminable {
     readonly root: RotaryModel;
+    static MAX_SEGMENTS: number;
     private readonly terminator;
     private readonly observable;
     private readonly gradient;
     readonly segments: BoundNumericValue;
     readonly exclude: ObservableBits;
+    readonly connect: ObservableBits;
     readonly width: BoundNumericValue;
     readonly widthPadding: BoundNumericValue;
     readonly length: BoundNumericValue;
@@ -83,8 +90,8 @@ export declare class RotaryTrackModel implements Observable<RotaryTrackModel>, S
     deserialize(format: RotaryTrackFormat): RotaryTrackModel;
     globalToLocal(x: number): number;
     localToGlobal(y: number): number;
-    globalToSegment(x: number): number;
-    localToSegment(x: number): number;
+    globalToSegment(x: number): Segment;
+    localToSegment(x: number): Segment | null;
     querySections(p0: number, p1: number): Iterator<QueryResult>;
     private branchQuerySection;
     private seekSection;

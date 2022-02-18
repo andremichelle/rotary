@@ -88,6 +88,19 @@ export const renderGIF = async (model: RotaryModel) => {
     gif.render()
 }
 
+export const renderPNG = async (model: RotaryModel) => {
+    const frame: Generator<CanvasRenderingContext2D> = RotaryRenderer.renderFrame(model, {
+        numFrames: 1,
+        subFrames: 1,
+        fps: 60,
+        size: 4096,
+        alpha: false,
+        padding: 128
+    })
+    const context: CanvasRenderingContext2D = frame.next().value
+    context.canvas.toBlob(blob => window.open(URL.createObjectURL(blob)), "image/png", 1)
+}
+
 export const renderVideo = async (model: RotaryModel) => {
     let totalBytes = 0 | 0
 

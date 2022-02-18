@@ -7,6 +7,8 @@ export interface RenderConfiguration {
     subFrames: number // motion blur off(1), on(2-32)
     numFrames: number
     size: number
+    alpha: boolean
+    padding: number
 }
 
 export class RotaryRenderer {
@@ -173,13 +175,13 @@ export class RotaryRenderer {
         })
     }
 
-    static* renderFrame(model: RotaryModel, configuration: RenderConfiguration): Generator<CanvasRenderingContext2D> {
+    static* renderFrame(model: RotaryModel, configuration: RenderConfiguration): Generator<CanvasRenderingContext2D, void, CanvasRenderingContext2D> {
         const canvas = document.createElement("canvas")
-        const context = canvas.getContext("2d", {alpha: true})
+        const context = canvas.getContext("2d", {alpha: configuration.alpha})
         const size = configuration.size
         const numFrames = configuration.numFrames
         const subFrames = configuration.subFrames
-        const scale: number = size / (model.measureRadius() + 2.0) * 0.5 // two pixel padding for strokes
+        const scale: number = size / (model.measureRadius() + configuration.padding) * 0.5 // two pixel padding for strokes
         canvas.width = size
         canvas.height = size
         for (let i = 0; i < numFrames; i++) {

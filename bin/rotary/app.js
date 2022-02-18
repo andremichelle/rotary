@@ -14,7 +14,7 @@ import { Dom } from "../dom/common.js";
 import { RotaryRenderer } from "./render.js";
 import { Mulberry32, TAU } from "../lib/math.js";
 import { ListItem, MenuBar } from "../dom/menu.js";
-import { open, renderGIF, renderVideo, renderWebM, save } from "./file.js";
+import { open, renderGIF, renderPNG, renderVideo, renderWebM, save } from "./file.js";
 import { TypeSwitchEditor, UIControllerLayout } from "../dom/controls.js";
 import { CompositeSettingsUIBuilder } from "../audio/composite.js";
 const zoomLevel = new Map([
@@ -226,6 +226,8 @@ export class RotaryApp {
             .onTrigger(() => renderGIF(this.model)))
             .addListItem(ListItem.default("Export WebM", "", false)
             .onTrigger(() => renderWebM(this.model)))
+            .addListItem(ListItem.default("Export PNG (still)", "", false)
+            .onTrigger(() => renderPNG(this.model)))
             .addListItem(ListItem.default("Export Wav", "", false)
             .onTrigger(() => __awaiter(this, void 0, void 0, function* () { return audio.exportWav(); })))
             .addListItem(ListItem.default("Clear", "", false)

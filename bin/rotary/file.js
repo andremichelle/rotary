@@ -88,6 +88,18 @@ export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* 
     gif.addListener("progress", progress => progressIndicator.onProgress(0.5 + progress * 0.5));
     gif.render();
 });
+export const renderPNG = (model) => __awaiter(void 0, void 0, void 0, function* () {
+    const frame = RotaryRenderer.renderFrame(model, {
+        numFrames: 1,
+        subFrames: 1,
+        fps: 60,
+        size: 4096,
+        alpha: false,
+        padding: 128
+    });
+    const context = frame.next().value;
+    context.canvas.toBlob(blob => window.open(URL.createObjectURL(blob)), "image/png", 1);
+});
 export const renderVideo = (model) => __awaiter(void 0, void 0, void 0, function* () {
     let totalBytes = 0 | 0;
     const buffers = [];

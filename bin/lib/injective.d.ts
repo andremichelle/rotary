@@ -7,6 +7,8 @@ export declare type InjectiveType = {
 export declare abstract class Injective<DATA extends InjectiveData> extends Settings<DATA> {
     static from(format: SettingsFormat<any>): Injective<any>;
     static random(random: Random): Injective<any>;
+    fxi(x: number): number;
+    fyi(y: number): number;
     abstract fx(x: number): number;
     abstract fy(y: number): number;
     abstract copy(): Injective<DATA>;
