@@ -1,5 +1,5 @@
 import {RotaryModel} from "./model/rotary.js"
-import {RotaryRenderer} from "./render.js"
+import {createRenderConfiguration, RotaryRenderer} from "./render.js"
 import {ProgressIndicator} from "../dom/common.js"
 
 const pickerOpts = {types: [{description: "rotary", accept: {"json/*": [".json"]}}]}
@@ -89,14 +89,14 @@ export const renderGIF = async (model: RotaryModel) => {
 }
 
 export const renderPNG = async (model: RotaryModel) => {
-    const frame: Generator<CanvasRenderingContext2D> = RotaryRenderer.renderFrame(model, {
+    const frame: Generator<CanvasRenderingContext2D> = RotaryRenderer.iterateFrames(model, createRenderConfiguration({
         numFrames: 1,
         subFrames: 1,
         fps: 60,
         size: 4096,
         alpha: false,
         padding: 128
-    })
+    }))
     const context: CanvasRenderingContext2D = frame.next().value
     context.canvas.toBlob(blob => window.open(URL.createObjectURL(blob)), "image/png", 1)
 }

@@ -20,7 +20,7 @@ import {
     Terminator
 } from "../../lib/common.js"
 import {Linear, LinearInteger} from "../../lib/mapping.js"
-import {RenderConfiguration} from "../render.js"
+import {createRenderConfiguration, RenderConfiguration} from "../render.js"
 import {Random} from "../../lib/math.js"
 import {Colors} from "../../lib/colors.js"
 import {barsToSeconds} from "../../audio/common.js"
@@ -61,7 +61,12 @@ export class RotaryExportSetting implements Terminable, Serializer<RotaryExportF
     }
 
     getConfiguration(numFrames: number): RenderConfiguration {
-        return {size: this.size.get(), subFrames: this.subFrames.get(), fps: this.fps.get(), numFrames: numFrames, alpha: true, padding: 2.0}
+        return createRenderConfiguration({
+            size: this.size.get(),
+            subFrames: this.subFrames.get(),
+            fps: this.fps.get(),
+            numFrames: numFrames
+        })
     }
 
     terminate(): void {

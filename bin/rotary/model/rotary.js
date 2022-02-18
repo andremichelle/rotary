@@ -1,6 +1,7 @@
 import { CompositeSettings, ConvolverFiles, ConvolverSettings, FlangerSettings, PulsarDelaySettings } from "../../audio/composite.js";
 import { ArrayUtils, BoundNumericValue, ObservableCollection, ObservableImpl, ObservableValueImpl, Terminator } from "../../lib/common.js";
 import { Linear, LinearInteger } from "../../lib/mapping.js";
+import { createRenderConfiguration } from "../render.js";
 import { Colors } from "../../lib/colors.js";
 import { barsToSeconds } from "../../audio/common.js";
 import { RotaryTrackModel } from "./track.js";
@@ -21,7 +22,12 @@ export class RotaryExportSetting {
         return { fps: this.fps.get(), subFrames: this.subFrames.get(), size: this.size.get() };
     }
     getConfiguration(numFrames) {
-        return { size: this.size.get(), subFrames: this.subFrames.get(), fps: this.fps.get(), numFrames: numFrames, alpha: true, padding: 2.0 };
+        return createRenderConfiguration({
+            size: this.size.get(),
+            subFrames: this.subFrames.get(),
+            fps: this.fps.get(),
+            numFrames: numFrames
+        });
     }
     terminate() {
         this.terminator.terminate();

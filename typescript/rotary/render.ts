@@ -9,6 +9,22 @@ export interface RenderConfiguration {
     size: number
     alpha: boolean
     padding: number
+    background: string
+}
+
+export const createRenderConfiguration = (options: Partial<RenderConfiguration>): RenderConfiguration => {
+    return {
+        ...{
+            fps: 60,
+            subFrames: 32,
+            numFrames: 60,
+            size: 512,
+            alpha: true,
+            padding: 16,
+            background: "rgba(0,0,0,0.0)"
+        },
+        ...options
+    }
 }
 
 export class RotaryRenderer {
@@ -77,7 +93,7 @@ export class RotaryRenderer {
         }
         const outline = trackModel.outline.get()
         if (0.0 < outline) {
-            context.globalAlpha = trackModel.root.inactiveAlpha.get()
+            context.globalAlpha = trackModel.root.inactiveAlpha.get() * alphaMultiplier
             context.strokeStyle = trackModel.opaque()
             context.lineWidth = outline
             const numArcs = length < 1.0 ? segments - 1 : segments
@@ -159,7 +175,7 @@ export class RotaryRenderer {
                               progress?: (progress: number) => void): Promise<void> {
         let count = 0 | 0
         return new Promise((resolve) => {
-            const iterator: Generator<CanvasRenderingContext2D> = RotaryRenderer.renderFrame(model, configuration)
+            const iterator = RotaryRenderer.iterateFrames(model, configuration)
             const next = () => {
                 const curr = iterator.next()
                 if (curr.done) {
@@ -175,25 +191,27 @@ export class RotaryRenderer {
         })
     }
 
-    static* renderFrame(model: RotaryModel, configuration: RenderConfiguration): Generator<CanvasRenderingContext2D, void, CanvasRenderingContext2D> {
+    static* iterateFrames(model: RotaryModel, configuration: RenderConfiguration): Generator<CanvasRenderingContext2D> {
         const canvas = document.createElement("canvas")
         const context = canvas.getContext("2d", {alpha: configuration.alpha})
         const size = configuration.size
         const numFrames = configuration.numFrames
         const subFrames = configuration.subFrames
-        const scale: number = size / (model.measureRadius() + configuration.padding) * 0.5 // two pixel padding for strokes
+        const scale: number = size / (model.measureRadius() + configuration.padding) * 0.5
         canvas.width = size
         canvas.height = size
         for (let i = 0; i < numFrames; i++) {
             context.clearRect(0, 0, size, size)
+            context.fillStyle = configuration.background
+            context.fillRect(0, 0, size, size)
             context.save()
             context.translate(size >> 1, size >> 1)
             context.scale(scale, scale)
-            const phase: number = i / numFrames
-            const alphaMultiplier = 1.0 / subFrames
+            const phase = i / numFrames
             const offset = 1.0 / (model.duration() * configuration.fps * subFrames)
-            for (let i = 0; i < subFrames; i++) {
-                RotaryRenderer.render(context, model, phase + offset * i, alphaMultiplier)
+            const alphaMultiplier = 1.0 / subFrames
+            for (let j = 0; j < subFrames; j++) {
+                RotaryRenderer.render(context, model, phase + offset * j, alphaMultiplier)
             }
             context.restore()
             yield context

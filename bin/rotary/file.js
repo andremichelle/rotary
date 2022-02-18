@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { RotaryModel } from "./model/rotary.js";
-import { RotaryRenderer } from "./render.js";
+import { createRenderConfiguration, RotaryRenderer } from "./render.js";
 import { ProgressIndicator } from "../dom/common.js";
 const pickerOpts = { types: [{ description: "rotary", accept: { "json/*": [".json"] } }] };
 export const open = (model) => __awaiter(void 0, void 0, void 0, function* () {
@@ -89,14 +89,14 @@ export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* 
     gif.render();
 });
 export const renderPNG = (model) => __awaiter(void 0, void 0, void 0, function* () {
-    const frame = RotaryRenderer.renderFrame(model, {
+    const frame = RotaryRenderer.iterateFrames(model, createRenderConfiguration({
         numFrames: 1,
         subFrames: 1,
         fps: 60,
         size: 4096,
         alpha: false,
         padding: 128
-    });
+    }));
     const context = frame.next().value;
     context.canvas.toBlob(blob => window.open(URL.createObjectURL(blob)), "image/png", 1);
 });

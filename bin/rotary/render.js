@@ -9,6 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { TAU } from "../lib/math.js";
 import { Fill } from "./model/track.js";
+export const createRenderConfiguration = (options) => {
+    return Object.assign({
+        fps: 60,
+        subFrames: 32,
+        numFrames: 60,
+        size: 512,
+        alpha: true,
+        padding: 16,
+        background: "rgba(0,0,0,0.0)"
+    }, options);
+};
 export class RotaryRenderer {
     static render(context, model, phase, alphaMultiplier = 1.0) {
         let radiusMin = model.radiusMin.get();
@@ -63,7 +74,7 @@ export class RotaryRenderer {
         }
         const outline = trackModel.outline.get();
         if (0.0 < outline) {
-            context.globalAlpha = trackModel.root.inactiveAlpha.get();
+            context.globalAlpha = trackModel.root.inactiveAlpha.get() * alphaMultiplier;
             context.strokeStyle = trackModel.opaque();
             context.lineWidth = outline;
             const numArcs = length < 1.0 ? segments - 1 : segments;
@@ -147,7 +158,7 @@ export class RotaryRenderer {
         return __awaiter(this, void 0, void 0, function* () {
             let count = 0 | 0;
             return new Promise((resolve) => {
-                const iterator = RotaryRenderer.renderFrame(model, configuration);
+                const iterator = RotaryRenderer.iterateFrames(model, configuration);
                 const next = () => {
                     const curr = iterator.next();
                     if (curr.done) {
@@ -166,7 +177,7 @@ export class RotaryRenderer {
             });
         });
     }
-    static *renderFrame(model, configuration) {
+    static *iterateFrames(model, configuration) {
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d", { alpha: configuration.alpha });
         const size = configuration.size;
@@ -177,14 +188,16 @@ export class RotaryRenderer {
         canvas.height = size;
         for (let i = 0; i < numFrames; i++) {
             context.clearRect(0, 0, size, size);
+            context.fillStyle = configuration.background;
+            context.fillRect(0, 0, size, size);
             context.save();
             context.translate(size >> 1, size >> 1);
             context.scale(scale, scale);
             const phase = i / numFrames;
-            const alphaMultiplier = 1.0 / subFrames;
             const offset = 1.0 / (model.duration() * configuration.fps * subFrames);
-            for (let i = 0; i < subFrames; i++) {
-                RotaryRenderer.render(context, model, phase + offset * i, alphaMultiplier);
+            const alphaMultiplier = 1.0 / subFrames;
+            for (let j = 0; j < subFrames; j++) {
+                RotaryRenderer.render(context, model, phase + offset * j, alphaMultiplier);
             }
             context.restore();
             yield context;
