@@ -342,10 +342,10 @@ html, body {
   width: 100%;
   height: 100%;
   color: white;
-  background-color: black;
+  background-color: #1A1A1A;
   font-family: "IBM Plex Sans", sans-serif;
   font-size: 9px;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 * {
@@ -366,27 +366,26 @@ button.error {
 body {
   display: flex;
   flex-direction: row;
-  margin: 1px 0 0 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: scroll;
 }
-body .side {
-  flex: 1;
-  background-color: #1A1A1A;
-}
-body .center {
-  margin: 0 1px;
-  height: 100%;
+body > .center {
+  margin: 0 auto;
   display: flex;
+  border: 1px #090909 solid;
   flex-direction: column;
+  height: max-content;
 }
-body .center > .top {
-  flex: 1 0 40px;
+body > .center > .top {
+  flex: 0 0 40px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   background-color: #1A1A1A;
 }
-body .center > .top #meter {
+body > .center > .top #meter {
   display: flex;
   margin: 0 8px;
   padding: 3px;
@@ -398,7 +397,7 @@ body main {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  background-color: #090909;
 }
 body main h5 {
   margin: 0;
@@ -555,7 +554,7 @@ body main > .editing > .v-split > .sound {
   background-color: #1A1A1A;
 }
 body main > .editing > .preview {
-  margin: 1px 0 0 1px;
+  margin: 1px;
   padding: 32px;
   flex: 1;
   display: flex;
@@ -563,7 +562,7 @@ body main > .editing > .preview {
   position: relative;
   background-color: #222;
 }
-body main > .editing > .preview .rotary {
+body main > .editing > .preview > .rotary {
   padding: 32px;
   position: relative;
   background-color: #040404;
@@ -573,10 +572,10 @@ body main > .editing > .preview .rotary {
   min-height: 400px;
   display: flex;
 }
-body main > .editing > .preview .rotary canvas {
+body main > .editing > .preview > .rotary canvas {
   margin: auto;
 }
-body main > .editing > .preview .rotary div.top-overlay {
+body main > .editing > .preview > .rotary div.top-overlay {
   top: 4px;
   left: 8px;
   width: calc(100% - 16px);
@@ -585,33 +584,41 @@ body main > .editing > .preview .rotary div.top-overlay {
   align-items: center;
   column-gap: 8px;
 }
-body main > .editing > .preview .rotary div.top-overlay > button.rewind {
+body main > .editing > .preview > .rotary div.top-overlay > button.rewind {
   padding: 2px;
 }
-body main > .editing > .preview .rotary div.top-overlay > button.rewind:hover > svg {
+body main > .editing > .preview > .rotary div.top-overlay > button.rewind:hover > svg {
   fill: rgba(255, 255, 255, 0.6);
 }
-body main > .editing > .preview .rotary div.top-overlay > button.rewind > svg {
+body main > .editing > .preview > .rotary div.top-overlay > button.rewind > svg {
   width: 14px;
   height: 14px;
   fill: rgba(255, 255, 255, 0.2);
 }
-body main > .editing > .preview .rotary div.top-overlay > div.spacer {
+body main > .editing > .preview > .rotary div.top-overlay > div.spacer {
   flex: 1;
 }
-body main > .editing > .preview .rotary div.top-overlay svg {
+body main > .editing > .preview > .rotary div.top-overlay svg {
   background-color: transparent;
 }
-body main > .editing > .preview .rotary div.top-overlay label {
+body main > .editing > .preview > .rotary div.top-overlay label {
   color: #AAA;
   white-space: nowrap;
 }
-body main > .editing > .preview .rotary div.top-overlay label.transport {
+body main > .editing > .preview > .rotary div.top-overlay label.transport {
   cursor: pointer;
 }
-body main > .editing > .preview .rotary div.top-overlay label:after {
+body main > .editing > .preview > .rotary div.top-overlay label:after {
   opacity: 0.6;
   content: attr(data-unit);
+}
+body main > .editing > .preview-context {
+  flex: 1 0 0;
+  background-color: #1A1A1A;
+}
+body footer {
+  flex: 1 0 40px;
+  background-color: #1A1A1A;
 }
 
 div.two-columns {
