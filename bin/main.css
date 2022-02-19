@@ -1,5 +1,6 @@
 ::-webkit-scrollbar {
   width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-button {
@@ -11,8 +12,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  border-left: 2px #111 solid;
-  border-right: 2px #111 solid;
+  border: 1px #111 solid;
   background-color: #333;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -21,6 +21,7 @@
 
 ::-webkit-scrollbar {
   width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-button {
@@ -32,8 +33,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  border-left: 2px #111 solid;
-  border-right: 2px #111 solid;
+  border: 1px #111 solid;
   background-color: #333;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -366,7 +366,7 @@ body {
   flex-direction: row;
   margin: 0;
   padding: 0;
-  overflow-y: scroll;
+  overflow: auto;
 }
 body > .center {
   margin: 0 auto;
