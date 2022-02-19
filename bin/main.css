@@ -417,11 +417,11 @@ body main h5.export {
 }
 body main h5.master-audio {
   color: #111;
-  background-color: #999900;
+  background-color: #7a7a1f;
 }
 body main h5.aux {
   color: #111;
-  background-color: #364563;
+  background-color: #5c6336;
 }
 body main > .global-editor {
   flex: 0 0 auto;
