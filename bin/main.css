@@ -381,14 +381,14 @@ body > .center > .top {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  background-color: #1A1A1A;
+  background-color: #1f1f1f;
 }
 body > .center > .top #meter {
   display: flex;
   margin: 0 8px;
   padding: 3px;
   border-radius: 3px;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.3);
   box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.6);
 }
 body main {
@@ -402,42 +402,41 @@ body main h5 {
   margin: 0;
   padding: 4px 6px;
   border-radius: 1px;
-  color: #444444;
+  color: #AAA;
   text-transform: uppercase;
   font-size: 9px;
   background-color: #111;
 }
 body main h5.global {
-  color: #656565;
-  background-color: #12211c;
+  color: #111;
+  background-color: #366354;
 }
 body main h5.export {
-  color: #656565;
-  background-color: #121f21;
+  color: #111;
+  background-color: #365c63;
 }
 body main h5.master-audio {
-  color: #656565;
-  background-color: #212108;
+  color: #111;
+  background-color: #999900;
 }
 body main h5.aux {
-  color: #656565;
-  background-color: #121721;
+  color: #111;
+  background-color: #364563;
 }
 body main > .global-editor {
   flex: 0 0 auto;
   margin: 1px 0 0 0;
   padding: 20px 12px 16px 16px;
-  background-color: #1A1A1A;
+  background-color: #151515;
 }
 body main > .global-editor > .columns {
   display: flex;
   flex-direction: row;
-  column-gap: 16px;
+  column-gap: 8px;
 }
 body main > .global-editor > .columns > .column {
   display: flex;
   flex-direction: column;
-  background-color: #1A1A1A;
   row-gap: 8px;
 }
 body main > form.track-nav {

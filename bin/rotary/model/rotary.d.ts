@@ -38,6 +38,8 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     readonly phaseOffset: ObservableValue<number>;
     readonly inactiveAlpha: ObservableValue<number>;
     readonly bpm: ObservableValue<number>;
+    readonly master_gain: ObservableValue<number>;
+    readonly limiter_threshold: ObservableValue<number>;
     readonly stretch: ObservableValue<number>;
     readonly motion: ObservableValue<number>;
     readonly aux: ObservableValue<CompositeSettings<any>>[];
