@@ -63,7 +63,7 @@ export class RotaryExportSetting implements Terminable, Serializer<RotaryExportF
     getConfiguration(numFrames: number): RenderConfiguration {
         return createRenderConfiguration({
             size: this.size.get(),
-            subFrames: this.subFrames.get(),
+            motionFrames: this.subFrames.get(),
             fps: this.fps.get(),
             numFrames: numFrames
         })
@@ -200,8 +200,9 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     }
 
     measureRadius(): number {
+        const lastIndex = this.tracks.size() - 1
         return this.tracks.reduce((radius, track, index) =>
-            radius + track.width.get() + track.widthPadding.get()
+            radius + track.width.get() + (lastIndex !== index ? track.widthPadding.get() : 0)
             * Math.min(1.0, (this.tracks.size() - index - 1)), this.radiusMin.get())
     }
 

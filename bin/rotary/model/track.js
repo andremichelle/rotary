@@ -109,6 +109,7 @@ export class RotaryTrackModel {
         const fill = 4 >= segments && random.nextDouble(0.0, 1.0) < 0.4 ? Fill.Gradient : random.nextDouble(0.0, 1.0) < 0.2 ? Fill.Stroke : Fill.Flat;
         this.segments.set(0 === lengthRatioExp ? 1 : segments);
         this.exclude.clear();
+        this.connect.clear();
         this.width.set(width);
         this.widthPadding.set(widthPadding);
         this.length.set(length);
@@ -124,8 +125,6 @@ export class RotaryTrackModel {
         this.fragments.set(Math.floor(random.nextDouble(1.0, 3.0)));
         this.reverse.set(random.nextBoolean());
         if (segments > 3) {
-            this.exclude.randomise(random, 0.2);
-            this.connect.randomise(random, 0.2);
         }
         this.panning.set(random.nextDouble(-1.0, 1.0));
         this.aux.forEach(value => random.nextDouble(0.0, 1.0) < 0.2 ? value.set(random.nextDouble(0.25, 1.0)) : 0.0);

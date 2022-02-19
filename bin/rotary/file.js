@@ -91,11 +91,10 @@ export const renderGIF = (model) => __awaiter(void 0, void 0, void 0, function* 
 export const renderPNG = (model) => __awaiter(void 0, void 0, void 0, function* () {
     const frame = RotaryRenderer.iterateFrames(model, createRenderConfiguration({
         numFrames: 1,
-        subFrames: 1,
+        motionFrames: 1,
         fps: 60,
         size: 4096,
-        alpha: false,
-        padding: 128
+        alpha: false
     }));
     const context = frame.next().value;
     context.canvas.toBlob(blob => window.open(URL.createObjectURL(blob)), "image/png", 1);

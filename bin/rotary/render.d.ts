@@ -2,11 +2,10 @@ import { RotaryModel } from "./model/rotary.js";
 import { RotaryTrackModel } from "./model/track.js";
 export interface RenderConfiguration {
     fps: number;
-    subFrames: number;
-    numFrames: number;
     size: number;
+    numFrames: number;
+    motionFrames: number;
     alpha: boolean;
-    padding: number;
     background: string;
 }
 export declare const createRenderConfiguration: (options: Partial<RenderConfiguration>) => RenderConfiguration;
@@ -17,4 +16,5 @@ export declare class RotaryRenderer {
     private static renderSection;
     static renderFrames(model: RotaryModel, configuration: RenderConfiguration, process: (context: CanvasRenderingContext2D) => void, progress?: (progress: number) => void): Promise<void>;
     static iterateFrames(model: RotaryModel, configuration: RenderConfiguration): Generator<CanvasRenderingContext2D>;
+    static renderFrame(context: CanvasRenderingContext2D, model: RotaryModel, size: number, motionFrames: number, fps: number, phase: number, background?: string): void;
 }

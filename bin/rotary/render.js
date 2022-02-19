@@ -12,11 +12,10 @@ import { Fill } from "./model/track.js";
 export const createRenderConfiguration = (options) => {
     return Object.assign({
         fps: 60,
-        subFrames: 32,
+        motionFrames: 32,
         numFrames: 60,
         size: 512,
         alpha: true,
-        padding: 16,
         background: "rgba(0,0,0,0.0)"
     }, options);
 };
@@ -178,30 +177,47 @@ export class RotaryRenderer {
         });
     }
     static *iterateFrames(model, configuration) {
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d", { alpha: configuration.alpha });
-        const size = configuration.size;
+        const rawCanvas = document.createElement("canvas");
+        const rawContext = rawCanvas.getContext("2d", { alpha: true });
+        const liveCanvas = document.createElement("canvas");
+        const liveContext = liveCanvas.getContext("2d", { alpha: configuration.alpha });
         const numFrames = configuration.numFrames;
-        const subFrames = configuration.subFrames;
-        const scale = size / (model.measureRadius() + configuration.padding) * 0.5;
-        canvas.width = size;
-        canvas.height = size;
+        const size = configuration.size;
+        liveCanvas.width = rawCanvas.width = size;
+        liveCanvas.height = rawCanvas.height = size;
         for (let i = 0; i < numFrames; i++) {
-            context.clearRect(0, 0, size, size);
-            context.fillStyle = configuration.background;
-            context.fillRect(0, 0, size, size);
-            context.save();
-            context.translate(size >> 1, size >> 1);
-            context.scale(scale, scale);
-            const phase = i / numFrames;
-            const offset = 1.0 / (model.duration() * configuration.fps * subFrames);
-            const alphaMultiplier = 1.0 / subFrames;
-            for (let j = 0; j < subFrames; j++) {
-                RotaryRenderer.render(context, model, phase + offset * j, alphaMultiplier);
-            }
-            context.restore();
-            yield context;
+            RotaryRenderer.renderFrame(rawContext, model, size, configuration.motionFrames, configuration.fps, i / numFrames, configuration.background);
+            liveContext.clearRect(0, 0, size, size);
+            liveContext.save();
+            liveContext.filter = "blur(32px) brightness(50%)";
+            liveContext.drawImage(rawCanvas, 0, 0);
+            liveContext.restore();
+            liveContext.drawImage(rawCanvas, 0, 0);
+            yield liveContext;
         }
+    }
+    static renderFrame(context, model, size, motionFrames, fps, phase, background = "rgba(0,0,0,0.0)") {
+        const radius = model.measureRadius();
+        const halfSize = size >> 1;
+        const scale = (halfSize - 64) / radius;
+        context.clearRect(0, 0, size, size);
+        context.fillStyle = background;
+        context.fillRect(0, 0, size, size);
+        context.save();
+        context.translate(halfSize, halfSize);
+        context.scale(scale, scale);
+        const angle = model.phaseOffset.get() * TAU;
+        const rof = radius + 12;
+        context.fillStyle = model.intersects(phase) ? "rgba(255, 255, 255, 0.5)" : "rgba(255, 255, 255, 0.125)";
+        context.beginPath();
+        context.arc(Math.cos(angle) * rof, Math.sin(angle) * rof, 3.0, 0.0, TAU, false);
+        context.fill();
+        const alphaMultiplier = 1.0 / motionFrames;
+        const subPhaseMultiplier = 1.0 / (model.duration() * fps * motionFrames);
+        for (let j = 0; j < motionFrames; j++) {
+            RotaryRenderer.render(context, model, phase + subPhaseMultiplier * j, alphaMultiplier);
+        }
+        context.restore();
     }
 }
 //# sourceMappingURL=render.js.map

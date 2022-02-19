@@ -11,7 +11,7 @@ import {Checkbox} from "../dom/inputs.js"
 import {RotaryTrackEditor, RotaryTrackEditorExecutor} from "./editor.js"
 import {Dom} from "../dom/common.js"
 import {RotaryRenderer} from "./render.js"
-import {Mulberry32, Random, TAU} from "../lib/math.js"
+import {Mulberry32, Random} from "../lib/math.js"
 import {ListItem, MenuBar} from "../dom/menu.js"
 import {open, renderGIF, renderPNG, renderVideo, renderWebM, save} from "./file.js"
 import {Audio, AudioSceneController} from "./audio.js"
@@ -57,7 +57,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     private readonly rawCanvas: HTMLCanvasElement = document.createElement("canvas")
     private readonly rawContext: CanvasRenderingContext2D = this.rawCanvas.getContext("2d", {alpha: true})
 
-    readonly zoom = new ObservableValueImpl<number>(0.5)
+    readonly zoom = new ObservableValueImpl<number>(0.75)
 
     private constructor(private readonly model: RotaryModel,
                         private readonly preview: AudioSceneController,
@@ -184,7 +184,7 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
     render(phase: number): void {
         const zoom = this.zoom.get()
         const radius = this.model.measureRadius()
-        const size = (radius + 64) * 2
+        const size = radius * 2.0
         const ratio = Math.ceil(devicePixelRatio) * zoom
 
         this.rawCanvas.width = this.elements.canvas.width = size * ratio
@@ -193,27 +193,8 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         this.elements.canvas.style.height = `${size * zoom}px`
         this.elements.labelSize.textContent = `${size}`
 
-        this.rawContext.save()
-        this.rawContext.scale(ratio, ratio)
-        this.rawContext.translate(size >> 1, size >> 1)
+        RotaryRenderer.renderFrame(this.rawContext, this.model, size * ratio, this.model.motion.get(), RotaryApp.FPS, phase)
 
-        const angle = this.model.phaseOffset.get() * TAU
-        const rof = radius + 12.0
-        const cos = Math.cos(angle)
-        const sin = Math.sin(angle)
-        this.rawContext.fillStyle = this.model.intersects(phase) ? "rgba(255, 255, 255, 0.5)" : "rgba(255, 255, 255, 0.125)"
-        this.rawContext.beginPath()
-        this.rawContext.arc(cos * rof, sin * rof, 3.0, 0.0, TAU, false)
-        this.rawContext.fill()
-
-        const subFrames = this.model.motion.get()
-        const alphaMultiplier = 1.0 / subFrames
-        const offset = 1.0 / (this.model.duration() * RotaryApp.FPS * subFrames)
-        for (let i = 0; i < subFrames; i++) {
-            RotaryRenderer.render(this.rawContext, this.model, phase + offset * i, alphaMultiplier)
-        }
-
-        this.rawContext.restore()
         this.liveContext.save()
         this.liveContext.filter = "blur(32px) brightness(50%)"
         this.liveContext.drawImage(this.rawCanvas, 0, 0)

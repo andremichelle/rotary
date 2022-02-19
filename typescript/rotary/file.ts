@@ -91,11 +91,10 @@ export const renderGIF = async (model: RotaryModel) => {
 export const renderPNG = async (model: RotaryModel) => {
     const frame: Generator<CanvasRenderingContext2D> = RotaryRenderer.iterateFrames(model, createRenderConfiguration({
         numFrames: 1,
-        subFrames: 1,
+        motionFrames: 1,
         fps: 60,
         size: 4096,
-        alpha: false,
-        padding: 128
+        alpha: false
     }))
     const context: CanvasRenderingContext2D = frame.next().value
     context.canvas.toBlob(blob => window.open(URL.createObjectURL(blob)), "image/png", 1)

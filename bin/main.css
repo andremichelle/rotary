@@ -1,5 +1,5 @@
 ::-webkit-scrollbar {
-  width: 11px;
+  width: 9px;
 }
 
 ::-webkit-scrollbar-button {
@@ -11,17 +11,16 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  border-left: 5px #111 solid;
-  border-right: 5px #111 solid;
-  background-color: #666;
-  border-radius: 1px;
+  border-left: 2px #111 solid;
+  border-right: 2px #111 solid;
+  background-color: #333;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #AAA;
+  background-color: #555;
 }
 
 ::-webkit-scrollbar {
-  width: 11px;
+  width: 9px;
 }
 
 ::-webkit-scrollbar-button {
@@ -33,13 +32,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  border-left: 5px #111 solid;
-  border-right: 5px #111 solid;
-  background-color: #666;
-  border-radius: 1px;
+  border-left: 2px #111 solid;
+  border-right: 2px #111 solid;
+  background-color: #333;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #AAA;
+  background-color: #555;
 }
 
 @font-face {
@@ -396,6 +394,7 @@ body > .center > .top #meter {
 body main {
   display: flex;
   flex-direction: column;
+  row-gap: 1px;
   width: 100%;
   background-color: #090909;
 }
@@ -434,7 +433,6 @@ body main > .global-editor > .columns > .column {
   row-gap: 8px;
 }
 body main > form.track-nav {
-  margin-top: 1px;
   flex: 0 0 auto;
   padding: 16px 8px;
   display: flex;
@@ -526,9 +524,10 @@ body main > form.track-nav > button.delete {
 body main > .editing {
   flex: 1 0 0;
   display: flex;
+  flex-direction: row;
+  column-gap: 1px;
 }
 body main > .editing > .v-split {
-  margin: 1px 0 0 0;
   display: flex;
   flex-direction: column;
   padding: 16px;
@@ -554,22 +553,17 @@ body main > .editing > .v-split > .sound {
   background-color: #1A1A1A;
 }
 body main > .editing > .preview {
-  margin: 1px;
-  padding: 32px;
-  flex: 1;
+  padding: 16px;
   display: flex;
-  gap: 32px;
-  position: relative;
-  background-color: #222;
+  background-color: #1A1A1A;
 }
 body main > .editing > .preview > .rotary {
-  padding: 32px;
   position: relative;
   background-color: #040404;
   box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.4);
   height: min-content;
-  min-width: 400px;
-  min-height: 400px;
+  min-width: 320px;
+  min-height: 320px;
   display: flex;
 }
 body main > .editing > .preview > .rotary canvas {
@@ -614,10 +608,6 @@ body main > .editing > .preview > .rotary div.top-overlay label:after {
 }
 body main > .editing > .preview-context {
   flex: 1 0 0;
-  background-color: #1A1A1A;
-}
-body footer {
-  flex: 1 0 40px;
   background-color: #1A1A1A;
 }
 
