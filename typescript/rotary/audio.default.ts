@@ -28,6 +28,7 @@ import {Metronome} from "../audio/metronome/worklet.js"
 import {Channelstrip, Mixer} from "../audio/mixer.js"
 import {RotaryModel} from "./model/rotary.js"
 import {RotaryTrackModel} from "./model/track.js"
+import {dbToGain, interpolateParameterValueIfRunning} from "../audio/common.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -151,8 +152,11 @@ export const initAudioScene = (): AudioScene => {
                 }, true))
             })
 
-            // source.connect(limiterWorklet)
-            mixer.masterOutput().connect(limiterWorklet)
+            const masterGain = context.createGain()
+            terminator.with(model.master_gain.addObserver(db => interpolateParameterValueIfRunning(context, masterGain.gain, dbToGain(db)), true))
+            terminator.with(model.limiter_threshold.addObserver(db => limiterWorklet.threshold = db, true))
+            mixer.masterOutput().connect(masterGain)
+            masterGain.connect(limiterWorklet)
             metronome.connect(output)
             limiterWorklet.connect(output)
             await boot.waitForCompletion()

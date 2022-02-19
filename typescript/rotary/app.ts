@@ -87,6 +87,12 @@ export class RotaryApp implements RotaryTrackEditorExecutor {
         exportLayout.createNumericStepper("motion blur", PrintMapping.integer(""),
             new NumericStepper(1)).with(model.exportSettings.subFrames)
 
+        const masterAudioLayout = this.terminator.with(new UIControllerLayout(document.querySelector(".two-columns.master-audio")))
+        masterAudioLayout.createNumericStepper("gain", PrintMapping.integer("db"), NumericStepper.Integer)
+            .with(model.master_gain)
+        masterAudioLayout.createNumericStepper("threshold", PrintMapping.integer("db"), NumericStepper.Integer)
+            .with(model.limiter_threshold)
+
         this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-a"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[0])
         this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-b"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[1])
         this.terminator.with(new TypeSwitchEditor(document.querySelector("div.two-columns.aux-c"), CompositeSettingsUIBuilder, "Effect")).with(model.aux[2])

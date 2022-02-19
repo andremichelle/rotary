@@ -37,11 +37,11 @@ export class Channelstrip implements Terminable {
     }
 
     public setInputDecibel(db: number): void {
-        this.mixer.setParameterValue(this.inputNode.gain, dbToGain(Channelstrip.GAIN_MAPPING.y(db)))
+        this.mixer.setParameterValue(this.inputNode.gain, dbToGain(db))
     }
 
     public getInputDecibel(): number {
-        return Channelstrip.GAIN_MAPPING.x(gainToDb(this.inputNode.gain.value))
+        return gainToDb(this.inputNode.gain.value)
     }
 
     public setPanning(bipolar: number): void {

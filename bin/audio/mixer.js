@@ -25,10 +25,10 @@ export class Channelstrip {
         this.connected = Options.valueOf([output, outputIndex]);
     }
     setInputDecibel(db) {
-        this.mixer.setParameterValue(this.inputNode.gain, dbToGain(Channelstrip.GAIN_MAPPING.y(db)));
+        this.mixer.setParameterValue(this.inputNode.gain, dbToGain(db));
     }
     getInputDecibel() {
-        return Channelstrip.GAIN_MAPPING.x(gainToDb(this.inputNode.gain.value));
+        return gainToDb(this.inputNode.gain.value);
     }
     setPanning(bipolar) {
         this.mixer.setParameterValue(this.panningNode.pan, bipolar);

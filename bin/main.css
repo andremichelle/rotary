@@ -411,6 +411,14 @@ body main h5.global {
   color: #656565;
   background-color: #12211c;
 }
+body main h5.export {
+  color: #656565;
+  background-color: #121f21;
+}
+body main h5.master-audio {
+  color: #656565;
+  background-color: #212108;
+}
 body main h5.aux {
   color: #656565;
   background-color: #121721;

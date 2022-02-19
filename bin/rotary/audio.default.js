@@ -17,6 +17,7 @@ import { Transport } from "../audio/sequencing.js";
 import { Metronome } from "../audio/metronome/worklet.js";
 import { Mixer } from "../audio/mixer.js";
 import { RotaryModel } from "./model/rotary.js";
+import { dbToGain, interpolateParameterValueIfRunning } from "../audio/common.js";
 export const initAudioScene = () => {
     return {
         loadModules(context) {
@@ -122,7 +123,11 @@ export const initAudioScene = () => {
                         auxTerminator.with(composite);
                     }, true));
                 });
-                mixer.masterOutput().connect(limiterWorklet);
+                const masterGain = context.createGain();
+                terminator.with(model.master_gain.addObserver(db => interpolateParameterValueIfRunning(context, masterGain.gain, dbToGain(db)), true));
+                terminator.with(model.limiter_threshold.addObserver(db => limiterWorklet.threshold = db, true));
+                mixer.masterOutput().connect(masterGain);
+                masterGain.connect(limiterWorklet);
                 metronome.connect(output);
                 limiterWorklet.connect(output);
                 yield boot.waitForCompletion();
