@@ -94,7 +94,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     readonly inactiveAlpha = this.bindValue(new BoundNumericValue(Linear.Identity, 0.1))
     readonly bpm = this.bindValue(new BoundNumericValue(new Linear(30.0, 999.0), 120.0))
     readonly stretch = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0))
-    readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 1))
+    readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 8))
 
     readonly aux: ObservableValue<CompositeSettings<any>>[] = [
         new ObservableValueImpl(new PulsarDelaySettings()),

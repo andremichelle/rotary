@@ -13,7 +13,7 @@ registerProcessor("metronome", class extends AudioWorkletProcessor {
     private enabled: boolean = false
     private moving: boolean = false
     private phase: number = 0.0
-    private frequency: number = 440.0
+    private frequency: number = 0.0
 
     constructor() {
         super()
@@ -35,13 +35,14 @@ registerProcessor("metronome", class extends AudioWorkletProcessor {
     }
 
     process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
+        const barsIncrement: number = numFramesToBars(RENDER_QUANTUM, this.bpm, sampleRate)
+        const b0 = this.barPosition
         if (!this.enabled) {
+            this.barPosition = b0 + barsIncrement
             return true
         }
         const output = outputs[0][0]
         if (this.moving) {
-            const barsIncrement: number = numFramesToBars(RENDER_QUANTUM, this.bpm, sampleRate)
-            const b0 = this.barPosition
             const b1 = this.barPosition + barsIncrement
             let index = Math.floor(b0 / this.scale)
             let position = index * this.scale

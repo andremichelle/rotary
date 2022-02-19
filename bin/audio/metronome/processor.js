@@ -11,7 +11,7 @@ registerProcessor("metronome", class extends AudioWorkletProcessor {
         this.enabled = false;
         this.moving = false;
         this.phase = 0.0;
-        this.frequency = 440.0;
+        this.frequency = 0.0;
         this.port.onmessage = event => {
             const msg = event.data;
             if (msg.type === "set-bpm") {
@@ -32,13 +32,14 @@ registerProcessor("metronome", class extends AudioWorkletProcessor {
         };
     }
     process(inputs, outputs) {
+        const barsIncrement = numFramesToBars(RENDER_QUANTUM, this.bpm, sampleRate);
+        const b0 = this.barPosition;
         if (!this.enabled) {
+            this.barPosition = b0 + barsIncrement;
             return true;
         }
         const output = outputs[0][0];
         if (this.moving) {
-            const barsIncrement = numFramesToBars(RENDER_QUANTUM, this.bpm, sampleRate);
-            const b0 = this.barPosition;
             const b1 = this.barPosition + barsIncrement;
             let index = Math.floor(b0 / this.scale);
             let position = index * this.scale;
