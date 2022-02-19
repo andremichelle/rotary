@@ -428,6 +428,7 @@ body main > .global-editor {
   margin: 1px 0 0 0;
   padding: 20px 12px 16px 16px;
   background-color: #151515;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.2) inset;
 }
 body main > .global-editor > .columns {
   display: flex;
