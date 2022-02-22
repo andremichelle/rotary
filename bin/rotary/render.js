@@ -43,7 +43,7 @@ export class RotaryRenderer {
         const length = trackModel.length.get();
         const width = trackModel.width.get();
         const r0 = radiusStart;
-        const r1 = radiusStart + width;
+        const r1 = r0 + width;
         const bend = trackModel.bend.get();
         const lengthRatio = trackModel.lengthRatio.get();
         phase = trackModel.root.phaseOffset.get() - phase;

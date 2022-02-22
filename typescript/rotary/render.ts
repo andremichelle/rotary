@@ -61,7 +61,7 @@ export class RotaryRenderer {
         const length = trackModel.length.get()
         const width = trackModel.width.get()
         const r0 = radiusStart
-        const r1 = radiusStart + width
+        const r1 = r0 + width //+ Math.sin((null === crossing ? phase : phase + crossing.ratio) * 8.0 * TAU) * width * 0.25
         const bend = trackModel.bend.get()
         const lengthRatio = trackModel.lengthRatio.get()
         phase = trackModel.root.phaseOffset.get() - phase

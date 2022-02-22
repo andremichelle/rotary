@@ -61,32 +61,43 @@ export const initAudioScene = (): AudioScene => {
             // source.buffer = buffer
             // source.start()
 
+            const mute = !false
 
             let index = 0
+
+            for (let i = 0; i <= 19 && mute; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/kicks/${i}.ogg`))
+            }
+            for (let i = 0; i <= 19 && mute; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/clicks/${i}.ogg`))
+            }
+            for (let i = 0; i <= 59 && mute; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/cracks/${i}.ogg`), true)
+            }
+            for (let i = 0; i <= 74 && mute; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/glitch/${i}.ogg`))
+            }
+            for (let i = 0; i <= 9 && mute; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/snares/${i}.ogg`))
+            }
+            for (let i = 0; i <= 23 && mute; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/neuro/${i}.ogg`))
+            }
+
+
             // for (let i = 1; i <= 8; i++) {
             //     rotaryNode.uploadSample(index++, await gen.render(Harmonic.make(60 * i)))
             // }
             /*for (let i = 0; i <= 24; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/toypiano/${i}.wav`))
-            }*/
-            for (let i = 0; i <= 19; i++) {
-                rotaryNode.uploadSample(index++, loadSample(`samples/kicks/${i}.wav`))
-            }
-            for (let i = 0; i <= 74; i++) {
-                rotaryNode.uploadSample(index++, loadSample(`samples/glitch/${i}.wav`))
-            }
-            for (let i = 0; i <= 19; i++) {
-                rotaryNode.uploadSample(index++, loadSample(`samples/clicks/${i}.wav`))
             }
             for (let i = 0; i <= 12; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/vinyl/${i}.wav`))
             }
-            for (let i = 0; i <= 9; i++) {
-                rotaryNode.uploadSample(index++, loadSample(`samples/snares/${i}.wav`))
-            }
             for (let i = 0; i <= 21; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`))
             }
+            */
 
             for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
                 rotaryNode.connect(meter, lineIndex, lineIndex)
