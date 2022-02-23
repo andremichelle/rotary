@@ -190,8 +190,8 @@ export class RotaryTrackModel implements Observable<RotaryTrackModel>, Serialize
         this.fragments.set(Math.floor(random.nextDouble(1.0, 3.0)))
         this.reverse.set(random.nextBoolean())
         if(segments > 3) {
-            // this.exclude.randomise(random, 0.2)
-            // this.connect.randomise(random, 0.2)
+            this.exclude.randomise(random, 0.1)
+            this.connect.randomise(random, 0.1)
         }
 
         this.panning.set(random.nextDouble(-1.0, 1.0))
