@@ -9,7 +9,7 @@ class Stencil {
 
     constructor(private readonly stencil: Element, seed: number) {
         this.model = new RotaryModel()
-        this.model.randomize(new Mulberry32(seed))
+        this.model.randomize(new Mulberry32(0xFFFF + seed))
         this.model.inactiveAlpha.set(1.0)
         this.radius = this.model.measureRadius()
     }

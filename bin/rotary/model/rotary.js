@@ -77,10 +77,10 @@ export class RotaryModel {
         return this.observable.removeObserver(observer);
     }
     randomize(random) {
-        this.radiusMin.set(random.nextDouble(8.0, 32.0));
+        this.radiusMin.set(Math.round(random.nextDouble(8.0, 32.0)));
         this.tracks.clear();
         const palette = Colors.getRandomPalette(random);
-        const maxRadius = random.nextDouble(192, 480);
+        const maxRadius = Math.floor(random.nextDouble(256, 320));
         let radius = this.radiusMin.get();
         while (radius < maxRadius) {
             const track = this.createTrack().randomize(random);
