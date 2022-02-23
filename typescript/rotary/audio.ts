@@ -45,8 +45,9 @@ export class Audio {
 
     async initPreview(): Promise<AudioSceneController> {
         await this.scene.loadModules(this.context)
+        console.log("modules loaded")
         const masterMeter = new StereoMeterWorklet(this.context)
-        document.getElementById("meter").appendChild(masterMeter.domElement)
+        // document.getElementById("meter").appendChild(masterMeter.domElement)
         masterMeter.connect(this.context.destination)
         const boot: Boot = new Boot()
         boot.addObserver(boot => {
@@ -80,6 +81,7 @@ export class Audio {
             }
         }
         (document.querySelector("button.rewind") as HTMLButtonElement).onclick = () => preview.transport.stop()
+        console.log("preview built")
         return preview
     }
 

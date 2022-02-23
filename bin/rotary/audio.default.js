@@ -34,8 +34,8 @@ export const initAudioScene = () => {
                 const terminator = new Terminator();
                 const transport = new Transport();
                 const metronome = new Metronome(context);
-                model.bpm.addObserver(value => metronome.setBpm(value), true);
-                metronome.listenToTransport(transport);
+                terminator.with(model.bpm.addObserver(value => metronome.setBpm(value), true));
+                terminator.with(metronome.listenToTransport(transport));
                 const rotaryNode = new RotaryWorkletNode(context, model);
                 terminator.with(rotaryNode.listenToTransport(transport));
                 const meter = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2);
