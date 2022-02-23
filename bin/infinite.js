@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { install } from "./common.js";
 import { RotaryModel } from "./rotary/model/rotary.js";
-import { Mulberry32, TAU } from "./lib/math.js";
+import { Mulberry32 } from "./lib/math.js";
 import { RotaryRenderer } from "./rotary/render.js";
 import { Audio } from "./rotary/audio.js";
 import { initAudioScene } from "./rotary/audio.default.js";
@@ -20,7 +20,7 @@ class Stencil {
         this.model.randomize(new Mulberry32(0xFFFF + seed));
         this.model.inactiveAlpha.set(1.0);
         this.radius = this.model.measureRadius();
-        this.alpha = 0.75;
+        this.alpha = 0.5;
     }
     activate() {
         this.model.inactiveAlpha.set(0.2);
@@ -28,7 +28,7 @@ class Stencil {
     }
     deactivate() {
         this.model.inactiveAlpha.set(1.0);
-        this.alpha = 0.75;
+        this.alpha = 0.5;
     }
     render(context, dx, dy, phase) {
         const rect = this.stencil.getBoundingClientRect();
@@ -38,15 +38,7 @@ class Stencil {
         this.y = rect.top + halfSize + dy;
         context.save();
         context.translate(this.x, this.y);
-        if (this.stencil.getAttribute("active") !== null) {
-            context.strokeStyle = "rgba(255, 255, 255, 0.4)";
-            context.globalAlpha = 1.0;
-            context.lineWidth = 2.0;
-            context.beginPath();
-            context.arc(0, 0, halfSize - 1, 0.0, TAU, false);
-            context.stroke();
-        }
-        const scale = (halfSize - 8.0) / this.radius;
+        const scale = (halfSize - 16.0) / this.radius;
         context.scale(scale, scale);
         RotaryRenderer.render(context, this.model, phase, this.alpha);
         context.restore();
@@ -95,7 +87,7 @@ class Stencil {
     const context = canvas.getContext("2d");
     const padding = 64;
     const size = 256;
-    const gap = 32;
+    const gap = 16;
     const resize = () => {
         const columns = Math.min(5, Math.floor((window.innerWidth - padding * 2) / (size + gap)));
         style.setProperty("--columns", `${columns}`);

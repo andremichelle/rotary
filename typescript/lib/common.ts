@@ -660,6 +660,15 @@ export class ArrayUtils {
         return array
     }
 
+    static shuffle(array: ArrayBufferLike, n: number, random: Random) {
+        for (let i = 0; i < n; i++) {
+            const element = array[i]
+            const randomIndex = random.nextInt(0, n - 1)
+            array[i] = array[randomIndex]
+            array[randomIndex] = element
+        }
+    }
+
     // noinspection JSUnusedLocalSymbols
     private constructor() {
     }

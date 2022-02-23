@@ -39,6 +39,7 @@ export declare interface RotaryFormat {
     stretch: number
     exportSettings: RotaryExportFormat
     tracks: RotaryTrackFormat[],
+    seed: number
     aux: CompositeSettingsFormat<any>[]
 }
 
@@ -97,7 +98,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     readonly limiter_threshold = this.bindValue(new BoundNumericValue(new Linear(-72.0, 0.0), -3.0))
     readonly stretch = this.bindValue(new BoundNumericValue(new Linear(1.0, 16.0), 4.0))
     readonly motion = this.bindValue(new BoundNumericValue(new LinearInteger(1, 32), 8))
-
+    readonly seed = this.bindValue(new ObservableValueImpl(0xFFFFFF))
     readonly aux: ObservableValue<CompositeSettings<any>>[] = [
         new ObservableValueImpl(new PulsarDelaySettings()),
         new ObservableValueImpl(convolverSettingsA),
@@ -127,6 +128,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
     }
 
     randomize(random: Random): RotaryModel {
+        this.seed.set(random.nextInt(0, 0xFFFFFF))
         this.radiusMin.set(Math.round(random.nextDouble(8.0, 32.0)))
         this.tracks.clear()
         const palette = Colors.getRandomPalette(random)
@@ -232,6 +234,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
             bpm: this.bpm.get(),
             stretch: this.stretch.get(),
             tracks: this.tracks.map(track => track.serialize()),
+            seed: this.seed.get(),
             aux: this.aux.map((value: ObservableValue<CompositeSettings<any>>): CompositeSettingsFormat<any> => value.get().serialize())
         }
     }
@@ -244,6 +247,7 @@ export class RotaryModel implements Observable<RotaryModel>, Serializer<RotaryFo
         this.stretch.set(format.stretch)
         this.tracks.clear()
         this.tracks.addAll(format.tracks.map(trackFormat => new RotaryTrackModel(this).deserialize(trackFormat)))
+        this.seed.set(format.seed)
         this.aux.forEach((value: ObservableValue<CompositeSettings<any>>, index: number) => value.set(CompositeSettings.from(format.aux[index])))
         return this
     }

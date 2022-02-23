@@ -1,6 +1,6 @@
 import {TransportMessage} from "../../audio/sequencing.js"
 import {MessageToProcessor} from "./messages.js"
-import {ObservableValueImpl} from "../../lib/common.js"
+import {ArrayUtils, ObservableValueImpl} from "../../lib/common.js"
 import {RotaryModel} from "../model/rotary.js"
 import {Edge, QueryResult} from "../model/track.js"
 import {barsToNumFrames, numFramesToBars, RENDER_QUANTUM} from "../../audio/common.js"
@@ -8,6 +8,7 @@ import {Voice, VoiceManager} from "./voices.js"
 import {Sample, SampleRepository, SampleVoice} from "./samples.js"
 import {OscillatorVoice} from "./oscillators.js"
 import {OscillatorSettings, SamplePlayerSettings} from "../model/sound.js"
+import {Mulberry32} from "../../lib/math.js"
 
 registerProcessor("rotary", class extends AudioWorkletProcessor {
         private readonly model: RotaryModel = new RotaryModel()
@@ -15,6 +16,7 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         private readonly voiceManager: VoiceManager = new VoiceManager()
         private readonly positions = new Float32Array(RENDER_QUANTUM)
         private readonly transport: ObservableValueImpl<boolean> = new ObservableValueImpl<boolean>(false)
+        private readonly ranIntMap: Uint16Array = new Uint16Array(2048)
 
         private readonly updateRate: number
         private updateCount: number = 0 | 0
@@ -23,12 +25,18 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         constructor() {
             super()
 
+            for (let i = 0; i < this.ranIntMap.length; i++) {
+                this.ranIntMap[i] = i
+            }
+
             const fps: number = 60.0
             this.updateRate = (sampleRate / fps) | 0
             this.port.onmessage = (event: MessageEvent) => {
                 const msg = event.data as MessageToProcessor | TransportMessage
                 if (msg.type === "update-format") {
                     this.model.deserialize(msg.format)
+                    ArrayUtils.shuffle(this.ranIntMap, this.ranIntMap.length, new Mulberry32(this.model.seed.get()))
+                    console.log(this.ranIntMap)
                     this.port.postMessage({type: "format-updated", version: msg.version})
                 } else if (msg.type === "upload-sample") {
                     this.sampleRepository.set(msg.key, new Sample(msg.frames, msg.numFrames, msg.loop))
@@ -89,8 +97,9 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                         const sound = track.sound.get()
                         let voice: Voice
                         if (sound instanceof SamplePlayerSettings) {
-                            const key = this.sampleRepository.modulo(trackIndex * track.segments.get() + result.index)
+                            const key: number = this.sampleRepository.modulo(this.ranIntMap[trackIndex * track.segments.get() + result.index])
                             const sample = this.sampleRepository.get(key)
+                            console.assert(sample !== undefined)
                             voice = new SampleVoice(frameIndex, trackIndex, result.index, track, sample, 0)
                         } else if (sound instanceof OscillatorSettings) {
                             voice = new OscillatorVoice(frameIndex, trackIndex, result.index, track)

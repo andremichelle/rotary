@@ -212,6 +212,7 @@ export declare class GeneratorIterator<T> {
 }
 export declare class ArrayUtils {
     static fill<T>(n: number, factory: (index: number) => T): T[];
+    static shuffle(array: ArrayBufferLike, n: number, random: Random): void;
     private constructor();
 }
 export interface SettingsFormat<DATA> {

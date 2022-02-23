@@ -1,4 +1,4 @@
-import { ObservableValueImpl } from "../../lib/common.js";
+import { ArrayUtils, ObservableValueImpl } from "../../lib/common.js";
 import { RotaryModel } from "../model/rotary.js";
 import { Edge } from "../model/track.js";
 import { barsToNumFrames, numFramesToBars, RENDER_QUANTUM } from "../../audio/common.js";
@@ -6,6 +6,7 @@ import { VoiceManager } from "./voices.js";
 import { Sample, SampleRepository, SampleVoice } from "./samples.js";
 import { OscillatorVoice } from "./oscillators.js";
 import { OscillatorSettings, SamplePlayerSettings } from "../model/sound.js";
+import { Mulberry32 } from "../../lib/math.js";
 registerProcessor("rotary", class extends AudioWorkletProcessor {
     constructor() {
         super();
@@ -14,14 +15,20 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
         this.voiceManager = new VoiceManager();
         this.positions = new Float32Array(RENDER_QUANTUM);
         this.transport = new ObservableValueImpl(false);
+        this.ranIntMap = new Uint16Array(2048);
         this.updateCount = 0 | 0;
         this.barPosition = +0.0;
+        for (let i = 0; i < this.ranIntMap.length; i++) {
+            this.ranIntMap[i] = i;
+        }
         const fps = 60.0;
         this.updateRate = (sampleRate / fps) | 0;
         this.port.onmessage = (event) => {
             const msg = event.data;
             if (msg.type === "update-format") {
                 this.model.deserialize(msg.format);
+                ArrayUtils.shuffle(this.ranIntMap, this.ranIntMap.length, new Mulberry32(this.model.seed.get()));
+                console.log(this.ranIntMap);
                 this.port.postMessage({ type: "format-updated", version: msg.version });
             }
             else if (msg.type === "upload-sample") {
@@ -83,8 +90,9 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
                     const sound = track.sound.get();
                     let voice;
                     if (sound instanceof SamplePlayerSettings) {
-                        const key = this.sampleRepository.modulo(trackIndex * track.segments.get() + result.index);
+                        const key = this.sampleRepository.modulo(this.ranIntMap[trackIndex * track.segments.get() + result.index]);
                         const sample = this.sampleRepository.get(key);
+                        console.assert(sample !== undefined);
                         voice = new SampleVoice(frameIndex, trackIndex, result.index, track, sample, 0);
                     }
                     else if (sound instanceof OscillatorSettings) {
