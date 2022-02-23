@@ -351,7 +351,7 @@ export interface FlangerData {
 
 export class FlangerSettings extends CompositeSettings<FlangerData> {
     readonly delayTime = this.bindValue(new BoundNumericValue(new Linear(0.005, 0.200), 0.007))
-    readonly feedback = this.bindValue(new BoundNumericValue(Linear.Identity, 0.9))
+    readonly feedback = this.bindValue(new BoundNumericValue(Linear.Identity, 0.6))
     readonly rate = this.bindValue(new BoundNumericValue(new Exp(0.01, 10.0), 0.1))
     readonly depth = this.bindValue(new BoundNumericValue(Linear.Identity, 0.1))
 

@@ -20,7 +20,7 @@ class Stencil {
         this.model.randomize(new Mulberry32(0xFFFF + seed));
         this.model.inactiveAlpha.set(1.0);
         this.radius = this.model.measureRadius();
-        this.alpha = 0.5;
+        this.alpha = 0.75;
     }
     activate() {
         this.model.inactiveAlpha.set(0.2);
@@ -28,7 +28,7 @@ class Stencil {
     }
     deactivate() {
         this.model.inactiveAlpha.set(1.0);
-        this.alpha = 0.5;
+        this.alpha = 0.75;
     }
     render(context, dx, dy, phase) {
         const rect = this.stencil.getBoundingClientRect();
@@ -52,10 +52,9 @@ class Stencil {
     const model = new RotaryModel();
     const audio = yield Audio.config(initAudioScene(), model);
     const preview = yield audio.initPreview();
-    console.log("...");
     const stencils = new Map();
     const pattern = document.querySelector("div.pattern");
-    const intersectionObserver = new IntersectionObserver((entries) => {
+    const handleRecords = (entries) => {
         entries.forEach(entry => {
             const element = entry.target;
             if (entry.isIntersecting) {
@@ -70,9 +69,8 @@ class Stencil {
                 }
             }
         });
-    }, {
-        threshold: 0.0
-    });
+    };
+    const intersectionObserver = new IntersectionObserver(handleRecords, { threshold: 0.0 });
     let seed = 0 | 0;
     const populate = (n) => {
         for (let i = 0; i < n; i++) {
@@ -83,28 +81,28 @@ class Stencil {
         }
     };
     const style = document.documentElement.style;
-    const canvas = document.querySelector("canvas");
+    const canvas = document.querySelector("canvas.rotaries");
     const context = canvas.getContext("2d");
     const padding = 64;
     const size = 256;
-    const gap = 16;
+    const gap = 12;
     const resize = () => {
-        const columns = Math.min(5, Math.floor((window.innerWidth - padding * 2) / (size + gap)));
+        const columns = Math.min(9, Math.floor((window.innerWidth - padding * 2) / (size + gap)));
         style.setProperty("--columns", `${columns}`);
     };
-    let phase = 0.0;
     const run = () => {
+        handleRecords(intersectionObserver.takeRecords());
         const bounds = canvas.getBoundingClientRect();
         const pixelRatio = 1;
         canvas.width = canvas.clientWidth * pixelRatio;
         canvas.height = canvas.clientHeight * pixelRatio;
         context.save();
         context.scale(pixelRatio, pixelRatio);
+        const position = preview.position();
         for (const stencil of stencils.values()) {
-            stencil.render(context, -bounds.left, -bounds.top, phase);
+            stencil.render(context, -bounds.left, -bounds.top, position);
         }
         context.restore();
-        phase += 1.0 / (60.0 * 8.0);
         requestAnimationFrame(run);
     };
     resize();
@@ -116,6 +114,8 @@ class Stencil {
             populate(24);
         }
     });
+    const fieldset = document.querySelector("fieldset.controls");
+    fieldset.disabled = true;
     pattern.addEventListener("click", (event) => {
         const element = event.target;
         const stencil = stencils.get(element);
@@ -129,6 +129,7 @@ class Stencil {
                 stencil.deactivate();
             }
         });
+        fieldset.disabled = false;
         preview.transport.play();
         stencil.activate();
         element.setAttribute("active", "true");

@@ -1,10 +1,13 @@
 import {install} from "./common.js"
 import {RotaryModel} from "./rotary/model/rotary.js"
-import {Mulberry32, TAU} from "./lib/math.js"
+import {Mulberry32} from "./lib/math.js"
 import {RotaryRenderer} from "./rotary/render.js"
 import {Terminable} from "./lib/common.js"
 import {Audio} from "./rotary/audio.js"
 import {initAudioScene} from "./rotary/audio.default.js"
+
+// TODO
+// Change new model on loop-start
 
 class Stencil implements Terminable {
     readonly model: RotaryModel
@@ -20,7 +23,7 @@ class Stencil implements Terminable {
         this.model.randomize(new Mulberry32(0xFFFF + seed))
         this.model.inactiveAlpha.set(1.0)
         this.radius = this.model.measureRadius()
-        this.alpha = 0.5
+        this.alpha = 0.75
     }
 
     activate() {
@@ -30,7 +33,7 @@ class Stencil implements Terminable {
 
     deactivate() {
         this.model.inactiveAlpha.set(1.0)
-        this.alpha = 0.5
+        this.alpha = 0.75
     }
 
     render(context: CanvasRenderingContext2D, dx: number, dy: number, phase: number): void {
@@ -57,10 +60,9 @@ class Stencil implements Terminable {
     const model = new RotaryModel()
     const audio: Audio = await Audio.config(initAudioScene(), model)
     const preview = await audio.initPreview()
-    console.log("...")
     const stencils: Map<Element, Stencil> = new Map()
     const pattern = document.querySelector("div.pattern") as HTMLElement
-    const intersectionObserver = new IntersectionObserver((entries: IntersectionObserverEntry[]) => {
+    const handleRecords = (entries: IntersectionObserverEntry[]) => {
         entries.forEach(entry => {
             const element = entry.target
             if (entry.isIntersecting) {
@@ -74,9 +76,8 @@ class Stencil implements Terminable {
                 }
             }
         })
-    }, {
-        threshold: 0.0
-    })
+    }
+    const intersectionObserver = new IntersectionObserver(handleRecords, {threshold: 0.0})
 
     let seed = 0 | 0
     const populate = (n: number): void => {
@@ -88,28 +89,28 @@ class Stencil implements Terminable {
         }
     }
     const style = document.documentElement.style
-    const canvas = document.querySelector("canvas")
+    const canvas: HTMLCanvasElement = document.querySelector("canvas.rotaries")
     const context = canvas.getContext("2d")
     const padding = 64
     const size = 256
-    const gap = 16
+    const gap = 12
     const resize = () => {
-        const columns = Math.min(5, Math.floor((window.innerWidth - padding * 2) / (size + gap)))
+        const columns = Math.min(9, Math.floor((window.innerWidth - padding * 2) / (size + gap)))
         style.setProperty("--columns", `${columns}`)
     }
-    let phase = 0.0
     const run = () => {
+        handleRecords(intersectionObserver.takeRecords())
         const bounds = canvas.getBoundingClientRect()
         const pixelRatio = 1//devicePixelRatio
         canvas.width = canvas.clientWidth * pixelRatio
         canvas.height = canvas.clientHeight * pixelRatio
         context.save()
         context.scale(pixelRatio, pixelRatio)
+        const position = preview.position()
         for (const stencil of stencils.values()) {
-            stencil.render(context, -bounds.left, -bounds.top, phase)
+            stencil.render(context, -bounds.left, -bounds.top, position)
         }
         context.restore()
-        phase += 1.0 / (60.0 * 8.0)
         requestAnimationFrame(run)
     }
     resize()
@@ -121,6 +122,8 @@ class Stencil implements Terminable {
             populate(24)
         }
     })
+    const fieldset: HTMLFieldSetElement = document.querySelector("fieldset.controls")
+    fieldset.disabled = true
     pattern.addEventListener("click", (event: MouseEvent) => {
         const element = event.target as Element
         const stencil = stencils.get(element)
@@ -134,6 +137,7 @@ class Stencil implements Terminable {
                 stencil.deactivate()
             }
         })
+        fieldset.disabled = false
         preview.transport.play()
         stencil.activate()
         element.setAttribute("active", "true")

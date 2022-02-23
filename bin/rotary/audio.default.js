@@ -41,7 +41,7 @@ export const initAudioScene = () => {
                 const meter = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2);
                 const limiterWorklet = new LimiterWorklet(context);
                 const loadSample = (url) => boot.registerProcess(readAudio(context, url));
-                const mute = !true;
+                const mute = !false;
                 let index = 0;
                 for (let i = 0; i <= 19 && mute; i++) {
                     rotaryNode.uploadSample(index++, loadSample(`samples/kicks/${i}.ogg`));
@@ -61,8 +61,11 @@ export const initAudioScene = () => {
                 for (let i = 0; i <= 23 && mute; i++) {
                     rotaryNode.uploadSample(index++, loadSample(`samples/neuro/${i}.ogg`));
                 }
-                for (let i = 0; i <= 442; i++) {
+                for (let i = 0; i <= 442 && mute; i++) {
                     rotaryNode.uploadSample(index++, loadSample(`samples/blips/${i}.ogg`));
+                }
+                for (let i = 0; i <= 63 && mute; i++) {
+                    rotaryNode.uploadSample(index++, loadSample(`samples/gameboy/${i}.ogg`));
                 }
                 for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
                     rotaryNode.connect(meter, lineIndex, lineIndex);

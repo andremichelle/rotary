@@ -15,6 +15,7 @@ export declare interface RotaryFormat {
     stretch: number;
     exportSettings: RotaryExportFormat;
     tracks: RotaryTrackFormat[];
+    seed: number;
     aux: CompositeSettingsFormat<any>[];
 }
 export declare class RotaryExportSetting implements Terminable, Serializer<RotaryExportFormat> {
@@ -42,6 +43,7 @@ export declare class RotaryModel implements Observable<RotaryModel>, Serializer<
     readonly limiter_threshold: ObservableValue<number>;
     readonly stretch: ObservableValue<number>;
     readonly motion: ObservableValue<number>;
+    readonly seed: ObservableValue<number>;
     readonly aux: ObservableValue<CompositeSettings<any>>[];
     constructor();
     addObserver(observer: Observer<RotaryModel>, notify: boolean): Terminable;

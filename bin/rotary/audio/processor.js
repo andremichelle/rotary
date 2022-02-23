@@ -28,7 +28,6 @@ registerProcessor("rotary", class extends AudioWorkletProcessor {
             if (msg.type === "update-format") {
                 this.model.deserialize(msg.format);
                 ArrayUtils.shuffle(this.ranIntMap, this.ranIntMap.length, new Mulberry32(this.model.seed.get()));
-                console.log(this.ranIntMap);
                 this.port.postMessage({ type: "format-updated", version: msg.version });
             }
             else if (msg.type === "upload-sample") {

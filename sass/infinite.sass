@@ -33,10 +33,21 @@ body
   padding: 0
   overflow: hidden
 
-  > div.controls
+  > fieldset.controls
     display: flex
-    flex: 0 0 32px
-    width: 100%
+    align-items: center
+    flex: 0 0 40px
+    padding: 0 20px
+    width: calc(100% - 40px)
+
+    > div.transport
+      display: flex
+      align-items: center
+      column-gap: 8px
+      flex: 1 0 0
+
+    > div.spacer
+      flex: 1 0 0
 
   > main
     flex: 1 0 0
@@ -62,10 +73,14 @@ body
       gap: var(--gap)
       overflow-y: scroll
 
+      &::-webkit-scrollbar
+        display: none
+
       > section
         height: var(--size)
+        cursor: pointer
 
         &[active]
           border-radius: var(--size)
-          box-shadow: 0 0 8px 0 white
+          box-shadow: 0 0 16px 0 rgba(white, 0.3) inset, 0 0 16px 0 rgba(white, 0.1)
           background-color: black

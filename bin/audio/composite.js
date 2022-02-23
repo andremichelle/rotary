@@ -275,7 +275,7 @@ export class FlangerSettings extends CompositeSettings {
     constructor() {
         super(...arguments);
         this.delayTime = this.bindValue(new BoundNumericValue(new Linear(0.005, 0.200), 0.007));
-        this.feedback = this.bindValue(new BoundNumericValue(Linear.Identity, 0.9));
+        this.feedback = this.bindValue(new BoundNumericValue(Linear.Identity, 0.6));
         this.rate = this.bindValue(new BoundNumericValue(new Exp(0.01, 10.0), 0.1));
         this.depth = this.bindValue(new BoundNumericValue(Linear.Identity, 0.1));
     }

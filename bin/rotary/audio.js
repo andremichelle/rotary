@@ -27,8 +27,8 @@ export class Audio {
     initPreview() {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.scene.loadModules(this.context);
-            console.log("modules loaded");
             const masterMeter = new StereoMeterWorklet(this.context);
+            document.getElementById("meter").appendChild(masterMeter.domElement);
             masterMeter.connect(this.context.destination);
             const boot = new Boot();
             boot.addObserver(boot => {
@@ -63,7 +63,6 @@ export class Audio {
                 }
             });
             document.querySelector("button.rewind").onclick = () => preview.transport.stop();
-            console.log("preview built");
             return preview;
         });
     }

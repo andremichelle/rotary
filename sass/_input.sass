@@ -5,6 +5,7 @@ $background: rgba(black, 0.3)
 
 button
   color: rgba(white, 0.4)
+  fill: currentColor
   font-size: $FONT_SIZE
   font-family: $FONT-FAMILY
   height: $SIZE
@@ -79,8 +80,9 @@ label.checkbox
       ~ span.unchecked
         display: none !important
 
-fieldset:disabled *
-  opacity: 0.3
+fieldset:disabled
+  input, label, button
+    opacity: 0.2
 
 input[type=text]
   height: $SIZE

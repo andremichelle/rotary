@@ -61,7 +61,7 @@ export const initAudioScene = (): AudioScene => {
             // source.buffer = buffer
             // source.start()
 
-            const mute = !true
+            const mute = !false
 
             let index = 0
 
@@ -83,8 +83,11 @@ export const initAudioScene = (): AudioScene => {
             for (let i = 0; i <= 23 && mute; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/neuro/${i}.ogg`))
             }
-            for (let i = 0; i <= 442; i++) {
+            for (let i = 0; i <= 442 && mute; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/blips/${i}.ogg`))
+            }
+            for (let i = 0; i <= 63 && mute; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/gameboy/${i}.ogg`))
             }
 
 
