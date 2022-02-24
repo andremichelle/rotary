@@ -27,8 +27,10 @@ const randomName = (random) => {
     return output.join(" ");
 };
 class Stencil {
-    constructor(stencil, seed) {
+    constructor(stencil, size, seed) {
         this.stencil = stencil;
+        this.size = size;
+        this.active = false;
         this.random = new Mulberry32(0xFFFFFFFF + seed);
         this.model = new RotaryModel();
         this.model.randomize(this.random);
@@ -36,12 +38,13 @@ class Stencil {
         this.mutationObserver = new MutationObserver((records) => {
             records.forEach(record => {
                 if (record.type === "attributes" && record.target === stencil) {
-                    this.updateState();
+                    this.active = this.isElementActive();
                 }
             });
         });
         this.mutationObserver.observe(stencil, { attributeFilter: ["active"] });
-        this.updateState();
+        this.active = this.isElementActive();
+        this.preview = this.renderPreview();
     }
     isActive() {
         return this.active;
@@ -54,37 +57,51 @@ class Stencil {
     }
     render(context, dx, dy, phase) {
         const rect = this.stencil.getBoundingClientRect();
-        this.size = Math.max(rect.width, rect.height);
         const halfSize = this.size >> 1;
-        this.x = rect.left + halfSize + dx;
-        this.y = rect.top + halfSize + dy;
-        context.save();
-        context.translate(this.x, this.y);
-        const scale = (halfSize - 16.0) / this.radius;
-        context.scale(scale, scale);
-        RotaryRenderer.render(context, this.model, this.active ? phase : 0.0, this.alpha);
-        context.restore();
+        const x = rect.left + dx;
+        const y = rect.top + dy;
+        if (this.active) {
+            context.save();
+            context.translate(x + halfSize, y + halfSize);
+            const scale = (halfSize - Stencil.PADDING) / this.radius;
+            context.scale(scale, scale);
+            RotaryRenderer.render(context, this.model, phase, 1.0);
+            context.restore();
+        }
+        else {
+            const scale = 1.0 / devicePixelRatio;
+            context.save();
+            context.translate(x, y);
+            context.scale(scale, scale);
+            context.drawImage(this.preview, 0, 0);
+            context.restore();
+        }
     }
     terminate() {
         this.model.terminate();
         this.mutationObserver.disconnect();
     }
-    updateState() {
-        if (this.isElementActive()) {
-            this.model.inactiveAlpha.set(0.3);
-            this.alpha = 1.0;
-            this.active = true;
-        }
-        else {
-            this.model.inactiveAlpha.set(1.0);
-            this.alpha = 0.75;
-            this.active = false;
-        }
+    renderPreview() {
+        this.model.inactiveAlpha.set(1.0);
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        const halfSize = this.size;
+        const scale = (this.size * 0.5 - Stencil.PADDING) / this.radius * devicePixelRatio;
+        canvas.width = this.size * devicePixelRatio;
+        canvas.height = this.size * devicePixelRatio;
+        context.save();
+        context.translate(halfSize, halfSize);
+        context.scale(scale, scale);
+        RotaryRenderer.render(context, this.model, 0.0, 0.8);
+        context.restore();
+        this.model.inactiveAlpha.set(0.4);
+        return canvas;
     }
     isElementActive() {
         return this.stencil.getAttribute("active") !== null;
     }
 }
+Stencil.PADDING = 16;
 (() => __awaiter(void 0, void 0, void 0, function* () {
     yield install();
     const model = new RotaryModel();
@@ -97,7 +114,7 @@ class Stencil {
             const element = entry.target;
             if (entry.isIntersecting) {
                 const seed = parseInt(element.getAttribute("seed"));
-                stencils.set(element, new Stencil(element, seed));
+                stencils.set(element, new Stencil(element, size, seed));
             }
             else {
                 const stencil = stencils.get(element);
@@ -131,7 +148,7 @@ class Stencil {
     const run = () => {
         handleRecords(intersectionObserver.takeRecords());
         const bounds = canvas.getBoundingClientRect();
-        const pixelRatio = 1;
+        const pixelRatio = devicePixelRatio;
         canvas.width = canvas.clientWidth * pixelRatio;
         canvas.height = canvas.clientHeight * pixelRatio;
         context.save();

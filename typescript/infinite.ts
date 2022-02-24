@@ -22,19 +22,16 @@ const randomName = (random: Random): string => {
 }
 
 class Stencil implements Terminable {
+    private static PADDING = 16
     private readonly random: Mulberry32
     private readonly model: RotaryModel
-
-    private readonly mutationObserver: MutationObserver
     private readonly radius: number
+    private readonly mutationObserver: MutationObserver
+    private readonly preview: HTMLCanvasElement
 
-    private x: number
-    private y: number
-    private size: number
-    private alpha: number
-    private active: boolean
+    private active: boolean = false
 
-    constructor(private readonly stencil: Element, seed: number) {
+    constructor(private readonly stencil: Element, private readonly size: number, seed: number) {
         this.random = new Mulberry32(0xFFFFFFFF + seed)
         this.model = new RotaryModel()
         this.model.randomize(this.random)
@@ -42,12 +39,13 @@ class Stencil implements Terminable {
         this.mutationObserver = new MutationObserver((records: MutationRecord[]) => {
             records.forEach(record => {
                 if (record.type === "attributes" && record.target === stencil) {
-                    this.updateState()
+                    this.active = this.isElementActive()
                 }
             })
         })
         this.mutationObserver.observe(stencil, {attributeFilter: ["active"]})
-        this.updateState()
+        this.active = this.isElementActive()
+        this.preview = this.renderPreview()
     }
 
     isActive(): boolean {
@@ -64,16 +62,24 @@ class Stencil implements Terminable {
 
     render(context: CanvasRenderingContext2D, dx: number, dy: number, phase: number): void {
         const rect = this.stencil.getBoundingClientRect()
-        this.size = Math.max(rect.width, rect.height)
         const halfSize = this.size >> 1
-        this.x = rect.left + halfSize + dx
-        this.y = rect.top + halfSize + dy
-        context.save()
-        context.translate(this.x, this.y)
-        const scale: number = (halfSize - 16.0) / this.radius // 16px padding
-        context.scale(scale, scale)
-        RotaryRenderer.render(context, this.model, this.active ? phase : 0.0, this.alpha)
-        context.restore()
+        const x = rect.left + dx
+        const y = rect.top + dy
+        if (this.active) {
+            context.save()
+            context.translate(x + halfSize, y + halfSize)
+            const scale: number = (halfSize - Stencil.PADDING) / this.radius
+            context.scale(scale, scale)
+            RotaryRenderer.render(context, this.model, phase, 1.0) // TODO Motion Blur
+            context.restore()
+        } else {
+            const scale = 1.0 / devicePixelRatio
+            context.save()
+            context.translate(x, y)
+            context.scale(scale, scale)
+            context.drawImage(this.preview, 0, 0)
+            context.restore()
+        }
     }
 
     terminate(): void {
@@ -81,16 +87,21 @@ class Stencil implements Terminable {
         this.mutationObserver.disconnect()
     }
 
-    private updateState(): void {
-        if (this.isElementActive()) {
-            this.model.inactiveAlpha.set(0.3)
-            this.alpha = 1.0
-            this.active = true
-        } else {
-            this.model.inactiveAlpha.set(1.0)
-            this.alpha = 0.75
-            this.active = false
-        }
+    private renderPreview(): HTMLCanvasElement {
+        this.model.inactiveAlpha.set(1.0)
+        const canvas = document.createElement("canvas")
+        const context = canvas.getContext("2d")
+        const halfSize = this.size
+        const scale: number = (this.size * 0.5 - Stencil.PADDING) / this.radius * devicePixelRatio
+        canvas.width = this.size * devicePixelRatio
+        canvas.height = this.size * devicePixelRatio
+        context.save()
+        context.translate(halfSize, halfSize)
+        context.scale(scale, scale)
+        RotaryRenderer.render(context, this.model, 0.0, 0.8)
+        context.restore()
+        this.model.inactiveAlpha.set(0.4)
+        return canvas
     }
 
     private isElementActive(): boolean {
@@ -110,7 +121,7 @@ class Stencil implements Terminable {
             const element = entry.target
             if (entry.isIntersecting) {
                 const seed = parseInt(element.getAttribute("seed"))
-                stencils.set(element, new Stencil(element, seed))
+                stencils.set(element, new Stencil(element, size, seed))
             } else {
                 const stencil = stencils.get(element)
                 if (undefined !== stencil) {
@@ -144,7 +155,7 @@ class Stencil implements Terminable {
     const run = () => {
         handleRecords(intersectionObserver.takeRecords())
         const bounds = canvas.getBoundingClientRect()
-        const pixelRatio = 1//devicePixelRatio
+        const pixelRatio = devicePixelRatio
         canvas.width = canvas.clientWidth * pixelRatio
         canvas.height = canvas.clientHeight * pixelRatio
         context.save()

@@ -439,9 +439,9 @@ body > main > div.pattern::-webkit-scrollbar {
 body > main > div.pattern > section {
   height: var(--size);
   cursor: pointer;
+  border-radius: var(--size);
 }
 body > main > div.pattern > section[active] {
-  border-radius: var(--size);
   box-shadow: 0 0 4px 0 rgba(255, 255, 255, 0.3) inset, 0 0 16px 0 rgba(255, 255, 255, 0.1);
   background-color: black;
 }
