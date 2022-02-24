@@ -98,6 +98,12 @@ export const initAudioScene = (): AudioScene => {
             for (let i = 0; i <= 13; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/stabs/${i}.ogg`))
             }
+            for (let i = 0; i <= 89; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/fx/${i}.ogg`))
+            }
+            for (let i = 0; i <= 116; i++) {
+                rotaryNode.uploadSample(index++, loadSample(`samples/chords/${i}.ogg`))
+            }
 
             for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
                 rotaryNode.connect(meter, lineIndex, lineIndex)
