@@ -89,21 +89,9 @@ export const initAudioScene = (): AudioScene => {
             for (let i = 0; i <= 63 && mute; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/gameboy/${i}.ogg`))
             }
-
-
-            // for (let i = 1; i <= 8; i++) {
-            //     rotaryNode.uploadSample(index++, await gen.render(Harmonic.make(60 * i)))
-            // }
-            /*for (let i = 0; i <= 24; i++) {
-                rotaryNode.uploadSample(index++, loadSample(`samples/toypiano/${i}.wav`))
-            }
             for (let i = 0; i <= 12; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/vinyl/${i}.wav`))
             }
-            for (let i = 0; i <= 21; i++) {
-                rotaryNode.uploadSample(index++, loadSample(`samples/foley/${i}.wav`))
-            }
-            */
 
             for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
                 rotaryNode.connect(meter, lineIndex, lineIndex)

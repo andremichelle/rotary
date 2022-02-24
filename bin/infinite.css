@@ -385,6 +385,19 @@ body > fieldset.controls {
   flex: 0 0 40px;
   padding: 0 20px;
   width: calc(100% - 40px);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+body > fieldset.controls > .transport h1 {
+  color: #1A1A1A;
+  background-color: #DDDDDD;
+  padding: 0 8px;
+  margin-left: 16px;
+}
+body > fieldset.controls > .transport h1:empty {
+  opacity: 0.1;
+}
+body > fieldset.controls > .transport h1:empty:before {
+  content: "Select rotary to explore";
 }
 body > fieldset.controls > div.transport {
   display: flex;
@@ -418,6 +431,7 @@ body > main > div.pattern {
   padding: var(--padding);
   gap: var(--gap);
   overflow-y: scroll;
+  will-change: scroll-position;
 }
 body > main > div.pattern::-webkit-scrollbar {
   display: none;
@@ -428,7 +442,7 @@ body > main > div.pattern > section {
 }
 body > main > div.pattern > section[active] {
   border-radius: var(--size);
-  box-shadow: 0 0 16px 0 rgba(255, 255, 255, 0.3) inset, 0 0 16px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 4px 0 rgba(255, 255, 255, 0.3) inset, 0 0 16px 0 rgba(255, 255, 255, 0.1);
   background-color: black;
 }
 
