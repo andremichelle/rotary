@@ -24,16 +24,17 @@ const randomName = (random: Random): string => {
 
 class Stencil implements Terminable {
     private static PADDING = 16
+
     private readonly random: Mulberry32
     private readonly model: RotaryModel
     private readonly radius: number
     private readonly mutationObserver: MutationObserver
-    private readonly preview: HTMLCanvasElement
+    private preview: HTMLCanvasElement
 
     private active: boolean = false
 
     constructor(private readonly stencil: Element, private readonly size: number, seed: number) {
-        this.random = new Mulberry32(0xFFFFFFFF + seed)
+        this.random = new Mulberry32(0xFFFFFF + seed)
         this.model = new RotaryModel()
         this.model.randomize(this.random)
         this.radius = this.model.measureRadius()
@@ -80,6 +81,10 @@ class Stencil implements Terminable {
         }
     }
 
+    rebuildPreview() {
+        this.preview = this.renderPreview()
+    }
+
     terminate(): void {
         this.model.terminate()
         this.mutationObserver.disconnect()
@@ -87,7 +92,7 @@ class Stencil implements Terminable {
 
     private renderPreview(): HTMLCanvasElement {
         this.model.inactiveAlpha.set(1.0)
-        this.model.motion.set(16)
+        this.model.motion.set(4)
         const canvas = document.createElement("canvas")
         const context = canvas.getContext("2d")
         const halfSize = this.size
@@ -170,6 +175,13 @@ class Stencil implements Terminable {
     populate(120)
     requestAnimationFrame(run)
     window.addEventListener("resize", () => resize())
+    document.onvisibilitychange = () => {
+        if (!document.hidden) {
+            for (const stencil of stencils.values()) {
+                stencil.rebuildPreview()
+            }
+        }
+    }
     pattern.addEventListener("scroll", () => {
         if (pattern.scrollTop >= pattern.scrollHeight - pattern.clientHeight - size) {
             populate(24)

@@ -32,7 +32,7 @@ class Stencil {
         this.stencil = stencil;
         this.size = size;
         this.active = false;
-        this.random = new Mulberry32(0xFFFFFFFF + seed);
+        this.random = new Mulberry32(0xFFFFFF + seed);
         this.model = new RotaryModel();
         this.model.randomize(this.random);
         this.radius = this.model.measureRadius();
@@ -75,13 +75,16 @@ class Stencil {
             context.restore();
         }
     }
+    rebuildPreview() {
+        this.preview = this.renderPreview();
+    }
     terminate() {
         this.model.terminate();
         this.mutationObserver.disconnect();
     }
     renderPreview() {
         this.model.inactiveAlpha.set(1.0);
-        this.model.motion.set(16);
+        this.model.motion.set(4);
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
         const halfSize = this.size;
@@ -163,6 +166,13 @@ Stencil.PADDING = 16;
     populate(120);
     requestAnimationFrame(run);
     window.addEventListener("resize", () => resize());
+    document.onvisibilitychange = () => {
+        if (!document.hidden) {
+            for (const stencil of stencils.values()) {
+                stencil.rebuildPreview();
+            }
+        }
+    };
     pattern.addEventListener("scroll", () => {
         if (pattern.scrollTop >= pattern.scrollHeight - pattern.clientHeight - size) {
             populate(24);
