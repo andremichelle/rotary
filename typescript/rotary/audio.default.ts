@@ -105,6 +105,8 @@ export const initAudioScene = (): AudioScene => {
                 rotaryNode.uploadSample(index++, loadSample(`samples/chords/${i}.ogg`))
             }
 
+            console.log(`loading ${index} samples...`)
+
             for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
                 rotaryNode.connect(meter, lineIndex, lineIndex)
             }
