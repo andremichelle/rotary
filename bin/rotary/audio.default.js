@@ -50,7 +50,7 @@ export const initAudioScene = () => {
                     rotaryNode.uploadSample(index++, loadSample(`samples/clicks/${i}.ogg`));
                 }
                 for (let i = 0; i <= 59 && mute; i++) {
-                    rotaryNode.uploadSample(index++, loadSample(`samples/cracks/${i}.ogg`), true);
+                    rotaryNode.uploadSample(index++, loadSample(`samples/cracks/${i}.ogg`));
                 }
                 for (let i = 0; i <= 74 && mute; i++) {
                     rotaryNode.uploadSample(index++, loadSample(`samples/glitch/${i}.ogg`));
@@ -72,6 +72,9 @@ export const initAudioScene = () => {
                 }
                 for (let i = 0; i <= 72; i++) {
                     rotaryNode.uploadSample(index++, loadSample(`samples/switches/${i}.ogg`));
+                }
+                for (let i = 0; i <= 13; i++) {
+                    rotaryNode.uploadSample(index++, loadSample(`samples/stabs/${i}.ogg`));
                 }
                 for (let lineIndex = 0; lineIndex < RotaryModel.MAX_TRACKS; lineIndex++) {
                     rotaryNode.connect(meter, lineIndex, lineIndex);

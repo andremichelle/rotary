@@ -178,6 +178,14 @@ class Stencil implements Terminable {
     const fieldset: HTMLFieldSetElement = document.querySelector("fieldset.controls")
     const nameLabel = document.getElementById("rotary-name")
     fieldset.disabled = true
+    window.addEventListener("keydown", event => {
+        if (event.code === "Space") {
+            event.preventDefault()
+            if (!fieldset.disabled) {
+                preview.transport.togglePlayback()
+            }
+        }
+    })
     pattern.addEventListener("click", (event: MouseEvent) => {
         const element = event.target as Element
         const stencil = stencils.get(element)

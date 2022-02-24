@@ -171,6 +171,14 @@ Stencil.PADDING = 16;
     const fieldset = document.querySelector("fieldset.controls");
     const nameLabel = document.getElementById("rotary-name");
     fieldset.disabled = true;
+    window.addEventListener("keydown", event => {
+        if (event.code === "Space") {
+            event.preventDefault();
+            if (!fieldset.disabled) {
+                preview.transport.togglePlayback();
+            }
+        }
+    });
     pattern.addEventListener("click", (event) => {
         const element = event.target;
         const stencil = stencils.get(element);
