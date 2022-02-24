@@ -16,5 +16,5 @@ export declare class RotaryRenderer {
     private static renderSection;
     static renderFrames(model: RotaryModel, configuration: RenderConfiguration, process: (context: CanvasRenderingContext2D) => void, progress?: (progress: number) => void): Promise<void>;
     static iterateFrames(model: RotaryModel, configuration: RenderConfiguration): Generator<CanvasRenderingContext2D>;
-    static renderFrame(context: CanvasRenderingContext2D, model: RotaryModel, size: number, motionFrames: number, fps: number, phase: number, background?: string): void;
+    static renderFrame(context: CanvasRenderingContext2D, model: RotaryModel, size: number, motionFrames: number, fps: number, phase: number, padding?: number, background?: string): void;
 }

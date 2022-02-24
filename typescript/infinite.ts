@@ -5,6 +5,7 @@ import {RotaryRenderer} from "./rotary/render.js"
 import {Terminable} from "./lib/common.js"
 import {Audio} from "./rotary/audio.js"
 import {initAudioScene} from "./rotary/audio.default.js"
+import {RotaryApp} from "./rotary/app.js"
 
 // https://gist.github.com/tkon99/4c98af713acc73bed74c
 const randomName = (random: Random): string => {
@@ -62,15 +63,12 @@ class Stencil implements Terminable {
 
     render(context: CanvasRenderingContext2D, dx: number, dy: number, phase: number): void {
         const rect = this.stencil.getBoundingClientRect()
-        const halfSize = this.size >> 1
         const x = rect.left + dx
         const y = rect.top + dy
         if (this.active) {
             context.save()
-            context.translate(x + halfSize, y + halfSize)
-            const scale: number = (halfSize - Stencil.PADDING) / this.radius
-            context.scale(scale, scale)
-            RotaryRenderer.render(context, this.model, phase, 1.0) // TODO Motion Blur
+            context.translate(x, y)
+            RotaryRenderer.renderFrame(context, this.model, this.size, this.model.motion.get(), RotaryApp.FPS, phase, Stencil.PADDING)
             context.restore()
         } else {
             const scale = 1.0 / devicePixelRatio
@@ -89,6 +87,7 @@ class Stencil implements Terminable {
 
     private renderPreview(): HTMLCanvasElement {
         this.model.inactiveAlpha.set(1.0)
+        this.model.motion.set(16)
         const canvas = document.createElement("canvas")
         const context = canvas.getContext("2d")
         const halfSize = this.size
@@ -98,9 +97,9 @@ class Stencil implements Terminable {
         context.save()
         context.translate(halfSize, halfSize)
         context.scale(scale, scale)
-        RotaryRenderer.render(context, this.model, 0.0, 0.8)
+        RotaryRenderer.render(context, this.model, 0.0, 0.7)
         context.restore()
-        this.model.inactiveAlpha.set(0.4)
+        this.model.inactiveAlpha.set(0.5)
         return canvas
     }
 
@@ -190,6 +189,7 @@ class Stencil implements Terminable {
             .forEach(element => element.removeAttribute("active"))
         preview.transport.stop()
         if (wasActive) {
+            fieldset.disabled = true
             nameLabel.textContent = ""
             return
         }
@@ -200,8 +200,8 @@ class Stencil implements Terminable {
         nameLabel.textContent = randomName(stencil.getRandom())
     })
     {
-        style.setProperty("--size", `${size}px`)
         style.setProperty("--gap", `${gap}px`)
+        style.setProperty("--size", `${size}px`)
         style.setProperty("--padding", `${padding}px`)
     }
     document.getElementById("preloader").remove()

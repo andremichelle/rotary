@@ -13,6 +13,7 @@ import { Mulberry32 } from "./lib/math.js";
 import { RotaryRenderer } from "./rotary/render.js";
 import { Audio } from "./rotary/audio.js";
 import { initAudioScene } from "./rotary/audio.default.js";
+import { RotaryApp } from "./rotary/app.js";
 const randomName = (random) => {
     const capFirst = word => word.charAt(0).toLocaleUpperCase() + word.slice(1);
     const pre = ["The", "A", "My", "Your"];
@@ -57,15 +58,12 @@ class Stencil {
     }
     render(context, dx, dy, phase) {
         const rect = this.stencil.getBoundingClientRect();
-        const halfSize = this.size >> 1;
         const x = rect.left + dx;
         const y = rect.top + dy;
         if (this.active) {
             context.save();
-            context.translate(x + halfSize, y + halfSize);
-            const scale = (halfSize - Stencil.PADDING) / this.radius;
-            context.scale(scale, scale);
-            RotaryRenderer.render(context, this.model, phase, 1.0);
+            context.translate(x, y);
+            RotaryRenderer.renderFrame(context, this.model, this.size, this.model.motion.get(), RotaryApp.FPS, phase, Stencil.PADDING);
             context.restore();
         }
         else {
@@ -83,6 +81,7 @@ class Stencil {
     }
     renderPreview() {
         this.model.inactiveAlpha.set(1.0);
+        this.model.motion.set(16);
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
         const halfSize = this.size;
@@ -92,9 +91,9 @@ class Stencil {
         context.save();
         context.translate(halfSize, halfSize);
         context.scale(scale, scale);
-        RotaryRenderer.render(context, this.model, 0.0, 0.8);
+        RotaryRenderer.render(context, this.model, 0.0, 0.7);
         context.restore();
-        this.model.inactiveAlpha.set(0.4);
+        this.model.inactiveAlpha.set(0.5);
         return canvas;
     }
     isElementActive() {
@@ -183,6 +182,7 @@ Stencil.PADDING = 16;
             .forEach(element => element.removeAttribute("active"));
         preview.transport.stop();
         if (wasActive) {
+            fieldset.disabled = true;
             nameLabel.textContent = "";
             return;
         }
@@ -193,8 +193,8 @@ Stencil.PADDING = 16;
         nameLabel.textContent = randomName(stencil.getRandom());
     });
     {
-        style.setProperty("--size", `${size}px`);
         style.setProperty("--gap", `${gap}px`);
+        style.setProperty("--size", `${size}px`);
         style.setProperty("--padding", `${padding}px`);
     }
     document.getElementById("preloader").remove();

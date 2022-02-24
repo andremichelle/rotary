@@ -199,7 +199,7 @@ export class RotaryRenderer {
         liveCanvas.width = rawCanvas.width = size
         liveCanvas.height = rawCanvas.height = size
         for (let i = 0; i < numFrames; i++) {
-            RotaryRenderer.renderFrame(rawContext, model, size, configuration.motionFrames, configuration.fps, i / numFrames, configuration.background)
+            RotaryRenderer.renderFrame(rawContext, model, size, configuration.motionFrames, configuration.fps, i / numFrames, 64, configuration.background)
             liveContext.clearRect(0, 0, size, size)
             liveContext.save()
             liveContext.filter = "blur(32px) brightness(50%)"
@@ -216,10 +216,11 @@ export class RotaryRenderer {
                        motionFrames: number,
                        fps: number,
                        phase: number,
+                       padding: number = 64,
                        background: string = "rgba(0,0,0,0.0)") {
         const radius = model.measureRadius()
         const halfSize = size >> 1
-        const scale: number = (halfSize - 64) / radius
+        const scale: number = (halfSize - padding) / radius
         context.clearRect(0, 0, size, size)
         context.fillStyle = background
         context.fillRect(0, 0, size, size)
