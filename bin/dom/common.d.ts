@@ -1,5 +1,5 @@
 import { Terminable } from "../lib/common.js";
-export declare const getChromeVersion: () => number | boolean;
+export declare const testFeatures: () => Promise<boolean>;
 export declare class Updater {
     private readonly callback;
     private needsUpdate;
