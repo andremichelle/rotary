@@ -7,6 +7,8 @@ import {Audio} from "./rotary/audio.js"
 import {initAudioScene} from "./rotary/audio.default.js"
 import {RotaryApp} from "./rotary/app.js"
 
+const pixelRatio = devicePixelRatio
+
 // https://gist.github.com/tkon99/4c98af713acc73bed74c
 const randomName = (random: Random): string => {
     const capFirst = word => word.charAt(0).toLocaleUpperCase() + word.slice(1)
@@ -72,7 +74,7 @@ class Stencil implements Terminable {
             RotaryRenderer.renderFrame(context, this.model, this.size, this.model.motion.get(), RotaryApp.FPS, phase, Stencil.PADDING)
             context.restore()
         } else {
-            const scale = 1.0 / devicePixelRatio
+            const scale = 1.0 / pixelRatio
             context.save()
             context.translate(x, y)
             context.scale(scale, scale)
@@ -95,10 +97,10 @@ class Stencil implements Terminable {
         this.model.motion.set(4)
         const canvas = document.createElement("canvas")
         const context = canvas.getContext("2d")
-        const halfSize = this.size
-        const scale: number = (this.size * 0.5 - Stencil.PADDING) / this.radius * devicePixelRatio
-        canvas.width = this.size * devicePixelRatio
-        canvas.height = this.size * devicePixelRatio
+        const scale: number = (this.size * 0.5 - Stencil.PADDING) / this.radius * pixelRatio
+        const halfSize = this.size * 0.5 * pixelRatio
+        canvas.width = this.size * pixelRatio
+        canvas.height = this.size * pixelRatio
         context.save()
         context.translate(halfSize, halfSize)
         context.scale(scale, scale)
@@ -159,7 +161,6 @@ class Stencil implements Terminable {
     const run = () => {
         handleRecords(intersectionObserver.takeRecords())
         const bounds = canvas.getBoundingClientRect()
-        const pixelRatio = devicePixelRatio
         canvas.width = canvas.clientWidth * pixelRatio
         canvas.height = canvas.clientHeight * pixelRatio
         context.save()
