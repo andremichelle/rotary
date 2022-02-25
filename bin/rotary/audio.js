@@ -20,7 +20,9 @@ export class Audio {
     static config(scene, model) {
         return __awaiter(this, void 0, void 0, function* () {
             const context = new AudioContext();
-            yield context.suspend();
+            if (context.state !== "suspended") {
+                yield context.suspend();
+            }
             return new Audio(context, scene, model);
         });
     }

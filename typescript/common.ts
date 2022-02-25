@@ -1,4 +1,4 @@
-import {getChromeVersion} from "./dom/common.js"
+import {testFeatures} from "./dom/common.js"
 
 export const install = async () => {
     const showError = (message: string) => {
@@ -6,7 +6,7 @@ export const install = async () => {
         if (null === preloader) {
             alert(message)
         } else {
-            preloader.innerHTML = `<span style="color: #F33">${message}</span>`
+            preloader.innerHTML = `<span style="color: #F33">${message} (Try using Chrome)</span>`
         }
     }
     window.onerror = (message: string) => {
@@ -20,9 +20,8 @@ export const install = async () => {
             showError(event.reason)
         }
     }
-    const chromeVersion = getChromeVersion()
-    if (!chromeVersion || chromeVersion < 97) {
-        throw new Error("Use latest Chrome browser.")
+    if (!await testFeatures()) {
+        throw new Error("Your browser does not support all necessary web features")
     }
     return Promise.resolve()
 }

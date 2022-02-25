@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { getChromeVersion } from "./dom/common.js";
+import { testFeatures } from "./dom/common.js";
 export const install = () => __awaiter(void 0, void 0, void 0, function* () {
     const showError = (message) => {
         const preloader = document.getElementById("preloader");
@@ -15,7 +15,7 @@ export const install = () => __awaiter(void 0, void 0, void 0, function* () {
             alert(message);
         }
         else {
-            preloader.innerHTML = `<span style="color: #F33">${message}</span>`;
+            preloader.innerHTML = `<span style="color: #F33">${message} (Try using Chrome)</span>`;
         }
     };
     window.onerror = (message) => {
@@ -30,9 +30,8 @@ export const install = () => __awaiter(void 0, void 0, void 0, function* () {
             showError(event.reason);
         }
     };
-    const chromeVersion = getChromeVersion();
-    if (!chromeVersion || chromeVersion < 97) {
-        throw new Error("Use latest Chrome browser.");
+    if (!(yield testFeatures())) {
+        throw new Error("Your browser does not support all necessary web features");
     }
     return Promise.resolve();
 });

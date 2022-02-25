@@ -568,10 +568,7 @@ export const readBinary = (url: string): Promise<ArrayBuffer> => {
     })
 }
 export const readAudio = (context: BaseAudioContext, url: string): Promise<AudioBuffer> => {
-    return readBinary(url).then(buffer => decodeAudioData(context, buffer).catch(error => {
-        console.error(`${error} for ${url}`)
-        return null
-    }))
+    return readBinary(url).then(buffer => decodeAudioData(context, buffer))
 }
 export const decodeAudioData = (context: BaseAudioContext, buffer: ArrayBuffer): Promise<AudioBuffer> => {
     return context.decodeAudioData(buffer)

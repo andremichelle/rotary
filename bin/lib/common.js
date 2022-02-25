@@ -454,10 +454,7 @@ export const readBinary = (url) => {
     });
 };
 export const readAudio = (context, url) => {
-    return readBinary(url).then(buffer => decodeAudioData(context, buffer).catch(error => {
-        console.error(`${error} for ${url}`);
-        return null;
-    }));
+    return readBinary(url).then(buffer => decodeAudioData(context, buffer));
 };
 export const decodeAudioData = (context, buffer) => {
     return context.decodeAudioData(buffer);

@@ -1,8 +1,17 @@
-import {Estimation, Terminable} from "../lib/common.js"
+import {Estimation, readAudio, Terminable} from "../lib/common.js"
 
-export const getChromeVersion = (): boolean | number => {
-    const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./)
-    return raw ? parseInt(raw[2], 10) : false
+export const testFeatures = async (): Promise<boolean> => {
+    {
+        const canvas = document.createElement('canvas')
+        const context = canvas.getContext('2d')
+        context.createConicGradient(0, 1, 1)
+    }
+    {
+        const context = new AudioContext()
+        await readAudio(context, "samples/decode-test.ogg")
+        await context.close()
+    }
+    return Promise.resolve(true)
 }
 
 export class Updater {

@@ -1,8 +1,26 @@
-import { Estimation } from "../lib/common.js";
-export const getChromeVersion = () => {
-    const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
-    return raw ? parseInt(raw[2], 10) : false;
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
 };
+import { Estimation, readAudio } from "../lib/common.js";
+export const testFeatures = () => __awaiter(void 0, void 0, void 0, function* () {
+    {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        context.createConicGradient(0, 1, 1);
+    }
+    {
+        const context = new AudioContext();
+        yield readAudio(context, "samples/decode-test.ogg");
+        yield context.close();
+    }
+    return Promise.resolve(true);
+});
 export class Updater {
     constructor(callback) {
         this.callback = callback;

@@ -1,6 +1,17 @@
+.hidden {
+  display: none;
+}
+
 fieldset {
   border: none;
   outline: none;
+}
+
+button.error {
+  left: 16px;
+  bottom: 32px;
+  background: transparent;
+  position: absolute;
 }
 
 ::-webkit-scrollbar {
@@ -24,9 +35,20 @@ fieldset {
   background-color: #555;
 }
 
+.hidden {
+  display: none;
+}
+
 fieldset {
   border: none;
   outline: none;
+}
+
+button.error {
+  left: 16px;
+  bottom: 32px;
+  background: transparent;
+  position: absolute;
 }
 
 ::-webkit-scrollbar {
