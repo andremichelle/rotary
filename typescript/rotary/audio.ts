@@ -32,7 +32,7 @@ export interface AudioScene {
 export class Audio {
     static async config(scene: AudioScene, model: RotaryModel): Promise<Audio> {
         const context = new AudioContext()
-        if(context.state !== "suspended") { // fix for SAFARI (stopped silently forever)
+        if (context.state !== "suspended") { // fix for SAFARI (stopped silently forever)
             await context.suspend()
         }
         return new Audio(context, scene, model)

@@ -1,3 +1,20 @@
+import {dbToGain, interpolateParameterValueIfRunning} from "../audio/common.js"
+import {
+    CompositeSettings,
+    Convolver,
+    ConvolverSettings,
+    DefaultComposite,
+    Flanger,
+    FlangerSettings,
+    PulsarDelay,
+    PulsarDelaySettings
+} from "../audio/composite.js"
+import {LimiterWorklet} from "../audio/limiter/worklet.js"
+import {NoUIMeterWorklet} from "../audio/meter/worklet.js"
+import {Metronome} from "../audio/metronome/worklet.js"
+import {Channelstrip, Mixer} from "../audio/mixer.js"
+import {Transport} from "../audio/sequencing.js"
+import {Updater} from "../dom/common.js"
 import {
     ArrayUtils,
     Boot,
@@ -9,26 +26,9 @@ import {
     Terminator
 } from "../lib/common.js"
 import {AudioScene, AudioSceneController} from "./audio.js"
-import {LimiterWorklet} from "../audio/limiter/worklet.js"
 import {RotaryWorkletNode} from "./audio/worklet.js"
-import {
-    CompositeSettings,
-    Convolver,
-    ConvolverSettings,
-    DefaultComposite,
-    Flanger,
-    FlangerSettings,
-    PulsarDelay,
-    PulsarDelaySettings
-} from "../audio/composite.js"
-import {NoUIMeterWorklet} from "../audio/meter/worklet.js"
-import {Updater} from "../dom/common.js"
-import {Transport} from "../audio/sequencing.js"
-import {Metronome} from "../audio/metronome/worklet.js"
-import {Channelstrip, Mixer} from "../audio/mixer.js"
 import {RotaryModel} from "./model/rotary.js"
 import {RotaryTrackModel} from "./model/track.js"
-import {dbToGain, interpolateParameterValueIfRunning} from "../audio/common.js"
 
 export const initAudioScene = (): AudioScene => {
     return {
@@ -52,41 +52,31 @@ export const initAudioScene = (): AudioScene => {
             const meter = new NoUIMeterWorklet(context, RotaryModel.MAX_TRACKS, 2)
             const limiterWorklet = new LimiterWorklet(context)
             const loadSample = (url: string): Promise<AudioBuffer> => boot.registerProcess(readAudio(context, url))
-            // const gen = new Generator(1 << 16, context.sampleRate)
-            // const wavetable = await gen.render(Harmonic.make(120 / context.sampleRate))
-            // const buffer = context.createBuffer(1, wavetable.length, context.sampleRate)
-            // buffer.copyToChannel(wavetable, 0)
-            // const source = context.createBufferSource()
-            // source.loop = true
-            // source.buffer = buffer
-            // source.start()
-
-            const mute = !false
 
             let index = 0
 
-            for (let i = 0; i <= 19 && mute; i++) {
+            for (let i = 0; i <= 19; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/kicks/${i}.ogg`))
             }
-            for (let i = 0; i <= 19 && mute; i++) {
+            for (let i = 0; i <= 19; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/clicks/${i}.ogg`))
             }
-            for (let i = 0; i <= 59 && mute; i++) {
+            for (let i = 0; i <= 59; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/cracks/${i}.ogg`))
             }
-            for (let i = 0; i <= 74 && mute; i++) {
+            for (let i = 0; i <= 74; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/glitch/${i}.ogg`))
             }
-            for (let i = 0; i <= 9 && mute; i++) {
+            for (let i = 0; i <= 9; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/snares/${i}.ogg`))
             }
-            for (let i = 0; i <= 23 && mute; i++) {
+            for (let i = 0; i <= 23; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/neuro/${i}.ogg`))
             }
-            for (let i = 0; i <= 442 && mute; i++) {
+            for (let i = 0; i <= 442; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/blips/${i}.ogg`))
             }
-            for (let i = 0; i <= 63 && mute; i++) {
+            for (let i = 0; i <= 63; i++) {
                 rotaryNode.uploadSample(index++, loadSample(`samples/gameboy/${i}.ogg`))
             }
             for (let i = 0; i <= 12; i++) {
